@@ -1,0 +1,156 @@
+--- PREVIEW ENDPOINT HIT ---
+{
+  "invoiceNumber": "TEST-001",
+  "clientName": "Test Client",
+  "serviceType": "Service",
+  "totalAmount": 1000,
+  "totalAmountFormatted": "$1,000.00",
+  "currency": "USD",
+  "paymentStatus": "PAID",
+  "isSubscription": false,
+  "amountPaid": 0,
+  "amountPaidFormatted": "$0.00",
+  "balanceDue": 0,
+  "balanceDueFormatted": "$0.00",
+  "depositPercent": 0,
+  "dueDate": null,
+  "paidAt": "2026-02-14T06:51:16.853Z",
+  "renewalDate": null,
+  "pdfWatermarkText": "PAID",
+  "pdfWatermarkColor": "#28a745",
+  "pdfShowDueDate": false,
+  "pdfShowPaidDate": true,
+  "emailSubjectText": "Invoice #TEST-001 — Paid in Full (Receipt Attached)",
+  "emailHeaderText": "Invoice #TEST-001",
+  "emailSummaryRows": [
+    {
+      "label": "Total Amount",
+      "value": "$1,000.00"
+    },
+    {
+      "label": "Date Paid",
+      "value": "February 14, 2026"
+    },
+    {
+      "label": "Status",
+      "value": "CLOSED / PAID"
+    }
+  ]
+}
+--- PREVIEW ENDPOINT HIT ---
+{
+  "invoiceNumber": "TEST-002",
+  "clientName": "Test Client",
+  "serviceType": "Service",
+  "totalAmount": 1000,
+  "totalAmountFormatted": "$1,000.00",
+  "currency": "USD",
+  "paymentStatus": "DEPOSIT",
+  "isSubscription": false,
+  "amountPaid": 500,
+  "amountPaidFormatted": "$500.00",
+  "balanceDue": 500,
+  "balanceDueFormatted": "$500.00",
+  "depositPercent": 50,
+  "dueDate": null,
+  "paidAt": null,
+  "renewalDate": null,
+  "pdfWatermarkText": "DEPOSIT PAID — 50%",
+  "pdfWatermarkColor": "#00AEEF",
+  "pdfShowDueDate": true,
+  "pdfShowPaidDate": false,
+  "emailSubjectText": "Invoice #TEST-002 — Deposit Received (50%)",
+  "emailHeaderText": "Invoice #TEST-002",
+  "emailSummaryRows": [
+    {
+      "label": "Total Project",
+      "value": "$1,000.00"
+    },
+    {
+      "label": "Deposit Received",
+      "value": "$500.00"
+    },
+    {
+      "label": "Balance Remaining",
+      "value": "$500.00"
+    },
+    {
+      "label": "Balance Due Date",
+      "value": "N/A"
+    }
+  ]
+}
+--- PREVIEW ENDPOINT HIT ---
+{
+  "invoiceNumber": "TEST-003",
+  "clientName": "Test Client",
+  "serviceType": "Service",
+  "totalAmount": 1000,
+  "totalAmountFormatted": "$1,000.00",
+  "currency": "USD",
+  "paymentStatus": "UNPAID",
+  "isSubscription": false,
+  "amountPaid": 0,
+  "amountPaidFormatted": "$0.00",
+  "balanceDue": 1000,
+  "balanceDueFormatted": "$1,000.00",
+  "depositPercent": 0,
+  "dueDate": "2026-12-31",
+  "paidAt": null,
+  "renewalDate": null,
+  "pdfWatermarkText": "UNPAID",
+  "pdfWatermarkColor": "#FF0000",
+  "pdfShowDueDate": true,
+  "pdfShowPaidDate": false,
+  "emailSubjectText": "Invoice #TEST-003 — Payment Required",
+  "emailHeaderText": "Invoice #TEST-003",
+  "emailSummaryRows": [
+    {
+      "label": "Total Due",
+      "value": "$1,000.00"
+    },
+    {
+      "label": "Due Date",
+      "value": "December 31, 2026"
+    }
+  ]
+}
+--- PREVIEW ENDPOINT HIT ---
+{
+  "invoiceNumber": "TEST-004",
+  "clientName": "Test Client",
+  "serviceType": "Service",
+  "totalAmount": 1000,
+  "totalAmountFormatted": "$1,000.00",
+  "currency": "USD",
+  "paymentStatus": "PAID",
+  "isSubscription": false,
+  "amountPaid": 1000,
+  "amountPaidFormatted": "$1,000.00",
+  "balanceDue": 0,
+  "balanceDueFormatted": "$0.00",
+  "depositPercent": 0,
+  "dueDate": null,
+  "paidAt": "2026-02-14T06:51:17.335Z",
+  "renewalDate": null,
+  "pdfWatermarkText": "PAID",
+  "pdfWatermarkColor": "#28a745",
+  "pdfShowDueDate": false,
+  "pdfShowPaidDate": true,
+  "emailSubjectText": "Invoice #TEST-004 — Paid in Full (Receipt Attached)",
+  "emailHeaderText": "Invoice #TEST-004",
+  "emailSummaryRows": [
+    {
+      "label": "Total Amount",
+      "value": "$1,000.00"
+    },
+    {
+      "label": "Date Paid",
+      "value": "February 14, 2026"
+    },
+    {
+      "label": "Status",
+      "value": "CLOSED / PAID"
+    }
+  ]
+}

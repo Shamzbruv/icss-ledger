@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | ICSS Command Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top right, #0B2447 0%, #101014 60%);
+            overflow: hidden;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .login-card {
+            background: rgba(30, 30, 36, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xxl) var(--spacing-xl);
+            box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            border-top: 3px solid var(--secondary-color);
+        }
+
+        .login-logo {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+            display: inline-block;
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+            color: #fff;
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-xl);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            padding-left: 14px;
+        }
+
+        .stay-logged-in {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: var(--spacing-lg);
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .stay-logged-in input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--secondary-color);
+        }
+
+        #loginError {
+            background: rgba(231, 76, 60, 0.15);
+            border-left: 3px solid var(--danger-color);
+            color: #ff9f9f;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--spacing-lg);
+            font-size: 0.85rem;
+            display: none;
+            text-align: left;
+        }
+
+        /* Decorative background elements */
+        .bg-blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: var(--secondary-color);
+            filter: blur(150px);
+            opacity: 0.05;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .blob-1 {
+            top: -100px;
+            right: -100px;
+        }
+
+        .blob-2 {
+            bottom: -100px;
+            left: -100px;
+            background: var(--primary-light);
+        }
+
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+
+            0%,
+            20% {
+                content: '.';
+            }
+
+            40% {
+                content: '..';
+            }
+
+            60% {
+                content: '...';
+            }
+
+            80%,
+            100% {
+                content: '';
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+
+    <div class="login-wrapper fade-in">
+        <div class="login-card">
+            <div class="login-logo">🔌</div>
+            <h1 class="login-title">ICSS Command Center</h1>
+            <p class="login-subtitle">Sign in to manage your operations</p>
+
+            <div id="loginError">Invalid email or password. Please try again.</div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="name@example.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required
+                        autocomplete="current-password">
+                </div>
+
+                <label class="stay-logged-in">
+                    <input type="checkbox" id="stayLoggedIn" checked>
+                    Always stay logged in
+                </label>
+
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
+                    Sign In
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center mt-4 text-muted" style="font-size: 0.85rem;">
+            &copy; 2026 iCreate Solutions. All rights reserved.
+        </p>
+    </div>
+
+    <!-- SDKs -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script type="module" src="js/auth.js"></script>
+</body>
+
+</html>

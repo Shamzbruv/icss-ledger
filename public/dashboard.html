@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | ICSS Command Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+</head>
+
+<body>
+
+    <!-- Layout.js injects Header here -->
+
+    <div class="container fade-in">
+
+        <div class="text-center mb-4">
+            <h2 style="font-weight: 300; font-size: 2rem; margin-bottom: 0.5rem;">Welcome back</h2>
+            <p class="lead" style="max-width: 600px; margin: 0 auto;">Manage invoices, client care, and operations — all
+                in one place.</p>
+        </div>
+
+        <h3 class="mt-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Quick Actions</h3>
+
+        <div class="dashboard-grid">
+            <!-- Card 1: Generate Invoice -->
+            <div class="card card-action" onclick="window.location.href='invoices'">
+                <div>
+                    <div class="card-icon">📄</div>
+                    <h3 class="card-title">Generate Invoice</h3>
+                    <p class="card-text">Create a branded invoice, send it to your client, and track payment status.</p>
+                </div>
+                <button class="btn btn-primary btn-block">Open Invoice Generator</button>
+            </div>
+
+            <!-- Card 2: Client Care Pulse -->
+            <div class="card card-action" onclick="window.location.href='client-care-pulse'">
+                <div>
+                    <div class="card-icon">💓</div>
+                    <h3 class="card-title">Client Care Pulse</h3>
+                    <p class="card-text">Automatically send weekly or monthly system health reports and monitor
+                        services.</p>
+                </div>
+                <button class="btn btn-primary btn-block">Open Client Care Pulse</button>
+            </div>
+        </div>
+
+        <h3 class="mt-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Recent Activity
+        </h3>
+
+        <div class="card">
+            <div id="recentActivityPlaceholder" class="text-center text-muted" style="padding: 2rem;">
+                <!-- TODO: Fetch actual recent logs -->
+                <p>No recent activity logs available yet.</p>
+            </div>
+            <!-- Example Table Structure for Future Use -->
+        </div>
+    </div>
+
+    </div>
+
+    <!-- Supabase & Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script type="module" src="js/layout.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,11 @@
+node_modules
+.env
+.DS_Store
+coverage
+npm-debug.log
+yarn-error.log
+.idea
+.vscode
+*.log
+*.pid
+*.zip

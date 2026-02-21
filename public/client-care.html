@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Care Pulse | ICSS Command Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+    <style>
+        /* Specific overrides for this page if needed */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-inactive {
+            background-color: var(--text-muted);
+            color: white;
+        }
+
+        .issue-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .issue-count {
+            background: var(--primary-light);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-right: 12px;
+            font-weight: 600;
+        }
+
+        /* Responsive Utilities */
+        @media (max-width: 768px) {
+            .w-mobile-100 {
+                width: 100% !important;
+            }
+
+            .summary-actions {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Layout.js injects Header here -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/layout.js"></script>
+
+    <div class="container fade-in">
+
+        <div class="mb-4 text-center">
+            <h1>Client Care Pulse Dashboard</h1>
+            <p class="lead">Monitor System Health & Manage Client Subscriptions</p>
+        </div>
+
+        <!-- TABS -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="switchTab('scheduled')">Scheduled Reports</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="switchTab('summaries')">Monthly Summaries</a>
+            </li>
+        </ul>
+
+        <!-- SCHEDULED REPORTS TAB -->
+        <div id="tab-scheduled" class="fade-in">
+            <div class="dashboard-grid two-cols" style="align-items: start;">
+
+                <!-- ADD NEW SERVICE FORM -->
+                <div>
+                    <div class="card">
+                        <h4 class="card-title">➕ Add New Service</h4>
+                        <form id="addServiceForm">
+                            <div class="mb-3">
+                                <label>Client</label>
+                                <!-- Toggle Mode -->
+                                <div class="radio-group mb-2" style="gap: 15px;">
+                                    <label class="radio-option">
+                                        <input type="radio" name="clientMode" value="existing" checked
+                                            onchange="toggleClientMode()">
+                                        <span style="font-size: 0.9rem;">Existing</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="clientMode" value="new" onchange="toggleClientMode()">
+                                        <span style="font-size: 0.9rem;">New</span>
+                                    </label>
+                                </div>
+                                <!-- Existing Client Select -->
+                                <div id="existingClientDiv">
+                                    <select id="clientSelect">
+                                        <option value="">Loading clients...</option>
+                                    </select>
+                                </div>
+                                <!-- New Client Inputs -->
+                                <div id="newClientDiv" class="d-none">
+                                    <div id="newClientFormWrapper"> <!-- Virtual wrapper, logical grouping -->
+                                        <input type="text" id="newClientName" placeholder="Client Name" class="mb-2">
+                                        <input type="email" id="newClientEmail" placeholder="Client Email" class="mb-2">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Plan</label>
+                                <select id="planSelect" required>
+                                    <option value="">Loading plans...</option>
+                                </select>
+                            </div>
+
+                            <hr>
+                            <h5 class="mb-2">Schedule</h5>
+                            <div class="mb-3">
+                                <label>Frequency</label>
+                                <select id="frequencySelect" onchange="toggleScheduleFields()">
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+
+                            <!-- Weekly Fields -->
+                            <div id="weeklyFields" class="mb-3">
+                                <label>Day of Week</label>
+                                <select id="sendDayOfWeek" class="form-control">
+                                    <option value="1">Monday</option>
+                                    <option value="2">Tuesday</option>
+                                    <option value="3">Wednesday</option>
+                                    <option value="4">Thursday</option>
+                                    <option value="5">Friday</option>
+                                    <option value="6">Saturday</option>
+                                    <option value="0">Sunday</option>
+                                </select>
+                            </div>
+
+                            <!-- Monthly Fields -->
+                            <div id="monthlyFields" class="mb-3 d-none">
+                                <label>Monthly Rule</label>
+                                <select id="monthlyRuleType" class="form-control mb-2" onchange="toggleMonthlyRule()">
+                                    <option value="dayOfMonth">Specific Day (e.g. 1st)</option>
+                                    <option value="pattern">Pattern (e.g. First Monday)</option>
+                                </select>
+
+                                <div id="dayOfMonthInput">
+                                    <label>Day (1-28)</label>
+                                    <input type="number" id="sendDayOfMonth" class="form-control" min="1" max="28"
+                                        value="1">
+                                </div>
+
+                                <div id="patternInput" class="d-none">
+                                    <div class="d-flex gap-2">
+                                        <select id="sendWeekOfMonth" class="form-control">
+                                            <option value="1">1st</option>
+                                            <option value="2">2nd</option>
+                                            <option value="3">3rd</option>
+                                            <option value="4">4th</option>
+                                        </select>
+                                        <select id="patternDayOfWeek" class="form-control">
+                                            <option value="1">Monday</option>
+                                            <option value="2">Tuesday</option>
+                                            <option value="3">Wednesday</option>
+                                            <option value="4">Thursday</option>
+                                            <option value="5">Friday</option>
+                                            <option value="6">Saturday</option>
+                                            <option value="0">Sunday</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-6" style="padding-right: 5px;">
+                                    <label>Time</label>
+                                    <input type="time" id="sendTime" class="form-control" value="09:00">
+                                </div>
+                                <div class="col-6" style="padding-left: 5px;">
+                                    <label>Timezone</label>
+                                    <select id="timezone" class="form-control" style="font-size: 0.8rem;">
+                                        <option value="America/Jamaica">Jamaica (EST/EDT)</option>
+                                        <option value="America/New_York">New York</option>
+                                        <option value="Europe/London">London</option>
+                                        <option value="UTC">UTC</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <h5 class="mb-2">Configuration</h5>
+                            <div class="mb-2">
+                                <label>Website URL</label>
+                                <input type="url" id="websiteUrl" placeholder="https://example.com">
+                            </div>
+                            <div class="mb-2">
+                                <label>Domain Name</label>
+                                <input type="text" id="domainName" placeholder="example.com">
+                            </div>
+                            <div class="mb-2">
+                                <label>API URLs (Optional)</label>
+                                <div id="apiUrlsContainer">
+                                    <div class="d-flex mb-2">
+                                        <input type="url" name="apiUrl[]" placeholder="https://api.example.com/health"
+                                            class="form-control me-2">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="addApiUrlField()">+ Add
+                                    Another API</button>
+                            </div>
+
+                            <div class="mb-2">
+                                <label>CC Emails (Optional)</label>
+                                <div id="ccEmailsContainer">
+                                    <div class="d-flex mb-2">
+                                        <input type="email" name="ccEmail[]" placeholder="colleague@example.com"
+                                            class="form-control me-2">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="addCcEmailField()">+ Add
+                                    Another Email</button>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mt-3">Create Subscription</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ACTIVE SERVICES LIST -->
+                <div>
+                    <div class="card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="card-title" style="margin-bottom: 0; border: none;">📡 Active Monitored Services
+                            </h4>
+                            <div>
+                                <button class="btn btn-secondary btn-sm" onclick="loadServices()">Refresh List</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table-mobile-cards">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Plan</th>
+                                        <th>Freq</th>
+                                        <th>Next Send</th>
+                                        <th>Last Report</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="servicesTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- REPORT HISTORY (Moved inside this tab) -->
+                    <div class="card mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="card-title" style="margin-bottom: 0; border: none;">📜 Report History</h4>
+                            <button class="btn btn-secondary btn-sm" onclick="loadReportHistory()">Refresh
+                                History</button>
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table-mobile-cards">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Client</th>
+                                        <th>Subject</th>
+                                        <th>Score</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Loading history...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTHLY SUMMARIES TAB -->
+        <div id="tab-summaries" class="fade-in d-none">
+            <div class="card">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                    <h4 class="card-title" style="margin-bottom: 0; border: none;">📊 Monthly Summaries</h4>
+                    <div class="d-flex flex-wrap gap-2 align-items-center w-mobile-100 summary-actions">
+                        <input type="month" id="summaryMonthPicker" class="form-control"
+                            style="width: auto; flex: 1; min-width: 120px;">
+                        <select id="summaryClientSelect" class="form-control"
+                            style="width: auto; flex: 2; min-width: 150px;">
+                            <option value="">Select Client to Generate</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm w-mobile-100" style="flex: 1 1 100%;"
+                            onclick="generateSummaryNow()">Generate &
+                            Send</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table-mobile-cards">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Client</th>
+                                <th>Total Sent</th>
+                                <th>Breakdown (P/W/F)</th>
+                                <th>Overall Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summariesTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Select a client or load summaries...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY DETAIL MODAL -->
+        <div id="summaryModal" class="modal-overlay d-none">
+            <div class="modal-content card fade-in"
+                style="max-width: 600px; width: 90%; margin: 50px auto; overflow-y: auto; max-height: 80vh;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 id="modalTitle" style="margin:0;">Monthly Summary Details</h3>
+                    <button class="btn btn-sm btn-outline-light" onclick="closeModal()">Close</button>
+                </div>
+                <div id="modalBody">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Load Config globally -->
+    <script src="js/config.js"></script>
+
+    <script>
+        // Inline script now has access to window.CONFIG
+        // ... (rest of script)
+        // Load Data on Start
+        document.addEventListener('DOMContentLoaded', () => {
+            loadClients();
+            loadPlans();
+            loadServices();
+            loadReportHistory();
+
+            // Set default month for summary picker
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Current month
+            // Or previous month? Summaries are usually for past month.
+            // Let's set to current.
+            document.getElementById('summaryMonthPicker').value = `${year}-${month}`;
+        });
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.getElementById('tab-scheduled').classList.add('d-none');
+            document.getElementById('tab-summaries').classList.add('d-none');
+
+            // Deactivate nav links
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+            // Show target
+            document.getElementById(`tab-${tabName}`).classList.remove('d-none');
+
+            // Activate link (simple match)
+            if (tabName === 'scheduled') document.querySelector('.nav-link[onclick*="scheduled"]').classList.add('active');
+            if (tabName === 'summaries') {
+                document.querySelector('.nav-link[onclick*="summaries"]').classList.add('active');
+                loadSummaries(); // Load data when tab clicked
+            }
+        }
+
+        function toggleScheduleFields() {
+            const freq = document.getElementById('frequencySelect').value;
+            const weeklyDiv = document.getElementById('weeklyFields');
+            const monthlyDiv = document.getElementById('monthlyFields');
+
+            if (freq === 'weekly') {
+                weeklyDiv.classList.remove('d-none');
+                monthlyDiv.classList.add('d-none');
+            } else {
+                weeklyDiv.classList.add('d-none');
+                monthlyDiv.classList.remove('d-none');
+            }
+        }
+
+        function toggleMonthlyRule() {
+            const rule = document.getElementById('monthlyRuleType').value;
+            if (rule === 'dayOfMonth') {
+                document.getElementById('dayOfMonthInput').classList.remove('d-none');
+                document.getElementById('patternInput').classList.add('d-none');
+            } else {
+                document.getElementById('dayOfMonthInput').classList.add('d-none');
+                document.getElementById('patternInput').classList.remove('d-none');
+            }
+        }
+
+        function toggleClientMode() {
+            const mode = document.querySelector('input[name="clientMode"]:checked').value;
+            const existingDiv = document.getElementById('existingClientDiv');
+            const newDiv = document.getElementById('newClientDiv');
+
+            if (mode === 'existing') {
+                existingDiv.classList.remove('d-none');
+                newDiv.classList.add('d-none');
+            } else {
+                existingDiv.classList.add('d-none');
+                newDiv.classList.remove('d-none');
+            }
+        }
+
+        function addApiUrlField() {
+            const container = document.getElementById('apiUrlsContainer');
+            const div = document.createElement('div');
+            div.className = 'd-flex mb-2';
+            div.innerHTML = `
+                <input type="url" name="apiUrl[]" placeholder="https://api.example.com/health" class="form-control me-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function addCcEmailField() {
+            const container = document.getElementById('ccEmailsContainer');
+            const div = document.createElement('div');
+            div.className = 'd-flex mb-2';
+            div.innerHTML = `
+                <input type="email" name="ccEmail[]" placeholder="colleague@example.com" class="form-control me-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(div);
+        }
+
+        async function loadClients() {
+            try {
+                const res = await fetch('api/clients');
+                const clients = await res.json();
+                const select = document.getElementById('clientSelect');
+                const summarySelect = document.getElementById('summaryClientSelect');
+
+                const opts = clients.map(c => `<option value="${c.id}">${c.name} (${c.email})</option>`).join('');
+
+                select.innerHTML = '<option value="">Select Client</option>' + opts;
+                summarySelect.innerHTML = '<option value="">Select Client to Generate</option>' + opts;
+
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadPlans() {
+            try {
+                const res = await fetch('api/service-plans');
+                const plans = await res.json();
+                const select = document.getElementById('planSelect');
+                select.innerHTML = '<option value="">Select Plan</option>' +
+                    plans.map(p => `<option value="${p.id}">${p.name} ($${p.price})</option>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadServices() {
+            try {
+                const res = await fetch('api/admin/client-services');
+                const services = await res.json();
+                const tbody = document.getElementById('servicesTableBody');
+
+                if (services.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No active subscriptions found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = services.map(s => {
+                    // Format Next Run
+                    let nextRun = 'Pending Calculation';
+                    if (s.next_run_at) {
+                        try {
+                            const d = new Date(s.next_run_at);
+                            nextRun = d.toLocaleString('en-US', {
+                                month: 'short', day: 'numeric',
+                                hour: 'numeric', minute: '2-digit',
+                                timeZoneName: 'short'
+                            });
+                        } catch (e) { nextRun = 'Invalid Date'; }
+                    }
+
+                    return `
+                    <tr>
+                        <td>
+                            <div class="cell-content">
+                                <strong>${s.clients?.name || 'Unknown'}</strong><br>
+                                <small>${s.clients?.email || ''}</small>
+                            </div>
+                        </td>
+                        <td><div class="cell-content">${s.service_plans?.name || 'Unknown Plan'}</div></td>
+                        <td>
+                            <div class="cell-content">
+                                <span class="badge bg-secondary">${s.frequency}</span>
+                                <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">
+                                    ${s.timezone || 'America/Jamaica'}
+                                </div>
+                            </div>
+                        </td>
+                        <td>${nextRun}</td>
+                        <td>${s.last_emailed_at ? new Date(s.last_emailed_at).toLocaleDateString() : 'Never'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
+                        </td>
+                    </tr>
+                `}).join('');
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('servicesTableBody').innerHTML = '<tr><td colspan="6" class="text-center" style="color: var(--danger-color);">Error loading services</td></tr>';
+            }
+        }
+
+        // Submit Form
+        document.getElementById('addServiceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Determine Client ID
+            let clientId = null;
+            const clientMode = document.querySelector('input[name="clientMode"]:checked').value;
+
+            if (clientMode === 'existing') {
+                clientId = document.getElementById('clientSelect').value;
+                if (!clientId) return showAlert('Please select a client', 'error');
+            } else {
+                // Create New Client
+                const name = document.getElementById('newClientName').value;
+                const email = document.getElementById('newClientEmail').value;
+                if (!name || !email) return showAlert('Please enter client name and email', 'error');
+
+                try {
+                    const res = await fetch('api/clients/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email })
+                    });
+                    const data = await res.json();
+                    if (data.error) return showAlert('Error creating client: ' + data.error, 'error');
+                    clientId = data.client.id;
+                    // Reload clients silently to update list
+                    loadClients();
+                } catch (err) {
+                    return showAlert('Failed to create client', 'error');
+                }
+            }
+
+            const planId = document.getElementById('planSelect').value;
+            const frequency = document.getElementById('frequencySelect').value;
+            const website = document.getElementById('websiteUrl').value;
+            const domain = document.getElementById('domainName').value;
+
+            // Schedule Fields
+            const sendTime = document.getElementById('sendTime').value; // HH:MM
+            const timezone = document.getElementById('timezone').value;
+            let sendDayOfWeek = null;
+            let sendDayOfMonth = null;
+            let sendWeekOfMonth = null;
+
+            if (frequency === 'weekly') {
+                sendDayOfWeek = parseInt(document.getElementById('sendDayOfWeek').value);
+            } else {
+                const rule = document.getElementById('monthlyRuleType').value;
+                if (rule === 'dayOfMonth') {
+                    sendDayOfMonth = parseInt(document.getElementById('sendDayOfMonth').value);
+                } else {
+                    sendWeekOfMonth = parseInt(document.getElementById('sendWeekOfMonth').value);
+                    sendDayOfWeek = parseInt(document.getElementById('patternDayOfWeek').value); // Reuse variable
+                }
+            }
+
+            // Gather multiple API URLs
+            const apiInputs = document.querySelectorAll('input[name="apiUrl[]"]');
+            const apiUrls = Array.from(apiInputs).map(input => input.value).filter(val => val.trim() !== '');
+
+            if (!planId) return showAlert('Select Plan', 'error');
+
+            const payload = {
+                clientId, planId, frequency,
+                sendTime, timezone,
+                sendDayOfWeek, sendDayOfMonth, sendWeekOfMonth,
+                serviceMeta: {
+                    website_url: website,
+                    domain: domain,
+                    api_urls: apiUrls // Send array
+                }
+            };
+
+            // Gather CC Emails
+            const ccInputs = document.querySelectorAll('input[name="ccEmail[]"]');
+            const ccEmails = Array.from(ccInputs).map(input => input.value).filter(val => val.trim() !== '');
+
+            if (ccEmails.length > 0) {
+                payload.serviceMeta.cc_emails = ccEmails;
+            }
+
+            try {
+                const res = await fetch('api/client-services/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await showAlert('Service Created Successfully!', 'success');
+                    document.getElementById('addServiceForm').reset();
+                    // Reset mode defaults
+                    document.querySelector('input[value="existing"]').checked = true;
+                    toggleClientMode();
+                    toggleScheduleFields(); // Reset visibility
+
+                    loadServices(); // Refresh
+                } else {
+                    showAlert('Error: ' + (data.error || 'Unknown'), 'error');
+                }
+            } catch (e) { showAlert('Request Failed', 'error'); }
+        });
+
+        async function runCheck(serviceId) {
+            if (!(await showConfirm('Run system check for this client now?', 'info', 'Run Now'))) return;
+
+            // Show Loader
+            const loader = document.getElementById('loadingOverlay');
+            if (loader) loader.classList.remove('d-none');
+
+            try {
+                const res = await fetch(`api/client-care-pulse/run-now/${serviceId}`, { method: 'POST' });
+                const data = await res.json();
+
+                // Hide Loader BEFORE showing alert
+                if (loader) loader.classList.add('d-none');
+
+                if (data.result && data.result.success) {
+                    await showAlert(`✅ Check Completed Successfully!\n\nScore: ${data.result.score}%\nRecipient: ${data.result.recipient}\n\nReport has been sent.`, 'success');
+                } else if (data.result && !data.result.success) {
+                    await showAlert(`❌ Check Failed: ${data.result.error}`, 'error');
+                } else {
+                    await showAlert(data.message || 'Check run completed', 'info');
+                }
+
+                loadServices();
+                loadReportHistory(); // Update history after run
+            } catch (e) {
+                // Hide Loader BEFORE showing error
+                if (loader) loader.classList.add('d-none');
+                showAlert('Error running check: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteService(serviceId) {
+            if (!(await showConfirm('Are you sure you want to delete this monitored service?', 'danger', 'Delete'))) return;
+            try {
+                const res = await fetch(`api/client-services/delete/${serviceId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    await showAlert('Service deleted successfully', 'success');
+                    loadServices();
+                } else {
+                    showAlert('Error deleting service: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showAlert('Failed to delete service', 'error');
+            }
+        }
+
+        async function loadReportHistory() {
+            try {
+                const res = await fetch('api/client-care-pulse/reports');
+                const reports = await res.json();
+                const tbody = document.getElementById('historyTableBody');
+
+                if (reports.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No reports sent yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = reports.map(r => `
+                <tr>
+                    <td><div class="cell-content">${new Date(r.sent_at).toLocaleString()}</div></td>
+                    <td><div class="cell-content">${r.client_services?.clients?.name || 'Unknown'}</div></td>
+                    <td><div class="cell-content">${r.email_subject || 'Client Care Pulse Report'}</div></td>
+                    <td><div class="cell-content"><span class="badge bg-primary">${r.checklist_runs?.score || 0}%</span></div></td>
+                    <td><div class="cell-content"><span class="badge ${r.status === 'sent' ? 'bg-success' : 'bg-danger'}">${r.status}</span></div></td>
+                </tr>
+            `).join('');
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('historyTableBody').innerHTML = '<tr><td colspan="5" class="text-center" style="color: var(--danger-color);">Error loading history</td></tr>';
+            }
+        }
+
+        async function loadSummaries() {
+            // Loading summaries for ALL clients is tricky if we don't have an endpoint for that.
+            // But we can iterate active clients? Or just empty state until client selected?
+            // Let's just create a simple endpoint to list ALL summaries or last 20.
+            // Since we implemented `monthly-summaries/:clientId`, we need a client ID.
+            // For now, prompt user to select.
+            document.getElementById('summariesTableBody').innerHTML = '<tr><td colspan="6" class="text-center">Please select a client to view/generate summaries.</td></tr>';
+        }
+
+        async function generateSummaryNow() {
+            const clientId = document.getElementById('summaryClientSelect').value;
+            const month = document.getElementById('summaryMonthPicker').value;
+
+            if (!clientId || !month) return showAlert('Select Client and Month', 'error');
+
+            try {
+                if (!(await showConfirm(`Generate summary for ${month}?`, 'info', 'Generate'))) return;
+
+                const res = await fetch('api/client-care-pulse/monthly-summary/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId, month })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    await showAlert('Summary Generated!', 'success');
+                    // Fetch and display
+                    loadClientSummaries(clientId);
+                } else {
+                    showAlert('Error: ' + data.error, 'error');
+                }
+            } catch (e) { showAlert('Failed', 'error'); }
+        }
+
+        // Helper to load specific client summaries
+        async function loadClientSummaries(clientId) {
+            try {
+                const res = await fetch(`api/client-care-pulse/monthly-summaries/${clientId}`);
+                const data = await res.json();
+                const tbody = document.getElementById('summariesTableBody');
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No summaries found for this client.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(s => `
+                    <tr>
+                        <td>${s.month}</td>
+                        <td><strong>${s.clients?.name || 'Unknown'}</strong></td> 
+                        <td>${s.total_reports_sent}</td>
+                        <td>✅${s.pass_count} ⚠️${s.warn_count} ❌${s.fail_count}</td>
+                        <td>${s.overall_status}</td>
+                        <td><button class="btn btn-sm btn-info" onclick="viewSummary('${s.id}')">View</button></td>
+                    </tr>
+                `).join('');
+
+                // Cache data globally for viewing
+                window._loadedSummaries = data;
+
+            } catch (e) { console.error(e); }
+        }
+
+        function viewSummary(summaryId) {
+            const summary = window._loadedSummaries.find(s => s.id === summaryId);
+            if (!summary) return;
+
+            const modal = document.getElementById('summaryModal');
+            const modalBody = document.getElementById('modalBody');
+            const modalTitle = document.getElementById('modalTitle');
+
+            modalTitle.innerText = `Summary for ${summary.month}`;
+
+            const topIssues = (summary.top_issues_json || []).map(i => `
+                <div class="issue-item">
+                    <span class="issue-count">${i.count}x</span>
+                    <span>${i.issue}</span>
+                </div>
+            `).join('') || '<p class="text-muted">No recurring issues detected.</p>';
+
+            modalBody.innerHTML = `
+                <div class="mb-4 text-center">
+                    <div class="badge ${summary.overall_status === 'Mostly Healthy' ? 'bg-success' : 'bg-warning'} mb-2" style="font-size: 1rem; padding: 10px 20px;">
+                        ${summary.overall_status}
+                    </div>
+                </div>
+
+                <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+                    <div class="card text-center" style="padding: 10px;">
+                        <h3 class="mb-0 text-success">${summary.pass_count}</h3>
+                        <small>Passed</small>
+                    </div>
+                    <div class="card text-center" style="padding: 10px;">
+                        <h3 class="mb-0 text-warning">${summary.warn_count}</h3>
+                        <small>Warning</small>
+                    </div>
+                    <div class="card text-center" style="padding: 10px;">
+                        <h3 class="mb-0 text-danger">${summary.fail_count}</h3>
+                        <small>Failed</small>
+                    </div>
+                </div>
+
+                <h5 class="mb-2">Top Issues</h5>
+                ${topIssues}
+
+                <div class="mt-4 p-3" style="background: rgba(255,255,255,0.03); border-radius: 10px; border-left: 4px solid var(--secondary-color);">
+                    <h5 class="mb-2">Recommendations</h5>
+                    <p class="mb-0" style="color: var(--text-main); font-size: 0.95rem;">${summary.recommendations_text || 'System is running smoothly. Continue regular maintenance.'}</p>
+                </div>
+            `;
+
+            modal.classList.remove('d-none');
+        }
+
+        function closeModal() {
+            document.getElementById('summaryModal').classList.add('d-none');
+        }
+
+        // --- CUSTOM CONFIRM MODAL ---
+        // --- CUSTOM ALERT MODAL ---
+        function showAlert(message, type = 'success', title = null) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('alertModal');
+                const titleEl = document.getElementById('alertTitle');
+                const msgEl = document.getElementById('alertMessage');
+                const iconEl = document.getElementById('alertIcon');
+                const okBtn = document.getElementById('alertOkBtn');
+
+                msgEl.innerText = message;
+
+                // Set defaults based on type
+                let iconHtml = '';
+                let defaultTitle = '';
+                let btnClass = 'btn-primary';
+
+                if (type === 'success') {
+                    iconHtml = '<i class="fas fa-check-circle text-success"></i>';
+                    defaultTitle = 'Success';
+                    btnClass = 'btn-success';
+                } else if (type === 'error') {
+                    iconHtml = '<i class="fas fa-times-circle text-danger"></i>';
+                    defaultTitle = 'Error';
+                    btnClass = 'btn-danger';
+                } else {
+                    iconHtml = '<i class="fas fa-info-circle text-info"></i>';
+                    defaultTitle = 'Info';
+                    btnClass = 'btn-primary';
+                }
+
+                iconEl.innerHTML = iconHtml;
+                titleEl.innerText = title || defaultTitle;
+                okBtn.className = `btn ${btnClass} w-100`;
+
+                modal.classList.remove('d-none');
+
+                const handleOk = () => {
+                    modal.classList.add('d-none');
+                    okBtn.removeEventListener('click', handleOk);
+                    resolve();
+                };
+
+                okBtn.addEventListener('click', handleOk);
+            });
+        }
+
+        function showConfirm(message, type = 'info', confirmText = 'OK') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                const title = document.getElementById('confirmTitle');
+                const msg = document.getElementById('confirmMessage');
+                const icon = document.getElementById('confirmIcon');
+                const confirmBtn = document.getElementById('confirmBtn');
+                const cancelBtn = document.getElementById('cancelBtn');
+
+                msg.innerText = message;
+                confirmBtn.innerText = confirmText;
+
+                // Adjust icon and title based on type
+                if (type === 'danger') {
+                    icon.innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i>';
+                    title.innerText = 'Confirmation Required';
+                    confirmBtn.className = 'btn btn-danger';
+                } else {
+                    icon.innerHTML = '<i class="fas fa-info-circle text-info"></i>';
+                    title.innerText = 'System Check';
+                    confirmBtn.className = 'btn btn-primary';
+                }
+
+                modal.classList.remove('d-none');
+
+                const handleConfirm = () => {
+                    modal.classList.add('d-none');
+                    cleanup();
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    modal.classList.add('d-none');
+                    cleanup();
+                    resolve(false);
+                };
+
+                const cleanup = () => {
+                    confirmBtn.removeEventListener('click', handleConfirm);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                };
+
+                confirmBtn.addEventListener('click', handleConfirm);
+                cancelBtn.addEventListener('click', handleCancel);
+            });
+        }
+
+        // Listen to select change
+        document.getElementById('summaryClientSelect').addEventListener('change', (e) => {
+            if (e.target.value) loadClientSummaries(e.target.value);
+        });
+        // Helper to add data-labels to tables for mobile cards
+        function applyTableLabels() {
+            const tables = document.querySelectorAll('.table-mobile-cards');
+            tables.forEach(table => {
+                const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText);
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach((cell, i) => {
+                        if (headers[i] && !cell.hasAttribute('data-label')) {
+                            cell.setAttribute('data-label', headers[i]);
+                        }
+                    });
+                });
+            });
+        }
+
+        // Apply labels after dynamic content loads
+        const observer = new MutationObserver(applyTableLabels);
+        observer.observe(document.body, { childList: true, subtree: true });
+        applyTableLabels();
+    </script>
+
+    <!-- CUSTOM CONFIRM MODAL -->
+    <div id="confirmModal" class="modal-overlay d-none">
+        <div class="modal-content confirm-modal">
+            <div class="modal-body">
+                <span id="confirmIcon" class="confirm-icon">
+                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                </span>
+                <h3 id="confirmTitle" class="confirm-title">Are you sure?</h3>
+                <p id="confirmMessage" class="confirm-message">This action cannot be undone.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button id="cancelBtn" class="btn btn-secondary w-100">Cancel</button>
+                    <button id="confirmBtn" class="btn btn-danger w-100">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM ALERT MODAL -->
+    <div id="alertModal" class="modal-overlay d-none">
+        <div class="modal-content confirm-modal">
+            <div class="modal-body">
+                <span id="alertIcon" class="confirm-icon">
+                    <i class="fas fa-check-circle text-success"></i>
+                </span>
+                <h3 id="alertTitle" class="confirm-title">Success</h3>
+                <p id="alertMessage" class="confirm-message">Operation completed.</p>
+                <div class="d-flex justify-content-center">
+                    <button id="alertOkBtn" class="btn btn-primary w-100">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay d-none" style="text-align: center;">
+        <div class="spinner"></div>
+        <h3 style="margin-bottom: 10px;">Processing Request...</h3>
+        <p class="text-muted">Please wait while we contact the client's system.</p>
+    </div>
+
+</body>
+
+</html>

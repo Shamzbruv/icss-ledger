@@ -1,0 +1,42 @@
+# .htaccess for ICSS Command Center & Public Site
+
+# 1. Force HTTPS
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# 2. Directory Index
+DirectoryIndex index.html index.php
+
+# 3. Protect Node App Source Code
+# Prevent direct access to .env, package.json, or server.js if they are in public_html (they shouldn't be, but just in case)
+<FilesMatch "^\.env|package\.json|server\.js">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 4. MIME Types / Caching (Basic)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType text/x-javascript "access plus 1 month"
+    ExpiresByType application/x-shockwave-flash "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresDefault "access plus 2 days"
+</IfModule>
+
+# 5. Passthrough for Node App (if using Passenger or similar, this might be handled by cPanel)
+# But standard cPanel Node setup usually handles the mapping via the UI.
+# If you need to reserve /command for the app:
+# PassengerAppRoot "/home/USER/icss-command-center"
+# PassengerBaseURI "/command"
+# PassengerNodejs "/usr/bin/node"
+# PassengerAppType node
+# PassengerStartupFile server.js
