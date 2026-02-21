@@ -8,6 +8,9 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_APP_PASSWORD,
     },
+    // Force Node to use IPv4 (fixes Render -> Gmail IPv6 routing hang)
+    tls: { rejectUnauthorized: false }, // Optional, sometimes helps
+    family: 4,
     // Explicit timeouts to prevent Render 504 hanging
     connectionTimeout: 10000,
     greetingTimeout: 10000,
