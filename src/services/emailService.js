@@ -1,86 +1,63 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SMTPS instead of STARTTLS
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD,
-    },
-    // Force Node to use IPv4 and specific TLS settings
-    family: 4,
-    tls: {
-        rejectUnauthorized: false, // Optional, sometimes helps
-        ciphers: 'SSLv3', // Force older cipher for stricter firewalls
-    },
-    // Explicit timeouts to prevent Render 504 hanging
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-});
+// Initialize Resend
+// It uses process.env.RESEND_API_KEY automatically if no argument is passed,
+// but we will explicitly pass it to be safe.
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * 
- * @param {string} toEmail 
- * @param {string} subject 
- * @param {string} text 
- * @param {string} html
- * @param {Buffer} attachmentBuffer 
- * @param {string} attachmentName 
+ * Sends an email using Resend API
+ * @param {string} to - Recipient email address
+ * @param {string} subject - Email subject
+ * @param {string} text - Plain text body
+ * @param {string} html - HTML body
+ * @param {Buffer} pdfBuffer - Optional PDF buffer to attach
+ * @param {string} invoiceNumber - Optional invoice number for the attachment name
+ * @param {string} bcc - Optional BCC email address
+ * @param {string|string[]} cc - Optional CC email address(es)
+ * @returns {Promise<void>}
  */
-/**
- * 
- * @param {string} toEmail 
- * @param {string} subject 
- * @param {string} text 
- * @param {string} html
- * @param {Buffer} attachmentBuffer 
- * @param {string} attachmentName 
- * @param {string} bccEmail 
- */
-/**
- * 
- * @param {string} toEmail 
- * @param {string} subject 
- * @param {string} text 
- * @param {string} html
- * @param {Buffer} attachmentBuffer 
- * @param {string} attachmentName 
- * @param {string} bccEmail 
- * @param {string|string[]} ccEmail 
- */
-async function sendInvoiceEmail(toEmail, subject, text, html, attachmentBuffer, attachmentName, bccEmail, ccEmail) {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: toEmail,
-        subject: subject,
-        text: text,
-        html: html, // HTML body
-        attachments: attachmentBuffer ? [
-            {
-                filename: attachmentName,
-                content: attachmentBuffer
-            }
-        ] : []
-    };
-
-    if (bccEmail) {
-        mailOptions.bcc = bccEmail;
-    }
-
-    if (ccEmail) {
-        mailOptions.cc = ccEmail;
-    }
-
+async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoiceNumber = null, bcc = null, cc = null) {
     try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent: ' + info.response);
-        return info;
+        const mailOptions = {
+            // Must match the domain you verified in Resend (e.g. send.icreatesolutionsandservices.com or just the root)
+            // It is usually best to use a subdomain like invoices@ or billing@
+            from: 'iCreate Solutions <invoices@icreatesolutionsandservices.com>',
+            to: Array.isArray(to) ? to : [to],
+            // Resend allows multiple CC/BCC if provided as arrays
+            subject: subject,
+            text: text,
+            html: html,
+        };
+
+        if (pdfBuffer && invoiceNumber) {
+            mailOptions.attachments = [
+                {
+                    filename: `${invoiceNumber}.pdf`,
+                    content: pdfBuffer,
+                    // Resend expects base64 or Buffer directly in 'content'
+                },
+            ];
+        }
+
+        if (bcc) {
+            mailOptions.bcc = Array.isArray(bcc) ? bcc : [bcc];
+        }
+
+        if (cc) {
+            mailOptions.cc = Array.isArray(cc) ? cc : [cc];
+        }
+
+        // Use Resend SDK to send the email
+        const data = await resend.emails.send(mailOptions);
+
+        console.log('Resend Email sent successfully:', data.id);
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error sending email via Resend:', error);
         throw error;
     }
 }
 
-module.exports = { sendInvoiceEmail };
+module.exports = {
+    sendInvoiceEmail,
+};
