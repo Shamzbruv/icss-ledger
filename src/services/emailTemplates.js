@@ -231,7 +231,7 @@ Reply to this email if you have questions.
             </ul>
         </div>
 
-        ${(plan.name === 'Hosting + Domain' || plan.name === 'Content Refresh' || plan.name === 'Basic Hosting') ? `
+        ${(plan.name === 'Hosting + Domain' || plan.name === 'Professional Hosting' || plan.name === 'Basic Hosting') ? `
         <div class="section" style="margin-top: 30px; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e7;">
             <div style="background: linear-gradient(135deg, #0056b3 0%, #003d82 100%); padding: 15px 20px;">
                 <h3 style="color: white; margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center;">🔒 Pro Maintenance Insights</h3>
@@ -254,7 +254,18 @@ Reply to this email if you have questions.
                 </div>
             </div>
         </div>
-        ` : ''}
+        ` : `
+        <div class="section" style="margin-top: 30px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e7;">
+            <div style="background: linear-gradient(135deg, #0056b3 0%, #003d82 100%); padding: 15px 20px;">
+                <h3 style="color: white; margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center;">🛡️ Pro Maintenance Insights</h3>
+            </div>
+            <div style="padding: 20px; background: #fdfdfd;">
+                <p style="margin-top: 0; font-family: monospace; font-size: 13px; color: #28a745;">> Analyzing plugin vulnerabilities... [0] Outdated detected.</p>
+                <p style="font-family: monospace; font-size: 13px; color: #28a745;">> Database optimization scan... Optimal performance confirmed.</p>
+                <p style="font-family: monospace; font-size: 13px; margin-bottom: 0; color: #28a745;">> Running security perimeter check... Firewall rules actively blocking threats.</p>
+            </div>
+        </div>
+        `}
 
         <div style="margin-top: 30px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
             <p style="margin:0;"><strong>Need help?</strong> Reply to this email to schedule a support session.</p>
