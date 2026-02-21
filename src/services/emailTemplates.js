@@ -231,6 +231,31 @@ Reply to this email if you have questions.
             </ul>
         </div>
 
+        ${(plan.name === 'Hosting + Domain' || plan.name === 'Content Refresh' || plan.name === 'Basic Hosting') ? `
+        <div class="section" style="margin-top: 30px; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e7;">
+            <div style="background: linear-gradient(135deg, #0056b3 0%, #003d82 100%); padding: 15px 20px;">
+                <h3 style="color: white; margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center;">🔒 Pro Maintenance Insights</h3>
+            </div>
+            
+            <div style="padding: 20px; position: relative;">
+                <!-- Simulated blurred content -->
+                <div style="filter: blur(5px); opacity: 0.6; user-select: none;">
+                    <p style="margin-top: 0; font-family: monospace; font-size: 13px;">Analyzing plugin vulnerabilities... [3] Outdated detected.</p>
+                    <p style="font-family: monospace; font-size: 13px;">Database optimization scan... 450MB overhead cleared.</p>
+                    <p style="font-family: monospace; font-size: 13px; margin-bottom: 0;">Running security perimeter check... Firewall rules updated.</p>
+                </div>
+                
+                <!-- Overlay CTA -->
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.85); text-align: center; padding: 20px;">
+                    <span style="font-size: 24px; margin-bottom: 10px;">🛡️</span>
+                    <h4 style="margin: 0 0 8px 0; color: #1d1d1f; font-size: 16px;">Elevate Your Digital Security</h4>
+                    <p style="margin: 0 0 15px 0; color: #424245; font-size: 13px; max-width: 80%;">Unlock comprehensive security scans, database optimization, and proactive plugin management.</p>
+                    <a href="mailto:support@icreatesolutionsandservices.com?subject=Upgrade%20to%20Maintenance%20Plan" style="display: inline-block; background: #0056b3; color: white; text-decoration: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;">Upgrade to Maintenance Plan</a>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+
         <div style="margin-top: 30px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
             <p style="margin:0;"><strong>Need help?</strong> Reply to this email to schedule a support session.</p>
         </div>
