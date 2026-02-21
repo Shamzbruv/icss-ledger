@@ -30,3 +30,4 @@ jobs:
         SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_KEY }}
         EMAIL_USER: ${{ secrets.EMAIL_USER }}
         EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+        RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
