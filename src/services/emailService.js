@@ -2,12 +2,16 @@ const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // use false for STARTTLS; true for use on port 465
+    port: 465,
+    secure: true, // Use SMTPS instead of STARTTLS
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_APP_PASSWORD,
     },
+    // Explicit timeouts to prevent Render 504 hanging
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
 });
 
 /**
