@@ -7,7 +7,7 @@ const CONFIG = {
         if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
             return "http://localhost:3000"; // Local Backend Port
         }
-        return "https://icss-ledger.onrender.com"; // Production Backend
+        return "https://icss-ledger-production.up.railway.app"; // Production Backend
     }
 };
 

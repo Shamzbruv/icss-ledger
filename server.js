@@ -31,7 +31,8 @@ const allowedOrigins = [
     'http://127.0.0.1:3002',
     process.env.CLIENT_URL, // e.g. https://your-app.netlify.app
     'https://icss-command-center.netlify.app',
-    'https://icss-ledger.onrender.com'
+    'https://icss-ledger.onrender.com',
+    'https://icss-ledger-production.up.railway.app'
 ].filter(Boolean);
 
 const corsOptions = {
