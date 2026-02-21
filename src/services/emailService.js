@@ -22,12 +22,14 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
         const mailOptions = {
             // Must match the domain you verified in Resend (e.g. send.icreatesolutionsandservices.com or just the root)
             // It is usually best to use a subdomain like invoices@ or billing@
-            from: 'iCreate Solutions <invoices@icreatesolutionsandservices.com>',
+            from: 'iCreate Solutions <support@icreatesolutionsandservices.com>',
             to: Array.isArray(to) ? to : [to],
             // Resend allows multiple CC/BCC if provided as arrays
             subject: subject,
             text: text,
             html: html,
+            // Ensure client replies go back to the primary Gmail inbox
+            reply_to: process.env.EMAIL_USER || 'iCreatesolutions.ja@gmail.com',
         };
 
         if (pdfBuffer && invoiceNumber) {
