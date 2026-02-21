@@ -51,9 +51,14 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
         }
 
         // Use Resend SDK to send the email
-        const data = await resend.emails.send(mailOptions);
+        const { data, error } = await resend.emails.send(mailOptions);
 
-        console.log('Resend Email sent successfully:', data.id);
+        if (error) {
+            console.error('Resend API Error:', error);
+            throw new Error(error.message || 'Failed to send email via Resend');
+        }
+
+        console.log('Resend Email sent successfully:', data ? data.id : 'No ID returned');
     } catch (error) {
         console.error('Error sending email via Resend:', error);
         throw error;
