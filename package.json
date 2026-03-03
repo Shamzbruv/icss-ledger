@@ -16,6 +16,7 @@
     "express-session": "^1.17.3",
     "nodemailer": "^6.9.7",
     "pdfkit": "^0.14.0",
+    "pg": "^8.19.0",
     "resend": "^6.9.2"
   },
   "engines": {

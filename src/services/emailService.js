@@ -3,7 +3,7 @@ const { Resend } = require('resend');
 // Initialize Resend
 // It uses process.env.RESEND_API_KEY automatically if no argument is passed,
 // but we will explicitly pass it to be safe.
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_for_local_dev');
 
 /**
  * Sends an email using Resend API
@@ -65,6 +65,34 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
     }
 }
 
+/**
+ * Sends a generic email using Resend API (used for notifications like renewals)
+ */
+async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <no-reply@icreatesolutionsandservices.com>') {
+    try {
+        const mailOptions = {
+            from: fromEmail,
+            to: Array.isArray(to) ? to : [to],
+            subject: subject,
+            html: html
+        };
+
+        const { data, error } = await resend.emails.send(mailOptions);
+
+        if (error) {
+            console.error('Resend Generic API Error:', error);
+            return false;
+        }
+
+        console.log('Resend Generic Email sent successfully:', data ? data.id : 'No ID returned');
+        return true;
+    } catch (error) {
+        console.error('Error sending generic email via Resend:', error);
+        return false;
+    }
+}
+
 module.exports = {
     sendInvoiceEmail,
+    sendEmail
 };

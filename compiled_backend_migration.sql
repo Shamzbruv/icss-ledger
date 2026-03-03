@@ -132,3 +132,14 @@ BEGIN
 END $$;
 
 COMMIT;
+
+-- Added 2026-02-21: Add checklist template for Content Refresh Plan
+INSERT INTO checklist_templates (plan_id, items_json) 
+VALUES (
+    '54d88327-e5bd-47d2-95aa-b60bc7baafd5', 
+    '[
+      {"code": "UPTIME", "type": "auto", "label": "Website Availability"},
+      {"code": "PERF_LIGHT", "type": "auto", "label": "Performance Check"},
+      {"code": "API_HEALTH", "type": "auto", "label": "API Integrations"}
+    ]'::jsonb
+);

@@ -1,0 +1,1 @@
+{"error":"column fixed_assets.purchase_date does not exist"}

@@ -1,0 +1,6 @@
+{
+  "code": "23502",
+  "details": "Failing row contains (01bf1960-af41-4424-b0b3-a97465a31387, 123b8bee-baab-4763-a152-680cb80981e8, 1000, Cash, asset, null, null, t, t, null, null, 2026-02-27 19:56:44.1373+00).",
+  "hint": null,
+  "message": "null value in column \"normal_balance\" of relation \"chart_of_accounts\" violates not-null constraint"
+}

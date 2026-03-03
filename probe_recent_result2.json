@@ -1,0 +1,167 @@
+{
+  "email_logs": "None",
+  "service_logs": "None",
+  "client_services_sample": [
+    {
+      "id": "ca42fe49-d9b5-4ebe-affd-29251c9d24a9",
+      "client_id": "0579c85f-6b54-4606-8543-be6e2b499300",
+      "plan_id": "751f29e0-acda-4cc6-a23e-84931e68e43e",
+      "status": "active",
+      "frequency": "weekly",
+      "send_day": null,
+      "send_time": "16:00",
+      "start_date": "2026-02-21",
+      "service_meta_json": {
+        "domain": "dappliancegenie.com",
+        "api_urls": [
+          "https://wa.me/18765628349"
+        ],
+        "cc_emails": [
+          "hudsonwhendie@gmail.com"
+        ],
+        "website_url": "https://dappliancegenie.com"
+      },
+      "last_emailed_at": "2026-02-27T16:04:52.705+00:00",
+      "created_at": "2026-02-21T06:02:17.315317+00:00",
+      "updated_at": "2026-02-21T06:02:17.315317+00:00",
+      "end_date": null,
+      "timezone": "America/Jamaica",
+      "send_day_of_week": 5,
+      "send_day_of_month": null,
+      "send_week_of_month": null,
+      "next_run_at": "2026-03-06T16:00:00+00:00",
+      "next_billing_date": "2026-03-27"
+    },
+    {
+      "id": "ad16cd17-6736-47ce-919f-4e3f838ae367",
+      "client_id": "363787f4-5d66-4c84-b9be-9dcfe845c67d",
+      "plan_id": "751f29e0-acda-4cc6-a23e-84931e68e43e",
+      "status": "active",
+      "frequency": "weekly",
+      "send_day": null,
+      "send_time": "17:00",
+      "start_date": "2026-02-21",
+      "service_meta_json": {
+        "domain": "icraveghuchiscateringservices.com",
+        "api_urls": [
+          "https://script.google.com/macros/s/AKfycbyXFrQdbNFO1Ute8cF_sM1T7Um0SJmmlY_ukistaphdcMoU1ECYmGGUdNar4ouHYzE/exec",
+          "https://maps.googleapis.com/maps/api/js",
+          "https://www.google.com/maps/search/?api=1&query=ICRAVE%20Ghuchi%27s%2C%20Kingston%20Jamaica",
+          "https://search.google.com/local/writereview?placeid=ChIJ0SQTVABB244ROTpJdLq1qGk",
+          "https://wa.me/18763434147",
+          "https://chat.whatsapp.com/ElZT3CkzxpE4E8K7xl9RTD?mode=wwt",
+          "https://drive.google.com/uc?export=view&id={id}",
+          "https://lh3.googleusercontent.com/d/{id}=w2400",
+          "https://i.postimg.cc/dtBZtVbG/20221020-051948-1.png",
+          "https://i.postimg.cc/g2GhpZr4/Untitled-design-1.png"
+        ],
+        "cc_emails": [
+          "Kemar.white@hotmail.com",
+          "shauna-kay-ok@hotmail.com"
+        ],
+        "website_url": "https://icraveghuchiscateringservices.com"
+      },
+      "last_emailed_at": "2026-02-27T17:04:52.724+00:00",
+      "created_at": "2026-02-21T05:34:06.6029+00:00",
+      "updated_at": "2026-02-21T05:34:06.6029+00:00",
+      "end_date": null,
+      "timezone": "America/Jamaica",
+      "send_day_of_week": 5,
+      "send_day_of_month": null,
+      "send_week_of_month": null,
+      "next_run_at": "2026-03-06T17:00:00+00:00",
+      "next_billing_date": "2026-03-27"
+    },
+    {
+      "id": "8926a24c-742c-4fca-89bc-953405f2b831",
+      "client_id": "a8a66fcc-2d3c-4ace-b1c2-b806f18f1825",
+      "plan_id": "751f29e0-acda-4cc6-a23e-84931e68e43e",
+      "status": "active",
+      "frequency": "weekly",
+      "send_day": null,
+      "send_time": "09:00",
+      "start_date": "2026-02-17",
+      "service_meta_json": {
+        "domain": "icreatesolutionsandservices.com",
+        "api_urls": [],
+        "cc_emails": [
+          "halonalarissa@gmail.com"
+        ],
+        "website_url": "https://icreatesolutionsandservices.com/"
+      },
+      "last_emailed_at": "2026-02-28T09:04:52.739+00:00",
+      "created_at": "2026-02-17T21:41:59.307524+00:00",
+      "updated_at": "2026-02-17T21:41:59.307524+00:00",
+      "end_date": null,
+      "timezone": "America/Jamaica",
+      "send_day_of_week": 6,
+      "send_day_of_month": null,
+      "send_week_of_month": null,
+      "next_run_at": "2026-03-07T09:00:00+00:00",
+      "next_billing_date": "2026-03-27"
+    },
+    {
+      "id": "6ba9a005-7d2e-45b8-8b15-54d76eda10c3",
+      "client_id": "1caec460-30be-466a-87e0-b22372f66236",
+      "plan_id": "eb194f3b-8627-4a1d-94a6-3d40d324a20b",
+      "status": "active",
+      "frequency": "weekly",
+      "send_day": null,
+      "send_time": "12:00",
+      "start_date": "2026-02-21",
+      "service_meta_json": {
+        "domain": "tlcfamilyservices.com",
+        "api_urls": [
+          "https://hooks.zapier.com/hooks/catch/11198202/u6j4olq/",
+          "https://hooks.zapier.com/hooks/catch/11198202/u6jdo90/",
+          "https://hooks.zapier.com/hooks/catch/11198202/u6qjrfm/",
+          "https://api.brevo.com/v3/smtp/email",
+          "https://formspree.io/f/mzzvjdow",
+          "https://tlcfamilyservices.us19.list-manage.com/subscribe/post?u=005430ac176f7ff244f286e92&id=7ac99b39ae&f_id=00f7c2e1f0"
+        ],
+        "cc_emails": [
+          "recardomillwood@gmail.com"
+        ],
+        "website_url": "https://tlcfamilyservices.com"
+      },
+      "last_emailed_at": "2026-03-01T12:04:55.881+00:00",
+      "created_at": "2026-02-21T05:15:38.073615+00:00",
+      "updated_at": "2026-02-21T05:15:38.073615+00:00",
+      "end_date": null,
+      "timezone": "America/New_York",
+      "send_day_of_week": 0,
+      "send_day_of_month": null,
+      "send_week_of_month": null,
+      "next_run_at": "2026-03-08T12:00:00+00:00",
+      "next_billing_date": "2026-03-27"
+    },
+    {
+      "id": "ab186ce9-b82e-4cea-b77e-1612c87ed3da",
+      "client_id": "3252f661-b0c2-45e3-9573-7bba3f716a58",
+      "plan_id": "54d88327-e5bd-47d2-95aa-b60bc7baafd5",
+      "status": "active",
+      "frequency": "weekly",
+      "send_day": null,
+      "send_time": "13:00",
+      "start_date": "2026-02-21",
+      "service_meta_json": {
+        "domain": "tbodestinationplanner.com",
+        "api_urls": [],
+        "cc_emails": [
+          "icreatesolutions.ja@gmail.com"
+        ],
+        "website_url": "https://tbodestinationplanner.com"
+      },
+      "last_emailed_at": "2026-03-02T13:04:56.932+00:00",
+      "created_at": "2026-02-21T05:24:23.373948+00:00",
+      "updated_at": "2026-02-21T05:24:23.373948+00:00",
+      "end_date": null,
+      "timezone": "America/Jamaica",
+      "send_day_of_week": 1,
+      "send_day_of_month": null,
+      "send_week_of_month": null,
+      "next_run_at": "2026-03-09T13:00:00+00:00",
+      "next_billing_date": "2026-03-27"
+    }
+  ]
+}

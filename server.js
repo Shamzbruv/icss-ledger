@@ -235,6 +235,26 @@ const { getInvoiceEmailContent } = require('./src/services/emailTemplates');
 const { sendPaymentReceipt } = require('./src/services/automationService');
 const { computeInvoiceState, validateInvoiceState } = require('./src/services/invoiceStateService');
 
+// --- ACCOUNTING MODULE IMPORTS ---
+const {
+    getChartOfAccounts, getTrialBalance, getJournalEntries,
+    lockPeriod, getClosedPeriods, getAccountingSettings, upsertAccountingSettings
+} = require('./src/services/accountingCoreService');
+const { handleInvoiceEvent } = require('./src/services/postingRulesService');
+const { startPolling } = require('./src/services/outboxPublisher');
+const {
+    computeSoleTraderContributions, estimateAnnualIncome, getComplianceCalendar,
+    getAllPoliciesAsOf, computeBlendedThreshold
+} = require('./src/services/taxEngineService');
+const { checkGCTThreshold, computeForm4A, getGCTConfig, upsertGCTConfig, generateForm4APDF } = require('./src/services/gctService');
+const {
+    addAsset, getAssets, disposeAsset, getAssetRegisterReport,
+    postDepreciationJournalEntries, getCapitalAllowanceReport
+} = require('./src/services/assetRegisterService');
+const { getProfitAndLoss, getBalanceSheet, getCashFlowSummary, getARAgingReport, getRevenueReconciliation } = require('./src/services/reportingService');
+const { generateAndSendOwnerPack, generateOwnerPackPDF } = require('./src/services/ownerPackService');
+const { exportAuditBundle, buildS04Workpaper, buildS04AWorkpaper } = require('./src/services/taxFormService');
+
 // --- APP ROUTES ---
 
 // SaaS: Companies List
@@ -347,6 +367,98 @@ router.get('/api/invoices', async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
     res.json(data);
+});
+
+// Endpoint to fetch recent activity for the dashboard from multiple sources
+router.get('/api/dashboard/recent-activity', async (req, res) => {
+    try {
+        // Fetch top 5 invoices
+        const { data: invoices } = await supabase
+            .from('invoices')
+            .select('id, invoice_number, total_amount, issue_date, payment_status, status, clients(name)')
+            .order('issue_date', { ascending: false })
+            .limit(5);
+
+        // Fetch top 5 journal entries
+        let journalEntries = [];
+        const { data: journals } = await supabase
+            .from('journal_entries')
+            .select('id, entry_number, description, total_amount, date')
+            .order('date', { ascending: false })
+            .limit(5);
+        if (journals) journalEntries = journals;
+
+        // Fetch top 5 client services by created_at
+        const { data: clientServicesC } = await supabase
+            .from('client_services')
+            .select('id, status, created_at, last_emailed_at, clients(name)')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+        // Fetch top 5 client services that have been emailed
+        const { data: clientServicesE } = await supabase
+            .from('client_services')
+            .select('id, status, created_at, last_emailed_at, clients(name)')
+            .not('last_emailed_at', 'is', null)
+            .order('last_emailed_at', { ascending: false })
+            .limit(5);
+
+        // Combine and deduplicate
+        const servicesMap = new Map();
+        if (clientServicesC) clientServicesC.forEach(s => servicesMap.set(s.id, s));
+        if (clientServicesE) clientServicesE.forEach(s => servicesMap.set(s.id, s));
+        const services = Array.from(servicesMap.values());
+
+        // Normalize data
+        let activities = [];
+
+        if (invoices) {
+            invoices.forEach(inv => {
+                activities.push({
+                    type: 'invoice',
+                    id: inv.id,
+                    title: `Invoice ${inv.invoice_number}`,
+                    description: `Client: ${inv.clients ? inv.clients.name : 'Unknown'}`,
+                    amount: inv.total_amount,
+                    status: inv.payment_status || (inv.status === 'paid' ? 'PAID' : 'UNPAID'),
+                    date: inv.issue_date
+                });
+            });
+        }
+
+        journalEntries.forEach(jn => {
+            activities.push({
+                type: 'accounting',
+                id: jn.id,
+                title: `Journal ${jn.entry_number || 'Entry'}`,
+                description: jn.description || 'Accounting Entry',
+                amount: jn.total_amount,
+                status: 'POSTED',
+                date: jn.date
+            });
+        });
+
+        services.forEach(cs => {
+            const hasSentEmail = cs.last_emailed_at && new Date(cs.last_emailed_at) > new Date(cs.created_at);
+            activities.push({
+                type: 'client_care',
+                id: cs.id,
+                title: hasSentEmail ? `Client Care Email Sent` : `Client Care Pulse Configured`,
+                description: `Client: ${cs.clients ? cs.clients.name : 'Unknown'}`,
+                amount: null,
+                status: cs.status || 'ACTIVE',
+                date: hasSentEmail ? cs.last_emailed_at : cs.created_at
+            });
+        });
+
+        // Sort combined list by date descending and take top 5
+        activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        res.json(activities.slice(0, 5));
+    } catch (err) {
+        console.error('Error fetching recent activity:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 router.post('/api/invoices/create', async (req, res) => {
@@ -584,6 +696,40 @@ router.post('/api/invoices/create', async (req, res) => {
             bccEmail
         );
 
+        // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event for journal posting
+        try {
+            const defaultComp = await supabase.from('companies').select('id').limit(1).single();
+            if (defaultComp.data) {
+                // Construct the canonical payload
+                const eventPayload = {
+                    ...invoice,
+                    client_name: client.name,
+                    payment_method: 'bank'
+                };
+
+                // Write to outbox_events instead of calling the projector directly
+                // We use event_version = 1 for creation
+                const { error: outboxError } = await supabase
+                    .from('outbox_events')
+                    .insert({
+                        company_id: defaultComp.data.id,
+                        aggregate_type: 'invoice',
+                        aggregate_id: invoice.id,
+                        event_version: 1,
+                        event_type: 'INVOICE_CREATED',
+                        idempotency_key: `${invoice.id}-1-INVOICE_CREATED`,
+                        payload_jsonb: eventPayload,
+                        publish_status: 'pending'
+                    });
+
+                if (outboxError) throw outboxError;
+                console.log(`[OUTBOX] Published INVOICE_CREATED for invoice ${invoice.id}`);
+            }
+        } catch (accErr) {
+            console.error('Accounting outbox event failed:', accErr.message);
+            // In a strict environment, we might fail the whole request. For now, we log it.
+        }
+
         res.json({ success: true, message: 'Invoice created and sent', invoiceId: invoice.id });
 
     } catch (err) {
@@ -635,6 +781,37 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     reference_id: resource.id,
                     payment_date: new Date().toISOString()
                 });
+
+                // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event for payment
+                try {
+                    // Refetch with client to get full payload for projector
+                    const { data: fullInvoice } = await supabase
+                        .from('invoices')
+                        .select('*, clients(*)')
+                        .eq('id', customId)
+                        .single();
+
+                    if (fullInvoice) {
+                        const eventPayload = {
+                            ...fullInvoice,
+                            client_name: fullInvoice.clients ? fullInvoice.clients.name : 'Unknown',
+                            payment_method: 'PayPal'
+                        };
+
+                        await supabase.from('outbox_events').insert({
+                            company_id: fullInvoice.company_id,
+                            aggregate_type: 'invoice',
+                            aggregate_id: fullInvoice.id,
+                            event_version: Date.now(), // High resolution timestamp as version for updates
+                            event_type: 'PAYMENT_APPLIED',
+                            idempotency_key: `${fullInvoice.id}-${Date.now()}-PAYMENT_APPLIED`,
+                            payload_jsonb: eventPayload,
+                            publish_status: 'pending'
+                        });
+                    }
+                } catch (accErr) {
+                    console.error('Accounting outbox event failed (PayPal):', accErr.message);
+                }
 
                 // 3.5 Automated Receipt (PDF & Email)
                 await sendPaymentReceipt(customId);
@@ -698,6 +875,28 @@ router.post('/api/paypal/webhook', async (req, res) => {
 
                             await supabase.from('invoice_items').insert(newItems);
                         }
+
+                        // ✅ ACCOUNTING INTEGRATION: Emit outbox event for renewal invoice
+                        try {
+                            const eventPayload = {
+                                ...newInvoice,
+                                client_name: 'Unknown (Renewal)', // Projector typically uses existing ar_documents info if client is missing
+                                payment_method: 'bank'
+                            };
+
+                            await supabase.from('outbox_events').insert({
+                                company_id: newInvoice.company_id,
+                                aggregate_type: 'invoice',
+                                aggregate_id: newInvoice.id,
+                                event_version: 1,
+                                event_type: 'INVOICE_CREATED',
+                                idempotency_key: `${newInvoice.id}-1-INVOICE_CREATED`,
+                                payload_jsonb: eventPayload,
+                                publish_status: 'pending'
+                            });
+                        } catch (accErr) {
+                            console.error('Accounting outbox event failed (Renewal):', accErr.message);
+                        }
                     }
                 }
             }
@@ -712,6 +911,43 @@ router.post('/api/paypal/webhook', async (req, res) => {
 
 // DEBUG: Test Email Connection Endpoint
 // ... (existing code)
+
+// ==========================================
+// ACCOUNTING DASHBOARD API
+// ==========================================
+const { getDashboardWidgets } = require('./src/services/reportingService');
+
+router.get('/api/accounting/dashboard/widgets', async (req, res) => {
+    try {
+        const { company_id } = req.query;
+        if (!company_id) return res.status(400).json({ error: 'Missing company_id' });
+        const widgets = await getDashboardWidgets(company_id);
+        res.json(widgets);
+    } catch (err) {
+        console.error('Widget error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.get('/api/accounting/tax/estimate', async (req, res) => {
+    try {
+        const { year, company_id } = req.query;
+        // Basic mock of tax reserve estimate until full YTD computation is requested
+        res.json({ contributions: { totalContributions: 0 } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.get('/api/accounting/tax/compliance-calendar', async (req, res) => {
+    try {
+        const { year, company_id } = req.query;
+        const events = await getComplianceCalendar(Number(year) || new Date().getFullYear(), company_id);
+        res.json(events || []);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // --- CLIENT CARE PULSE API ---
 
@@ -752,6 +988,14 @@ router.post('/api/client-services/create', async (req, res) => {
             .from('client_services')
             .update({ next_run_at: nextRun })
             .eq('id', service.id);
+
+        // [BILLING INTEGRATION] Trigger initial invoice generation
+        try {
+            const { syncServiceActivation } = require('./src/services/subscriptionBillingService');
+            await syncServiceActivation(service.id);
+        } catch (syncErr) {
+            console.error('Failed to sync billing on insert:', syncErr);
+        }
 
         res.json({ success: true, service: { ...service, next_run_at: nextRun } });
     } catch (err) {
@@ -865,7 +1109,17 @@ router.post('/api/client-care-pulse/monthly-summary/generate', async (req, res) 
 // Delete a Client Service
 router.delete('/api/client-services/delete/:id', async (req, res) => {
     try {
-        const result = await deleteClientService(req.params.id);
+        const serviceId = req.params.id;
+
+        // [BILLING INTEGRATION] Cancel ongoing billing and void unpaid invoices
+        try {
+            const { cancelServiceBilling } = require('./src/services/subscriptionBillingService');
+            await cancelServiceBilling(serviceId);
+        } catch (syncErr) {
+            console.error('Failed to cancel billing on delete:', syncErr);
+        }
+
+        const result = await deleteClientService(serviceId);
         res.json(result);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -884,6 +1138,21 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
         }
 
         runDueClientCarePulses(); // Async, don't wait
+
+        try {
+            const { processRecurringBilling } = require('./src/services/subscriptionBillingService');
+            processRecurringBilling(); // Async, don't wait
+        } catch (syncErr) {
+            console.error('Failed to trigger recurring billing cron:', syncErr);
+        }
+
+        try {
+            const { processSubscriptionReminders } = require('./src/services/subscriptionReminderService');
+            processSubscriptionReminders(7); // Check 7 days in advance
+        } catch (err) {
+            console.error('Failed to trigger subscription reminders:', err);
+        }
+
         res.json({ success: true, message: 'Batch run started' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -905,6 +1174,40 @@ router.get('/api/admin/client-services', async (req, res) => {
         if (error) throw error;
         res.json(data);
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update Subscription Renewal Date Endpoint
+router.put('/api/client-services/:id/renewal', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { next_renewal_date } = req.body;
+
+        const { data, error } = await supabase
+            .from('client_services')
+            .update({ next_renewal_date })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({ success: true, service: data });
+    } catch (err) {
+        console.error('Error updating renewal date:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Trigger Reminder Checks Manually
+router.post('/api/admin/check-renewals', async (req, res) => {
+    try {
+        const { processSubscriptionReminders } = require('./src/services/subscriptionReminderService');
+        const result = await processSubscriptionReminders();
+        res.json(result);
+    } catch (err) {
+        console.error('Error checking renewals:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -963,6 +1266,33 @@ router.post('/api/invoices/resend', async (req, res) => {
             .eq('id', invoiceId);
 
         if (updateError) throw updateError;
+
+        // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event
+        try {
+            const eventPayload = {
+                ...invoice,
+                ...updatedFields,
+                client_name: invoice.clients ? invoice.clients.name : 'Unknown',
+                payment_method: 'bank'
+            };
+
+            let eventType = 'INVOICE_UPDATED';
+            if (paymentStatus === 'DEPOSIT') eventType = 'DEPOSIT_PRE_SERVICE';
+            else if (paymentStatus === 'PARTIAL' || paymentStatus === 'PAID') eventType = 'PAYMENT_APPLIED';
+
+            await supabase.from('outbox_events').insert({
+                company_id: invoice.company_id,
+                aggregate_type: 'invoice',
+                aggregate_id: invoice.id,
+                event_version: Date.now(), // High resolution timestamp as version
+                event_type: eventType,
+                idempotency_key: `${invoice.id}-${Date.now()}-${eventType}`,
+                payload_jsonb: eventPayload,
+                publish_status: 'pending'
+            });
+        } catch (accErr) {
+            console.error('Accounting outbox event failed (Resend/Payment):', accErr.message);
+        }
 
         // 4. Regenerate PDF and Resend Email
         const { sendPaymentReceipt } = require('./src/services/automationService');
@@ -1106,7 +1436,461 @@ router.get('/auth/check', (req, res) => {
     }
 });
 
+// =============================================================================
+// --- ACCOUNTING MODULE API ROUTES ---
+// =============================================================================
+
+// Helper: get company_id from request or default
+async function resolveCompanyId(req) {
+    const cid = req.query.company_id;
+    // Basic regex to check if the string resembles a UUID to prevent DB query casting errors
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    if (cid && isUUID.test(cid)) {
+        return cid;
+    }
+
+    const { data } = await supabase.from('companies').select('id').limit(1).single();
+    return data ? data.id : null;
+}
+
+// GET /api/accounting/settings
+router.get('/api/accounting/settings', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const settings = await getAccountingSettings(companyId);
+        res.json(settings || {});
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// PUT /api/accounting/settings
+router.put('/api/accounting/settings', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const updated = await upsertAccountingSettings(companyId, req.body);
+        res.json({ success: true, settings: updated });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/coa
+router.get('/api/accounting/coa', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const accounts = await getChartOfAccounts(companyId);
+        res.json(accounts);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/journal
+router.get('/api/accounting/journal', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { periodStart, periodEnd, sourceType, page, pageSize } = req.query;
+        const result = await getJournalEntries(companyId, {
+            periodStart, periodEnd, sourceType,
+            page: page ? parseInt(page) : 1,
+            pageSize: pageSize ? parseInt(pageSize) : 50
+        });
+        res.json(result);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/trial-balance
+router.get('/api/accounting/trial-balance', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { start, end } = req.query;
+        const tb = await getTrialBalance(companyId, start || `${new Date().getFullYear()}-01-01`, end || new Date().toISOString().split('T')[0]);
+        res.json(tb);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/reports/pnl
+router.get('/api/accounting/reports/pnl', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { start, end, basis, ytdStart } = req.query;
+        const pnl = await getProfitAndLoss(companyId, start, end, basis || 'accrual', ytdStart);
+        res.json(pnl);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/reports/balance-sheet
+router.get('/api/accounting/reports/balance-sheet', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { asOf } = req.query;
+        const bs = await getBalanceSheet(companyId, asOf || new Date().toISOString().split('T')[0]);
+        res.json(bs);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/reports/cash-flow
+router.get('/api/accounting/reports/cash-flow', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { start, end } = req.query;
+        const cf = await getCashFlowSummary(companyId, start, end);
+        res.json(cf);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/reports/ar-aging
+router.get('/api/accounting/reports/ar-aging', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const aging = await getARAgingReport(companyId);
+        res.json(aging);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/reports/reconciliation
+router.get('/api/accounting/reports/reconciliation', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { start, end } = req.query;
+        const rec = await getRevenueReconciliation(companyId, start || `${new Date().getFullYear()}-01-01`, end || new Date().toISOString().split('T')[0]);
+        res.json(rec);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/dashboard/widgets
+router.get('/api/accounting/dashboard/widgets', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { getDashboardWidgets } = require('./src/services/reportingService');
+        const widgets = await getDashboardWidgets(companyId);
+        res.json(widgets);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/tax/estimate
+router.get('/api/accounting/tax/estimate', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const year = parseInt(req.query.year) || new Date().getFullYear();
+        const settings = await getAccountingSettings(companyId);
+        const start = `${year}-01-01`;
+        const today = new Date().toISOString().split('T')[0];
+        const pnl = await getProfitAndLoss(companyId, start, today, 'accrual');
+        const incomeEst = estimateAnnualIncome(pnl.summary.grossRevenue, pnl.summary.totalExpenses, new Date(), year);
+        const contributions = await computeSoleTraderContributions(
+            incomeEst.projectedRevenue, incomeEst.projectedExpenses, year, settings || { nht_category: 'cat1_5' }
+        );
+        res.json({ incomeEstimate: incomeEst, contributions });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/tax/compliance-calendar
+router.get('/api/accounting/tax/compliance-calendar', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const year = parseInt(req.query.year) || new Date().getFullYear();
+        const settings = await getAccountingSettings(companyId);
+        const calendar = getComplianceCalendar(settings?.business_type || 'sole_trader', year);
+        res.json(calendar);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/tax/gct-status
+router.get('/api/accounting/tax/gct-status', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const gctStatus = await checkGCTThreshold(companyId);
+        res.json(gctStatus);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/tax/policies
+router.get('/api/accounting/tax/policies', async (req, res) => {
+    try {
+        const { asOf } = req.query;
+        const policies = await getAllPoliciesAsOf('JM', asOf || new Date().toISOString().split('T')[0]);
+        res.json(policies);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET/POST /api/accounting/expenses
+router.get('/api/accounting/expenses', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { limit = 50, offset = 0 } = req.query;
+        const { data, error } = await supabase
+            .from('expense_records')
+            .select('*')
+            .eq('company_id', companyId)
+            .order('expense_date', { ascending: false })
+            .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+        if (error) throw error;
+        res.json(data);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/api/accounting/expenses', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const body = req.body;
+        const { data: expense, error } = await supabase
+            .from('expense_records')
+            .insert({ company_id: companyId, ...body })
+            .select()
+            .single();
+        if (error) throw error;
+
+        // Emit accounting event
+        const { emitAccountingEvent, projectAccountingEvent } = require('./src/services/postingRulesService');
+        const event = await emitAccountingEvent({
+            companyId, sourceId: expense.id, sourceType: 'EXPENSE',
+            eventType: expense.expense_type === 'bill' ? 'EXPENSE_BILL_CREATED' : 'EXPENSE_CASH',
+            eventVersion: 1, payload: expense
+        });
+        await projectAccountingEvent(event);
+
+        res.json({ success: true, expense });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET/POST /api/accounting/assets
+router.get('/api/accounting/assets', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const assets = await getAssetRegisterReport(companyId);
+        res.json(assets);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/api/accounting/assets', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const asset = await addAsset(companyId, req.body);
+        res.json({ success: true, asset });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/api/accounting/assets/:id/dispose', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const result = await disposeAsset(companyId, req.params.id, req.body);
+        res.json(result);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/accounting/reports/owner-pack/:month — Generate + email
+router.post('/api/accounting/reports/owner-pack/:month', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { month } = req.params; // 'YYYY-MM'
+        const result = await generateAndSendOwnerPack(companyId, month);
+        res.json({ success: true, ...result });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/reports/owner-pack/:month — Download PDF
+router.get('/api/accounting/reports/owner-pack/:month', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { month } = req.params;
+        const pdfBuffer = await generateOwnerPackPDF(companyId, month);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="owner_pack_${month}.pdf"`);
+        res.send(pdfBuffer);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/accounting/tax/generate-pack/:year
+router.post('/api/accounting/tax/generate-pack/:year', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const taxYear = parseInt(req.params.year);
+        const bundle = await exportAuditBundle(companyId, taxYear);
+        res.json({ success: true, ...bundle });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/tax/generate-pack/:year — Download tax pack PDF
+router.get('/api/accounting/tax/generate-pack/:year', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const taxYear = parseInt(req.params.year);
+        const s04 = await buildS04Workpaper(companyId, taxYear);
+        const s04a = await buildS04AWorkpaper(companyId, taxYear);
+        const { generateTaxPackPDF } = require('./src/services/taxFormService');
+        const pdfBuffer = await generateTaxPackPDF(companyId, taxYear, s04, s04a);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="tax_pack_${taxYear}.pdf"`);
+        res.send(pdfBuffer);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/gct/form4a — GCT Form 4A data + PDF download
+router.get('/api/accounting/gct/form4a', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { start, end, pdf } = req.query;
+        const gctConfig = await getGCTConfig(companyId);
+        const form4AData = await computeForm4A(companyId, start, end, gctConfig);
+        if (pdf === 'true') {
+            const { data: company } = await supabase.from('companies').select('name').limit(1).single();
+            const pdfBuffer = await generateForm4APDF(form4AData, company?.name || 'ICSS');
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="form4a_${start}_${end}.pdf"`);
+            return res.send(pdfBuffer);
+        }
+        res.json(form4AData);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/accounting/periods/lock
+router.post('/api/accounting/periods/lock', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { period, notes } = req.body;
+        await lockPeriod(companyId, period, 'owner', notes);
+        res.json({ success: true, period });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/periods/closed
+router.get('/api/accounting/periods/closed', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const periods = await getClosedPeriods(companyId);
+        res.json(periods);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/accounting/depreciation/post/:year
+router.post('/api/accounting/depreciation/post/:year', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const results = await postDepreciationJournalEntries(companyId, parseInt(req.params.year));
+        res.json({ success: true, results });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/capital-allowances/:year
+router.get('/api/accounting/capital-allowances/:year', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const report = await getCapitalAllowanceReport(companyId, parseInt(req.params.year));
+        res.json(report);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// =============================================================================
+// --- BULK IMPORT ROUTES ---
+// =============================================================================
+
+const { parseBulkInput } = require('./src/services/csvParser');
+const { autoCategorizeLines, confirmBatch, revertBatch } = require('./src/services/bulkImportService');
+
+// POST /api/accounting/bulk-import/parse
+router.post('/api/accounting/bulk-import/parse', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { rawText, sourceType, parseSettings } = req.body;
+
+        // 1. Parse lines
+        const parseResult = await parseBulkInput({ rawText, sourceType, parseSettings });
+
+        // 2. Auto-categorize
+        parseResult.lines = await autoCategorizeLines(companyId, parseResult.lines);
+
+        // 3. Save draft to DB
+        const { data: batch, error: batchErr } = await supabase
+            .from('bulk_imports')
+            .insert({
+                company_id: companyId,
+                source_type: sourceType,
+                status: 'draft',
+                parse_settings: parseSettings || {},
+                created_by_user_id: req.session?.user?.id || null
+            })
+            .select()
+            .single();
+
+        if (batchErr) throw batchErr;
+
+        // Save lines
+        const dbLines = parseResult.lines.map((l, i) => ({
+            bulk_import_id: batch.id,
+            row_number: l.raw.row_number,
+            raw_row_json: l.raw,
+            normalized_json: l.normalized,
+            parse_status: l.parse_status,
+            warnings: l.warnings,
+            matched_vendor_id: l.matched_vendor_id,
+            suggested_account_id: l.suggested_account_id,
+            suggestion_confidence: l.suggestion_confidence,
+            line_fingerprint: l.line_fingerprint
+        }));
+
+        if (dbLines.length > 0) {
+            const { error: linesErr } = await supabase.from('bulk_import_lines').insert(dbLines);
+            if (linesErr) throw linesErr;
+        }
+
+        res.json({ success: true, batchId: batch.id, ...parseResult });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/accounting/bulk-import/:id/lines/:lineId
+// Update user overrides on a specific line before confirming
+router.put('/api/accounting/bulk-import/:id/lines/:lineId', async (req, res) => {
+    try {
+        const { user_account_id, user_vendor_id } = req.body;
+        const { error } = await supabase.from('bulk_import_lines')
+            .update({
+                user_account_id,
+                user_vendor_id,
+                user_overridden: true
+            })
+            .eq('id', req.params.lineId)
+            .eq('bulk_import_id', req.params.id);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/accounting/bulk-import/:id/confirm
+router.post('/api/accounting/bulk-import/:id/confirm', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const batchId = req.params.id;
+        const confirmPayload = req.body;
+        const userId = req.session?.user?.id || null;
+
+        const result = await confirmBatch(batchId, confirmPayload, userId, companyId);
+        res.json(result);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/accounting/bulk-import/:id/revert
+router.post('/api/accounting/bulk-import/:id/revert', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const batchId = req.params.id;
+        const userId = req.session?.user?.id || null;
+
+        const result = await revertBatch(batchId, userId, companyId);
+        res.json(result);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/bulk-import/rules
+router.get('/api/accounting/bulk-import/rules', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { data, error } = await supabase.from('auto_category_rules').select('*').eq('company_id', companyId);
+        if (error) throw error;
+        res.json(data);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// =============================================================================
 // --- View Routes ---
+// =============================================================================
 
 router.get('/', (req, res) => {
     if (req.session.isAuthenticated) {
@@ -1128,6 +1912,10 @@ router.get('/client-care-pulse', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'client-care.html'));
 });
 
+router.get('/accounting', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'accounting.html'));
+});
+
 
 // Mount the router under the base path
 app.use(BASE_PATH, router);
@@ -1135,6 +1923,11 @@ app.use(BASE_PATH, router);
 // Start Server
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
+
+    // Start the Event Projector Outbox Polling
+    if (isSchemaValid) {
+        startPolling(5000); // Poll every 5 seconds
+    }
 
     // Automation Scheduler
     // Run Check logic every 15 minutes

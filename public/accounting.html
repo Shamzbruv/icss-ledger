@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting & Tax | ICSS Command Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/accounting.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- Layout.js injects Header here -->
+
+    <div class="container fade-in accounting-container">
+        <div class="header-banner">
+            <div>
+                <h2 style="font-weight: 300; font-size: 2rem; margin-bottom: 0.5rem; color: white;">Accounting & Tax
+                    (Jamaica)</h2>
+                <p style="color: rgba(255, 255, 255, 0.8); margin: 0;">Manage your ledger, expenses, fixed assets, and
+                    generate TAJ tax forms.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-success" style="padding: 10px 16px;"
+                    onclick="document.getElementById('modalExpense').classList.remove('d-none')"><i
+                        class="fas fa-plus"></i> Expense</button>
+                <button class="btn btn-secondary mr-3" style="padding: 10px 16px;"
+                    onclick="document.getElementById('modalAsset').classList.remove('d-none')"><i
+                        class="fas fa-plus"></i> Asset</button>
+                <button class="btn btn-light" id="btnExportTaxPack"><i class="fas fa-file-invoice-dollar"></i> Generate
+                    Tax Pack</button>
+                <button class="btn btn-outline-light" id="btnGenerateOwnerPack"><i class="fas fa-file-pdf"></i> Run
+                    Owner Pack</button>
+                <button class="btn btn-outline-light" id="btnSettings"
+                    onclick="document.getElementById('modalSettings').classList.remove('d-none')"><i
+                        class="fas fa-cog"></i></button>
+            </div>
+        </div>
+
+        <!-- TABS NAV -->
+        <div class="tabs-nav mt-4" style="border-bottom: 1px solid var(--border-color); display: flex; gap: 15px;">
+            <button class="tab-btn active" data-target="tab-dashboard">Dashboard</button>
+            <button class="tab-btn" data-target="tab-journal">Journal Ledger</button>
+            <button class="tab-btn" data-target="tab-expenses">Expenses</button>
+            <button class="tab-btn" data-target="tab-assets">Fixed Assets</button>
+            <button class="tab-btn" data-target="tab-reports">Reports</button>
+            <button class="tab-btn" data-target="tab-gct">GCT Tracker</button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB: DASHBOARD -->
+        <!-- ========================================== -->
+        <div class="tab-content active" id="tab-dashboard">
+            <div class="dashboard-grid mt-4"
+                style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <!-- 1: Active Subscriptions MRR -->
+                <div class="card kpi-card highlight-card">
+                    <div class="kpi-title">ACTIVE SUBSCRIPTIONS (MRR)</div>
+                    <div class="kpi-value" id="kpi-subs-mrr"><i class="fas fa-spinner fa-spin"></i></div>
+                    <div class="kpi-subtext">Total Monthly Recurring Value</div>
+                </div>
+                <!-- 1: Total Revenue MRR -->
+                <div class="card kpi-card">
+                    <div class="kpi-title">TOTAL MRR (30D REV)</div>
+                    <div class="kpi-value" id="kpi-mrr">JMD 0.00</div>
+                    <div class="kpi-subtext">Monthly Recurring Revenue</div>
+                </div>
+                <!-- 2: Cash Balance -->
+                <div class="card kpi-card">
+                    <div class="kpi-title">CASH BALANCE</div>
+                    <div class="kpi-value" id="kpi-cash">JMD 0.00</div>
+                    <div class="kpi-subtext">Total Bank & Cash</div>
+                </div>
+                <!-- 3: Runway -->
+                <div class="card kpi-card">
+                    <div class="kpi-title">CASH RUNWAY</div>
+                    <div class="kpi-value" id="kpi-runway">0.0 Months</div>
+                    <div class="kpi-subtext">Based on 90D Burn Rate</div>
+                </div>
+                <!-- 4: NPM -->
+                <div class="card kpi-card">
+                    <div class="kpi-title">NET PROFIT MARGIN</div>
+                    <div class="kpi-value" id="kpi-margin">0.0%</div>
+                    <div class="kpi-subtext">YTD Profitability</div>
+                </div>
+                <!-- 5: Tax Reserve -->
+                <div class="card kpi-card highlight-card">
+                    <div class="kpi-title">TAX RESERVE PROJ.</div>
+                    <div class="kpi-value" id="kpi-tax-reserve">JMD 0.00</div>
+                    <div class="kpi-subtext">Estimated FY Contributions</div>
+                </div>
+            </div>
+
+            <div class="dashboard-split mt-4" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div class="card" style="flex: 2; min-width: 400px; display: flex; gap: 20px;">
+                    <div style="flex: 1; width: 100%;">
+                        <h3 class="card-title">A/R Aging</h3>
+                        <div style="position: relative; height: 260px; width: 100%;">
+                            <canvas id="agingChart"></canvas>
+                        </div>
+                    </div>
+                    <div style="flex: 1; width: 100%;">
+                        <h3 class="card-title">Top YTD Expenses</h3>
+                        <div style="position: relative; height: 260px; width: 100%;">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="flex: 1; min-width: 300px;">
+                    <h3 class="card-title">Compliance Calendar</h3>
+                    <div id="compliance-list" class="compliance-list">
+                        <div class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                    </div>
+                </div>
+            </div>
+            <!-- ========================================== -->
+            <!-- SUBSCRIPTIONS (NOW IN DASHBOARD) -->
+            <!-- ========================================== -->
+            <div class="card mt-4" id="dashboard-subscriptions-table">
+                <div class="flex-between mb-3">
+                    <h3 class="card-title m-0">Active Subscriptions (Synced from Client Care)</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table" id="subscriptionsTable">
+                        <thead>
+                            <tr>
+                                <th>Client Name</th>
+                                <th>Plan / Service</th>
+                                <th>Billing Cycle</th>
+                                <th>Next Billing Date</th>
+                                <th class="text-right">Amount (JMD)</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subscriptionsTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-4">Loading subscriptions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 text-muted" style="font-size: 0.85rem;">
+                    <i class="fas fa-info-circle"></i> Subscriptions are managed centrally from the Client Care section.
+                    Invoices are generated automatically on the billing date.
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB: JOURNAL LEDGER -->
+        <!-- ========================================== -->
+        <div class="tab-content" id="tab-journal">
+            <div class="card mt-4">
+                <div class="flex-between mb-3">
+                    <h3 class="card-title m-0">Journal Entries</h3>
+                    <div class="filters">
+                        <input type="month" id="journalFilterMonth" class="form-control"
+                            style="width: auto; display: inline-block;">
+                        <button class="btn btn-outline-primary btn-sm" id="btnRefreshJournal"><i
+                                class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table" id="journalTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Description</th>
+                                <th>Accounts (Lines)</th>
+                                <th class="text-right">Debit</th>
+                                <th class="text-right">Credit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="journalTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading
+                                    journal entries...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex-between mt-3 text-muted" style="font-size: 0.85rem;">
+                    <div><i class="fas fa-lock"></i> All journal entries are immutable. To correct errors, an offsetting
+                        reversal entry is required.</div>
+                    <div id="journalPagination"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB: EXPENSES -->
+        <!-- ========================================== -->
+        <div class="tab-content" id="tab-expenses">
+            <div class="flex-between align-items-center mt-4 mb-3">
+                <h3 class="m-0">Expense Records</h3>
+                <div>
+                    <button class="btn btn-outline-primary mr-2" onclick="window.accountingJS.openBulkImportModal()"><i
+                            class="fas fa-file-import"></i> Import Expenses</button>
+                    <button class="btn btn-primary" onclick="window.accountingJS.openExpenseModal()"><i
+                            class="fas fa-plus"></i> Record Expense</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="expensesTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Vendor</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th class="text-right">Amount (JMD)</th>
+                                <th class="text-right">GCT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expensesTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">Loading expenses...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB: FIXED ASSETS -->
+        <!-- ========================================== -->
+        <div class="tab-content" id="tab-assets">
+            <div class="flex-between align-items-center mt-4 mb-3">
+                <h3 class="m-0">Fixed Asset Register</h3>
+                <div>
+                    <button class="btn btn-outline-primary mr-2" id="btnRunDepreciation"><i
+                            class="fas fa-calculator"></i> Post FY Book Depreciation</button>
+                    <button class="btn btn-primary" onclick="window.accountingJS.openAssetModal()"><i
+                            class="fas fa-plus"></i> Add Asset</button>
+                </div>
+            </div>
+
+            <div class="alert highlight-card mb-4" style="font-size: 0.9rem; padding: 12px;">
+                <i class="fas fa-info-circle mr-2"></i> <strong>Note on Jamaica Tax:</strong> Book depreciation is
+                <em>not</em> tax-deductible. The system automatically calculates <strong>Capital Allowances (Schedule
+                    2)</strong> instead when generating your tax pack.
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table" id="assetsTable">
+                        <thead>
+                            <tr>
+                                <th>Asset Name</th>
+                                <th>Category</th>
+                                <th>Purchase Date</th>
+                                <th class="text-right">Original Cost</th>
+                                <th class="text-right">Accumulated Dep.</th>
+                                <th class="text-right">Current Net Book Value</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assetsTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">Loading fixed assets...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB: REPORTS -->
+        <!-- ========================================== -->
+        <div class="tab-content" id="tab-reports">
+            <div class="card mt-4">
+                <h3 class="card-title">Financial Reports Center</h3>
+
+                <div class="reports-grid">
+                    <!-- P&L -->
+                    <div class="report-card">
+                        <div class="report-icon"><i class="fas fa-chart-line"></i></div>
+                        <div class="report-details">
+                            <h4>Profit & Loss (Income Statement)</h4>
+                            <p>View revenue, expenses, and net profit over a specific period.</p>
+                            <div class="flex-row">
+                                <input type="month" id="pnlMonth" class="form-control form-control-sm mr-2"
+                                    style="width: 140px;">
+                                <button class="btn btn-outline-primary btn-sm"
+                                    onclick="window.accountingJS.viewReport('pnl')">View</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Balance Sheet -->
+                    <div class="report-card">
+                        <div class="report-icon"><i class="fas fa-balance-scale"></i></div>
+                        <div class="report-details">
+                            <h4>Balance Sheet</h4>
+                            <p>Snapshot of assets, liabilities, and equity at a specific date.</p>
+                            <div class="flex-row">
+                                <input type="date" id="bsDate" class="form-control form-control-sm mr-2"
+                                    style="width: 140px;">
+                                <button class="btn btn-outline-primary btn-sm"
+                                    onclick="window.accountingJS.viewReport('balance-sheet')">View</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cash Flow -->
+                    <div class="report-card">
+                        <div class="report-icon"><i class="fas fa-water"></i></div>
+                        <div class="report-details">
+                            <h4>Cash Flow Summary</h4>
+                            <p>Operating, investing, and financing cash movements.</p>
+                            <div class="flex-row">
+                                <input type="month" id="cfMonth" class="form-control form-control-sm mr-2"
+                                    style="width: 140px;">
+                                <button class="btn btn-outline-primary btn-sm"
+                                    onclick="window.accountingJS.viewReport('cash-flow')">View</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trial Balance -->
+                    <div class="report-card">
+                        <div class="report-icon"><i class="fas fa-list-ol"></i></div>
+                        <div class="report-details">
+                            <h4>Trial Balance</h4>
+                            <p>List of all accounts and their debit/credit balances to ensure the ledger is balanced.
+                            </p>
+                            <button class="btn btn-outline-primary btn-sm mt-2"
+                                onclick="window.accountingJS.viewReport('trial-balance')">View Full Year Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Viewer Modal injected via JS -->
+            <div id="reportViewerContainer" class="mt-4" style="display: none;">
+                <div class="card shadow-sm">
+                    <div class="flex-between mb-3 border-bottom pb-3">
+                        <h3 class="m-0" id="reportViewerTitle">Report Name</h3>
+                        <button class="btn btn-secondary btn-sm"
+                            onclick="document.getElementById('reportViewerContainer').style.display='none'">Close</button>
+                    </div>
+                    <div id="reportViewerContent" class="report-viewer-content">
+                        <!-- Content generated from JSON -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB: GCT TRACKER -->
+        <!-- ========================================== -->
+        <div class="tab-content" id="tab-gct">
+            <div class="card mt-4">
+                <div class="flex-between align-items-center mb-4">
+                    <h3 class="m-0">General Consumption Tax (GCT) Monitor</h3>
+                    <span class="badge" id="gct-status-badge">Checking Status...</span>
+                </div>
+
+                <div class="gct-tracker-wrapper">
+                    <div class="gct-bar-container">
+                        <div class="gct-bar-bg">
+                            <div class="gct-bar-fill" id="gct-bar-fill" style="width: 0%;"></div>
+                        </div>
+                        <div class="gct-bar-markers">
+                            <span style="left: 0;">0</span>
+                            <span style="left: 50%;">50%</span>
+                            <span
+                                style="left: 100%; border-left: 2px dashed #DC2626; padding-left: 5px; color: #DC2626; font-weight: bold;">JMD
+                                <span id="gct-threshold-val">15M</span></span>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-center" id="gct-tracker-message" style="font-size: 1.1rem;">
+                        <i class="fas fa-spinner fa-spin"></i> Calculating trailing 12-month turnover...
+                    </p>
+                </div>
+
+                <hr class="my-4">
+
+                <div id="gct-forms-section" style="display: none;">
+                    <h4>Generate Form 4A (For Registered Businesses)</h4>
+                    <p class="text-muted">Generate a draft Form 4A based on your journal ledger to assist with TAJ RAIS
+                        filing. Requires that you have marked GCT Registered in settings.</p>
+                    <div class="flex-row mt-3">
+                        <input type="month" id="gctFormPeriod" class="form-control mr-3" style="width: 200px;">
+                        <button class="btn btn-primary" id="btnDownloadForm4A"><i class="fas fa-download"></i> Download
+                            Form 4A Draft (PDF)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODALS -->
+    <!-- ========================================== -->
+
+    <!-- Settings Modal -->
+    <div id="modalSettings" class="d-none"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content"
+            style="max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <span class="close" style="float: right; cursor: pointer; font-size: 1.5rem;"
+                onclick="document.getElementById('modalSettings').classList.add('d-none')">&times;</span>
+            <h2 class="mb-4">Accounting Settings</h2>
+            <form id="formSettings">
+                <div class="form-group">
+                    <label>Business Type</label>
+                    <select class="form-control" name="business_type" required>
+                        <option value="sole_trader">Sole Trader / Self-Employed</option>
+                        <option value="company">Limited Liability Company</option>
+                    </select>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label>TRN Number</label>
+                        <input type="text" class="form-control" name="trn" placeholder="e.g., 123-456-789">
+                    </div>
+                    <div class="col-md-6">
+                        <label>NHT Category (Self-Employed)</label>
+                        <select class="form-control" name="nht_category">
+                            <option value="cat1_5">Category 1-5 (3%)</option>
+                            <option value="cat6_7">Category 6-7 (2%)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="custom-checkbox d-flex align-items-center mb-3">
+                        <input type="checkbox" name="gct_registered" id="gctRegisteredCb">
+                        <span class="checkmark" style="position: relative; top: 0; left: 0; margin-right: 10px;"></span>
+                        Registered for GCT with TAJ
+                    </label>
+                    <div id="gctRegNumGroup" style="display: none;" class="ml-4 pl-2 border-left mb-3">
+                        <input type="text" class="form-control form-control-sm" id="gct_registration_number"
+                            placeholder="GCT Registration Number">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Accountant Email (Receives Owner Packs)</label>
+                    <input type="email" class="form-control" name="accountant_email"
+                        placeholder="accountant@example.com">
+                </div>
+                <hr class="my-3">
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <label>Base Currency</label>
+                        <input type="text" class="form-control" value="JMD" readonly disabled>
+                        <small class="text-muted">Tax reports are generated in JMD.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Default USD to JMD FX Rate</label>
+                        <input type="number" class="form-control" name="fx_rate_usd_to_jmd" step="0.01" value="158.00">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block mt-4">Save Settings</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="modalExpense" class="d-none"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content"
+            style="max-width: 650px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <span class="close" style="float: right; cursor: pointer; font-size: 1.5rem;"
+                onclick="document.getElementById('modalExpense').classList.add('d-none')">&times;</span>
+            <h2 class="mb-4">Record Expense</h2>
+            <form id="formExpense">
+                <div class="form-row">
+                    <div class="col-md-6 form-group">
+                        <label>Expense Type</label>
+                        <select class="form-control" name="expense_type"
+                            onchange="window.accountingJS.toggleExpenseFields(this.value)">
+                            <option value="cash">Cash / Bank Payment</option>
+                            <option value="bill">Bill (Payble Later)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Date</label>
+                        <input type="date" class="form-control" name="expense_date" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Vendor / Payee</label>
+                    <input type="text" class="form-control" name="vendor" required
+                        placeholder="e.g., FLOW, JPS, Amazon">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" class="form-control" name="description" required
+                        placeholder="What was purchased?">
+                </div>
+                <div class="form-row">
+                    <div class="col-md-8 form-group">
+                        <label>Expense Category (CoA)</label>
+                        <select class="form-control" name="coa_account_code" id="expenseCoASelect" required>
+                            <option value="">Loading accounts...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label>Currency</label>
+                        <select class="form-control" name="currency">
+                            <option value="JMD">JMD</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-6 form-group">
+                        <label>Total Amount</label>
+                        <input type="number" class="form-control" name="total_amount" step="0.01" required>
+                    </div>
+                    <div class="col-md-6 form-group" id="gctInputGroup" style="display: none;">
+                        <label>GCT Included (if applicable)</label>
+                        <input type="number" class="form-control" name="gct_amount" step="0.01" value="0">
+                        <small class="text-muted">Will be recorded as Input GCT</small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block mt-3">Post to Ledger</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Fixed Asset Modal -->
+    <div id="modalAsset" class="d-none"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content"
+            style="max-width: 650px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <span class="close" style="float: right; cursor: pointer; font-size: 1.5rem;"
+                onclick="document.getElementById('modalAsset').classList.add('d-none')">&times;</span>
+            <h2 class="mb-4">Add Fixed Asset</h2>
+            <form id="formAsset">
+                <div class="form-row">
+                    <div class="col-md-8 form-group">
+                        <label>Asset Name</label>
+                        <input type="text" class="form-control" name="assetName" required
+                            placeholder="e.g., MacBook Pro M3">
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label>Purchase Date</label>
+                        <input type="date" class="form-control" name="purchaseDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-6 form-group">
+                        <label>Asset Category (Tax Schedule 2)</label>
+                        <select class="form-control" name="assetCategory" required>
+                            <option value="computer">Computers & IT Equipment (20%)</option>
+                            <option value="equipment">Machinery & Equipment (20%)</option>
+                            <option value="furniture">Furniture & Fixtures (10%)</option>
+                            <option value="vehicle">Motor Vehicles (20%)</option>
+                            <option value="building_commercial">Commercial Building (4%)</option>
+                            <option value="other">Other (10%)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Original Cost (JMD Equivalent)</label>
+                        <input type="number" class="form-control" name="cost" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-6 form-group">
+                        <label>Business Use %</label>
+                        <input type="number" class="form-control" name="businessUsePercent" value="100" min="1"
+                            max="100" required>
+                        <small class="text-muted">Capital allowances prorated by this.</small>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Useful Life (Years)</label>
+                        <input type="number" class="form-control" name="usefulLifeYears" value="5" required>
+                        <small class="text-muted">Used for book depreciation only.</small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block mt-3">Add and Capitalize Asset</button>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- Bulk Import Modal -->
+    <div id="modalBulkImport" class="d-none"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content"
+            style="max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <span class="close" style="float: right; cursor: pointer; font-size: 1.5rem;"
+                onclick="window.accountingJS.closeBulkImportModal()">&times;</span>
+            <h2 class="mb-4">Bulk Import Expenses</h2>
+
+            <!-- Step 1: Upload / Paste -->
+            <div id="bulkImportStep1">
+                <p class="text-muted mb-4">Paste rows copied from spreadsheets, or paste raw CSV data. We will
+                    automatically parse dates, amounts, and infer currencies based on your settings.</p>
+                <form id="formBulkImportParse">
+                    <div class="form-group">
+                        <label>Paste Data (CSV / Tab-delimited)</label>
+                        <textarea class="form-control" name="rawText" rows="10"
+                            placeholder="Date&#9;Description&#9;Amount&#9;Currency&#10;2026-03-01&#9;Office Supplies&#9;45.00&#9;USD"
+                            required font-family="monospace"></textarea>
+                    </div>
+                    <div class="form-row mt-3">
+                        <div class="col-md-6 form-group">
+                            <label>Format Hint (Optional)</label>
+                            <select class="form-control" name="dateFormatHint">
+                                <option value="">Auto-detect</option>
+                                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Amount Sign Policy</label>
+                            <select class="form-control" name="invertPositives">
+                                <option value="false">Negative = Expense (Typical)</option>
+                                <option value="true">Positive = Expense (Inverted)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block mt-3" id="btnParseBulkImport">Parse &
+                        Preview</button>
+                </form>
+            </div>
+
+            <!-- Step 2: Preview & Map -->
+            <div id="bulkImportStep2" class="d-none">
+                <div id="bulkImportWarnings" class="mb-3"></div>
+
+                <div class="form-row mb-3 align-items-end">
+                    <div class="col-md-5 form-group">
+                        <label>Bulk Apply Category to Overrides</label>
+                        <select class="form-control" id="bulkApplyOverrideCategory">
+                            <option value="">Select Account...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-7">
+                        <button class="btn btn-outline-secondary"
+                            onclick="window.accountingJS.bulkImportApplyDefaultPaymentAccount()"><i
+                                class="fas fa-university"></i> Set Payment Account</button>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label>Default Payment Account (Required for Posting)</label>
+                    <select class="form-control" id="bulkImportPaymentAccount" required>
+                        <option value="">Select Bank / Clearing Account...</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive"
+                    style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 5px;">
+                    <table class="table table-sm table-hover" id="bulkImportPreviewTable" style="margin-bottom: 0;">
+                        <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
+                            <tr>
+                                <th>St.</th>
+                                <th>Date</th>
+                                <th>Description / Vendor</th>
+                                <th>Amount</th>
+                                <th>Category Suggestion</th>
+                                <th>Manual Category Override</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bulkImportPreviewTableBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 flex-between">
+                    <button class="btn btn-secondary" onclick="window.accountingJS.resetBulkImport()">Start
+                        Over</button>
+                    <button class="btn btn-success" id="btnConfirmBulkImport"
+                        onclick="window.accountingJS.confirmBulkImport()"><i class="fas fa-check"></i> Confirm & Post
+                        Journals</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Supabase & Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="js/config.js"></script>
+    <script type="module" src="js/layout.js"></script>
+    <script type="module" src="js/accounting.js"></script>
+
+</body>
+
+</html>

@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize Supabase (requires SDK in HTML or dynamic import)
     // For simplicity, we assume Supabase is loaded via CDN in the HTML files
     const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    window.supabaseClient = supabase;
 
     // 2. Check Authentication
     const { data: { session } } = await supabase.auth.getSession();
@@ -37,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <a href="/dashboard" class="nav-link ${window.location.pathname === '/' || window.location.pathname === '/dashboard' ? 'active' : ''}">Dashboard</a>
                 <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}">Invoices</a>
                 <a href="/client-care-pulse" class="nav-link ${window.location.pathname.includes('client-care') ? 'active' : ''}">Client Care</a>
+                <a href="/accounting" class="nav-link ${window.location.pathname.includes('accounting') ? 'active' : ''}">Accounting</a>
                 <button id="logoutBtn" class="btn btn-outline-light btn-sm" style="margin-left: 10px; text-transform: none; font-weight: 500;">Logout</button>
             </nav>
         </div>

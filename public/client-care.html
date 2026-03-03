@@ -300,6 +300,7 @@
                                         <th>Plan</th>
                                         <th>Freq</th>
                                         <th>Next Send</th>
+                                        <th>Next Renewal</th>
                                         <th>Last Report</th>
                                         <th>Actions</th>
                                     </tr>
@@ -396,6 +397,21 @@
                 <div id="modalBody">
                     <!-- Dynamic Content -->
                 </div>
+            </div>
+        </div>
+        <!-- RENEWAL MODAL -->
+        <div id="renewalModal" class="modal-overlay d-none">
+            <div class="modal-content card fade-in" style="max-width: 400px; width: 90%; margin: 100px auto;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 style="margin:0;">Set Renewal Date</h3>
+                    <button class="btn btn-sm btn-outline-light" onclick="closeRenewalModal()">Close</button>
+                </div>
+                <div class="mb-3">
+                    <label>Next Renewal Date</label>
+                    <input type="date" id="renewalDateInput" class="form-control">
+                    <input type="hidden" id="renewalServiceId">
+                </div>
+                <button class="btn btn-primary w-100" onclick="submitRenewalDate()">Save Renewal Date</button>
             </div>
         </div>
     </div>
@@ -571,8 +587,10 @@
                             </div>
                         </td>
                         <td>${nextRun}</td>
+                        <td>${s.next_renewal_date ? new Date(s.next_renewal_date).toLocaleDateString() : 'Not Set'}</td>
                         <td>${s.last_emailed_at ? new Date(s.last_emailed_at).toLocaleDateString() : 'Never'}</td>
                         <td>
+                            <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
                             <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
                         </td>
@@ -881,6 +899,41 @@
 
         function closeModal() {
             document.getElementById('summaryModal').classList.add('d-none');
+        }
+
+        // --- RENEWAL MODAL FUNCTIONS ---
+        function openRenewalModal(serviceId, currentDate) {
+            document.getElementById('renewalServiceId').value = serviceId;
+            document.getElementById('renewalDateInput').value = currentDate || '';
+            document.getElementById('renewalModal').classList.remove('d-none');
+        }
+
+        function closeRenewalModal() {
+            document.getElementById('renewalModal').classList.add('d-none');
+        }
+
+        async function submitRenewalDate() {
+            const serviceId = document.getElementById('renewalServiceId').value;
+            const next_renewal_date = document.getElementById('renewalDateInput').value;
+
+            try {
+                const res = await fetch(`api/client-services/${serviceId}/renewal`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ next_renewal_date: next_renewal_date || null })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    await showAlert('Renewal date updated successfully!', 'success');
+                    closeRenewalModal();
+                    loadServices(); // refresh table
+                } else {
+                    showAlert('Error: ' + data.error, 'error');
+                }
+            } catch (err) {
+                showAlert('Failed to update renewal date', 'error');
+            }
         }
 
         // --- CUSTOM CONFIRM MODAL ---
