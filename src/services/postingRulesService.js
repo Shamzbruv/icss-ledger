@@ -61,6 +61,10 @@ async function getLatestEventVersion(companyId, sourceId, sourceType) {
 // ============================================================================
 
 async function projectAccountingEvent(event) {
+    if (!event.idempotency_key && event.id) {
+        event.idempotency_key = event.id;
+    }
+
     if (!event.idempotency_key) {
         throw new Error('idempotency_key is required for projection');
     }

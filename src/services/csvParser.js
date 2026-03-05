@@ -184,7 +184,8 @@ async function parseBulkInput({ rawText, fileBuffer, sourceType, parseSettings =
         amount: headers.findIndex(h => h === 'amount'),
         debit: headers.findIndex(h => h === 'debit' || h.includes('money out')),
         credit: headers.findIndex(h => h === 'credit' || h.includes('money in')),
-        currency: headers.findIndex(h => h.includes('currency') || h === 'ccy')
+        currency: headers.findIndex(h => h.includes('currency') || h === 'ccy'),
+        category: headers.findIndex(h => h.includes('category') || h.includes('account'))
     };
 
     for (let i = startIndex; i < rawLines.length; i++) {
@@ -264,6 +265,13 @@ async function parseBulkInput({ rawText, fileBuffer, sourceType, parseSettings =
             if (row[colMap.amount].includes('J$')) ccy = 'JMD';
         }
         normalized.currency = ccy;
+
+        // CATEGORY
+        let category = '';
+        if (colMap.category !== -1 && row[colMap.category]) {
+            category = row[colMap.category].trim();
+        }
+        normalized.category = category;
 
         normalized.source_type = sourceType;
 

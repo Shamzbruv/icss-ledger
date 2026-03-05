@@ -65,9 +65,9 @@
                 style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                 <!-- 1: Active Subscriptions MRR -->
                 <div class="card kpi-card highlight-card">
-                    <div class="kpi-title">ACTIVE SUBSCRIPTIONS (MRR)</div>
+                    <div class="kpi-title">PASSIVE INCOME (SUBS)</div>
                     <div class="kpi-value" id="kpi-subs-mrr"><i class="fas fa-spinner fa-spin"></i></div>
-                    <div class="kpi-subtext">Total Monthly Recurring Value</div>
+                    <div class="kpi-subtext">Monthly Recurring Value (JMD)</div>
                 </div>
                 <!-- 1: Total Revenue MRR -->
                 <div class="card kpi-card">
@@ -102,21 +102,21 @@
             </div>
 
             <div class="dashboard-split mt-4" style="display: flex; gap: 20px; flex-wrap: wrap;">
-                <div class="card" style="flex: 2; min-width: 400px; display: flex; gap: 20px;">
-                    <div style="flex: 1; width: 100%;">
+                <div class="card" style="flex: 2; min-width: 280px; display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px; width: 100%;">
                         <h3 class="card-title">A/R Aging</h3>
                         <div style="position: relative; height: 260px; width: 100%;">
                             <canvas id="agingChart"></canvas>
                         </div>
                     </div>
-                    <div style="flex: 1; width: 100%;">
+                    <div style="flex: 1; min-width: 250px; width: 100%;">
                         <h3 class="card-title">Top YTD Expenses</h3>
                         <div style="position: relative; height: 260px; width: 100%;">
                             <canvas id="expenseChart"></canvas>
                         </div>
                     </div>
                 </div>
-                <div class="card" style="flex: 1; min-width: 300px;">
+                <div class="card" style="flex: 1; min-width: 280px;">
                     <h3 class="card-title">Compliance Calendar</h3>
                     <div id="compliance-list" class="compliance-list">
                         <div class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
@@ -131,7 +131,7 @@
                     <h3 class="card-title m-0">Active Subscriptions (Synced from Client Care)</h3>
                 </div>
                 <div class="table-responsive">
-                    <table class="table" id="subscriptionsTable">
+                    <table class="table table-mobile-cards" id="subscriptionsTable">
                         <thead>
                             <tr>
                                 <th>Client Name</th>
@@ -160,10 +160,19 @@
         <!-- TAB: JOURNAL LEDGER -->
         <!-- ========================================== -->
         <div class="tab-content" id="tab-journal">
-            <div class="card mt-4">
-                <div class="flex-between mb-3">
-                    <h3 class="card-title m-0">Journal Entries</h3>
-                    <div class="filters">
+            <div class="flex-between align-items-center mt-4 mb-3">
+                <h3 class="m-0">Journal Entries</h3>
+                <div>
+                    <button class="btn btn-outline-primary mr-2" onclick="window.accountingJS.openBulkImportModal()"><i
+                            class="fas fa-file-import"></i> Import Journals</button>
+                    <button class="btn btn-primary" onclick="window.accountingJS.openJournalModal()"><i
+                            class="fas fa-plus"></i> Record Journal</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="flex-between mb-3 journal-filters-header" style="flex-wrap: wrap; gap: 15px;">
+                    <h4 class="card-title m-0">Ledger Filters</h4>
+                    <div class="filters flex-row" style="gap: 10px;">
                         <input type="month" id="journalFilterMonth" class="form-control"
                             style="width: auto; display: inline-block;">
                         <button class="btn btn-outline-primary btn-sm" id="btnRefreshJournal"><i
@@ -171,7 +180,7 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table" id="journalTable">
+                    <table class="table table-mobile-cards" id="journalTable">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -213,7 +222,7 @@
             </div>
             <div class="card">
                 <div class="table-responsive">
-                    <table class="table table-hover" id="expensesTable">
+                    <table class="table table-hover table-mobile-cards" id="expensesTable">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -223,6 +232,7 @@
                                 <th>Type</th>
                                 <th class="text-right">Amount (JMD)</th>
                                 <th class="text-right">GCT</th>
+                                <th class="text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="expensesTableBody">
@@ -257,7 +267,7 @@
 
             <div class="card">
                 <div class="table-responsive">
-                    <table class="table" id="assetsTable">
+                    <table class="table table-mobile-cards" id="assetsTable">
                         <thead>
                             <tr>
                                 <th>Asset Name</th>
@@ -395,7 +405,7 @@
                     <h4>Generate Form 4A (For Registered Businesses)</h4>
                     <p class="text-muted">Generate a draft Form 4A based on your journal ledger to assist with TAJ RAIS
                         filing. Requires that you have marked GCT Registered in settings.</p>
-                    <div class="flex-row mt-3">
+                    <div class="flex-row gct-actions mt-3">
                         <input type="month" id="gctFormPeriod" class="form-control mr-3" style="width: 200px;">
                         <button class="btn btn-primary" id="btnDownloadForm4A"><i class="fas fa-download"></i> Download
                             Form 4A Draft (PDF)</button>
@@ -426,7 +436,7 @@
                         <option value="company">Limited Liability Company</option>
                     </select>
                 </div>
-                <div class="form-group row">
+                <div class="form-row">
                     <div class="col-md-6">
                         <label>TRN Number</label>
                         <input type="text" class="form-control" name="trn" placeholder="e.g., 123-456-789">
@@ -532,6 +542,127 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block mt-3">Post to Ledger</button>
+            </form>
+        </div>
+    </div>
+    <!-- Edit Expense Modal -->
+    <div id="modalEditExpense" class="d-none"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content"
+            style="max-width: 650px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <span class="close" style="float: right; cursor: pointer; font-size: 1.5rem;"
+                onclick="document.getElementById('modalEditExpense').classList.add('d-none')">&times;</span>
+            <h2 class="mb-4">Edit Expense</h2>
+            <form id="formEditExpense">
+                <input type="hidden" name="expense_id" id="edit_expense_id">
+                <div class="form-row">
+                    <div class="col-md-6 form-group">
+                        <label>Expense Type</label>
+                        <select class="form-control" name="expense_type" id="edit_expense_type"
+                            onchange="window.accountingJS.toggleEditExpenseFields(this.value)">
+                            <option value="cash">Cash / Bank Payment</option>
+                            <option value="bill">Bill (Payble Later)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Date</label>
+                        <input type="date" class="form-control" name="expense_date" id="edit_expense_date" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Vendor / Payee</label>
+                    <input type="text" class="form-control" name="vendor" id="edit_vendor" required
+                        placeholder="e.g., FLOW, JPS, Amazon">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" class="form-control" name="description" id="edit_description" required
+                        placeholder="What was purchased?">
+                </div>
+                <div class="form-row">
+                    <div class="col-md-8 form-group">
+                        <label>Expense Category (CoA)</label>
+                        <select class="form-control" name="coa_account_code" id="editExpenseCoASelect" required>
+                            <option value="">Loading accounts...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label>Currency</label>
+                        <select class="form-control" name="currency" id="edit_currency">
+                            <option value="JMD">JMD</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-6 form-group">
+                        <label>Total Amount</label>
+                        <input type="number" class="form-control" name="total_amount" id="edit_total_amount" step="0.01"
+                            required>
+                    </div>
+                    <div class="col-md-6 form-group" id="editGctInputGroup" style="display: none;">
+                        <label>GCT Included (if applicable)</label>
+                        <input type="number" class="form-control" name="gct_amount" id="edit_gct_amount" step="0.01"
+                            value="0">
+                        <small class="text-muted">Will be recorded as Input GCT</small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block mt-3">Update Expense & Ledger</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Journal Entry Modal -->
+    <div id="modalJournal" class="d-none"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content"
+            style="max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <span class="close" style="float: right; cursor: pointer; font-size: 1.5rem;"
+                onclick="document.getElementById('modalJournal').classList.add('d-none')">&times;</span>
+            <h2 class="mb-4">Record Journal Entry</h2>
+            <form id="formJournal">
+                <div class="form-row">
+                    <div class="col-md-6 form-group">
+                        <label>Journal Date</label>
+                        <input type="date" class="form-control" name="journal_date" required>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Description / Memo</label>
+                        <input type="text" class="form-control" name="description" required
+                            placeholder="e.g., Adjusting Entry">
+                    </div>
+                </div>
+
+                <h5 class="mt-3 mb-3">Journal Lines</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-mobile-cards">
+                        <thead>
+                            <tr>
+                                <th style="width: 50%;">Account</th>
+                                <th>Debit</th>
+                                <th>Credit</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="journalLinesBody">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td class="text-right"><strong>Totals:</strong></td>
+                                <td id="journalTotalDebit"><strong>0.00</strong></td>
+                                <td id="journalTotalCredit"><strong>0.00</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-4"
+                    onclick="window.accountingJS.addJournalLineRow()">+ Add Line</button>
+
+                <div id="journalErrorBox" class="text-danger mb-3 d-none"></div>
+
+                <button type="submit" class="btn btn-primary btn-block mt-2">Post Journal Entry</button>
             </form>
         </div>
     </div>
@@ -662,7 +793,8 @@
 
                 <div class="table-responsive"
                     style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 5px;">
-                    <table class="table table-sm table-hover" id="bulkImportPreviewTable" style="margin-bottom: 0;">
+                    <table class="table table-sm table-hover table-mobile-cards" id="bulkImportPreviewTable"
+                        style="margin-bottom: 0;">
                         <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
                             <tr>
                                 <th>St.</th>

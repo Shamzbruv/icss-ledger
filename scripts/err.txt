@@ -1,0 +1,6 @@
+{
+  "code": "PGRST204",
+  "details": null,
+  "hint": null,
+  "message": "Could not find the 'description' column of 'journals' in the schema cache"
+}

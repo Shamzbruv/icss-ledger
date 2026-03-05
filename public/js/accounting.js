@@ -34,9 +34,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTabs();
     initSettingsForm();
     initExpenseForm();
+    initEditExpenseForm();
     initAssetForm();
     initModals();
     initBulkImportForm();
+    initJournalForm();
 
     // Load Initial Data (Dashboard active by default)
     loadDashboard();
@@ -144,19 +146,23 @@ async function loadSubscriptions() {
         const formatJMD = (val) => new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(val);
 
         let totalMRR = 0;
+        const FX_RATE = 158;
 
         tbody.innerHTML = data.map(sub => {
+            let priceUSD = parseFloat(sub.service_plans?.price || 0);
+            let priceJMD = priceUSD * FX_RATE;
+
             if (sub.status === 'active') {
-                totalMRR += parseFloat(sub.service_plans?.price || 0);
+                totalMRR += priceJMD;
             }
             return `
             <tr>
-                <td><strong>${sub.clients?.name || 'Unknown'}</strong></td>
-                <td>${sub.service_plans?.name || 'Custom Plan'}</td>
-                <td style="text-transform: capitalize;">${sub.frequency || 'Monthly'}</td>
-                <td><span class="badge bg-secondary">${sub.next_billing_date ? new Date(sub.next_billing_date).toLocaleDateString() : 'N/A'}</span></td>
-                <td class="text-right">${formatJMD(sub.service_plans?.price || 0)}</td>
-                <td class="text-center">
+                <td data-label="Client Name"><strong>${sub.clients?.name || 'Unknown'}</strong></td>
+                <td data-label="Plan">${sub.service_plans?.name || 'Custom Plan'}</td>
+                <td data-label="Billing Cycle" style="text-transform: capitalize;">${sub.frequency || 'Monthly'}</td>
+                <td data-label="Next Invoice"><span class="badge bg-secondary">${sub.next_billing_date ? new Date(sub.next_billing_date).toLocaleDateString() : 'N/A'}</span></td>
+                <td data-label="MRR" class="text-right">${formatJMD(priceJMD)}</td>
+                <td data-label="Status" class="text-center">
                     ${sub.status === 'active'
                     ? '<span class="badge badge-success" style="background: #D1FAE5; color: #065F46;">Active</span>'
                     : '<span class="badge badge-warning" style="background: #FEF3C7; color: #92400E;">Inactive</span>'}
@@ -272,8 +278,22 @@ function renderAgingChart(agingTotals) {
 let expChartInstance = null;
 function renderExpenseChart(expenses) {
     if (!expenses) return;
-    const ctx = document.getElementById('expenseChart').getContext('2d');
-    if (expChartInstance) expChartInstance.destroy();
+    const canvas = document.getElementById('expenseChart');
+    const ctx = canvas.getContext('2d');
+    if (expChartInstance) {
+        expChartInstance.destroy();
+        expChartInstance = null;
+    }
+
+    if (expenses.length === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '14px Inter';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('No expenses recorded YTD', canvas.width / 2, canvas.height / 2);
+        return;
+    }
 
     const labels = expenses.map(e => e.name);
     const data = expenses.map(e => e.amount);
@@ -421,12 +441,12 @@ async function loadJournal() {
 
             tbody.innerHTML += `
                 <tr>
-                    <td>${date}</td>
-                    <td><span class="badge badge-secondary">${entry.source_type}</span> ${entry.source_id ? `<br><small class="text-muted">${entry.source_id.substring(0, 8)}</small>` : ''}</td>
-                    <td>${entry.description} ${entry.is_reversal ? '<span class="badge badge-danger">REVERSAL</span>' : ''}</td>
-                    <td>${linesHtml}</td>
-                    <td class="text-right">${amountHtml}</td>
-                    <td class="text-right">${creditHtml}</td>
+                    <td data-label="Date">${date}</td>
+                    <td data-label="Source"><span class="badge badge-secondary">${entry.source_type}</span> ${entry.source_id ? `<br><small class="text-muted">${entry.source_id.substring(0, 8)}</small>` : ''}</td>
+                    <td data-label="Description">${entry.description} ${entry.is_reversal ? '<span class="badge badge-danger">REVERSAL</span>' : ''}</td>
+                    <td data-label="Account">${linesHtml}</td>
+                    <td data-label="Debit" class="text-right">${amountHtml}</td>
+                    <td data-label="Credit" class="text-right">${creditHtml}</td>
                 </tr>
             `;
         });
@@ -457,32 +477,46 @@ async function loadExpenses() {
         const formatMoney = (val) => Number(val).toLocaleString('en-JM', { minimumFractionDigits: 2 });
 
         expenses.forEach(ex => {
+            const vendorDisplay = ex.vendor || ex.vendor_name || '';
+            // Store the full object temporarily so edit func can use it
+            window.loadedExpenses = window.loadedExpenses || {};
+            window.loadedExpenses[ex.id] = ex;
+
             tbody.innerHTML += `
                 <tr>
-                    <td>${new Date(ex.expense_date).toLocaleDateString()}</td>
-                    <td><strong>${ex.vendor_name}</strong></td>
-                    <td>${ex.description}</td>
-                    <td>${ex.coa_account_code}</td>
-                    <td><span class="badge badge-info">${ex.expense_type}</span></td>
-                    <td class="text-right">${formatMoney(ex.total_amount)} ${ex.currency}</td>
-                    <td class="text-right">${ex.gct_amount > 0 ? formatMoney(ex.gct_amount) : '-'}</td>
+                    <td data-label="Date">${new Date(ex.expense_date).toLocaleDateString()}</td>
+                    <td data-label="Vendor"><strong>${vendorDisplay}</strong></td>
+                    <td data-label="Description">${ex.description}</td>
+                    <td data-label="Category">${ex.coa_account_code}</td>
+                    <td data-label="Type"><span class="badge badge-info">${ex.expense_type}</span></td>
+                    <td data-label="Amount" class="text-right">${formatMoney(ex.total_amount)} ${ex.currency}</td>
+                    <td data-label="Tax (GCT)" class="text-right">${ex.gct_amount > 0 ? formatMoney(ex.gct_amount) : '-'}</td>
+                    <td data-label="Actions" class="text-right">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="window.accountingJS.openEditExpenseModal('${ex.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="window.accountingJS.deleteExpense('${ex.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
                 </tr>
             `;
         });
-    } catch (err) { showToast('Failed to load expenses', 'error'); }
+    } catch (err) { Object.assign(window, { lastErr: err }); showToast('Failed to load expenses', 'error'); }
 }
 
 async function loadCoADropdown() {
-    // Only fetch Expense accounts (4000-5999 roughly)
     try {
         const res = await fetch(`/api/accounting/coa?company_id=${currentCompanyId}`);
         const accounts = await res.json();
 
+        window.accountingJS._cachedAccounts = accounts; // Cache all accounts for Journals
+
         const select = document.getElementById('expenseCoASelect');
+        const editSelect = document.getElementById('editExpenseCoASelect');
+
         select.innerHTML = '<option value="">Select Expense Account...</option>';
+        if (editSelect) editSelect.innerHTML = '<option value="">Select Expense Account...</option>';
 
         accounts.filter(a => a.account_type === 'expense').forEach(acc => {
             select.innerHTML += `<option value="${acc.code}">${acc.code} - ${acc.name}</option>`;
+            if (editSelect) editSelect.innerHTML += `<option value="${acc.code}">${acc.code} - ${acc.name}</option>`;
         });
     } catch (err) { console.error('CoA Error', err); }
 }
@@ -531,8 +565,165 @@ function initExpenseForm() {
     });
 }
 
+function initEditExpenseForm() {
+    document.getElementById('formEditExpense').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+
+        const expenseId = fd.get('expense_id');
+        const payload = {
+            expense_type: fd.get('expense_type'),
+            expense_date: fd.get('expense_date'),
+            vendor: fd.get('vendor'),
+            description: fd.get('description'),
+            coa_account_code: fd.get('coa_account_code'),
+            currency: fd.get('currency'),
+            total_amount: parseFloat(fd.get('total_amount')),
+            gct_amount: parseFloat(fd.get('gct_amount') || 0)
+        };
+
+        try {
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+            const res = await fetch(`/api/accounting/expenses/${expenseId}?company_id=${currentCompanyId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+
+            showToast('Expense and journal updated successfully!', 'success');
+            document.getElementById('modalEditExpense').classList.add('d-none');
+            loadExpenses();
+            loadJournal(); // Update dashboard components implicitly
+        } catch (err) {
+            showToast(err.message, 'error');
+        } finally {
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = false;
+            btn.innerText = 'Update Expense & Ledger';
+        }
+    });
+}
+
+function initJournalForm() {
+    document.getElementById('formJournal').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const journal_date = fd.get('journal_date');
+        const description = fd.get('description');
+
+        const lineRows = document.querySelectorAll('#journalLinesBody tr');
+        const lines = [];
+
+        lineRows.forEach(tr => {
+            const acc = tr.querySelector('.journal-account-code').value;
+            const desc = tr.querySelector('.journal-line-desc').value;
+            const deb = tr.querySelector('.journal-debit').value;
+            const cred = tr.querySelector('.journal-credit').value;
+
+            if (acc && (parseFloat(deb) > 0 || parseFloat(cred) > 0)) {
+                lines.push({ account_code: acc, description: desc, debit: deb, credit: cred });
+            }
+        });
+
+        const errBox = document.getElementById('journalErrorBox');
+        if (lines.length < 2) {
+            errBox.innerText = 'You must add at least two journal lines.';
+            errBox.classList.remove('d-none');
+            return;
+        }
+
+        try {
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+            const res = await fetch(`/api/accounting/journal?company_id=${currentCompanyId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ journal_date, description, lines })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || 'Failed to post journal');
+            }
+
+            showToast('Journal Entry recorded successfully!', 'success');
+            document.getElementById('modalJournal').classList.add('d-none');
+            loadJournal();
+        } catch (err) {
+            showToast(err.message, 'error');
+        } finally {
+            const btn = e.target.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = 'Post Journal Entry';
+            }
+        }
+    });
+}
+
 // Check GCT registered state to show GCT input in expense form dynamically
 window.accountingJS = {
+    openJournalModal: () => {
+        document.getElementById('modalJournal').classList.remove('d-none');
+        document.getElementById('formJournal').reset();
+        document.getElementById('journalLinesBody').innerHTML = '';
+
+        // Ensure chart of accounts is loaded if they haven't visited expenses
+        if (!window.accountingJS._cachedAccounts) {
+            loadCoADropdown().then(() => {
+                window.accountingJS.addJournalLineRow();
+                window.accountingJS.addJournalLineRow();
+            });
+        } else {
+            window.accountingJS.addJournalLineRow();
+            window.accountingJS.addJournalLineRow();
+        }
+        window.accountingJS.calculateJournalTotals();
+    },
+    addJournalLineRow: () => {
+        const tbody = document.getElementById('journalLinesBody');
+        const options = (window.accountingJS._cachedAccounts || []).map(a => `<option value="${a.code}">${a.code} - ${a.name}</option>`).join('');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <select class="form-control form-control-sm journal-account-code" required>
+                    <option value="">Select Account...</option>
+                    ${options}
+                </select>
+                <input type="text" class="form-control form-control-sm mt-1 journal-line-desc" placeholder="Line description (optional)">
+            </td>
+            <td><input type="number" step="0.01" class="form-control form-control-sm journal-debit" value="0" oninput="window.accountingJS.calculateJournalTotals()"></td>
+            <td><input type="number" step="0.01" class="form-control form-control-sm journal-credit" value="0" oninput="window.accountingJS.calculateJournalTotals()"></td>
+            <td><button type="button" class="btn btn-sm text-danger" onclick="this.closest('tr').remove(); window.accountingJS.calculateJournalTotals();"><i class="fas fa-times"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+    },
+    calculateJournalTotals: () => {
+        let debits = 0;
+        let credits = 0;
+        document.querySelectorAll('.journal-debit').forEach(i => debits += (parseFloat(i.value) || 0));
+        document.querySelectorAll('.journal-credit').forEach(i => credits += (parseFloat(i.value) || 0));
+
+        document.getElementById('journalTotalDebit').innerHTML = '<strong>' + debits.toLocaleString('en-JM', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</strong>';
+        document.getElementById('journalTotalCredit').innerHTML = '<strong>' + credits.toLocaleString('en-JM', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</strong>';
+
+        const errBox = document.getElementById('journalErrorBox');
+        if (Math.abs(debits - credits) > 0.01) {
+            errBox.innerText = 'Debits and Credits must balance.';
+            errBox.classList.remove('d-none');
+            document.querySelector('#formJournal button[type="submit"]').disabled = true;
+        } else {
+            errBox.classList.add('d-none');
+            document.querySelector('#formJournal button[type="submit"]').disabled = false;
+        }
+    },
     openExpenseModal: async () => {
         document.getElementById('modalExpense').style.display = 'block';
         const res = await fetch(`/api/accounting/settings?company_id=${currentCompanyId}`);
@@ -541,6 +732,51 @@ window.accountingJS = {
             document.getElementById('gctInputGroup').style.display = 'block';
         }
     },
+    toggleExpenseFields: (type) => { },
+
+    openEditExpenseModal: async (id) => {
+        const ex = window.loadedExpenses ? window.loadedExpenses[id] : null;
+        if (!ex) return showToast('Error loading expense data', 'error');
+
+        document.getElementById('edit_expense_id').value = ex.id;
+        document.getElementById('edit_expense_type').value = ex.expense_type;
+        document.getElementById('edit_expense_date').value = ex.expense_date.split('T')[0];
+        document.getElementById('edit_vendor').value = ex.vendor || ex.vendor_name || '';
+        document.getElementById('edit_description').value = ex.description;
+        document.getElementById('editExpenseCoASelect').value = ex.coa_account_code;
+        document.getElementById('edit_currency').value = ex.currency;
+        document.getElementById('edit_total_amount').value = ex.total_amount;
+
+        document.getElementById('modalEditExpense').classList.remove('d-none');
+
+        const res = await fetch(`/api/accounting/settings?company_id=${currentCompanyId}`);
+        const settings = await res.json();
+        if (settings && settings.gct_registered) {
+            document.getElementById('editGctInputGroup').style.display = 'block';
+            document.getElementById('edit_gct_amount').value = ex.gct_amount || 0;
+        } else {
+            document.getElementById('editGctInputGroup').style.display = 'none';
+        }
+    },
+    toggleEditExpenseFields: (type) => { },
+
+    deleteExpense: async (id) => {
+        if (!confirm('Are you sure you want to permanently delete this expense and its underlying journal entry? This will impact your ledger.')) {
+            return;
+        }
+        try {
+            const res = await fetch(`/api/accounting/expenses/${id}?company_id=${currentCompanyId}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error(await res.text());
+            showToast('Expense and journal entry deleted successfully.', 'success');
+            loadExpenses();
+            loadJournal(); // Update dashboard components implicitly
+        } catch (err) {
+            showToast(err.message || 'Failed to delete expense', 'error');
+        }
+    },
+
     openAssetModal: () => { document.getElementById('modalAsset').style.display = 'block'; },
 
     viewReport: async (reportType) => {
@@ -785,22 +1021,24 @@ async function initBulkImportForm() {
                     overrideOptions += `<option value="${a.code}">${a.code} - ${a.name}</option>`;
                 });
 
-                const dateStr = l.normalized ? l.normalized.date : (l.raw.Date || 'N/A');
-                const descStr = l.normalized ? l.normalized.description : (l.raw.Description || 'N/A');
-                const amountStr = l.normalized ? `${formatMoney(l.normalized.amount)} ${l.normalized.currency || ''}` : (l.raw.Amount || 'N/A');
+                const dateStr = l.normalized.txn_date || (l.raw.source_fields && Object.values(l.raw.source_fields)[0]) || 'N/A';
+                const descStr = l.normalized.description || (l.raw.source_fields && Object.values(l.raw.source_fields)[1]) || 'N/A';
+                const amountStr = l.normalized.amount_signed !== undefined ? `${formatMoney(l.normalized.amount_signed)} ${l.normalized.currency || ''}` : 'N/A';
 
                 let suggestionHtml = '<span class="text-muted">None</span>';
                 if (l.suggested_account_id) {
-                    suggestionHtml = `<span class="badge badge-info">${l.suggested_account_id}</span> <small class="text-muted">(${l.suggestion_confidence}%)</small>`;
+                    const acc = accounts.find(a => a.id === l.suggested_account_id);
+                    const accLabel = acc ? `${acc.code} - ${acc.name}` : l.suggested_account_id;
+                    suggestionHtml = `<span class="badge badge-info">${accLabel}</span> <small class="text-muted">(${Math.round(l.suggestion_confidence * 100)}%)</small>`;
                 }
 
                 tr.innerHTML = `
-                    <td class="text-center">${statusIcon}</td>
-                    <td>${dateStr}</td>
-                    <td title="${descStr}">${descStr.substring(0, 30)}${descStr.length > 30 ? '...' : ''}</td>
-                    <td class="text-right">${amountStr}</td>
-                    <td>${suggestionHtml}</td>
-                    <td>
+                    <td data-label="Status" class="text-center">${statusIcon}</td>
+                    <td data-label="Date">${dateStr}</td>
+                    <td data-label="Description" title="${descStr}">${descStr.substring(0, 30)}${descStr.length > 30 ? '...' : ''}</td>
+                    <td data-label="Amount" class="text-right">${amountStr}</td>
+                    <td data-label="Suggested Category">${suggestionHtml}</td>
+                    <td data-label="Override Category">
                         <select class="form-control form-control-sm" id="bi-override-cat-${l.raw.row_number}" onchange="window.accountingJS.updateLineOverrideCategory(${l.raw.row_number}, this)">
                             ${overrideOptions}
                         </select>

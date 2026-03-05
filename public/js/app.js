@@ -247,12 +247,12 @@ async function loadInvoices() {
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td><div class="cell-content">${inv.invoice_number}</div></td>
-                            <td><div class="cell-content">${clientName}</div></td>
-                            <td><div class="cell-content">${new Date(inv.issue_date).toLocaleDateString()}</div></td>
-                            <td><div class="cell-content">$${Number(inv.total_amount).toFixed(2)}</div></td>
-                            <td><div class="cell-content"><span class="badge ${badgeClass}">${status}</span></div></td>
-                            <td>
+                            <td data-label="Invoice #"><div class="cell-content">${inv.invoice_number}</div></td>
+                            <td data-label="Client"><div class="cell-content">${clientName}</div></td>
+                            <td data-label="Date Issued"><div class="cell-content">${new Date(inv.issue_date).toLocaleDateString()}</div></td>
+                            <td data-label="Amount"><div class="cell-content">$${Number(inv.total_amount).toFixed(2)}</div></td>
+                            <td data-label="Status"><div class="cell-content"><span class="badge ${badgeClass}">${status}</span></div></td>
+                            <td data-label="Actions">
                                 <div class="cell-content d-flex gap-2">
                                     <button class="btn btn-sm btn-outline-light" onclick="viewPDF('${inv.id}')" title="View PDF">View PDF</button>
                                     <button class="btn btn-sm btn-primary" onclick="updateStatusInvoice('${inv.id}', '${status}')">Update</button>

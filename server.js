@@ -1147,10 +1147,11 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
         }
 
         try {
-            const { processSubscriptionReminders } = require('./src/services/subscriptionReminderService');
+            const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
             processSubscriptionReminders(7); // Check 7 days in advance
+            autoAdvanceRenewalDates(); // Auto-advance past dates
         } catch (err) {
-            console.error('Failed to trigger subscription reminders:', err);
+            console.error('Failed to trigger subscription reminders or advancement:', err);
         }
 
         res.json({ success: true, message: 'Batch run started' });
@@ -1203,9 +1204,11 @@ router.put('/api/client-services/:id/renewal', async (req, res) => {
 // Trigger Reminder Checks Manually
 router.post('/api/admin/check-renewals', async (req, res) => {
     try {
-        const { processSubscriptionReminders } = require('./src/services/subscriptionReminderService');
-        const result = await processSubscriptionReminders();
-        res.json(result);
+        const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+        const remindersResult = await processSubscriptionReminders();
+        const advanceResult = await autoAdvanceRenewalDates();
+
+        res.json({ reminders: remindersResult, advancements: advanceResult });
     } catch (err) {
         console.error('Error checking renewals:', err.message);
         res.status(500).json({ error: err.message });
@@ -1495,6 +1498,76 @@ router.get('/api/accounting/journal', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// POST /api/accounting/journal (Manual Journal Entry)
+router.post('/api/accounting/journal', async (req, res) => {
+    try {
+        const crypto = require('crypto');
+        const companyId = await resolveCompanyId(req);
+        const { journal_date, description, lines } = req.body;
+
+        if (!lines || lines.length < 2) {
+            return res.status(400).json({ error: 'Journal must have at least 2 lines' });
+        }
+
+        // Validate debits = credits
+        const totalDebit = lines.reduce((sum, l) => sum + (parseFloat(l.debit) || 0), 0);
+        const totalCredit = lines.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
+
+        if (Math.abs(totalDebit - totalCredit) > 0.01) {
+            return res.status(400).json({ error: `Debits (${totalDebit.toFixed(2)}) and Credits (${totalCredit.toFixed(2)}) must balance out.` });
+        }
+
+        // Resolve account_code to account_id
+        const codes = lines.map(l => l.account_code);
+        const { data: accounts } = await supabase.from('chart_of_accounts').select('id, code').eq('company_id', companyId).in('code', codes);
+        const accountMap = {};
+        if (accounts) accounts.forEach(a => accountMap[a.code] = a.id);
+
+        // 1. Insert Journal
+        const d = new Date(journal_date);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const period_yyyymm = parseInt(`${yyyy}${mm}`);
+        const manualId = crypto.randomUUID(); // acts as source_id
+
+        const { data: journal, error: jErr } = await supabase.from('journals').insert({
+            company_id: companyId,
+            journal_date,
+            period_yyyymm,
+            journal_series: 'JNL',
+            narration: description || 'Manual Journal Entry',
+            currency: 'JMD',
+            fx_rate: 1.0,
+            source_system: 'icss',
+            source_type: 'manual',
+            source_id: manualId,
+            source_event_version: 1,
+            idempotency_key: manualId,
+            status: 'posted'
+        }).select().single();
+
+        if (jErr) throw jErr;
+
+        // 2. Insert Lines
+        const jLines = lines.map(l => {
+            const accId = accountMap[l.account_code];
+            if (!accId) throw new Error(`Account code ${l.account_code} not found`);
+            return {
+                journal_id: journal.id,
+                account_id: accId,
+                description: l.description || description || 'Manual Entry',
+                debit: parseFloat(l.debit) || 0,
+                credit: parseFloat(l.credit) || 0
+            };
+        });
+
+        const { error: lErr } = await supabase.from('journal_lines').insert(jLines);
+        if (lErr) throw lErr;
+
+        res.json({ success: true, journal });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // GET /api/accounting/trial-balance
 router.get('/api/accounting/trial-balance', async (req, res) => {
     try {
@@ -1596,6 +1669,7 @@ router.get('/api/accounting/tax/compliance-calendar', async (req, res) => {
 router.get('/api/accounting/tax/gct-status', async (req, res) => {
     try {
         const companyId = await resolveCompanyId(req);
+        const { checkGCTThreshold } = require('./src/services/gctService');
         const gctStatus = await checkGCTThreshold(companyId);
         res.json(gctStatus);
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1647,6 +1721,93 @@ router.post('/api/accounting/expenses', async (req, res) => {
         await projectAccountingEvent(event);
 
         res.json({ success: true, expense });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Helper to safely locate and delete an underlying journal entry for an expense
+async function deleteExpenseJournal(companyId, expense) {
+    // 1. Try to find a direct UI-created journal entry
+    const { data: uiJournals } = await supabase.from('journals')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('source_type', 'EXPENSE')
+        .eq('source_id', expense.id);
+
+    if (uiJournals && uiJournals.length > 0) {
+        for (const j of uiJournals) {
+            await supabase.from('journals').delete().eq('id', j.id);
+        }
+        return;
+    }
+
+    // 2. If no UI journal exists, it might be a backfilled bulk import. Try matching by date and description pattern.
+    const { data: bulkJournals } = await supabase.from('journals')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('source_type', 'bulk_import_line')
+        .eq('journal_date', expense.expense_date)
+        .ilike('description', `%${expense.description}%`);
+
+    if (bulkJournals && bulkJournals.length > 0) {
+        // Delete the first match to be safe
+        await supabase.from('journals').delete().eq('id', bulkJournals[0].id);
+    }
+}
+
+router.put('/api/accounting/expenses/:id', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const expenseId = req.params.id;
+        const body = req.body;
+
+        // Fetch old expense
+        const { data: oldExpense } = await supabase.from('expense_records').select('*').eq('id', expenseId).eq('company_id', companyId).single();
+        if (!oldExpense) throw new Error('Expense not found');
+
+        // Hard delete old journal entry from ledger
+        await deleteExpenseJournal(companyId, oldExpense);
+
+        // Update the expense record
+        const { data: newExpense, error } = await supabase
+            .from('expense_records')
+            .update(body)
+            .eq('id', expenseId)
+            .eq('company_id', companyId)
+            .select()
+            .single();
+        if (error) throw error;
+
+        // Issue a completely new journal entry mapping to this expense ID
+        const { emitAccountingEvent, projectAccountingEvent, getLatestEventVersion } = require('./src/services/postingRulesService');
+        const v = (await getLatestEventVersion(companyId, newExpense.id, 'EXPENSE')) + 1;
+
+        const event = await emitAccountingEvent({
+            companyId, sourceId: newExpense.id, sourceType: 'EXPENSE',
+            eventType: newExpense.expense_type === 'bill' ? 'EXPENSE_BILL_CREATED' : 'EXPENSE_CASH',
+            eventVersion: v, payload: newExpense
+        });
+        await projectAccountingEvent(event);
+
+        res.json({ success: true, expense: newExpense });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.delete('/api/accounting/expenses/:id', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const expenseId = req.params.id;
+
+        const { data: oldExpense } = await supabase.from('expense_records').select('*').eq('id', expenseId).eq('company_id', companyId).single();
+        if (!oldExpense) throw new Error('Expense not found');
+
+        // Delete underlying ledger entries first so they don't orphan
+        await deleteExpenseJournal(companyId, oldExpense);
+
+        // Delete the UI record
+        const { error } = await supabase.from('expense_records').delete().eq('id', expenseId).eq('company_id', companyId);
+        if (error) throw error;
+
+        res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

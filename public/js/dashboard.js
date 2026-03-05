@@ -24,7 +24,7 @@ async function loadRecentActivity() {
         // Build Table
         let tableHTML = `
             <div class="table-responsive" style="margin-bottom: 0; border: none;">
-                <table style="margin-top: 0;">
+                <table class="table-mobile-cards" style="margin-top: 0; width: 100%;">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -76,13 +76,13 @@ async function loadRecentActivity() {
 
             tableHTML += `
                 <tr>
-                    <td>${dateStr}</td>
-                    <td>${typeDisplay}</td>
-                    <td>
+                    <td data-label="Date">${dateStr}</td>
+                    <td data-label="Type">${typeDisplay}</td>
+                    <td data-label="Description">
                         <strong style="color: #fff;">${act.title}</strong><br>
                         <small class="text-muted">${act.description}</small>
                     </td>
-                    <td>${amountStatus}</td>
+                    <td data-label="Amount / Status">${amountStatus}</td>
                 </tr>
             `;
         });

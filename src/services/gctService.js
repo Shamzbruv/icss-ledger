@@ -14,24 +14,41 @@ const { postJournalEntry } = require('./accountingCoreService');
 
 async function getGCTConfig(companyId) {
     const { data, error } = await supabase
-        .from('gct_config')
-        .select('*')
-        .eq('company_id', companyId)
+        .from('companies')
+        .select('gct_registered, gct_registration_number, gct_registration_effective_date')
+        .eq('id', companyId)
         .maybeSingle();
 
     if (error) throw new Error(error.message);
-    return data;
+    if (!data) return null;
+    return {
+        company_id: companyId,
+        is_registered: data.gct_registered,
+        registration_number: data.gct_registration_number,
+        effective_date: data.gct_registration_effective_date
+    };
 }
 
 async function upsertGCTConfig(companyId, config) {
+    const updateData = {
+        gct_registered: config.is_registered,
+        gct_registration_number: config.registration_number,
+        gct_registration_effective_date: config.effective_date
+    };
     const { data, error } = await supabase
-        .from('gct_config')
-        .upsert({ company_id: companyId, ...config }, { onConflict: 'company_id' })
-        .select()
+        .from('companies')
+        .update(updateData)
+        .eq('id', companyId)
+        .select('gct_registered, gct_registration_number, gct_registration_effective_date')
         .single();
 
     if (error) throw new Error(error.message);
-    return data;
+    return {
+        company_id: companyId,
+        is_registered: data.gct_registered,
+        registration_number: data.gct_registration_number,
+        effective_date: data.gct_registration_effective_date
+    };
 }
 
 // ============================================================================
@@ -52,11 +69,11 @@ async function getTrailingTwelveMonthTurnover(companyId) {
 
     // Get journal entries in range
     const { data: entries, error: jeErr } = await supabase
-        .from('journal_entries')
+        .from('journals')
         .select('id')
         .eq('company_id', companyId)
-        .gte('entry_date', periodStart)
-        .lte('entry_date', periodEnd);
+        .gte('journal_date', periodStart)
+        .lte('journal_date', periodEnd);
 
     if (jeErr) throw new Error(`Turnover fetch failed: ${jeErr.message}`);
     if (!entries || entries.length === 0) return { turnover: 0, periodStart, periodEnd };
@@ -66,13 +83,13 @@ async function getTrailingTwelveMonthTurnover(companyId) {
     // Sum credit amounts on revenue accounts (4xxx)
     const { data: lines, error: lineErr } = await supabase
         .from('journal_lines')
-        .select('credit_amount')
-        .in('journal_entry_id', entryIds)
-        .like('account_code', '4%'); // Revenue accounts
+        .select('credit, chart_of_accounts!inner(code)')
+        .in('journal_id', entryIds)
+        .like('chart_of_accounts.code', '4%'); // Revenue accounts
 
     if (lineErr) throw new Error(`Turnover lines fetch failed: ${lineErr.message}`);
 
-    const turnover = (lines || []).reduce((sum, l) => sum + Number(l.credit_amount || 0), 0);
+    const turnover = (lines || []).reduce((sum, l) => sum + Number(l.credit || 0), 0);
 
     return {
         turnover: Math.round(turnover * 100) / 100,
@@ -140,11 +157,11 @@ async function computeForm4A(companyId, periodStart, periodEnd, gctConfig) {
 
     // Get all journal entries in period
     const { data: entries, error: jeErr } = await supabase
-        .from('journal_entries')
+        .from('journals')
         .select('id')
         .eq('company_id', companyId)
-        .gte('entry_date', periodStart)
-        .lte('entry_date', periodEnd);
+        .gte('journal_date', periodStart)
+        .lte('journal_date', periodEnd);
 
     if (jeErr) throw new Error(`Form 4A entries fetch failed: ${jeErr.message}`);
     const entryIds = (entries || []).map(e => e.id);
@@ -155,8 +172,8 @@ async function computeForm4A(companyId, periodStart, periodEnd, gctConfig) {
 
     const { data: lines, error: lineErr } = await supabase
         .from('journal_lines')
-        .select('account_code, debit_amount, credit_amount, memo')
-        .in('journal_entry_id', entryIds);
+        .select('debit, credit, description, chart_of_accounts!inner(code)')
+        .in('journal_id', entryIds);
 
     if (lineErr) throw new Error(`Form 4A lines fetch failed: ${lineErr.message}`);
 
@@ -168,14 +185,15 @@ async function computeForm4A(companyId, periodStart, periodEnd, gctConfig) {
     let exemptSupplies = 0;
 
     (lines || []).forEach(l => {
-        if (l.account_code === '2200') {
-            outputGCT += Number(l.credit_amount || 0);
+        const code = l.chart_of_accounts?.code;
+        if (code === '2200') {
+            outputGCT += Number(l.credit || 0);
         }
-        if (l.account_code === '1200') {
-            inputGCT += Number(l.debit_amount || 0);
+        if (code === '1200') {
+            inputGCT += Number(l.debit || 0);
         }
-        if (l.account_code === '4000') {
-            standardRatedSupplies += Number(l.credit_amount || 0);
+        if (code === '4000') {
+            standardRatedSupplies += Number(l.credit || 0);
         }
     });
 

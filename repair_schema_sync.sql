@@ -5,8 +5,8 @@ DROP TABLE IF EXISTS journal_lines CASCADE;
 DROP TABLE IF EXISTS journal_entries CASCADE;
 
 -- Also remove the FKs in accounting_events and depreciation_schedules that pointed to journal_entries
-ALTER TABLE accounting_events DROP COLUMN IF NOT EXISTS journal_entry_id;
-ALTER TABLE depreciation_schedules DROP COLUMN IF NOT EXISTS journal_entry_id;
+ALTER TABLE accounting_events DROP COLUMN IF EXISTS journal_entry_id;
+ALTER TABLE depreciation_schedules DROP COLUMN IF EXISTS journal_entry_id;
 
 -- 2. Create the V3 journals table
 CREATE TABLE IF NOT EXISTS journals (

@@ -49,7 +49,8 @@ async function processSubscriptionReminders(daysNotice = 7) {
                     service.clients.email,
                     subject,
                     emailHtml,
-                    'iCreate Solutions <no-reply@icreatesolutionsandservices.com>'
+                    'iCreate Solutions <no-reply@icreatesolutionsandservices.com>',
+                    'Shamzbiz1@gmail.com'
                 );
 
                 if (emailSent) {
@@ -76,6 +77,59 @@ async function processSubscriptionReminders(daysNotice = 7) {
     }
 }
 
+/**
+ * Automatically advances the renewal date by 1 month for subscriptions
+ * whose renewal date is today or in the past.
+ */
+async function autoAdvanceRenewalDates() {
+    console.log(`[RENEWALS] Checking for subscriptions that need date advancement...`);
+    try {
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // Find active services where next_renewal_date <= today
+        const { data: services, error } = await supabase
+            .from('client_services')
+            .select('*')
+            .eq('status', 'active')
+            .lte('next_renewal_date', todayStr);
+
+        if (error) throw error;
+
+        let advancedCount = 0;
+
+        for (const service of (services || [])) {
+            if (!service.next_renewal_date) continue;
+
+            const currentDate = new Date(service.next_renewal_date);
+            // Add 1 month
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            const newDateStr = currentDate.toISOString().split('T')[0];
+
+            console.log(`[RENEWALS] Auto-advancing ${service.id} from ${service.next_renewal_date} to ${newDateStr}`);
+
+            try {
+                // Update DB securely
+                await supabase
+                    .from('client_services')
+                    .update({ next_renewal_date: newDateStr })
+                    .eq('id', service.id);
+
+                advancedCount++;
+            } catch (updateErr) {
+                console.error(`[RENEWALS] Error advancing date for ${service.id}:`, updateErr.message);
+            }
+        }
+
+        console.log(`[RENEWALS] Auto-advanced ${advancedCount} subscriptions.`);
+        return { success: true, advanced: advancedCount };
+
+    } catch (err) {
+        console.error('[RENEWALS] Critical error advancing renewals:', err.message);
+        return { success: false, error: err.message };
+    }
+}
+
 module.exports = {
-    processSubscriptionReminders
+    processSubscriptionReminders,
+    autoAdvanceRenewalDates
 };

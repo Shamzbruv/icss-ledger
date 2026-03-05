@@ -68,7 +68,7 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
 /**
  * Sends a generic email using Resend API (used for notifications like renewals)
  */
-async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <no-reply@icreatesolutionsandservices.com>') {
+async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <no-reply@icreatesolutionsandservices.com>', bcc = null) {
     try {
         const mailOptions = {
             from: fromEmail,
@@ -76,6 +76,10 @@ async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <no-r
             subject: subject,
             html: html
         };
+
+        if (bcc) {
+            mailOptions.bcc = Array.isArray(bcc) ? bcc : [bcc];
+        }
 
         const { data, error } = await resend.emails.send(mailOptions);
 
