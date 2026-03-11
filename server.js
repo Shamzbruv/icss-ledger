@@ -2101,6 +2101,19 @@ app.listen(PORT, '0.0.0.0', () => {
         runMonthlySummaryChecks().catch(err => console.error('Scheduler Error (Summary):', err));
     }, 12 * 60 * 60 * 1000);
 
+    // Run Subscription Reminders and Auto-Advancements every 24 hours
+    setInterval(() => {
+        try {
+            const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+            processSubscriptionReminders(7)
+                .catch(err => console.error('Scheduler Error (Subscription Reminders):', err));
+            autoAdvanceRenewalDates()
+                .catch(err => console.error('Scheduler Error (Subscription Auto-Advance):', err));
+        } catch (err) {
+            console.error('Failed to trigger daily subscription routines:', err);
+        }
+    }, 24 * 60 * 60 * 1000);
+
     // Initial runs
     runDueClientCarePulses();
     runMonthlySummaryChecks();

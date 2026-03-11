@@ -24,7 +24,7 @@ async function processSubscriptionReminders(daysNotice = 7) {
                 service_plans (id, name, price)
             `)
             .eq('status', 'active')
-            .eq('next_renewal_date', targetDateStr);
+            .lte('next_renewal_date', targetDateStr);
 
         if (error) throw error;
 
@@ -32,12 +32,15 @@ async function processSubscriptionReminders(daysNotice = 7) {
 
         for (const service of (services || [])) {
             // Check if reminder was already sent for this specific date
-            if (service.last_renewal_reminder_sent_date === targetDateStr) {
-                console.log(`[REMINDERS] Reminder already sent to ${service.clients.email} for renewal on ${targetDateStr}`);
+            // Fallback: If service.next_renewal_date is missing, ignore it.
+            if (!service.next_renewal_date) continue;
+
+            if (service.last_renewal_reminder_sent_date === service.next_renewal_date) {
+                console.log(`[REMINDERS] Reminder already sent to ${service.clients.email} for renewal on ${service.next_renewal_date}`);
                 continue;
             }
 
-            console.log(`[REMINDERS] Sending renewal reminder for ${service.clients.name} (${service.service_plans.name})`);
+            console.log(`[REMINDERS] Sending renewal reminder for ${service.clients.name} (${service.service_plans.name}) for date ${service.next_renewal_date}`);
 
             try {
                 // Generate Email
@@ -57,7 +60,7 @@ async function processSubscriptionReminders(daysNotice = 7) {
                     // Update DB securely
                     await supabase
                         .from('client_services')
-                        .update({ last_renewal_reminder_sent_date: targetDateStr })
+                        .update({ last_renewal_reminder_sent_date: service.next_renewal_date })
                         .eq('id', service.id);
 
                     sentCount++;
