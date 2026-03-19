@@ -82,16 +82,23 @@ function getInvoiceEmailContent(invoice, client) {
     const state = computeInvoiceState(invoice, client);
 
     if (state.isSubscription) {
-        return getSubscriptionTemplate(state, client);
+        return getSubscriptionTemplate(state, client, invoice);
     }
 
-    return getUnifiedStatusTemplate(state, client);
+    return getUnifiedStatusTemplate(state, client, invoice);
 }
 
-function getUnifiedStatusTemplate(state, client) {
+function getUnifiedStatusTemplate(state, client, invoice) {
     const detailsHtml = state.emailSummaryRows.map(row =>
         `<p><strong>${row.label}:</strong> ${row.value}</p>`
     ).join('');
+
+    const notesHtml = invoice.notes ? `
+        <div class="notes" style="margin-top: 20px; padding: 15px; background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 4px;">
+            <h4 style="margin-top: 0; color: #856404;">Additional Notes</h4>
+            <p style="margin-bottom: 0; white-space: pre-wrap;">${invoice.notes}</p>
+        </div>
+    ` : '';
 
     const htmlBody = `
         <p>Hello <strong>${client.name}</strong>,</p>
@@ -101,21 +108,29 @@ function getUnifiedStatusTemplate(state, client) {
             <h3>Invoice Summary</h3>
             ${detailsHtml}
         </div>
+        ${notesHtml}
 
         <p>Thank you for your business. Please reach out if you have any questions.</p>
     `;
 
     return {
         subject: state.emailSubjectText,
-        text: `Hello ${client.name}, ${state.emailSubjectText}. Details: ${state.emailSummaryRows.map(r => `${r.label}: ${r.value}`).join(', ')}`,
+        text: `Hello ${client.name}, ${state.emailSubjectText}. Details: ${state.emailSummaryRows.map(r => `${r.label}: ${r.value}`).join(', ')}${invoice.notes ? `\n\nNotes:\n${invoice.notes}` : ''}`,
         html: getBaseHtml(htmlBody)
     };
 }
 
-function getSubscriptionTemplate(state, client) {
+function getSubscriptionTemplate(state, client, invoice) {
     const detailsHtml = state.emailSummaryRows.map(row =>
         `<p><strong>${row.label}:</strong> ${row.value}</p>`
     ).join('');
+
+    const notesHtml = invoice.notes ? `
+        <div class="notes" style="margin-top: 20px; padding: 15px; background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 4px;">
+            <h4 style="margin-top: 0; color: #856404;">Additional Notes</h4>
+            <p style="margin-bottom: 0; white-space: pre-wrap;">${invoice.notes}</p>
+        </div>
+    ` : '';
 
     const htmlBody = `
         <p>Hello <strong>${client.name}</strong>,</p>
@@ -125,13 +140,14 @@ function getSubscriptionTemplate(state, client) {
             <h3>Subscription Details</h3>
             ${detailsHtml}
         </div>
+        ${notesHtml}
 
         <p>This subscription will automatically renew unless canceled prior to the renewal date.</p>
     `;
 
     return {
         subject: state.emailSubjectText,
-        text: `Hello ${client.name}, ${state.emailSubjectText}.`,
+        text: `Hello ${client.name}, ${state.emailSubjectText}.${invoice.notes ? `\n\nNotes:\n${invoice.notes}` : ''}`,
         html: getBaseHtml(htmlBody)
     };
 }
