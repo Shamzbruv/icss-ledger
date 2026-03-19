@@ -1168,7 +1168,7 @@ router.get('/api/admin/client-services', async (req, res) => {
             .select(`
                 *,
                 clients (name, email),
-                service_plans (name)
+                service_plans (name, price)
             `)
             .order('created_at', { ascending: false });
 
@@ -1309,6 +1309,26 @@ router.post('/api/invoices/resend', async (req, res) => {
 
     } catch (err) {
         console.error('RESEND ERROR:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Resend Email ONLY (No status update)
+router.post('/api/invoices/resend-email-only', async (req, res) => {
+    try {
+        const { invoiceId } = req.body;
+        if (!invoiceId) return res.status(400).json({ error: 'Invoice ID required' });
+
+        const { sendPaymentReceipt } = require('./src/services/automationService');
+        const success = await sendPaymentReceipt(invoiceId);
+
+        if (success) {
+            res.json({ message: 'Invoice email resent successfully' });
+        } else {
+            res.status(500).json({ error: 'Failed to resend email' });
+        }
+    } catch (err) {
+        console.error('RESEND EMAIL ONLY ERROR:', err);
         res.status(500).json({ error: err.message });
     }
 });

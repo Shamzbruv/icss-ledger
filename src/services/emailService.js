@@ -13,51 +13,74 @@ const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_for_local_
  * @param {string} html - HTML body
  * @param {Buffer} pdfBuffer - Optional PDF buffer to attach
  * @param {string} invoiceNumber - Optional invoice number for the attachment name
- * @param {string} bcc - Optional BCC email address
- * @param {string|string[]} cc - Optional CC email address(es)
  * @returns {Promise<void>}
  */
+const nodemailer = require('nodemailer');
+
+// Initialize Nodemailer Transport as fallback
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_APP_PASSWORD
+    }
+});
+
 async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoiceNumber = null, bcc = null, cc = null) {
+    if (!process.env.RESEND_API_KEY) {
+        console.log('No RESEND_API_KEY found, falling back to Nodemailer (Gmail)');
+        try {
+            const mailOptions = {
+                from: process.env.EMAIL_USER || 'iCreate Solutions <support@icreatesolutionsandservices.com>',
+                to: Array.isArray(to) ? to.join(', ') : to,
+                subject: subject,
+                text: text,
+                html: html,
+                replyTo: process.env.EMAIL_USER
+            };
+
+            if (pdfBuffer && invoiceNumber) {
+                mailOptions.attachments = [{
+                    filename: `${invoiceNumber}.pdf`,
+                    content: pdfBuffer
+                }];
+            }
+
+            if (bcc) mailOptions.bcc = Array.isArray(bcc) ? bcc.join(', ') : bcc;
+            if (cc) mailOptions.cc = Array.isArray(cc) ? cc.join(', ') : cc;
+
+            const info = await transporter.sendMail(mailOptions);
+            console.log('Nodemailer Email sent successfully:', info.messageId);
+            return;
+        } catch (error) {
+            console.error('Error sending email via Nodemailer:', error);
+            throw error;
+        }
+    }
+
+    // Original Resend Logic
     try {
         const mailOptions = {
-            // Must match the domain you verified in Resend (e.g. send.icreatesolutionsandservices.com or just the root)
-            // It is usually best to use a subdomain like invoices@ or billing@
             from: 'iCreate Solutions <support@icreatesolutionsandservices.com>',
             to: Array.isArray(to) ? to : [to],
-            // Resend allows multiple CC/BCC if provided as arrays
             subject: subject,
             text: text,
             html: html,
-            // Ensure client replies go back to the primary Gmail inbox
             reply_to: process.env.EMAIL_USER || 'iCreatesolutions.ja@gmail.com',
         };
 
         if (pdfBuffer && invoiceNumber) {
-            mailOptions.attachments = [
-                {
-                    filename: `${invoiceNumber}.pdf`,
-                    content: pdfBuffer,
-                    // Resend expects base64 or Buffer directly in 'content'
-                },
-            ];
+            mailOptions.attachments = [{
+                filename: `${invoiceNumber}.pdf`,
+                content: pdfBuffer
+            }];
         }
 
-        if (bcc) {
-            mailOptions.bcc = Array.isArray(bcc) ? bcc : [bcc];
-        }
+        if (bcc) mailOptions.bcc = Array.isArray(bcc) ? bcc : [bcc];
+        if (cc) mailOptions.cc = Array.isArray(cc) ? cc : [cc];
 
-        if (cc) {
-            mailOptions.cc = Array.isArray(cc) ? cc : [cc];
-        }
-
-        // Use Resend SDK to send the email
         const { data, error } = await resend.emails.send(mailOptions);
-
-        if (error) {
-            console.error('Resend API Error:', error);
-            throw new Error(error.message || 'Failed to send email via Resend');
-        }
-
+        if (error) throw new Error(error.message || 'Failed to send email via Resend');
         console.log('Resend Email sent successfully:', data ? data.id : 'No ID returned');
     } catch (error) {
         console.error('Error sending email via Resend:', error);
@@ -69,6 +92,25 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
  * Sends a generic email using Resend API (used for notifications like renewals)
  */
 async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <no-reply@icreatesolutionsandservices.com>', bcc = null) {
+    if (!process.env.RESEND_API_KEY) {
+        try {
+            const mailOptions = {
+                from: process.env.EMAIL_USER || fromEmail,
+                to: Array.isArray(to) ? to.join(', ') : to,
+                subject: subject,
+                html: html
+            };
+            if (bcc) mailOptions.bcc = Array.isArray(bcc) ? bcc.join(', ') : bcc;
+            
+            const info = await transporter.sendMail(mailOptions);
+            console.log('Nodemailer Generic Email sent successfully:', info.messageId);
+            return true;
+        } catch (error) {
+            console.error('Error sending generic email via Nodemailer:', error);
+            return false;
+        }
+    }
+
     try {
         const mailOptions = {
             from: fromEmail,

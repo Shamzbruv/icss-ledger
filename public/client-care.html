@@ -172,13 +172,13 @@
                             <div class="mb-3">
                                 <label>Frequency</label>
                                 <select id="frequencySelect" onchange="toggleScheduleFields()">
+                                    <option value="monthly" selected>Monthly</option>
                                     <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
                                 </select>
                             </div>
 
                             <!-- Weekly Fields -->
-                            <div id="weeklyFields" class="mb-3">
+                            <div id="weeklyFields" class="mb-3 d-none">
                                 <label>Day of Week</label>
                                 <select id="sendDayOfWeek" class="form-control">
                                     <option value="1">Monday</option>
@@ -192,7 +192,7 @@
                             </div>
 
                             <!-- Monthly Fields -->
-                            <div id="monthlyFields" class="mb-3 d-none">
+                            <div id="monthlyFields" class="mb-3">
                                 <label>Monthly Rule</label>
                                 <select id="monthlyRuleType" class="form-control mb-2" onchange="toggleMonthlyRule()">
                                     <option value="dayOfMonth">Specific Day (e.g. 1st)</option>

@@ -255,6 +255,7 @@ async function loadInvoices() {
                             <td data-label="Actions">
                                 <div class="cell-content d-flex gap-2">
                                     <button class="btn btn-sm btn-outline-light" onclick="viewPDF('${inv.id}')" title="View PDF">View PDF</button>
+                                    <button class="btn btn-sm btn-outline-light" onclick="resendInvoiceEmail('${inv.id}')" title="Resend Email">Resend</button>
                                     <button class="btn btn-sm btn-primary" onclick="updateStatusInvoice('${inv.id}', '${status}')">Update</button>
                                 </div>
                             </td>
@@ -702,3 +703,36 @@ fetchPreviewState();
 // --- INITIALIZATION ---
 loadClients();
 loadInvoices();
+
+window.resendInvoiceEmail = async function (id) {
+    if (typeof showConfirm === 'function') {
+        const confirmed = await showConfirm('Are you sure you want to resend this invoice to the client?', 'info', 'Resend Invoice');
+        if (!confirmed) return;
+    } else {
+        if (!confirm('Are you sure you want to resend this invoice to the client?')) return;
+    }
+
+    try {
+        if (typeof showAlert === 'function') {
+            showAlert('Resending invoice...', 'info');
+        }
+        
+        const res = await fetch('/api/invoices/resend-email-only', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invoiceId: id })
+        });
+        
+        if (res.ok) {
+            if (typeof showAlert === 'function') await showAlert('Invoice email resent successfully!', 'success');
+            else alert('Invoice email resent successfully!');
+        } else {
+            const err = await res.json();
+            if (typeof showAlert === 'function') showAlert('Error: ' + err.error, 'error');
+            else alert('Error: ' + err.error);
+        }
+    } catch (err) {
+        if (typeof showAlert === 'function') showAlert('Failed to resend: ' + err.message, 'error');
+        else alert('Failed to resend: ' + err.message);
+    }
+};

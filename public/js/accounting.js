@@ -126,18 +126,10 @@ async function loadSubscriptions() {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
 
     try {
-        const { data, error } = await supabase
-            .from('client_services')
-            .select(`
-                id, frequency, next_billing_date, status,
-                clients (name),
-                service_plans (name, price)
-            `)
-            .order('next_billing_date', { ascending: true });
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
+        const res = await fetch('/api/admin/client-services');
+        const data = await res.json();
+        
+        if (!data || data.length === 0 || data.error) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No active subscriptions found. Add them in Client Care.</td></tr>';
             if (document.getElementById('kpi-subs-mrr')) document.getElementById('kpi-subs-mrr').textContent = 'JMD 0.00';
             return;
@@ -159,9 +151,11 @@ async function loadSubscriptions() {
             <tr>
                 <td data-label="Client Name"><strong>${sub.clients?.name || 'Unknown'}</strong></td>
                 <td data-label="Plan">${sub.service_plans?.name || 'Custom Plan'}</td>
-                <td data-label="Billing Cycle" style="text-transform: capitalize;">${sub.frequency || 'Monthly'}</td>
-                <td data-label="Next Invoice"><span class="badge bg-secondary">${sub.next_billing_date ? new Date(sub.next_billing_date).toLocaleDateString() : 'N/A'}</span></td>
-                <td data-label="MRR" class="text-right">${formatJMD(priceJMD)}</td>
+                <td data-label="Billing Cycle"><span class="badge bg-light text-dark">${sub.frequency}</span></td>
+                <td data-label="Next Billing">
+                    ${sub.next_renewal_date ? new Date(sub.next_renewal_date).toLocaleDateString() : 'N/A'}
+                </td>
+                <td data-label="Amount"><strong>${sub.service_plans?.price ? formatJMD(sub.service_plans.price) : 'N/A'}</strong></td>
                 <td data-label="Status" class="text-center">
                     ${sub.status === 'active'
                     ? '<span class="badge badge-success" style="background: #D1FAE5; color: #065F46;">Active</span>'

@@ -68,14 +68,16 @@ async function sendPaymentReceipt(invoiceId) {
         const emailContent = getInvoiceEmailContent(invoice, client);
 
         // 6. Send Email
-        console.log(`Sending email to ${client.email}...`);
+        const bccEmail = 'Shamzbiz1@gmail.com';
+        console.log(`Sending email to ${client.email} (BCC: ${bccEmail})...`);
         await sendInvoiceEmail(
             client.email,
             emailContent.subject,
             emailContent.text,
             emailContent.html, // Pass HTML content
             pdfBuffer,
-            `invoice_${invoice.invoice_number}.pdf`
+            `invoice_${invoice.invoice_number}.pdf`,
+            bccEmail
         );
 
         console.log(`Successfully sent receipt for Invoice #${invoice.invoice_number}`);

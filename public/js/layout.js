@@ -104,5 +104,137 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/login.html';
         });
     }
+
+    // --- GLOBAL MODALS (Alerts/Confirms) ---
+    // Inject if they don't already exist (to prevent duplicates with older pages)
+    if (!document.getElementById('alertModal')) {
+        const modalHtml = `
+            <!-- CUSTOM CONFIRM MODAL -->
+            <div id="confirmModal" class="modal-overlay d-none">
+                <div class="modal-content confirm-modal">
+                    <div class="modal-body">
+                        <span id="confirmIcon" class="confirm-icon">
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                        </span>
+                        <h3 id="confirmTitle" class="confirm-title">Are you sure?</h3>
+                        <p id="confirmMessage" class="confirm-message">This action cannot be undone.</p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button id="cancelBtn" class="btn btn-secondary w-100">Cancel</button>
+                            <button id="confirmBtn" class="btn btn-danger w-100">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOM ALERT MODAL -->
+            <div id="alertModal" class="modal-overlay d-none">
+                <div class="modal-content confirm-modal">
+                    <div class="modal-body">
+                        <span id="alertIcon" class="confirm-icon">
+                            <i class="fas fa-check-circle text-success"></i>
+                        </span>
+                        <h3 id="alertTitle" class="confirm-title">Success</h3>
+                        <p id="alertMessage" class="confirm-message">Operation completed.</p>
+                        <div class="d-flex justify-content-center">
+                            <button id="alertOkBtn" class="btn btn-primary w-100">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    window.showAlert = function(message, type = 'success', title = null) {
+        if (!document.getElementById('alertModal')) return alert(message);
+        return new Promise((resolve) => {
+            const modal = document.getElementById('alertModal');
+            const titleEl = document.getElementById('alertTitle');
+            const msgEl = document.getElementById('alertMessage');
+            const iconEl = document.getElementById('alertIcon');
+            const okBtn = document.getElementById('alertOkBtn');
+
+            msgEl.innerText = message;
+
+            let iconHtml = '';
+            let defaultTitle = '';
+            let btnClass = 'btn-primary';
+
+            if (type === 'success') {
+                iconHtml = '<i class="fas fa-check-circle text-success"></i>';
+                defaultTitle = 'Success';
+                btnClass = 'btn-success';
+            } else if (type === 'error') {
+                iconHtml = '<i class="fas fa-times-circle text-danger"></i>';
+                defaultTitle = 'Error';
+                btnClass = 'btn-danger';
+            } else {
+                iconHtml = '<i class="fas fa-info-circle text-info"></i>';
+                defaultTitle = 'Info';
+                btnClass = 'btn-primary';
+            }
+
+            iconEl.innerHTML = iconHtml;
+            titleEl.innerText = title || defaultTitle;
+            okBtn.className = `btn ${btnClass} w-100`;
+
+            modal.classList.remove('d-none');
+
+            const handleOk = () => {
+                modal.classList.add('d-none');
+                okBtn.removeEventListener('click', handleOk);
+                resolve();
+            };
+            okBtn.addEventListener('click', handleOk);
+        });
+    };
+
+    window.showConfirm = function(message, type = 'info', confirmText = 'OK') {
+        if (!document.getElementById('confirmModal')) return Promise.resolve(confirm(message));
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirmModal');
+            const titleEl = document.getElementById('confirmTitle');
+            const msgEl = document.getElementById('confirmMessage');
+            const iconEl = document.getElementById('confirmIcon');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            msgEl.innerText = message;
+            confirmBtn.innerText = confirmText;
+
+            if (type === 'danger') {
+                iconEl.innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i>';
+                titleEl.innerText = 'Confirmation Required';
+                confirmBtn.className = 'btn btn-danger w-100';
+            } else {
+                iconEl.innerHTML = '<i class="fas fa-info-circle text-info"></i>';
+                titleEl.innerText = 'Confirmation';
+                confirmBtn.className = 'btn btn-primary w-100';
+            }
+
+            modal.classList.remove('d-none');
+
+            const handleConfirm = () => {
+                modal.classList.add('d-none');
+                cleanup();
+                resolve(true);
+            };
+
+            const handleCancel = () => {
+                modal.classList.add('d-none');
+                cleanup();
+                resolve(false);
+            };
+
+            const cleanup = () => {
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+        });
+    };
+
 });
 

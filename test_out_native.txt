@@ -1,0 +1,11 @@
+Resend API Error: {"statusCode":401,"name":"validation_error","message":"API key is invalid"}
+Error sending email via Resend: Error: API key is invalid
+    at sendInvoiceEmail (C:\Users\Shamz\Desktop\ICSS Command Center\src\services\emailService.js:58:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async sendPaymentReceipt (C:\Users\Shamz\Desktop\ICSS Command Center\src\services\automationService.js:72:9)
+    at async testResend (C:\Users\Shamz\Desktop\ICSS Command Center\test_resend_api.js:16:5)
+Failed to send payment receipt: Error: API key is invalid
+    at sendInvoiceEmail (C:\Users\Shamz\Desktop\ICSS Command Center\src\services\emailService.js:58:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async sendPaymentReceipt (C:\Users\Shamz\Desktop\ICSS Command Center\src\services\automationService.js:72:9)
+    at async testResend (C:\Users\Shamz\Desktop\ICSS Command Center\test_resend_api.js:16:5)

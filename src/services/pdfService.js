@@ -191,15 +191,45 @@ function generateInvoicePDF(invoiceData, clientData, items) {
 
             items.forEach((item, index) => {
                 const totalItem = (item.quantity * item.unit_price).toFixed(2);
-                doc.moveTo(40, y + 15).lineTo(width - 40, y + 15).lineWidth(0.5).strokeColor('#E0E0E0').stroke();
+                
+                // Calculate height of the description text to handle wrapping
+                const textHeight = doc.heightOfString(item.description || "", { width: 280 });
+                const rowHeight = Math.max(textHeight, 15);
 
-                doc.text(item.description, 50, y)
+                // Add page if we're near the bottom of the page
+                if (y + rowHeight > 700) {
+                    doc.addPage();
+                    y = 50;
+                    
+                    // Draw continuous headers on the new page
+                    doc.rect(40, y, width - 80, 25).fillColor('#002B49').fill();
+                    doc.fillColor('#FFFFFF').fontSize(9).font('Helvetica-Bold');
+                    doc.text('DESCRIPTION', 50, y + 8)
+                       .text('QTY', 340, y + 8, { width: 40, align: 'center' })
+                       .text('PRICE', 400, y + 8, { width: 80, align: 'right' })
+                       .text('AMOUNT', 480, y + 8, { width: 80, align: 'right' });
+                    
+                    y += 35;
+                    doc.fillColor('#000000').font('Helvetica').fontSize(10);
+                }
+
+                // Draw horizontal line below the text based on rowHeight
+                doc.moveTo(40, y + rowHeight + 10).lineTo(width - 40, y + rowHeight + 10).lineWidth(0.5).strokeColor('#E0E0E0').stroke();
+
+                // Draw text with description constrained to width 280 to prevent overlap
+                doc.text(item.description, 50, y, { width: 280 })
                     .text(item.quantity, 340, y, { width: 40, align: 'center' })
                     .text(`$${Number(item.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 400, y, { width: 80, align: 'right' })
                     .text(`$${Number(totalItem).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 480, y, { width: 80, align: 'right' });
 
-                y += 25;
+                y += rowHeight + 20; // Move to the next row dynamically based on actual text height
             });
+
+            // Prevent totals and payment info from bleeding into the footer
+            if (y > 450) {
+                doc.addPage();
+                y = 50;
+            }
 
             // --- 6. TOTALS ---
             const totalY = y + 10;
