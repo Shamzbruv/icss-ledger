@@ -2137,4 +2137,13 @@ app.listen(PORT, '0.0.0.0', () => {
     // Initial runs
     runDueClientCarePulses();
     runMonthlySummaryChecks();
+    try {
+        const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+        processSubscriptionReminders(7)
+            .catch(err => console.error('Initial Run Error (Subscription Reminders):', err));
+        autoAdvanceRenewalDates()
+            .catch(err => console.error('Initial Run Error (Subscription Auto-Advance):', err));
+    } catch (err) {
+        console.error('Failed to trigger initial subscription routines:', err);
+    }
 });
