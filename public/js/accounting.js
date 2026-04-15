@@ -111,10 +111,49 @@ async function loadDashboard() {
 
         // Load Subscriptions Data directly into the Dashboard
         await loadSubscriptions();
+        
+        // Load the new Trial Balance Account Watchlist
+        await loadTrialBalanceDashboard();
 
     } catch (err) {
         console.error('Dashboard load error:', err);
         showToast('Failed to load dashboard data', 'error');
+    }
+}
+
+async function loadTrialBalanceDashboard() {
+    const tbody = document.getElementById('trialBalanceTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    try {
+        const yearStart = `${new Date().getFullYear()}-01-01`; // Optionally, we could pass 2000-01-01 for lifetime, but the API endpoint defaults to year start.
+        const res = await fetch(`/api/accounting/trial-balance?company_id=${currentCompanyId}&start=2000-01-01`);
+        const accounts = await res.json();
+        
+        tbody.innerHTML = '';
+        if (!accounts || accounts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No balances recorded yet.</td></tr>';
+            return;
+        }
+
+        const formatMoney = (val) => new Intl.NumberFormat('en-JM', { minimumFractionDigits: 2 }).format(val);
+
+        accounts.forEach(acc => {
+            if (acc.balance === 0) return; // Hide zero balance accounts
+            tbody.innerHTML += `
+                <tr>
+                    <td data-label="Account"><strong>${acc.accountCode}</strong> - ${acc.accountName}</td>
+                    <td data-label="Type"><span class="badge badge-light" style="text-transform: capitalize;">${acc.accountType}</span></td>
+                    <td data-label="Debit Balance" class="text-right">${acc.normalBalance === 'debit' && acc.balance > 0 ? formatMoney(acc.balance) : '-'}</td>
+                    <td data-label="Credit Balance" class="text-right">${acc.normalBalance === 'credit' && acc.balance > 0 ? formatMoney(acc.balance) : '-'}</td>
+                    <td data-label="Net Balance" class="text-right"><strong>${formatMoney(acc.balance)}</strong></td>
+                </tr>
+            `;
+        });
+        
+    } catch (err) {
+        console.error('Failed to load trial balance for dashboard:', err);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading ledger balances</td></tr>';
     }
 }
 
@@ -668,6 +707,7 @@ function initJournalForm() {
 
 // Check GCT registered state to show GCT input in expense form dynamically
 window.accountingJS = {
+    loadTrialBalanceDashboard: loadTrialBalanceDashboard,
     openJournalModal: () => {
         document.getElementById('modalJournal').classList.remove('d-none');
         document.getElementById('formJournal').reset();
