@@ -409,35 +409,39 @@ async function loadJournal() {
         const tbody = document.getElementById('journalTableBody');
         tbody.innerHTML = '';
 
-        if (!data.data || data.data.length === 0) {
+        if (!data.entries || data.entries.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No journal entries found.</td></tr>';
             return;
         }
 
-        data.data.forEach(entry => {
-            const date = new Date(entry.posting_date).toLocaleDateString();
+        data.entries.forEach(entry => {
+            const date = new Date(entry.journal_date).toLocaleDateString();
             const formatMoney = (val) => Number(val).toLocaleString('en-JM', { minimumFractionDigits: 2 });
-            let linesHtml = entry.journal_lines.map(l =>
-                `<div style="${l.is_credit ? 'padding-left: 20px;' : 'font-weight: 500;'}">
-                    ${l.coa_account_code} - ${l.coa_accounts ? l.coa_accounts.name : 'Unknown Account'}
-                 </div>`
-            ).join('');
+            let linesHtml = entry.journal_lines.map(l => {
+                const acctCode = l.chart_of_accounts ? l.chart_of_accounts.code : 'Unknown';
+                const acctName = l.chart_of_accounts ? l.chart_of_accounts.name : 'Unknown Account';
+                return `<div style="${l.credit > 0 ? 'padding-left: 20px;' : 'font-weight: 500;'}">
+                    ${acctCode} - ${acctName}
+                 </div>`;
+            }).join('');
 
             let amountHtml = entry.journal_lines.map(l => {
-                if (l.is_credit) return `<div><span class="text-muted">-</span></div>`;
-                return `<div>${formatMoney(l.amount)}</div>`;
+                if (l.credit > 0 && l.debit === 0) return `<div><span class="text-muted">-</span></div>`;
+                return `<div>${formatMoney(l.debit)}</div>`;
             }).join('');
 
             let creditHtml = entry.journal_lines.map(l => {
-                if (!l.is_credit) return `<div><span class="text-muted">-</span></div>`;
-                return `<div>${formatMoney(l.amount)}</div>`;
+                if (l.debit > 0 && l.credit === 0) return `<div><span class="text-muted">-</span></div>`;
+                return `<div>${formatMoney(l.credit)}</div>`;
             }).join('');
+
+            const isReversal = entry.status === 'reversed' || entry.reversal_of_journal_id;
 
             tbody.innerHTML += `
                 <tr>
                     <td data-label="Date">${date}</td>
                     <td data-label="Source"><span class="badge badge-secondary">${entry.source_type}</span> ${entry.source_id ? `<br><small class="text-muted">${entry.source_id.substring(0, 8)}</small>` : ''}</td>
-                    <td data-label="Description">${entry.description} ${entry.is_reversal ? '<span class="badge badge-danger">REVERSAL</span>' : ''}</td>
+                    <td data-label="Description">${entry.narration || ''} ${isReversal ? '<span class="badge badge-danger">REVERSAL</span>' : ''}</td>
                     <td data-label="Account">${linesHtml}</td>
                     <td data-label="Debit" class="text-right">${amountHtml}</td>
                     <td data-label="Credit" class="text-right">${creditHtml}</td>
