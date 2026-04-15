@@ -591,6 +591,7 @@
                         <td>${s.last_emailed_at ? new Date(s.last_emailed_at).toLocaleDateString() : 'Never'}</td>
                         <td>
                             <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
+                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month})">Edit Schedule</button>
                             <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
                         </td>
@@ -1055,6 +1056,73 @@
         const observer = new MutationObserver(applyTableLabels);
         observer.observe(document.body, { childList: true, subtree: true });
         applyTableLabels();
+
+        // EDIT SCHEDULE LOGIC
+        window.openEditScheduleModal = function(serviceId, frequency, dayOfWeek, dayOfMonth) {
+            document.getElementById('editScheduleServiceId').value = serviceId;
+            document.getElementById('editFrequencySelect').value = frequency || 'monthly';
+            if (dayOfWeek !== null && dayOfWeek !== undefined && dayOfWeek !== 'null') {
+                document.getElementById('editSendDayOfWeek').value = dayOfWeek;
+            }
+            if (dayOfMonth !== null && dayOfMonth !== undefined && dayOfMonth !== 'null') {
+                document.getElementById('editSendDayOfMonth').value = dayOfMonth;
+            }
+            
+            toggleEditScheduleFields();
+            document.getElementById('editScheduleModal').classList.remove('d-none');
+        };
+
+        window.closeEditScheduleModal = function() {
+            document.getElementById('editScheduleModal').classList.add('d-none');
+        };
+
+        window.toggleEditScheduleFields = function() {
+            const freq = document.getElementById('editFrequencySelect').value;
+            if (freq === 'weekly') {
+                document.getElementById('editWeeklyFields').classList.remove('d-none');
+                document.getElementById('editMonthlyFields').classList.add('d-none');
+            } else {
+                document.getElementById('editWeeklyFields').classList.add('d-none');
+                document.getElementById('editMonthlyFields').classList.remove('d-none');
+            }
+        };
+
+        window.submitScheduleUpdate = async function() {
+            const serviceId = document.getElementById('editScheduleServiceId').value;
+            const frequency = document.getElementById('editFrequencySelect').value;
+            let send_day_of_week = null;
+            let send_day_of_month = null;
+
+            if (frequency === 'weekly') {
+                send_day_of_week = document.getElementById('editSendDayOfWeek').value;
+            } else {
+                send_day_of_month = document.getElementById('editSendDayOfMonth').value || 1;
+            }
+
+            try {
+                showLoading('Updating Schedule...');
+                const res = await fetch(`/api/client-services/${serviceId}/schedule`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frequency, send_day_of_week, send_day_of_month })
+                });
+                
+                hideLoading();
+                closeEditScheduleModal();
+
+                const data = await res.json();
+                if (res.ok) {
+                    await showAlert('Schedule updated successfully.', 'success');
+                    loadActiveServices();
+                } else {
+                    await showAlert('Failed to update: ' + data.error, 'error');
+                }
+            } catch (err) {
+                hideLoading();
+                closeEditScheduleModal();
+                await showAlert('An error occurred.', 'error');
+            }
+        };
     </script>
 
     <!-- CUSTOM CONFIRM MODAL -->
@@ -1086,6 +1154,49 @@
                 <div class="d-flex justify-content-center">
                     <button id="alertOkBtn" class="btn btn-primary w-100">OK</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT SCHEDULE MODAL -->
+    <div id="editScheduleModal" class="modal-overlay d-none">
+        <div class="modal-content card fade-in" style="max-width: 500px; width: 90%;">
+            <div class="modal-header">
+                <h3>Edit Schedule</h3>
+                <button class="btn btn-sm btn-outline-light" onclick="closeEditScheduleModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editScheduleServiceId">
+                <div class="mb-3">
+                    <label>Frequency</label>
+                    <select id="editFrequencySelect" class="form-control" onchange="toggleEditScheduleFields()">
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                
+                <div id="editWeeklyFields" class="mb-3 d-none">
+                    <label>Day of Week</label>
+                    <select id="editSendDayOfWeek" class="form-control">
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                        <option value="0">Sunday</option>
+                    </select>
+                </div>
+
+                <div id="editMonthlyFields" class="mb-3 d-none">
+                    <label>Day of Month (1-28)</label>
+                    <input type="number" id="editSendDayOfMonth" class="form-control" min="1" max="28" value="1">
+                </div>
+                <p class="text-muted small">The system will recalculate the next run date automatically based on these settings.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditScheduleModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitScheduleUpdate()">Save Changes</button>
             </div>
         </div>
     </div>

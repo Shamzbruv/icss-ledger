@@ -1201,6 +1201,55 @@ router.put('/api/client-services/:id/renewal', async (req, res) => {
     }
 });
 
+// Update Subscription Schedule Endpoint
+router.put('/api/client-services/:id/schedule', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { frequency, send_day_of_week, send_day_of_month } = req.body;
+
+        // Fetch existing first to recalculate next run
+        const { data: service, error: fetchErr } = await supabase
+            .from('client_services')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchErr) throw fetchErr;
+
+        // Update fields locally
+        service.frequency = frequency;
+        service.send_day_of_week = send_day_of_week !== null && send_day_of_week !== '' ? parseInt(send_day_of_week) : null;
+        service.send_day_of_month = send_day_of_month !== null && send_day_of_month !== '' ? parseInt(send_day_of_month) : null;
+        
+        // Reset the pattern field if we are explicitly taking over
+        service.send_week_of_month = null; 
+
+        // Important: Recalculate the next run date based on the new cadence
+        const { calculateNextRun } = require('./src/services/clientCarePulseService');
+        const next_run_at = calculateNextRun(service);
+
+        const { data, error } = await supabase
+            .from('client_services')
+            .update({ 
+                frequency: service.frequency,
+                send_day_of_week: service.send_day_of_week,
+                send_day_of_month: service.send_day_of_month,
+                send_week_of_month: null, // Clear out pattern if present
+                next_run_at 
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({ success: true, service: data });
+    } catch (err) {
+        console.error('Error updating schedule:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Trigger Reminder Checks Manually
 router.post('/api/admin/check-renewals', async (req, res) => {
     try {
@@ -1211,6 +1260,45 @@ router.post('/api/admin/check-renewals', async (req, res) => {
         res.json({ reminders: remindersResult, advancements: advanceResult });
     } catch (err) {
         console.error('Error checking renewals:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Trigger Payment Declined Email
+router.post('/api/invoices/payment-declined', async (req, res) => {
+    try {
+        const { invoiceId } = req.body;
+        if (!invoiceId) return res.status(400).json({ error: 'Invoice ID required' });
+
+        // 1. Fetch current invoice to get client details
+        const { data: invoice, error: fetchError } = await supabase
+            .from('invoices')
+            .select(`
+                *,
+                clients (*)
+            `)
+            .eq('id', invoiceId)
+            .single();
+
+        if (fetchError || !invoice) return res.status(404).json({ error: 'Invoice not found' });
+        if (!invoice.clients) return res.status(404).json({ error: 'Client details missing for this invoice' });
+
+        // 2. Generate beautiful email content
+        const { getPaymentDeclinedTemplate } = require('./src/services/emailTemplates');
+        const emailContent = getPaymentDeclinedTemplate(invoice, invoice.clients);
+
+        // 3. Send Email
+        const emailService = require('./src/services/emailService');
+        await emailService.sendEmail(
+            invoice.clients.email,
+            emailContent.subject,
+            emailContent.text,
+            emailContent.html
+        );
+
+        res.json({ success: true, message: 'Payment Declined email sent' });
+    } catch (err) {
+        console.error('Error sending Payment Declined email:', err.message);
         res.status(500).json({ error: err.message });
     }
 });

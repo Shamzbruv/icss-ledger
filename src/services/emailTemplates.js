@@ -396,4 +396,75 @@ ${summary.recommendations_text || 'None'}
     return { subject, text: textBody, html: getBaseHtml(htmlBody) };
 }
 
-module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent };
+/**
+ * Generates an elegant Payment Declined Email Template
+ * @param {Object} invoice - The invoice/subscription details
+ * @param {Object} client - Client details
+ */
+function getPaymentDeclinedTemplate(invoice, client) {
+    const serviceName = invoice.plan_name || invoice.service_code || 'Service Subscription';
+    const amountDue = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(parseFloat(invoice.total_amount) || parseFloat(invoice.balance_due) || 0);
+    const invoiceNumber = invoice.invoice_number || 'Auto-Billing';
+
+    const subject = `Action Required: Payment Declined for ${serviceName}`;
+
+    // Modern, Elegant Structure
+    const htmlBody = `
+        <div style="background-color: #fcfcfc; padding: 20px 0;">
+            <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #eaeaea;">
+                
+                <!-- Header Banner -->
+                <div style="background: linear-gradient(135deg, #e63946 0%, #c1121f 100%); padding: 30px 20px; text-align: center;">
+                    <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                        <span style="font-size: 24px; color: white;">!</span>
+                    </div>
+                    <h2 style="color: white; margin: 0; font-size: 22px; font-weight: 600; font-family: 'Inter', Arial, sans-serif;">Payment Declined</h2>
+                </div>
+
+                <!-- Body Content -->
+                <div style="padding: 30px; font-family: 'Inter', Arial, sans-serif; color: #333333;">
+                    <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Hello <strong style="color: #1a1a1a;">${client.name}</strong>,</p>
+                    
+                    <p style="font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 25px;">
+                        We encountered an issue while attempting to process the payment for your recent invoice or subscription renewal. To ensure your services remain uninterrupted, please review your payment details.
+                    </p>
+
+                    <!-- Details Card -->
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 25px; border-left: 4px solid #e63946;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding-bottom: 8px; color: #777; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Service / Plan</td>
+                                <td style="padding-bottom: 8px; text-align: right; font-weight: 600; color: #1a1a1a;">${serviceName}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom: 8px; color: #777; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Reference #</td>
+                                <td style="padding-bottom: 8px; text-align: right; font-weight: 600; color: #1a1a1a;">${invoiceNumber}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding-top: 8px; border-top: 1px solid #e9ecef; color: #777; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Amount Due</td>
+                                <td style="padding-top: 8px; border-top: 1px solid #e9ecef; text-align: right; font-weight: 700; color: #e63946; font-size: 16px;">${amountDue}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Call to Action -->
+                    <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
+                        <a href="mailto:support@icreatesolutionsandservices.com?subject=Update%20Payment%20Method%20-%20${invoiceNumber}" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background-color 0.3s;">
+                            Update Payment Method
+                        </a>
+                    </div>
+                    
+                    <p style="font-size: 14px; color: #888; line-height: 1.5; text-align: center; margin-top: 25px; margin-bottom: 0;">
+                        If you have recently updated your details or believe this is an error, please reply directly to this email and our team will assist you immediately.
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const textBody = `Hello ${client.name},\n\nWe encountered an issue while attempting to process the payment for ${serviceName}. \n\nAmount Due: ${amountDue}\nReference: ${invoiceNumber}\n\nPlease reach out to update your payment method to avoid any service interruptions.\n\nThank you,\niCreate Solutions & Services`;
+
+    return { subject, text: textBody, html: getBaseHtml(htmlBody) };
+}
+
+module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate };

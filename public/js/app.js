@@ -257,6 +257,7 @@ async function loadInvoices() {
                                     <button class="btn btn-sm btn-outline-light" onclick="viewPDF('${inv.id}')" title="View PDF">View PDF</button>
                                     <button class="btn btn-sm btn-outline-light" onclick="resendInvoiceEmail('${inv.id}')" title="Resend Email">Resend</button>
                                     <button class="btn btn-sm btn-primary" onclick="updateStatusInvoice('${inv.id}', '${status}')">Update</button>
+                                    <button class="btn btn-sm btn-danger" onclick="sendPaymentDeclinedAlert('${inv.id}')" title="Payment Declined">Decline Alert</button>
                                 </div>
                             </td>
                          `;
@@ -734,5 +735,39 @@ window.resendInvoiceEmail = async function (id) {
     } catch (err) {
         if (typeof showAlert === 'function') showAlert('Failed to resend: ' + err.message, 'error');
         else alert('Failed to resend: ' + err.message);
+    }
+};
+
+window.sendPaymentDeclinedAlert = async function(id) {
+    if (typeof showConfirm === 'function') {
+        const confirmed = await showConfirm('Are you sure you want to send a Payment Declined alert to this client?', 'info', 'Payment Declined');
+        if (!confirmed) return;
+    } else {
+        if (!confirm('Are you sure you want to send a Payment Declined alert to this client?')) return;
+    }
+
+    try {
+        if (typeof showAlert === 'function') {
+            showAlert('Sending decline alert...', 'info');
+        }
+        
+        const res = await fetch('/api/invoices/payment-declined', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invoiceId: id })
+        });
+        
+        if (res.ok) {
+            if (typeof showAlert === 'function') await showAlert('Payment Declined email sent to the client!', 'success');
+            else alert('Payment Declined email sent to the client!');
+            loadInvoices(); // Refresh the invoice listing to reflect status if any
+        } else {
+            const err = await res.json();
+            if (typeof showAlert === 'function') showAlert('Error: ' + err.error, 'error');
+            else alert('Error: ' + err.error);
+        }
+    } catch (err) {
+        if (typeof showAlert === 'function') showAlert('Failed to send alert: ' + err.message, 'error');
+        else alert('Failed to send alert: ' + err.message);
     }
 };
