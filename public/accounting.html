@@ -203,11 +203,19 @@
             <div class="card">
                 <div class="flex-between mb-3 journal-filters-header" style="flex-wrap: wrap; gap: 15px;">
                     <h4 class="card-title m-0">Ledger Filters</h4>
-                    <div class="filters flex-row" style="gap: 10px;">
-                        <input type="month" id="journalFilterMonth" class="form-control"
+                    <div class="filters flex-row" style="gap: 10px; align-items: center;">
+                        <select id="journalFilterSource" class="form-control form-control-sm" style="width: auto;">
+                            <option value="manual">Manual Journals</option>
+                            <option value="">All Entries</option>
+                            <option value="expense">Expenses</option>
+                            <option value="invoice">Invoices</option>
+                            <option value="payment">Payments</option>
+                            <option value="asset">Assets</option>
+                        </select>
+                        <input type="month" id="journalFilterMonth" class="form-control form-control-sm"
                             style="width: auto; display: inline-block;">
                         <button class="btn btn-outline-primary btn-sm" id="btnRefreshJournal"><i
-                                class="fas fa-sync-alt"></i></button>
+                                class="fas fa-sync-alt"></i> Refresh</button>
                     </div>
                 </div>
                 <div class="table-responsive">

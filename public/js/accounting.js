@@ -440,22 +440,36 @@ function renderComplianceCalendar(events) {
    JOURNAL LEDGER
    ========================================================================== */
 async function loadJournal() {
+    const tbody = document.getElementById('journalTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
     try {
-        // Just fetch latest 50 for the table for now
-        const res = await fetch(`/api/accounting/journal?company_id=${currentCompanyId}&pageSize=50`);
+        const sourceFilter = document.getElementById('journalFilterSource')?.value ?? 'manual';
+        const monthFilter = document.getElementById('journalFilterMonth')?.value; // "YYYY-MM" or ""
+
+        let url = `/api/accounting/journal?company_id=${currentCompanyId}&pageSize=100`;
+        if (sourceFilter) url += `&sourceType=${encodeURIComponent(sourceFilter)}`;
+        if (monthFilter) {
+            const [year, month] = monthFilter.split('-');
+            const lastDay = new Date(year, month, 0).getDate();
+            url += `&periodStart=${year}-${month}-01&periodEnd=${year}-${month}-${lastDay}`;
+        }
+
+        const res = await fetch(url);
         const data = await res.json();
 
-        const tbody = document.getElementById('journalTableBody');
         tbody.innerHTML = '';
 
         if (!data.entries || data.entries.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No journal entries found.</td></tr>';
+            const sourceLabel = sourceFilter ? `source type: "${sourceFilter}"` : 'any source';
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No journal entries found for ${sourceLabel}${monthFilter ? ' in ' + monthFilter : ''}.</td></tr>`;
             return;
         }
 
+        const formatMoney = (val) => Number(val).toLocaleString('en-JM', { minimumFractionDigits: 2 });
+
         data.entries.forEach(entry => {
             const date = new Date(entry.journal_date).toLocaleDateString();
-            const formatMoney = (val) => Number(val).toLocaleString('en-JM', { minimumFractionDigits: 2 });
             let linesHtml = entry.journal_lines.map(l => {
                 const acctCode = l.chart_of_accounts ? l.chart_of_accounts.code : 'Unknown';
                 const acctName = l.chart_of_accounts ? l.chart_of_accounts.name : 'Unknown Account';
@@ -474,12 +488,13 @@ async function loadJournal() {
                 return `<div>${formatMoney(l.credit)}</div>`;
             }).join('');
 
-            const isReversal = entry.status === 'reversed' || entry.reversal_of_journal_id;
+            const isReversal = entry.reversal_of_journal_id;
+            const sourceType = entry.source_type || 'manual';
 
             tbody.innerHTML += `
                 <tr>
                     <td data-label="Date">${date}</td>
-                    <td data-label="Source"><span class="badge badge-secondary">${entry.source_type}</span> ${entry.source_id ? `<br><small class="text-muted">${entry.source_id.substring(0, 8)}</small>` : ''}</td>
+                    <td data-label="Source"><span class="badge badge-secondary">${sourceType}</span></td>
                     <td data-label="Description">${entry.narration || ''} ${isReversal ? '<span class="badge badge-danger">REVERSAL</span>' : ''}</td>
                     <td data-label="Account">${linesHtml}</td>
                     <td data-label="Debit" class="text-right">${amountHtml}</td>
@@ -489,11 +504,15 @@ async function loadJournal() {
         });
     } catch (err) {
         console.error('Journal error:', err);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load journal entries.</td></tr>';
         showToast('Failed to load journal ledger', 'error');
     }
 }
 
 document.getElementById('btnRefreshJournal').addEventListener('click', loadJournal);
+// Also reload when source type dropdown changes
+document.getElementById('journalFilterSource')?.addEventListener('change', loadJournal);
+
 
 /* ==========================================================================
    EXPENSES
