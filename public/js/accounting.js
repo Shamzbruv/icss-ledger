@@ -115,6 +115,19 @@ async function loadDashboard() {
         // Load the new Trial Balance Account Watchlist
         await loadTrialBalanceDashboard();
 
+        // Load AR Ledger Balance (account 1100 - Accounts Receivable)
+        try {
+            const tbRes = await fetch(`/api/accounting/trial-balance?company_id=${currentCompanyId}&start=2000-01-01`);
+            const tbData = await tbRes.json();
+            const arAccount = (tbData || []).find(a => a.accountCode === '1100');
+            const arBalance = arAccount ? arAccount.balance : 0;
+            const arEl = document.getElementById('kpi-ar-ledger');
+            if (arEl) arEl.textContent = new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(arBalance);
+        } catch (e) {
+            const arEl = document.getElementById('kpi-ar-ledger');
+            if (arEl) arEl.textContent = 'N/A';
+        }
+
     } catch (err) {
         console.error('Dashboard load error:', err);
         showToast('Failed to load dashboard data', 'error');
@@ -439,13 +452,14 @@ function renderComplianceCalendar(events) {
 /* ==========================================================================
    JOURNAL LEDGER
    ========================================================================== */
+let expenseMiniChartInstance = null;
 async function loadJournal() {
     const tbody = document.getElementById('journalTableBody');
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
 
     try {
         const sourceFilter = document.getElementById('journalFilterSource')?.value ?? 'manual';
-        const monthFilter = document.getElementById('journalFilterMonth')?.value; // "YYYY-MM" or ""
+        const monthFilter = document.getElementById('journalFilterMonth')?.value;
 
         let url = `/api/accounting/journal?company_id=${currentCompanyId}&pageSize=100`;
         if (sourceFilter) url += `&sourceType=${encodeURIComponent(sourceFilter)}`;
@@ -463,16 +477,25 @@ async function loadJournal() {
         if (!data.entries || data.entries.length === 0) {
             const sourceLabel = sourceFilter ? `source type: "${sourceFilter}"` : 'any source';
             tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No journal entries found for ${sourceLabel}${monthFilter ? ' in ' + monthFilter : ''}.</td></tr>`;
+            // Zero out KPIs
+            ['jnl-total-entries','jnl-total-debits','jnl-total-credits','jnl-accounts-hit'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '0'; });
             return;
         }
 
         const formatMoney = (val) => Number(val).toLocaleString('en-JM', { minimumFractionDigits: 2 });
+
+        // -- Compute summary analytics --
+        let totalDebits = 0, totalCredits = 0;
+        const accountsHit = new Set();
 
         data.entries.forEach(entry => {
             const date = new Date(entry.journal_date).toLocaleDateString();
             let linesHtml = entry.journal_lines.map(l => {
                 const acctCode = l.chart_of_accounts ? l.chart_of_accounts.code : 'Unknown';
                 const acctName = l.chart_of_accounts ? l.chart_of_accounts.name : 'Unknown Account';
+                if (acctCode !== 'Unknown') accountsHit.add(acctCode);
+                totalDebits += Number(l.debit || 0);
+                totalCredits += Number(l.credit || 0);
                 return `<div style="${l.credit > 0 ? 'padding-left: 20px;' : 'font-weight: 500;'}">
                     ${acctCode} - ${acctName}
                  </div>`;
@@ -502,6 +525,14 @@ async function loadJournal() {
                 </tr>
             `;
         });
+
+        // -- Populate summary KPI bar --
+        const setKPI = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setKPI('jnl-total-entries', data.entries.length);
+        setKPI('jnl-total-debits', formatMoney(totalDebits / 2)); // each line logged twice (dr+cr)
+        setKPI('jnl-total-credits', formatMoney(totalCredits / 2));
+        setKPI('jnl-accounts-hit', accountsHit.size);
+
     } catch (err) {
         console.error('Journal error:', err);
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load journal entries.</td></tr>';
@@ -510,7 +541,6 @@ async function loadJournal() {
 }
 
 document.getElementById('btnRefreshJournal').addEventListener('click', loadJournal);
-// Also reload when source type dropdown changes
 document.getElementById('journalFilterSource')?.addEventListener('change', loadJournal);
 
 
@@ -554,6 +584,41 @@ async function loadExpenses() {
                 </tr>
             `;
         });
+
+        // -- Populate Expense Summary KPIs --
+        const totalAmt = expenses.reduce((s, e) => s + Number(e.total_amount || 0), 0);
+        const totalGCT = expenses.reduce((s, e) => s + Number(e.gct_amount || 0), 0);
+        const catTotals = {};
+        expenses.forEach(e => { catTotals[e.coa_account_code] = (catTotals[e.coa_account_code] || 0) + Number(e.total_amount || 0); });
+        const topCat = Object.entries(catTotals).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
+
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setEl('exp-total-amount', formatMoney(totalAmt));
+        setEl('exp-total-gct', formatMoney(totalGCT));
+        setEl('exp-count', expenses.length);
+        setEl('exp-top-category', topCat);
+        const bar = document.getElementById('expenseSummaryBar');
+        if (bar) bar.style.display = '';
+
+        // -- Mini donut chart for expense categories --
+        const catCtx = document.getElementById('expenseMiniChart');
+        if (catCtx) {
+            if (expenseMiniChartInstance) { expenseMiniChartInstance.destroy(); expenseMiniChartInstance = null; }
+            const labels = Object.keys(catTotals);
+            const vals = Object.values(catTotals);
+            expenseMiniChartInstance = new Chart(catCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{ data: vals, backgroundColor: ['#34d399','#818cf8','#f472b6','#fbbf24','#38bdf8','#a78bfa','#fb923c'], borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '70%',
+                    plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 } } }
+                }
+            });
+        }
+
     } catch (err) { Object.assign(window, { lastErr: err }); showToast('Failed to load expenses', 'error'); }
 }
 
@@ -1150,26 +1215,41 @@ async function loadAssets() {
 
         if (!data.assets || data.assets.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No fixed assets registered.</td></tr>';
+            ['asset-total-cost','asset-total-dep','asset-total-nbv','asset-count'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '0'; });
             return;
         }
 
         const formatMoney = (val) => Number(val).toLocaleString('en-JM', { minimumFractionDigits: 2 });
 
+        // API returns: assetName, category, purchaseDate, cost, accumulatedDepreciation, currentNBV, disposed
         data.assets.forEach(a => {
             tbody.innerHTML += `
                 <tr>
-                    <td><strong>${a.asset_name}</strong></td>
-                    <td><span class="badge badge-secondary">${a.category.replace('_', ' ')}</span></td>
-                    <td>${new Date(a.purchase_date).toLocaleDateString()}</td>
-                    <td class="text-right">${formatMoney(a.original_cost)}</td>
-                    <td class="text-right text-danger">${formatMoney(a.accumulated_depreciation_book || 0)}</td>
-                    <td class="text-right font-weight-bold">${formatMoney(a.current_book_value)}</td>
+                    <td><strong>${a.assetName}</strong></td>
+                    <td><span class="badge badge-secondary">${(a.category || '').replace('_', ' ')}</span></td>
+                    <td>${new Date(a.purchaseDate).toLocaleDateString()}</td>
+                    <td class="text-right">${formatMoney(a.cost)}</td>
+                    <td class="text-right text-danger">${formatMoney(a.accumulatedDepreciation || 0)}</td>
+                    <td class="text-right font-weight-bold">${formatMoney(a.currentNBV)}</td>
                     <td class="text-center">
-                        ${a.status === 'active' ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-secondary">Disposed</span>'}
+                        ${!a.disposed ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-secondary">Disposed</span>'}
                     </td>
                 </tr>
             `;
         });
+
+        // -- Populate Asset Summary KPIs --
+        const totalCost = data.assets.reduce((s, a) => s + (a.cost || 0), 0);
+        const totalDep = data.assets.reduce((s, a) => s + (a.accumulatedDepreciation || 0), 0);
+        const totalNBV = data.assets.filter(a => !a.disposed).reduce((s, a) => s + (a.currentNBV || 0), 0);
+        const activeCount = data.assets.filter(a => !a.disposed).length;
+
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setEl('asset-total-cost', formatMoney(totalCost));
+        setEl('asset-total-dep', formatMoney(totalDep));
+        setEl('asset-total-nbv', formatMoney(totalNBV));
+        setEl('asset-count', activeCount);
+
     } catch (err) { showToast('Failed to load assets', 'error'); }
 }
 

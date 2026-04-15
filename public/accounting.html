@@ -99,6 +99,12 @@
                     <div class="kpi-value" id="kpi-tax-reserve">JMD 0.00</div>
                     <div class="kpi-subtext">Estimated FY Contributions</div>
                 </div>
+                <!-- 6: AR Ledger Balance -->
+                <div class="card kpi-card">
+                    <div class="kpi-title">ACCOUNTS RECEIVABLE</div>
+                    <div class="kpi-value" id="kpi-ar-ledger"><i class="fas fa-spinner fa-spin"></i></div>
+                    <div class="kpi-subtext">Ledger Balance (Account 1100)</div>
+                </div>
             </div>
 
             <div class="dashboard-split mt-4" style="display: flex; gap: 20px; flex-wrap: wrap;">
@@ -200,6 +206,34 @@
                             class="fas fa-plus"></i> Record Journal</button>
                 </div>
             </div>
+
+            <!-- Journal Mini Analytics -->
+            <div class="row mb-4" id="journalSummaryBar">
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="jnl-total-entries">-</div>
+                        <div class="kpi-subtext">Entries (Current Filter)</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="jnl-total-debits">-</div>
+                        <div class="kpi-subtext">Total Debits</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="jnl-total-credits">-</div>
+                        <div class="kpi-subtext">Total Credits</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="jnl-accounts-hit" style="font-size:1.1rem;">-</div>
+                        <div class="kpi-subtext">Accounts Affected</div>
+                    </div>
+                </div>
+            </div>
             <div class="card">
                 <div class="flex-between mb-3 journal-filters-header" style="flex-wrap: wrap; gap: 15px;">
                     <h4 class="card-title m-0">Ledger Filters</h4>
@@ -259,6 +293,43 @@
                             class="fas fa-plus"></i> Record Expense</button>
                 </div>
             </div>
+
+            <!-- Expense Mini Analytics -->
+            <div class="row mb-4" id="expenseSummaryBar" style="display:none;">
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="exp-total-amount">-</div>
+                        <div class="kpi-subtext">Total Expenses (JMD)</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="exp-total-gct">-</div>
+                        <div class="kpi-subtext">Total GCT Paid</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="exp-count">-</div>
+                        <div class="kpi-subtext">Total Records</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="exp-top-category">-</div>
+                        <div class="kpi-subtext">Top Category</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-12 col-md-5">
+                    <div class="card" style="height: 220px; position: relative;">
+                        <h5 class="card-title" style="font-size:0.9rem;">Breakdown by Category</h5>
+                        <canvas id="expenseMiniChart" style="max-height: 170px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="table-responsive">
                     <table class="table table-hover table-mobile-cards" id="expensesTable">
@@ -298,6 +369,34 @@
                 </div>
             </div>
 
+            <!-- Fixed Assets Mini Analytics -->
+            <div class="row mb-4">
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="asset-total-cost">-</div>
+                        <div class="kpi-subtext">Total Cost (JMD)</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value text-danger" id="asset-total-dep">-</div>
+                        <div class="kpi-subtext">Accumulated Dep.</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value text-success" id="asset-total-nbv">-</div>
+                        <div class="kpi-subtext">Net Book Value</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="card text-center py-3">
+                        <div class="kpi-value" id="asset-count">-</div>
+                        <div class="kpi-subtext">Active Assets</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="alert highlight-card mb-4" style="font-size: 0.9rem; padding: 12px;">
                 <i class="fas fa-info-circle mr-2"></i> <strong>Note on Jamaica Tax:</strong> Book depreciation is
                 <em>not</em> tax-deductible. The system automatically calculates <strong>Capital Allowances (Schedule
@@ -314,7 +413,7 @@
                                 <th>Purchase Date</th>
                                 <th class="text-right">Original Cost</th>
                                 <th class="text-right">Accumulated Dep.</th>
-                                <th class="text-right">Current Net Book Value</th>
+                                <th class="text-right">Net Book Value</th>
                                 <th class="text-center">Status</th>
                             </tr>
                         </thead>
