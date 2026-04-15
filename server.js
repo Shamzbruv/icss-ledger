@@ -1609,7 +1609,6 @@ router.get('/api/accounting/journal', async (req, res) => {
 // POST /api/accounting/journal (Manual Journal Entry)
 router.post('/api/accounting/journal', async (req, res) => {
     try {
-        const crypto = require('crypto');
         const companyId = await resolveCompanyId(req);
         const { journal_date, description, lines } = req.body;
 
@@ -1617,60 +1616,23 @@ router.post('/api/accounting/journal', async (req, res) => {
             return res.status(400).json({ error: 'Journal must have at least 2 lines' });
         }
 
-        // Validate debits = credits
-        const totalDebit = lines.reduce((sum, l) => sum + (parseFloat(l.debit) || 0), 0);
-        const totalCredit = lines.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
+        // Map UI lines to postJournalEntry expected format
+        const formattedLines = lines.map(l => ({
+            accountCode: l.account_code,
+            debitAmount: parseFloat(l.debit) || 0,
+            creditAmount: parseFloat(l.credit) || 0,
+            memo: l.description || description || 'Manual Entry'
+        }));
 
-        if (Math.abs(totalDebit - totalCredit) > 0.01) {
-            return res.status(400).json({ error: `Debits (${totalDebit.toFixed(2)}) and Credits (${totalCredit.toFixed(2)}) must balance out.` });
-        }
-
-        // Resolve account_code to account_id
-        const codes = lines.map(l => l.account_code);
-        const { data: accounts } = await supabase.from('chart_of_accounts').select('id, code').eq('company_id', companyId).in('code', codes);
-        const accountMap = {};
-        if (accounts) accounts.forEach(a => accountMap[a.code] = a.id);
-
-        // 1. Insert Journal
-        const d = new Date(journal_date);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const period_yyyymm = parseInt(`${yyyy}${mm}`);
-        const manualId = crypto.randomUUID(); // acts as source_id
-
-        const { data: journal, error: jErr } = await supabase.from('journals').insert({
-            company_id: companyId,
-            journal_date,
-            period_yyyymm,
-            journal_series: 'JNL',
-            narration: description || 'Manual Journal Entry',
-            currency: 'JMD',
-            fx_rate: 1.0,
-            source_system: 'icss',
-            source_type: 'manual',
-            source_id: manualId,
-            source_event_version: 1,
-            idempotency_key: manualId,
-            status: 'posted'
-        }).select().single();
-
-        if (jErr) throw jErr;
-
-        // 2. Insert Lines
-        const jLines = lines.map(l => {
-            const accId = accountMap[l.account_code];
-            if (!accId) throw new Error(`Account code ${l.account_code} not found`);
-            return {
-                journal_id: journal.id,
-                account_id: accId,
-                description: l.description || description || 'Manual Entry',
-                debit: parseFloat(l.debit) || 0,
-                credit: parseFloat(l.credit) || 0
-            };
+        const { postJournalEntry } = require('./src/services/accountingCoreService');
+        
+        const journal = await postJournalEntry({
+            companyId,
+            entryDate: journal_date,
+            description: description || 'Manual Journal Entry',
+            sourceType: 'manual',
+            lines: formattedLines
         });
-
-        const { error: lErr } = await supabase.from('journal_lines').insert(jLines);
-        if (lErr) throw lErr;
 
         res.json({ success: true, journal });
     } catch (err) { res.status(500).json({ error: err.message }); }
