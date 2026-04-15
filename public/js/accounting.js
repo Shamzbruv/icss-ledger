@@ -908,38 +908,198 @@ window.accountingJS = {
             const content = document.getElementById('reportViewerContent');
             const title = document.getElementById('reportViewerTitle');
             container.style.display = 'block';
-            content.innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Generating report...</p></div>';
+            content.innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-3">Generating report...</p></div>';
+            container.scrollIntoView({ behavior: 'smooth' });
 
-            let url = `/api/accounting/reports/${reportType}?company_id=${currentCompanyId}`;
-            let titleText = '';
+            const fmt = (val) => new Intl.NumberFormat('en-JM', { minimumFractionDigits: 2 }).format(val || 0);
+            const fmtSign = (val) => (val < 0 ? `<span class="text-danger">(${fmt(Math.abs(val))})</span>` : `<span>${fmt(val)}</span>`);
+
+            const reportRow = (label, value, bold = false, indent = false) => `
+                <tr>
+                    <td style="${indent ? 'padding-left: 30px;' : ''} ${bold ? 'font-weight: 700;' : ''}">${label}</td>
+                    <td class="text-right" style="${bold ? 'font-weight: 700;' : ''}">${value === '' ? '' : fmtSign(value)}</td>
+                </tr>`;
+            const reportSubheader = (label) => `
+                <tr style="background: rgba(99,102,241,0.08);">
+                    <td colspan="2" style="font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 12px; color: var(--primary);">${label}</td>
+                </tr>`;
+            const reportDivider = () => `<tr><td colspan="2" style="border-top: 2px solid var(--border);"></td></tr>`;
+
+            const wrapReport = (titleText, tableHtml) => `
+                <div style="font-family: var(--font-sans, sans-serif);">
+                    <div class="flex-between mb-4" style="flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h4 class="m-0">${titleText}</h4>
+                            <small class="text-muted">ICSS Command Center — Generated ${new Date().toLocaleString()}</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="window.print()"><i class="fas fa-print mr-1"></i> Print / Save PDF</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" style="min-width: 420px;">
+                            <tbody>${tableHtml}</tbody>
+                        </table>
+                    </div>
+                </div>`;
 
             if (reportType === 'pnl') {
                 const month = document.getElementById('pnlMonth').value;
-                if (month) url += `&start=${month}-01&end=${month}-31`; // Approximation
-                titleText = 'Profit & Loss Statement ' + (month ? `(${month})` : '(YTD)');
+                let url = `/api/accounting/reports/pnl?company_id=${currentCompanyId}`;
+                if (month) { url += `&start=${month}-01&end=${month}-31`; }
+                title.innerText = 'Profit & Loss';
+                const d = await fetch(url).then(r => r.json());
+                if (d.error) throw new Error(d.error);
+
+                let rows = '';
+                rows += reportSubheader('Revenue');
+                (d.revenue?.accounts || []).forEach(a => { rows += reportRow(`${a.accountCode} — ${a.accountName}`, a.balance, false, true); });
+                rows += reportDivider();
+                rows += reportRow('Gross Revenue', d.revenue?.grossRevenue, true);
+                if (d.revenue?.discounts > 0) rows += reportRow('Less: Discounts', -d.revenue.discounts, false, true);
+                rows += reportRow('Net Revenue', d.revenue?.netRevenue, true);
+
+                rows += reportSubheader('Operating Expenses');
+                (d.expenses?.operating || []).forEach(a => { rows += reportRow(`${a.accountCode} — ${a.accountName}`, a.balance, false, true); });
+                rows += reportDivider();
+                rows += reportRow('Total Operating Expenses', d.expenses?.totalExpenses, true);
+
+                rows += reportDivider();
+                rows += reportRow('Operating Profit', d.summary?.operatingProfit, true);
+                if (d.expenses?.taxExpenses > 0) {
+                    rows += reportSubheader('Tax Expenses');
+                    (d.expenses?.tax || []).forEach(a => { rows += reportRow(`${a.accountCode} — ${a.accountName}`, a.balance, false, true); });
+                    rows += reportRow('Total Tax Expenses', d.expenses?.taxExpenses, true);
+                }
+                rows += reportDivider();
+                rows += reportRow('NET PROFIT / (LOSS)', d.summary?.netProfit, true);
+
+                const period = `${d.period?.start || ''} to ${d.period?.end || ''}`;
+                content.innerHTML = wrapReport(`P&L Statement — ${period}`, rows);
+
             } else if (reportType === 'balance-sheet') {
-                const asOf = document.getElementById('bsDate').value;
-                if (asOf) url += `&asOf=${asOf}`;
-                titleText = 'Balance Sheet ' + (asOf ? `as of ${asOf}` : '(Current)');
+                const asOf = document.getElementById('bsDate').value || new Date().toISOString().split('T')[0];
+                const d = await fetch(`/api/accounting/reports/balance-sheet?company_id=${currentCompanyId}&asOf=${asOf}`).then(r => r.json());
+                if (d.error) throw new Error(d.error);
+                title.innerText = 'Balance Sheet';
+
+                let rows = '';
+                rows += reportSubheader('Assets');
+                (d.assets?.accounts || []).forEach(a => { rows += reportRow(`${a.accountCode} — ${a.accountName}`, a.balance, false, true); });
+                rows += reportDivider();
+                rows += reportRow('TOTAL ASSETS', d.assets?.total, true);
+
+                rows += reportSubheader('Liabilities');
+                (d.liabilities?.accounts || []).forEach(a => { rows += reportRow(`${a.accountCode} — ${a.accountName}`, a.balance, false, true); });
+                rows += reportDivider();
+                rows += reportRow('TOTAL LIABILITIES', d.liabilities?.total, true);
+
+                rows += reportSubheader('Equity');
+                (d.equity?.accounts || []).forEach(a => { rows += reportRow(`${a.accountCode} — ${a.accountName}`, a.balance, false, true); });
+                rows += reportRow('Retained Earnings', d.equity?.retainedEarnings, false, true);
+                rows += reportDivider();
+                rows += reportRow('TOTAL EQUITY', d.equity?.total, true);
+
+                rows += reportDivider();
+                const balanced = d.check?.balanced;
+                rows += `<tr><td colspan="2" class="text-center py-2"><span class="badge ${balanced ? 'badge-success' : 'badge-danger'}">${balanced ? '✓ Balanced' : '⚠ Out of Balance by ' + fmt(d.check?.assetsMinusLiabilitiesMinusEquity)}</span></td></tr>`;
+
+                content.innerHTML = wrapReport(`Balance Sheet as of ${asOf}`, rows);
+
             } else if (reportType === 'cash-flow') {
-                titleText = 'Cash Flow Summary';
+                const month = document.getElementById('cfMonth').value;
+                let url = `/api/accounting/reports/cash-flow?company_id=${currentCompanyId}`;
+                if (month) { url += `&start=${month}-01&end=${month}-31`; }
+                title.innerText = 'Cash Flow';
+                const d = await fetch(url).then(r => r.json());
+                if (d.error) throw new Error(d.error);
+
+                let rows = '';
+                rows += reportSubheader('Operating Activities');
+                rows += reportRow('Cash Inflows (Receipts)', d.operating?.cashIn, false, true);
+                rows += reportRow('Cash Outflows (Payments)', -d.operating?.cashOut, false, true);
+                rows += reportDivider();
+                rows += reportRow('Net Operating Cash Flow', d.operating?.net, true);
+
+                rows += reportSubheader('Investing Activities');
+                rows += reportRow('Asset Purchases', -d.investing?.assetPurchases, false, true);
+                rows += reportDivider();
+                rows += reportRow('Net Investing Cash Flow', d.investing?.net, true);
+
+                rows += reportSubheader('Financing Activities');
+                rows += reportRow('Capital Injections', d.financing?.capitalInjections, false, true);
+                rows += reportRow('Owner Drawings', -d.financing?.ownerDrawings, false, true);
+                rows += reportDivider();
+                rows += reportRow('Net Financing Cash Flow', d.financing?.net, true);
+
+                rows += reportDivider();
+                rows += reportRow('NET CASH MOVEMENT', d.netCashMovement, true);
+
+                content.innerHTML = wrapReport(`Cash Flow — ${d.period?.start || ''} to ${d.period?.end || ''}`, rows);
+
             } else if (reportType === 'trial-balance') {
-                titleText = 'Trial Balance';
-                url = `/api/accounting/trial-balance?company_id=${currentCompanyId}`;
+                title.innerText = 'Trial Balance';
+                const accounts = await fetch(`/api/accounting/trial-balance?company_id=${currentCompanyId}&start=2000-01-01`).then(r => r.json());
+                if (!Array.isArray(accounts)) throw new Error(accounts.error || 'Failed to load trial balance');
+
+                const totalDr = accounts.reduce((s, a) => s + a.debits, 0);
+                const totalCr = accounts.reduce((s, a) => s + a.credits, 0);
+
+                const typeOrder = ['asset', 'liability', 'equity', 'revenue', 'expense'];
+                const grouped = {};
+                accounts.forEach(a => {
+                    const t = a.accountType || 'other';
+                    if (!grouped[t]) grouped[t] = [];
+                    grouped[t].push(a);
+                });
+
+                let tableHtml = `
+                    <div class="flex-between mb-4" style="flex-wrap:wrap; gap:10px;">
+                        <div><h4 class="m-0">Trial Balance — All Time</h4><small class="text-muted">ICSS Command Center — Generated ${new Date().toLocaleString()}</small></div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="window.print()"><i class="fas fa-print mr-1"></i> Print / Save PDF</button>
+                    </div>
+                    <div class="table-responsive">
+                    <table class="table" style="min-width: 500px;">
+                        <thead><tr>
+                            <th>Account</th>
+                            <th>Type</th>
+                            <th class="text-right">Debits</th>
+                            <th class="text-right">Credits</th>
+                            <th class="text-right">Balance</th>
+                        </tr></thead><tbody>`;
+
+                typeOrder.forEach(type => {
+                    const accts = grouped[type];
+                    if (!accts || accts.length === 0) return;
+                    tableHtml += `<tr style="background: rgba(99,102,241,0.08);"><td colspan="5" style="font-weight:700; text-transform:uppercase; font-size:0.85rem; letter-spacing:0.05em; color:var(--primary);">${type}</td></tr>`;
+                    accts.sort((a,b) => a.accountCode.localeCompare(b.accountCode)).forEach(a => {
+                        tableHtml += `<tr>
+                            <td style="padding-left:20px;">${a.accountCode} — ${a.accountName}</td>
+                            <td><span class="badge badge-light">${a.accountType}</span></td>
+                            <td class="text-right">${fmt(a.debits)}</td>
+                            <td class="text-right">${fmt(a.credits)}</td>
+                            <td class="text-right font-weight-bold">${fmt(a.balance)}</td>
+                        </tr>`;
+                    });
+                });
+
+                const balanced = Math.abs(totalDr - totalCr) < 1;
+                tableHtml += `
+                    <tr style="border-top: 2px solid var(--border); font-weight:700;">
+                        <td colspan="2">TOTALS</td>
+                        <td class="text-right">${fmt(totalDr)}</td>
+                        <td class="text-right">${fmt(totalCr)}</td>
+                        <td class="text-right"><span class="badge ${balanced ? 'badge-success' : 'badge-danger'}">${balanced ? '✓ Balanced' : '⚠ Unbalanced'}</span></td>
+                    </tr>
+                    </tbody></table></div>`;
+
+                content.innerHTML = tableHtml;
             }
 
-            title.innerText = titleText;
-            const res = await fetch(url);
-            const data = await res.json();
-
-            // Very simple JSON renderer for now
-            content.innerHTML = `<pre style="background: #f8f9fa; padding: 15px; border-radius: 5px;">${JSON.stringify(data, null, 2)}</pre>`;
-
         } catch (err) {
-            showToast('Failed to run report. Check console.', 'error');
+            document.getElementById('reportViewerContent').innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle mr-2"></i>${err.message || 'Failed to generate report.'}</div>`;
             console.error(err);
         }
     },
+
 
     // --- BULK IMPORT LOGIC ---
     currentBulkImportBatchId: null,

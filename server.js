@@ -1697,6 +1697,40 @@ router.get('/api/accounting/reports/reconciliation', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// GET /api/accounting/reports/pnl
+router.get('/api/accounting/reports/pnl', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { start, end, basis } = req.query;
+        const yearStart = `${new Date().getFullYear()}-01-01`;
+        const today = new Date().toISOString().split('T')[0];
+        const data = await getProfitAndLoss(companyId, start || yearStart, end || today, basis || 'accrual');
+        res.json(data);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/reports/balance-sheet
+router.get('/api/accounting/reports/balance-sheet', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const asOf = req.query.asOf || new Date().toISOString().split('T')[0];
+        const data = await getBalanceSheet(companyId, asOf);
+        res.json(data);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/accounting/reports/cash-flow
+router.get('/api/accounting/reports/cash-flow', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { start, end } = req.query;
+        const yearStart = `${new Date().getFullYear()}-01-01`;
+        const today = new Date().toISOString().split('T')[0];
+        const data = await getCashFlowSummary(companyId, start || yearStart, end || today);
+        res.json(data);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // GET /api/accounting/dashboard/widgets
 router.get('/api/accounting/dashboard/widgets', async (req, res) => {
     try {
