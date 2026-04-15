@@ -388,6 +388,8 @@ async function getDashboardWidgets(companyId) {
     const arAging = await getARAgingReport(companyId);
 
     // 3b. Supplement with ledger-based AR (account 1100) — catches manual journal entries
+    //     for invoices sent via external systems not recorded in the invoices table.
+    //     These are added directly on top of invoice AR since they are separate receivables.
     try {
         const { data: arAccount } = await supabase
             .from('chart_of_accounts')
@@ -403,15 +405,12 @@ async function getDashboardWidgets(companyId) {
                 .eq('account_id', arAccount.id)
                 .eq('journals.status', 'posted');
 
-            const ledgerARBalance = (arLines || []).reduce((sum, l) => sum + (Number(l.debit) - Number(l.credit)), 0);
-            const invoiceARTotal = arAging.totals.grandTotal || 0;
+            const ledgerARBalance = Math.max(0, (arLines || []).reduce((sum, l) => sum + (Number(l.debit) - Number(l.credit)), 0));
 
-            // If the ledger AR is greater than invoice AR, add the difference into "Current"
-            // (manual entries have no due date so they're always "current" aged)
-            const ledgerOnlyAR = Math.max(0, Math.round((ledgerARBalance - invoiceARTotal) * 100) / 100);
-            if (ledgerOnlyAR > 0) {
-                arAging.totals.current = Math.round((arAging.totals.current + ledgerOnlyAR) * 100) / 100;
-                arAging.totals.grandTotal = Math.round((arAging.totals.grandTotal + ledgerOnlyAR) * 100) / 100;
+            // Add full ledger AR balance into "Current" — manual entries have no due date
+            if (ledgerARBalance > 0) {
+                arAging.totals.current = Math.round((arAging.totals.current + ledgerARBalance) * 100) / 100;
+                arAging.totals.grandTotal = Math.round((arAging.totals.grandTotal + ledgerARBalance) * 100) / 100;
             }
         }
     } catch (e) {
