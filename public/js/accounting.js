@@ -64,7 +64,7 @@ function initTabs() {
             switch (target) {
                 case 'tab-dashboard': loadDashboard(); break;
                 case 'tab-journal': loadJournal(); break;
-                case 'tab-expenses': loadExpenses(); loadCoADropdown(); break;
+                case 'tab-expenses': loadCoADropdown().then(() => loadExpenses()); break;
                 case 'tab-assets': loadAssets(); break;
                 case 'tab-reports': break; // Loaded on demand
                 case 'tab-gct': loadGCTTracker(); break;
@@ -562,9 +562,13 @@ async function loadExpenses() {
 
         const formatMoney = (val) => Number(val).toLocaleString('en-JM', { minimumFractionDigits: 2 });
 
+        // Build a code → name lookup from cached accounts (loaded by loadCoADropdown)
+        const acctNameMap = {};
+        (window.accountingJS._cachedAccounts || []).forEach(a => { acctNameMap[a.code] = a.name; });
+        const codeName = (code) => acctNameMap[code] || code; // fallback to code if name not cached
+
         expenses.forEach(ex => {
             const vendorDisplay = ex.vendor || ex.vendor_name || '';
-            // Store the full object temporarily so edit func can use it
             window.loadedExpenses = window.loadedExpenses || {};
             window.loadedExpenses[ex.id] = ex;
 
@@ -573,7 +577,7 @@ async function loadExpenses() {
                     <td data-label="Date">${new Date(ex.expense_date).toLocaleDateString()}</td>
                     <td data-label="Vendor"><strong>${vendorDisplay}</strong></td>
                     <td data-label="Description">${ex.description}</td>
-                    <td data-label="Category">${ex.coa_account_code}</td>
+                    <td data-label="Category">${codeName(ex.coa_account_code)}</td>
                     <td data-label="Type"><span class="badge badge-info">${ex.expense_type}</span></td>
                     <td data-label="Amount" class="text-right">${formatMoney(ex.total_amount)} ${ex.currency}</td>
                     <td data-label="Tax (GCT)" class="text-right">${ex.gct_amount > 0 ? formatMoney(ex.gct_amount) : '-'}</td>
@@ -585,11 +589,14 @@ async function loadExpenses() {
             `;
         });
 
-        // -- Populate Expense Summary KPIs --
+        // -- Populate Expense Summary KPIs (using names as keys) --
         const totalAmt = expenses.reduce((s, e) => s + Number(e.total_amount || 0), 0);
         const totalGCT = expenses.reduce((s, e) => s + Number(e.gct_amount || 0), 0);
         const catTotals = {};
-        expenses.forEach(e => { catTotals[e.coa_account_code] = (catTotals[e.coa_account_code] || 0) + Number(e.total_amount || 0); });
+        expenses.forEach(e => {
+            const label = codeName(e.coa_account_code);
+            catTotals[label] = (catTotals[label] || 0) + Number(e.total_amount || 0);
+        });
         const topCat = Object.entries(catTotals).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
 
         const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
