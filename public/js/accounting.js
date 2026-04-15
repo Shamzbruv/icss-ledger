@@ -115,17 +115,11 @@ async function loadDashboard() {
         // Load the new Trial Balance Account Watchlist
         await loadTrialBalanceDashboard();
 
-        // Load AR Ledger Balance (account 1100 - Accounts Receivable)
-        try {
-            const tbRes = await fetch(`/api/accounting/trial-balance?company_id=${currentCompanyId}&start=2000-01-01`);
-            const tbData = await tbRes.json();
-            const arAccount = (tbData || []).find(a => a.accountCode === '1100');
-            const arBalance = arAccount ? arAccount.balance : 0;
-            const arEl = document.getElementById('kpi-ar-ledger');
-            if (arEl) arEl.textContent = new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(arBalance);
-        } catch (e) {
-            const arEl = document.getElementById('kpi-ar-ledger');
-            if (arEl) arEl.textContent = 'N/A';
+        // AR KPI card — use the same combined total as the aging chart (invoices + ledger)
+        const arEl = document.getElementById('kpi-ar-ledger');
+        if (arEl) {
+            const totalAR = widgets.arAgingTotals?.grandTotal || 0;
+            arEl.textContent = new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(totalAR);
         }
 
     } catch (err) {
