@@ -384,8 +384,39 @@ async function getDashboardWidgets(companyId) {
     const pnl30 = await getProfitAndLoss(companyId, thirtyDaysAgo.toISOString().split('T')[0], today.toISOString().split('T')[0]);
     const mrr = pnl30.summary.netRevenue || 0;
 
-    // 3. A/R Aging Summary
+    // 3. A/R Aging Summary (from invoices)
     const arAging = await getARAgingReport(companyId);
+
+    // 3b. Supplement with ledger-based AR (account 1100) — catches manual journal entries
+    try {
+        const { data: arAccount } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .eq('company_id', companyId)
+            .eq('code', '1100')
+            .maybeSingle();
+
+        if (arAccount) {
+            const { data: arLines } = await supabase
+                .from('journal_lines')
+                .select('debit, credit, journals!inner(status)')
+                .eq('account_id', arAccount.id)
+                .eq('journals.status', 'posted');
+
+            const ledgerARBalance = (arLines || []).reduce((sum, l) => sum + (Number(l.debit) - Number(l.credit)), 0);
+            const invoiceARTotal = arAging.totals.grandTotal || 0;
+
+            // If the ledger AR is greater than invoice AR, add the difference into "Current"
+            // (manual entries have no due date so they're always "current" aged)
+            const ledgerOnlyAR = Math.max(0, Math.round((ledgerARBalance - invoiceARTotal) * 100) / 100);
+            if (ledgerOnlyAR > 0) {
+                arAging.totals.current = Math.round((arAging.totals.current + ledgerOnlyAR) * 100) / 100;
+                arAging.totals.grandTotal = Math.round((arAging.totals.grandTotal + ledgerOnlyAR) * 100) / 100;
+            }
+        }
+    } catch (e) {
+        console.warn('[getDashboardWidgets] Failed to supplement AR with ledger balance:', e.message);
+    }
 
     // 4. Net Profit Margin (YTD)
     const pnlYTD = await getProfitAndLoss(companyId, ytdStart, today.toISOString().split('T')[0]);
