@@ -405,66 +405,134 @@ function getPaymentDeclinedTemplate(invoice, client) {
     const serviceName = invoice.plan_name || invoice.service_code || 'Service Subscription';
     const amountDue = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(parseFloat(invoice.total_amount) || parseFloat(invoice.balance_due) || 0);
     const invoiceNumber = invoice.invoice_number || 'Auto-Billing';
+    const dueDate = invoice.due_date ? formatDate(invoice.due_date) : 'Immediately';
 
-    const subject = `Action Required: Payment Declined for ${serviceName}`;
+    const subject = `⚠️ Action Required: Payment Declined — ${serviceName}`;
 
-    // Modern, Elegant Structure
-    const htmlBody = `
-        <div style="background-color: #fcfcfc; padding: 20px 0;">
-            <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #eaeaea;">
-                
-                <!-- Header Banner -->
-                <div style="background: linear-gradient(135deg, #e63946 0%, #c1121f 100%); padding: 30px 20px; text-align: center;">
-                    <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
-                        <span style="font-size: 24px; color: white;">!</span>
-                    </div>
-                    <h2 style="color: white; margin: 0; font-size: 22px; font-weight: 600; font-family: 'Inter', Arial, sans-serif;">Payment Declined</h2>
-                </div>
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Declined — iCreate Solutions & Services</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f2f2f7; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
 
-                <!-- Body Content -->
-                <div style="padding: 30px; font-family: 'Inter', Arial, sans-serif; color: #333333;">
-                    <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Hello <strong style="color: #1a1a1a;">${client.name}</strong>,</p>
-                    
-                    <p style="font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 25px;">
-                        We encountered an issue while attempting to process the payment for your recent invoice or subscription renewal. To ensure your services remain uninterrupted, please review your payment details.
-                    </p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f2f2f7; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.10);">
 
-                    <!-- Details Card -->
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 25px; border-left: 4px solid #e63946;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <td style="padding-bottom: 8px; color: #777; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Service / Plan</td>
-                                <td style="padding-bottom: 8px; text-align: right; font-weight: 600; color: #1a1a1a;">${serviceName}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding-bottom: 8px; color: #777; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Reference #</td>
-                                <td style="padding-bottom: 8px; text-align: right; font-weight: 600; color: #1a1a1a;">${invoiceNumber}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding-top: 8px; border-top: 1px solid #e9ecef; color: #777; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Amount Due</td>
-                                <td style="padding-top: 8px; border-top: 1px solid #e9ecef; text-align: right; font-weight: 700; color: #e63946; font-size: 16px;">${amountDue}</td>
-                            </tr>
-                        </table>
-                    </div>
+          <!-- ═══ HEADER BANNER ═══ -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #c0392b 0%, #922b21 100%); padding: 42px 40px; text-align:center;">
+              <div style="width:64px; height:64px; background:rgba(255,255,255,0.15); border-radius:50%; margin:0 auto 18px auto; display:flex; align-items:center; justify-content:center;">
+                <span style="font-size:32px; line-height:1;">⚠️</span>
+              </div>
+              <p style="margin:0 0 6px 0; color:rgba(255,255,255,0.75); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Payment Notice</p>
+              <h1 style="margin:0; color:#ffffff; font-size:26px; font-weight:700; letter-spacing:-0.5px;">Payment Declined</h1>
+              <p style="margin:12px 0 0 0; color:rgba(255,255,255,0.8); font-size:14px;">Immediate attention required to keep your services active</p>
+            </td>
+          </tr>
 
-                    <!-- Call to Action -->
-                    <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                        <a href="mailto:support@icreatesolutionsandservices.com?subject=Update%20Payment%20Method%20-%20${invoiceNumber}" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background-color 0.3s;">
-                            Update Payment Method
-                        </a>
-                    </div>
-                    
-                    <p style="font-size: 14px; color: #888; line-height: 1.5; text-align: center; margin-top: 25px; margin-bottom: 0;">
-                        If you have recently updated your details or believe this is an error, please reply directly to this email and our team will assist you immediately.
-                    </p>
-                </div>
-            </div>
-        </div>
-    `;
+          <!-- ═══ BODY CONTENT ═══ -->
+          <tr>
+            <td style="padding: 40px 44px 10px 44px;">
+              <p style="margin:0 0 10px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hello ${client.name},</p>
+              <p style="margin:0 0 28px 0; font-size:15px; color:#555555; line-height:1.7;">
+                We attempted to process the payment for your <strong style="color:#1a1a1a;">${serviceName}</strong> on your account, but unfortunately the transaction was declined. To avoid any interruption to your services, please update your payment information as soon as possible.
+              </p>
 
-    const textBody = `Hello ${client.name},\n\nWe encountered an issue while attempting to process the payment for ${serviceName}. \n\nAmount Due: ${amountDue}\nReference: ${invoiceNumber}\n\nPlease reach out to update your payment method to avoid any service interruptions.\n\nThank you,\niCreate Solutions & Services`;
+              <!-- ═══ INVOICE DETAIL CARD ═══ -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff5f5; border-radius:14px; border:1.5px solid #f5c6c6; padding:0; margin-bottom:30px;">
+                <tr>
+                  <td style="padding: 22px 26px;">
+                    <p style="margin:0 0 14px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#c0392b;">Payment Details</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #f0c0c0; color:#777; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Service / Plan</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #f0c0c0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${serviceName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #f0c0c0; color:#777; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Reference #</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #f0c0c0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${invoiceNumber}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #f0c0c0; color:#777; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Payment Due</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #f0c0c0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${dueDate}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:14px 0 0 0; color:#c0392b; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Amount Due</td>
+                        <td style="padding:14px 0 0 0; text-align:right; font-weight:800; color:#c0392b; font-size:22px;">${amountDue}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-    return { subject, text: textBody, html: getBaseHtml(htmlBody) };
+              <!-- ═══ WHAT TO DO NEXT ═══ -->
+              <p style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#1a1a1a; text-transform:uppercase; letter-spacing:0.5px;">What you can do:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
+                <tr>
+                  <td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                    <span style="display:inline-block; width:28px; height:28px; background:#fff5f5; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#c0392b; margin-right:12px; vertical-align:middle;">1</span>
+                    <span style="font-size:14px; color:#444; vertical-align:middle;">Verify your card details are correct and current</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                    <span style="display:inline-block; width:28px; height:28px; background:#fff5f5; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#c0392b; margin-right:12px; vertical-align:middle;">2</span>
+                    <span style="font-size:14px; color:#444; vertical-align:middle;">Confirm sufficient funds are available</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;">
+                    <span style="display:inline-block; width:28px; height:28px; background:#fff5f5; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#c0392b; margin-right:12px; vertical-align:middle;">3</span>
+                    <span style="font-size:14px; color:#444; vertical-align:middle;">Contact us to provide a new payment method</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ═══ CTA BUTTON ═══ -->
+          <tr>
+            <td style="padding: 0 44px 36px 44px; text-align:center;">
+              <a href="mailto:support@icreatesolutionsandservices.com?subject=Update%20Payment%20Method%20-%20${invoiceNumber}&body=Hi%2C%20I%20would%20like%20to%20update%20my%20payment%20method%20for%20invoice%20${invoiceNumber}."
+                 style="display:inline-block; background:linear-gradient(135deg, #c0392b 0%, #922b21 100%); color:#ffffff; text-decoration:none; padding:16px 36px; border-radius:50px; font-weight:700; font-size:15px; letter-spacing:0.3px; box-shadow:0 8px 24px rgba(192,57,43,0.35);">
+                Update Payment Method →
+              </a>
+              <p style="margin:16px 0 0 0; font-size:13px; color:#999;">Or reply directly to this email and our team will assist you right away.</p>
+            </td>
+          </tr>
+
+          <!-- ═══ WARNING STRIP ═══ -->
+          <tr>
+            <td style="background:#fef9f9; border-top:1px solid #f5c6c6; padding:18px 44px;">
+              <p style="margin:0; font-size:13px; color:#c0392b; text-align:center; font-weight:500;">
+                ⚠️ &nbsp;Failure to resolve this within <strong>7 days</strong> may result in temporary suspension of your services.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ═══ FOOTER ═══ -->
+          <tr>
+            <td style="background:#1a1a1a; padding:28px 44px; text-align:center;">
+              <p style="margin:0 0 6px 0; color:#ffffff; font-size:14px; font-weight:600;">iCreate Solutions &amp; Services</p>
+              <p style="margin:0; color:#888; font-size:12px;">© ${new Date().getFullYear()} iCreate Solutions &amp; Services. All rights reserved.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const textBody = `Hello ${client.name},\n\nACTION REQUIRED: Payment Declined\n\nWe were unable to process your payment for ${serviceName}.\n\nInvoice Reference: ${invoiceNumber}\nAmount Due: ${amountDue}\nPayment Due: ${dueDate}\n\nTo avoid service interruption, please:\n1. Verify your card details are correct\n2. Confirm sufficient funds are available\n3. Contact us to provide a new payment method\n\nReply to this email or contact: support@icreatesolutionsandservices.com\n\nFailure to resolve within 7 days may result in temporary suspension of services.\n\nThank you,\niCreate Solutions & Services`;
+
+    return { subject, text: textBody, html };
 }
 
 module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate };
