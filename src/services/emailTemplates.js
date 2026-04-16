@@ -535,4 +535,140 @@ function getPaymentDeclinedTemplate(invoice, client) {
     return { subject, text: textBody, html };
 }
 
-module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate };
+/**
+ * Payment Nudge Email — sent from Client Care section for subscription payment reminders
+ * TO: client   |   BCC: owner (handled by the route)
+ * @param {Object} service - client_service row (has frequency, next_renewal_date etc.)
+ * @param {Object} client  - clients row (name, email)
+ * @param {Object} plan    - service_plans row (name, price etc.)
+ */
+function getPaymentNudgeTemplate(service, client, plan) {
+    const planName   = plan?.name || service?.service_meta_json?.planName || 'your subscription';
+    const frequency  = service?.frequency ? service.frequency.charAt(0).toUpperCase() + service.frequency.slice(1) : 'Recurring';
+    const renewalRaw = service?.next_renewal_date;
+    const renewal    = renewalRaw ? formatDate(renewalRaw) : null;
+    const price      = plan?.price ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price) : null;
+
+    const subject = `Action Required: Please Update Your Payment Details — ${planName}`;
+
+    const renewalRow = renewal ? `
+      <tr>
+        <td style="padding:8px 0; border-bottom:1px solid #e8e4ff; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Next Renewal</td>
+        <td style="padding:8px 0; border-bottom:1px solid #e8e4ff; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${renewal}</td>
+      </tr>` : '';
+
+    const priceRow = price ? `
+      <tr>
+        <td style="padding:10px 0 0 0; color:#4f46e5; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Subscription Amount</td>
+        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#4f46e5; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${frequency.toLowerCase()}</span></td>
+      </tr>` : '';
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Reminder — iCreate Solutions & Services</title>
+</head>
+<body style="margin:0; padding:0; background:#f0f0f5; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f5; padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.10);">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding:44px 40px; text-align:center;">
+              <p style="margin:0 0 8px 0; color:rgba(255,255,255,0.7); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Subscription Notice</p>
+              <h1 style="margin:0 0 10px 0; color:#ffffff; font-size:26px; font-weight:700; letter-spacing:-0.5px;">Payment Update Required</h1>
+              <p style="margin:0; color:rgba(255,255,255,0.8); font-size:14px; line-height:1.5;">We need you to review your payment details to keep your services running smoothly.</p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:38px 44px 10px 44px;">
+              <p style="margin:0 0 8px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hi ${client.name},</p>
+              <p style="margin:0 0 28px 0; font-size:15px; color:#555; line-height:1.7;">
+                We noticed there may be an issue with the payment method on file for your <strong style="color:#1a1a1a;">${planName}</strong> subscription. To avoid any interruption to your services, please take a moment to verify or update your payment details.
+              </p>
+
+              <!-- SUBSCRIPTION CARD -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff; border-radius:14px; border:1.5px solid #ddd6fe; margin-bottom:30px;">
+                <tr>
+                  <td style="padding:22px 26px;">
+                    <p style="margin:0 0 14px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#4f46e5;">Subscription Details</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #e8e4ff; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Plan</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #e8e4ff; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${planName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #e8e4ff; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Billing Cycle</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #e8e4ff; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${frequency}</td>
+                      </tr>
+                      ${renewalRow}
+                      ${priceRow}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- STEPS -->
+              <p style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#1a1a1a; text-transform:uppercase; letter-spacing:0.5px;">What to do:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f3ff; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#4f46e5; margin-right:12px; vertical-align:middle;">1</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Check that your payment method is valid and up to date</span>
+                </td></tr>
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f3ff; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#4f46e5; margin-right:12px; vertical-align:middle;">2</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Ensure sufficient funds are available for your next billing cycle</span>
+                </td></tr>
+                <tr><td style="padding:10px 0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f3ff; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#4f46e5; margin-right:12px; vertical-align:middle;">3</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Reply to this email or reach out to us directly if you need assistance</span>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding:0 44px 36px 44px; text-align:center;">
+              <a href="mailto:support@icreatesolutionsandservices.com?subject=Payment%20Update%20-%20${encodeURIComponent(planName)}&body=Hi%2C%20I%20would%20like%20to%20update%20my%20payment%20details%20for%20my%20${encodeURIComponent(planName)}%20subscription."
+                 style="display:inline-block; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); color:#ffffff; text-decoration:none; padding:16px 36px; border-radius:50px; font-weight:700; font-size:15px; box-shadow:0 8px 24px rgba(79,70,229,0.35);">
+                Contact Us to Update Payment →
+              </a>
+              <p style="margin:14px 0 0 0; font-size:13px; color:#999;">Simply reply to this email — we're here to help.</p>
+            </td>
+          </tr>
+
+          <!-- NOTE STRIP -->
+          <tr>
+            <td style="background:#fafafa; border-top:1px solid #ece9ff; padding:16px 44px;">
+              <p style="margin:0; font-size:13px; color:#888; text-align:center;">
+                If you believe this is an error or have already updated your details, please disregard this message.
+              </p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#1a1a1a; padding:28px 44px; text-align:center;">
+              <p style="margin:0 0 6px 0; color:#fff; font-size:14px; font-weight:600;">iCreate Solutions &amp; Services</p>
+              <p style="margin:0; color:#888; font-size:12px;">© ${new Date().getFullYear()} iCreate Solutions &amp; Services. All rights reserved.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    return { subject, html };
+}
+
+module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate };

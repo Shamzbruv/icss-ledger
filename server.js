@@ -1159,6 +1159,43 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// PAYMENT NUDGE — Send payment reminder for a subscription
+router.post('/api/client-services/payment-nudge', async (req, res) => {
+    try {
+        const { serviceId } = req.body;
+        if (!serviceId) return res.status(400).json({ error: 'serviceId is required' });
+
+        // Fetch the subscription with client + plan details
+        const { data: service, error } = await supabase
+            .from('client_services')
+            .select(`*, clients(*), service_plans(*)`)
+            .eq('id', serviceId)
+            .single();
+
+        if (error || !service) return res.status(404).json({ error: 'Subscription not found' });
+        if (!service.clients?.email) return res.status(400).json({ error: 'Client has no email address' });
+
+        const { getPaymentNudgeTemplate } = require('./src/services/emailTemplates');
+        const emailContent = getPaymentNudgeTemplate(service, service.clients, service.service_plans);
+
+        const emailService = require('./src/services/emailService');
+        const ownerEmail = process.env.EMAIL_USER || 'iCreatesolutions.ja@gmail.com';
+
+        await emailService.sendEmail(
+            service.clients.email,
+            emailContent.subject,
+            emailContent.html,
+            'iCreate Solutions <support@icreatesolutionsandservices.com>',
+            ownerEmail  // BCC owner
+        );
+
+        console.log(`💳 Payment nudge sent to ${service.clients.email} (BCC: ${ownerEmail})`);
+        res.json({ success: true, message: `Payment nudge sent to ${service.clients.name}` });
+    } catch (err) {
+        console.error('Payment nudge error:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // ADMIN: List All Active Services
 router.get('/api/admin/client-services', async (req, res) => {

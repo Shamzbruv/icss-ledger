@@ -458,6 +458,36 @@
             }
         }
 
+        async function sendPaymentNudge(serviceId) {
+            const confirmed = typeof showConfirm === 'function'
+                ? await showConfirm('Send a payment reminder to this client? You will be BCC\'d on the email.', 'warning', 'Payment Nudge')
+                : confirm('Send a payment reminder to this client? You will be BCC\'d on the email.');
+            if (!confirmed) return;
+
+            try {
+                const btn = document.querySelector(`button[onclick="sendPaymentNudge('${serviceId}')"]`);
+                if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Sending...'; }
+
+                const res = await fetch('/api/client-services/payment-nudge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ serviceId })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to send nudge');
+
+                if (typeof showAlert === 'function') showAlert('Payment reminder sent! You\'ve been BCC\'d.', 'success');
+                else alert('Payment reminder sent!');
+            } catch (err) {
+                if (typeof showAlert === 'function') showAlert('Error: ' + err.message, 'error');
+                else alert('Error: ' + err.message);
+            } finally {
+                const btn = document.querySelector(`button[onclick="sendPaymentNudge('${serviceId}')"]`);
+                if (btn) { btn.disabled = false; btn.innerHTML = '💳 Payment Nudge'; }
+            }
+        }
+
         function toggleScheduleFields() {
             const freq = document.getElementById('frequencySelect').value;
             const weeklyDiv = document.getElementById('weeklyFields');
@@ -593,6 +623,7 @@
                             <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
                             <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month})">Edit Schedule</button>
                             <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
+                            <button class="btn btn-sm btn-warning" onclick="sendPaymentNudge('${s.id}')" title="Send payment reminder to client" style="margin-left: 5px;">💳 Payment Nudge</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
                         </td>
                     </tr>
