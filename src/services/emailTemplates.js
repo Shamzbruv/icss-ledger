@@ -671,4 +671,117 @@ function getPaymentNudgeTemplate(service, client, plan) {
     return { subject, html };
 }
 
-module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate };
+/**
+ * Upcoming Subscription Renewal Email Template
+ * Expected to return raw HTML string for the cron reminder engine.
+ * @param {Object} service - client_service row (has clients and service_plans joined)
+ */
+function getSubscriptionRenewalTemplate(service) {
+    const client = service.clients || { name: 'Valued Client' };
+    const plan = service.service_plans || { name: 'Service Subscription', price: 0 };
+    
+    const renewalRaw = service.next_renewal_date;
+    const renewalDate = renewalRaw ? formatDate(renewalRaw) : 'Soon';
+    const frequency = service.frequency ? service.frequency.charAt(0).toUpperCase() + service.frequency.slice(1) : 'Recurring';
+    const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price || 0);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Subscription Renewal — iCreate Solutions & Services</title>
+</head>
+<body style="margin:0; padding:0; background:#f0f0f5; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f5; padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.10);">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #0056b3 0%, #003d82 100%); padding:44px 40px; text-align:center;">
+              <p style="margin:0 0 8px 0; color:rgba(255,255,255,0.7); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Automated Notice</p>
+              <h1 style="margin:0 0 10px 0; color:#ffffff; font-size:26px; font-weight:700; letter-spacing:-0.5px;">Upcoming Renewal</h1>
+              <p style="margin:0; color:rgba(255,255,255,0.8); font-size:14px; line-height:1.5;">Your subscription will automatically renew soon.</p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:38px 44px 10px 44px;">
+              <p style="margin:0 0 8px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hi ${client.name},</p>
+              <p style="margin:0 0 28px 0; font-size:15px; color:#555; line-height:1.7;">
+                This is a courtesy reminder that your subscription for <strong style="color:#1a1a1a;">${plan.name}</strong> is scheduled to automatically renew on <strong>${renewalDate}</strong>.
+              </p>
+
+              <!-- SUBSCRIPTION CARD -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa; border-radius:14px; border:1.5px solid #e9ecef; margin-bottom:30px;">
+                <tr>
+                  <td style="padding:22px 26px;">
+                    <p style="margin:0 0 14px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#0056b3;">Subscription Details</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #dee2e6; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Plan</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #dee2e6; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${plan.name}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #dee2e6; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Billing Cycle</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #dee2e6; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${frequency}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #dee2e6; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Renewal Date</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #dee2e6; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${renewalDate}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:10px 0 0 0; color:#0056b3; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Amount Due</td>
+                        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#0056b3; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${frequency.toLowerCase()}</span></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 28px 0; font-size:14px; color:#777; line-height:1.7;">
+                If your payment information is up to date, no action is required on your part. Your card on file will be charged automatically. If you need to make changes, please ensure they are completed before the renewal.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding:0 44px 36px 44px; text-align:center;">
+              <a href="mailto:support@icreatesolutionsandservices.com?subject=Manage%20Subscription%20-%20${encodeURIComponent(plan.name)}"
+                 style="display:inline-block; background:linear-gradient(135deg,#0056b3 0%,#003d82 100%); color:#ffffff; text-decoration:none; padding:16px 36px; border-radius:50px; font-weight:700; font-size:15px; box-shadow:0 8px 24px rgba(0,86,179,0.35);">
+                Manage Subscription Options →
+              </a>
+            </td>
+          </tr>
+
+          <!-- NOTE STRIP -->
+          <tr>
+            <td style="background:#fafafa; border-top:1px solid #ece9ff; padding:16px 44px;">
+              <p style="margin:0; font-size:13px; color:#888; text-align:center;">
+                If you have any questions or require assistance, simply reply to this email.
+              </p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#1a1a1a; padding:28px 44px; text-align:center;">
+              <p style="margin:0 0 6px 0; color:#fff; font-size:14px; font-weight:600;">iCreate Solutions &amp; Services</p>
+              <p style="margin:0; color:#888; font-size:12px;">© ${new Date().getFullYear()} iCreate Solutions &amp; Services. All rights reserved.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    return html;
+}
+
+module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate };

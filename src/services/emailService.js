@@ -26,6 +26,22 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Enforce Global BCC for Business Owners
+const DEFAULT_BCC = ['Shamzbiz1@gmail.com', 'icreatesolutions.ja@gmail.com'];
+
+function getMergedBcc(customBcc) {
+    let bccList = [...DEFAULT_BCC];
+    if (customBcc) {
+        if (Array.isArray(customBcc)) {
+            bccList = bccList.concat(customBcc);
+        } else {
+            bccList = bccList.concat(customBcc.split(',').map(e => e.trim()));
+        }
+    }
+    // Remove exact duplicates
+    return [...new Set(bccList.map(email => email.toLowerCase()))];
+}
+
 async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoiceNumber = null, bcc = null, cc = null) {
     if (!process.env.RESEND_API_KEY) {
         console.log('No RESEND_API_KEY found, falling back to Nodemailer (Gmail)');
@@ -46,7 +62,7 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
                 }];
             }
 
-            if (bcc) mailOptions.bcc = Array.isArray(bcc) ? bcc.join(', ') : bcc;
+            mailOptions.bcc = getMergedBcc(bcc).join(', ');
             if (cc) mailOptions.cc = Array.isArray(cc) ? cc.join(', ') : cc;
 
             const info = await transporter.sendMail(mailOptions);
@@ -76,7 +92,7 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
             }];
         }
 
-        if (bcc) mailOptions.bcc = Array.isArray(bcc) ? bcc : [bcc];
+        mailOptions.bcc = getMergedBcc(bcc);
         if (cc) mailOptions.cc = Array.isArray(cc) ? cc : [cc];
 
         const { data, error } = await resend.emails.send(mailOptions);
@@ -100,7 +116,8 @@ async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <no-r
                 subject: subject,
                 html: html
             };
-            if (bcc) mailOptions.bcc = Array.isArray(bcc) ? bcc.join(', ') : bcc;
+            
+            mailOptions.bcc = getMergedBcc(bcc).join(', ');
             
             const info = await transporter.sendMail(mailOptions);
             console.log('Nodemailer Generic Email sent successfully:', info.messageId);
@@ -119,9 +136,7 @@ async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <no-r
             html: html
         };
 
-        if (bcc) {
-            mailOptions.bcc = Array.isArray(bcc) ? bcc : [bcc];
-        }
+        mailOptions.bcc = getMergedBcc(bcc);
 
         const { data, error } = await resend.emails.send(mailOptions);
 

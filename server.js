@@ -740,12 +740,25 @@ router.post('/api/invoices/create', async (req, res) => {
 });
 
 // PayPal Webhook/IPN Handler
+const { verifyPayPalWebhookSignature } = require('./src/services/paypalService');
+
 router.post('/api/paypal/webhook', async (req, res) => {
     try {
         const body = req.body;
         console.log('Received PayPal Webhook:', JSON.stringify(body, null, 2));
 
-        // TODO: Verify PayPal Signature (Critical for production)
+        // 0. Verify PayPal Signature
+        let isValid = false;
+        try {
+            isValid = await verifyPayPalWebhookSignature(req.headers, req.body);
+        } catch (verifyErr) {
+            console.error('PayPal Signature Verification Error:', verifyErr.message);
+        }
+        
+        if (!isValid) {
+            console.warn('PayPal Webhook verification failed! Invalid signature.');
+            return res.status(401).send('Unauthorized Webhook');
+        }
 
         // Example for PAYMENT.CAPTURE.COMPLETED
         if (body.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
@@ -818,9 +831,12 @@ router.post('/api/paypal/webhook', async (req, res) => {
 
                 // 4. Handle Subscription Renewal Logic
                 if (invoice.is_subscription && invoice.billing_cycle) {
-                    // Calculate next renewal date
-                    let nextDate = new Date();
-                    let nextDueDate = new Date(); // Next invoice due date
+                    if (invoice.client_service_id) {
+                        console.log(`[BILLING] Skipping legacy invoice clone. Subscription is managed by client_services (ID: ${invoice.client_service_id}).`);
+                    } else {
+                        // Calculate next renewal date
+                        let nextDate = new Date();
+                        let nextDueDate = new Date(); // Next invoice due date
 
                     // If renewal_date exists on the invoice, base it off that, otherwise base off today
                     const baseDate = invoice.renewal_date ? new Date(invoice.renewal_date) : new Date();
@@ -898,6 +914,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                             console.error('Accounting outbox event failed (Renewal):', accErr.message);
                         }
                     }
+                    } // Ends else block for legacy cloning
                 }
             }
         }
