@@ -765,33 +765,89 @@ router.post('/api/paypal/webhook', async (req, res) => {
 
         if (validEvents.includes(body.event_type)) {
             const resource = body.resource;
-            const customId = resource.custom_id || resource.custom; // Invoice ID
+            const customId = resource.custom_id || resource.custom; // Invoice ID or Client Service ID
 
             if (customId) {
-                // 1. Fetch current invoice to check subscription status
-                const { data: invoice, error: fetchError } = await supabase
+                let targetInvoice = null;
+                let clientServiceId = null;
+
+                // 1. Try to fetch as an exact Invoice ID first
+                const { data: exactInvoice } = await supabase
                     .from('invoices')
                     .select('*')
                     .eq('id', customId)
                     .single();
 
-                if (fetchError || !invoice) {
-                    console.error('Invoice not found:', customId);
+                if (exactInvoice) {
+                    targetInvoice = exactInvoice;
+                    clientServiceId = exactInvoice.client_service_id;
+                } else {
+                    // 2. Try fetching as a Client Service ID (Modern Subscription Engine)
+                    const { data: service } = await supabase
+                        .from('client_services')
+                        .select('*')
+                        .eq('id', customId)
+                        .single();
+
+                    if (service) {
+                        clientServiceId = service.id;
+                    }
+                }
+
+                // If this is a subscription, PayPal can charge *before* our cron job generates the invoice.
+                if (body.event_type !== 'PAYMENT.CAPTURE.COMPLETED' && clientServiceId) {
+                    // Look for the most recent pending invoice for this service
+                    const { data: latestUnpaid } = await supabase
+                        .from('invoices')
+                        .select('*')
+                        .eq('client_service_id', clientServiceId)
+                        .eq('status', 'pending')
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .single();
+
+                    if (latestUnpaid) {
+                        targetInvoice = latestUnpaid;
+                    } else {
+                        console.log(`[BILLING] PayPal charged before cron. Auto-generating invoice for service ${clientServiceId}`);
+                        const { syncServiceActivation } = require('./src/services/subscriptionBillingService');
+                        await syncServiceActivation(clientServiceId);
+                        
+                        // Fetch the newly created invoice to attach payment to
+                        const { data: newlyCreated } = await supabase
+                            .from('invoices')
+                            .select('*')
+                            .eq('client_service_id', clientServiceId)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .single();
+                            
+                        targetInvoice = newlyCreated;
+                    }
+                }
+
+                if (!targetInvoice) {
+                    console.error('No invoice or subscription could be resolved for customId:', customId);
                     return res.status(404).send('Invoice not found');
                 }
+
+                // Map targetInvoice to local variables so legacy code below doesn't break
+                const invoice = targetInvoice;
+                const actualInvoiceId = targetInvoice.id;
 
                 // 2. Update Invoice Status to Paid
                 const { error } = await supabase
                     .from('invoices')
-                    .update({ status: 'paid', remaining_amount: 0 })
-                    .eq('id', customId);
+                    .update({ status: 'paid', remaining_amount: 0, payment_status: 'PAID' })
+                    .eq('id', actualInvoiceId);
 
                 if (error) console.error('Error updating invoice:', error);
 
                 // 3. Record Payment
+                const paymentAmount = resource.amount ? resource.amount.value || resource.amount.total : targetInvoice.total_amount;
                 await supabase.from('payments').insert({
-                    invoice_id: customId,
-                    amount: resource.amount.value,
+                    invoice_id: actualInvoiceId,
+                    amount: paymentAmount,
                     method: 'PayPal',
                     reference_id: resource.id,
                     payment_date: new Date().toISOString()
@@ -803,7 +859,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     const { data: fullInvoice } = await supabase
                         .from('invoices')
                         .select('*, clients(*)')
-                        .eq('id', customId)
+                        .eq('id', actualInvoiceId)
                         .single();
 
                     if (fullInvoice) {
@@ -829,7 +885,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 }
 
                 // 3.5 Automated Receipt (PDF & Email)
-                await sendPaymentReceipt(customId);
+                await sendPaymentReceipt(actualInvoiceId);
 
                 // 4. Handle Subscription Renewal Logic
                 if (invoice.is_subscription && invoice.billing_cycle) {
