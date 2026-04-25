@@ -760,10 +760,12 @@ router.post('/api/paypal/webhook', async (req, res) => {
             return res.status(401).send('Unauthorized Webhook');
         }
 
-        // Example for PAYMENT.CAPTURE.COMPLETED
-        if (body.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
+        // Support standard captures, legacy recurring sales, and modern subscription payments
+        const validEvents = ['PAYMENT.CAPTURE.COMPLETED', 'PAYMENT.SALE.COMPLETED', 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED'];
+
+        if (validEvents.includes(body.event_type)) {
             const resource = body.resource;
-            const customId = resource.custom_id; // Invoice ID
+            const customId = resource.custom_id || resource.custom; // Invoice ID
 
             if (customId) {
                 // 1. Fetch current invoice to check subscription status
