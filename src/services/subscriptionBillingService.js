@@ -149,8 +149,18 @@ async function generateSubscriptionInvoice(service) {
     const targetCompanyId = await getDefaultCompanyId();
 
     const price = Number(service.service_plans?.price || 0);
+    const taxAmount = price * 0.15; // 15% GCT
+    const totalAmount = price + taxAmount;
+
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 14); // Net 14 by default for recurring
+    
+    const renewalDate = new Date();
+    if (service.service_plans.billing_cycle === 'monthly' || service.service_plans.default_frequency === 'monthly') {
+        renewalDate.setMonth(renewalDate.getMonth() + 1);
+    } else {
+        renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+    }
 
     // 2. Create Invoice
     const { data: invoice, error: invoiceError } = await supabase
@@ -162,16 +172,17 @@ async function generateSubscriptionInvoice(service) {
             client_service_id: service.id, // Linking back to subscription
             due_date: dueDate.toISOString(),
             notes: `Automated monthly billing for ${service.service_plans.name}`,
-            total_amount: price,
+            total_amount: totalAmount,
             service_code: 'MAINT',
             payment_expected_type: 'FULL',
             payment_expected_percentage: 100,
-            remaining_amount: price,
+            remaining_amount: totalAmount,
             is_subscription: true,
             plan_name: service.service_plans.name,
             billing_cycle: 'monthly',
             payment_status: 'UNPAID',
-            balance_due: price
+            balance_due: totalAmount,
+            renewal_date: renewalDate.toISOString()
         })
         .select()
         .single();

@@ -233,20 +233,45 @@ function generateInvoicePDF(invoiceData, clientData, items) {
 
             // --- 6. TOTALS ---
             const totalY = y + 10;
-            doc.rect(width - 250, totalY, 210, 30)
+            
+            // Calculate Item Sum to determine Tax
+            const itemSum = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+            const totalAmount = Number(state.totalAmount);
+            let taxY = totalY;
+            let displayY = totalY;
+
+            if (totalAmount > itemSum + 0.01) {
+                // Render Subtotal & Tax above Total
+                doc.fillColor('#000').fontSize(10).font('Helvetica-Bold')
+                   .text('SUBTOTAL', width - 230, taxY)
+                   .text(`$${Number(itemSum).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, width - 140, taxY, { align: 'right', width: 90 });
+                   
+                taxY += 15;
+                const taxAmount = totalAmount - itemSum;
+                doc.font('Helvetica')
+                   .text('Tax / Fees', width - 230, taxY)
+                   .text(`$${Number(taxAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, width - 140, taxY, { align: 'right', width: 90 });
+                   
+                displayY = taxY + 15;
+            }
+
+            doc.rect(width - 250, displayY, 210, 30)
                 .fillColor('#002B49')
                 .fill();
 
             doc.fillColor('#FFFFFF')
                 .fontSize(12)
                 .font('Helvetica-Bold')
-                .text('TOTAL', width - 230, totalY + 8)
-                .text(`$${Number(state.totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, width - 140, totalY + 8, { align: 'right', width: 90 });
+                .text('TOTAL', width - 230, displayY + 8)
+                .text(`$${Number(state.totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, width - 140, displayY + 8, { align: 'right', width: 90 });
+
+            // Ensure summary box respects the new Y coordinate
+            y = displayY;
 
 
             // --- 7. PAYMENT SUMMARY (For DEPOSIT / PARTIAL / PAID) ---
             if (state.paymentStatus !== 'UNPAID') {
-                const summaryY = totalY + 40;
+                const summaryY = y + 40;
 
                 doc.fontSize(10).font('Helvetica-Bold').fillColor('#333');
                 doc.text('PAYMENT SUMMARY', width - 230, summaryY);
@@ -260,8 +285,9 @@ function generateInvoicePDF(invoiceData, clientData, items) {
                     doc.font('Helvetica').fontSize(9).fillColor('#555')
                         .text(row.label, width - 230, currentY);
 
+                    // Widened width to prevent overlapping text for long plan names
                     doc.font('Helvetica-Bold').fillColor('#000')
-                        .text(row.value, width - 100, currentY, { align: 'right', width: 60 });
+                        .text(row.value, width - 160, currentY, { align: 'right', width: 120 });
 
                     currentY += 15;
                 });
