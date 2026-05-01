@@ -148,7 +148,6 @@ const checkAuth = async (req, res, next) => {
         console.warn(`[AUTH] Invalid JWT for ${req.method} ${req.path}`);
         return res.status(401).json({ error: 'Unauthorized: invalid token' });
     }
-    }
 
     // --- Neither passed — block ---
     console.warn(`[AUTH] Rejected unauthenticated API request: ${req.method} ${req.path}`);
