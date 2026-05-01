@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoices | ICSS Command Center</title>
+    <!-- Use extracted CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+</head>
+
+<body>
+
+    <!-- Layout.js injects Header here -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script type="module" src="js/layout.js"></script>
+
+    <div class="container fade-in">
+
+        <form id="invoiceForm">
+            <!-- Client Section -->
+            <div class="card">
+                <h2 class="card-title">Client Information</h2>
+
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" id="clientExisting" name="clientMode" value="existing" checked
+                            onchange="toggleClientMode()">
+                        <span>Select Existing Client</span>
+                    </label>
+
+                    <label class="radio-option">
+                        <input type="radio" id="clientNew" name="clientMode" value="new" onchange="toggleClientMode()">
+                        <span>Create New Client</span>
+                    </label>
+                </div>
+
+                <div id="existingClientSection" class="mt-4 d-flex gap-2">
+                    <select id="clientId" name="clientId" class="form-control" style="flex-grow: 1;">
+                        <option value="">-- Select Client --</option>
+                    </select>
+                    <button type="button" id="deleteClientBtn" class="btn btn-outline-danger" onclick="deleteClient()"
+                        title="Delete Selected Client" disabled>
+                        🗑️
+                    </button>
+                </div>
+
+                <div id="newClientSection" class="form-grid d-none">
+                    <div>
+                        <label for="newClientName">Client Name</label>
+                        <input type="text" id="newClientName" placeholder="e.g. Acme Corp">
+                    </div>
+                    <div>
+                        <label for="newClientEmail">Email Address</label>
+                        <input type="email" id="newClientEmail" placeholder="client@example.com">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label for="newClientAddress">Address (Optional)</label>
+                        <input type="text" id="newClientAddress" placeholder="Street, City, Zip">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Details Section -->
+            <div class="card">
+                <h2 class="card-title">Invoice Details</h2>
+
+                <div class="radio-group mb-4">
+                    <label class="radio-option">
+                        <input type="checkbox" id="isSubscription" onchange="toggleSubscription()">
+                        <span>Subscription / Recurring Invoice</span>
+                    </label>
+                </div>
+
+                <!-- Subscription Fields -->
+                <div id="subscriptionFields" class="form-grid d-none"
+                    style="border-left: 2px solid var(--secondary-color); padding-left: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label>Plan Name</label>
+                        <input type="text" id="planName" placeholder="e.g. Standard Hosting">
+                    </div>
+                    <div>
+                        <label>Billing Cycle</label>
+                        <select id="billingCycle">
+                            <option value="Monthly">Monthly</option>
+                            <option value="Yearly">Yearly</option>
+                            <option value="Quarterly">Quarterly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Next Renewal Date</label>
+                        <input type="date" id="renewalDate">
+                    </div>
+                    <div class="radio-group" style="grid-column: 1 / -1; margin-top: 10px;">
+                        <label class="radio-option">
+                            <input type="radio" id="isInitial" name="subscriptionType" value="initial" checked>
+                            <span>Initial Subscription</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" id="isRenewal" name="subscriptionType" value="renewal">
+                            <span>Renewal</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div id="dueDateContainer">
+                        <label for="dueDate">Due Date</label>
+                        <input type="date" id="dueDate" name="dueDate" required>
+                    </div>
+
+                    <div>
+                        <label for="serviceCode">Service Type</label>
+                        <select id="serviceCode" name="serviceCode">
+                            <option value="WEB">Website Development</option>
+                            <option value="APP">App Development</option>
+                            <option value="GD">Graphic Designs</option>
+                            <option value="HOST_PRO">Professional Hosting</option>
+                            <option value="HOST_DOM">Hosting + Domain</option>
+                            <option value="MAINT">Web Maintenance</option>
+                            <option value="MONITOR">App Monitoring</option>
+                            <option value="AUTO_BIZ">Business Automation</option>
+                            <option value="AUTO_IND">Industry Automation</option>
+                            <option value="REFRESH">Content Refresh</option>
+                            <option value="CON">Consultation</option>
+                            <option value="CUST">Custom Service</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="paymentType">Payment Terms</label>
+                        <select id="paymentType" name="paymentType" onchange="togglePercentage()">
+                            <option value="FULL">Full Payment (100%)</option>
+                            <option value="PARTIAL">Partial Deposit</option>
+                        </select>
+                    </div>
+
+                    <div id="pctContainer" class="d-none">
+                        <label for="paymentPercentage">Percentage %</label>
+                        <input type="number" id="paymentPercentage" name="paymentPercentage" value="100" min="1"
+                            max="100">
+                    </div>
+
+                    <div id="paymentStatusContainer">
+                        <label for="paymentStatus">Payment Status</label>
+                        <select id="paymentStatus" name="paymentStatus" onchange="togglePaymentStatus()">
+                            <option value="UNPAID">Unpaid</option>
+                            <option value="PARTIAL">Partially Paid</option>
+                            <option value="DEPOSIT">Deposit Paid</option>
+                            <option value="PAID">Paid (Paid in Full)</option>
+                        </select>
+                    </div>
+
+                    <div id="depositFields" class="d-none">
+                        <label for="depositPercent">Deposit %</label>
+                        <input type="number" id="depositPercent" name="depositPercent" placeholder="e.g. 30" min="1"
+                            max="99">
+                    </div>
+
+                    <div id="partialFields" class="d-none">
+                        <label for="amountPaid">Amount Paid</label>
+                        <input type="number" id="amountPaid" name="amountPaid" placeholder="0.00" step="0.01">
+                    </div>
+
+                    <div id="paidFields" class="d-none">
+                        <label for="paidAt">Date Paid</label>
+                        <input type="date" id="paidAt" name="paidAt">
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" name="notes" rows="3"
+                        placeholder="Payment instructions, thank you notes, etc..."></textarea>
+                </div>
+            </div>
+
+            <!-- Items Section -->
+            <div class="card">
+                <h2 class="card-title">Services / Items</h2>
+                <div id="itemsContainer">
+                    <div class="item-row">
+                        <input type="text" placeholder="Description of service or item" class="item-desc" required>
+                        <input type="number" placeholder="Qty" class="item-qty" value="1" required>
+                        <input type="number" placeholder="Price" class="item-price" step="0.01" required>
+                        <button type="button" class="remove-btn" onclick="removeItem(this)">✕</button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="button" class="btn-success" onclick="addItem()">+ Add Line Item</button>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="card mt-4">
+                <h2 class="card-title">Preview</h2>
+                <div class="preview-tabs" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <button type="button" class="tab-btn active" onclick="switchPreview('email')">Email
+                            Preview</button>
+                        <button type="button" class="tab-btn" onclick="switchPreview('pdf')">PDF Watermark
+                            Check</button>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #666; display: flex; align-items: center; gap: 10px;">
+                        <span id="previewSpinner" style="display: none;">⟳ Updating...</span>
+                        <small id="emailPreviewTimestamp" style="opacity: 0.5; transition: opacity 0.5s;"></small>
+                    </div>
+                </div>
+
+                <!-- Email Preview -->
+                <div id="emailPreviewContainer" class="preview-content">
+                    <div class="email-mockup">
+                        <div class="email-header">
+                            <strong>Subject:</strong> <span id="previewSubject">...</span>
+                        </div>
+                        <div class="email-body">
+                            <p>Hello <strong id="previewClientName">[Client Name]</strong>,</p>
+                            <p id="previewIntroText">...</p>
+
+                            <div class="email-summary-box">
+                                <h3>Invoice Summary</h3>
+                                <div id="previewSummaryRows">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <p>Thank you for your business.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Layout Preview (Conceptual) -->
+                <div id="pdfPreviewContainer" class="preview-content d-none">
+                    <div class="pdf-mockup">
+                        <div id="pdfWatermarkPreview" class="watermark-overlay">UNPAID</div>
+                        <div class="pdf-content">
+                            <p><strong>Invoice #</strong> <span id="previewInvoiceNum">...</span></p>
+                            <p><strong>Total:</strong> <span id="previewTotal">...</span></p>
+                            <p id="previewDueDateLine"><strong>Due Date:</strong> <span id="previewDueDate">...</span>
+                            </p>
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-2">* This is a layout check. Using "Create & Send" generates the
+                        actual PDF.</p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="text-center mb-4 mt-4">
+                <button type="submit"
+                    style="width: 100%; max-width: 300px; padding: 15px; font-size: 1.1rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    Create & Send Invoice
+                </button>
+            </div>
+        </form>
+
+        <div id="message" class="text-center"></div>
+
+        <hr>
+
+        <!-- History Section -->
+        <h2 class="mb-4">Recent Invoices</h2>
+        <div class="table-responsive">
+            <table class="table-mobile-cards">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Client</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceTableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- STATUS UPDATE MODAL -->
+    <div id="statusUpdateModal" class="modal-overlay d-none">
+        <div class="modal-content card fade-in" style="max-width: 500px; width: 90%;">
+            <div class="modal-header">
+                <h3 id="statusModalTitle">Update Invoice Status</h3>
+                <button class="btn btn-sm btn-outline-light" onclick="closeStatusModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="updateInvoiceId">
+                <div class="mb-3">
+                    <label for="modalPaymentStatus">Payment Status</label>
+                    <select id="modalPaymentStatus" class="form-control" onchange="toggleModalStatusFields()">
+                        <option value="UNPAID">Unpaid</option>
+                        <option value="PARTIAL">Partially Paid</option>
+                        <option value="DEPOSIT">Deposit Paid</option>
+                        <option value="PAID">Paid (Paid in Full)</option>
+                    </select>
+                </div>
+
+                <div id="modalDepositFields" class="d-none mb-3">
+                    <label for="modalDepositPercent">Deposit Percentage (%)</label>
+                    <input type="number" id="modalDepositPercent" class="form-control" placeholder="e.g. 30" min="1"
+                        max="99">
+                </div>
+
+                <div id="modalPartialFields" class="d-none mb-3">
+                    <label for="modalAmountPaid">Amount Received ($)</label>
+                    <input type="number" id="modalAmountPaid" class="form-control" placeholder="0.00" step="0.01">
+                </div>
+
+                <p class="text-muted small">Note: Updating the status will automatically resend the invoice email to the
+                    client.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeStatusModal()">Cancel</button>
+                <button id="modalSubmitBtn" class="btn btn-primary" onclick="submitStatusUpdate()">Update &
+                    Resend</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script>
+        // Helper to add data-labels to tables for mobile cards
+        function applyTableLabels() {
+            const tables = document.querySelectorAll('.table-mobile-cards');
+            tables.forEach(table => {
+                const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText);
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach((cell, i) => {
+                        if (headers[i] && !cell.hasAttribute('data-label')) {
+                            cell.setAttribute('data-label', headers[i]);
+                        }
+                    });
+                });
+            });
+        }
+
+        // Apply labels after dynamic content loads
+        const observer = new MutationObserver(applyTableLabels);
+        observer.observe(document.body, { childList: true, subtree: true });
+        applyTableLabels();
+
+        applyTableLabels();
+    </script>
+</body>
+
+</html>

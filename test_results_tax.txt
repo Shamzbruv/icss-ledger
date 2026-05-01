@@ -1,0 +1,15 @@
+--- Testing Tax Policy Engine (Jamaica) ---
+2025 Standard IT Rate: 0.25
+
+--- Sole Trader Contributions (2025) ---
+Tax-Free Threshold 2025: 1500000
+Chargeable Income: 6500000
+Income Tax: 1650000
+Total: 2175000
+Note: Fixed threshold for CY2025: JMD 1,500,000
+
+--- Sole Trader Contributions (2026) ---
+Tax-Free Threshold 2026: 1875000
+Note: Blended threshold for CY2026: 3/12 × 1,500,000 + 9/12 × 2,000,000 = 1,875,000
+
+✅ Tax Engine Policy Tests completed.

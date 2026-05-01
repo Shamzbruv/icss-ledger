@@ -1,0 +1,52 @@
+[
+  {
+    "id": "be7dad87-dac6-4cdf-b130-3f302f7be0a5",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "4eb481da-0c00-4d35-81fb-671f57911483",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "da051460-0c5c-40db-b3ad-dba0218837ee",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "2d5de1b2-32ea-4c64-8f28-369716491fe0",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "6df99c15-7e50-43f3-8429-869976d40aad",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "5e68863e-b720-4f46-bfab-e90075b90d6b",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "552990cc-c9b0-45b9-84fe-69990ceb2ee7",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "21932ccf-44da-48ce-bb56-3508bff124be",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "8c8c2074-353d-481b-a926-65b2229b9779",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  },
+  {
+    "id": "a322de8e-ba6c-4f60-8d4e-efa6033ee4fa",
+    "journal_date": "2026-03-02",
+    "source_type": "INVOICE"
+  }
+]

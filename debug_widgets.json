@@ -1,0 +1,17 @@
+{
+  "asOf": "2026-03-04",
+  "cashBalance": 0,
+  "monthlyBurn": 0,
+  "runwayMonths": 999,
+  "mrr": 0,
+  "ytdNetProfitMargin": 0,
+  "arAgingTotals": {
+    "current": 1747.99,
+    "days0_30": 0,
+    "days31_60": 0,
+    "days61_90": 0,
+    "over90": 0,
+    "grandTotal": 1747.99
+  },
+  "expenseBreakdown": []
+}
