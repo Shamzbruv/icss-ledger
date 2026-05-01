@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 4. Load Dashboard
     await loadInvoices();
+    await fetchPreviewState();
 });
 
 // --- TOGGLES ---
@@ -698,13 +699,6 @@ function renderPreview(state) {
     const ts = document.getElementById('emailPreviewTimestamp');
     if (ts) ts.innerText = `Preview updated at ${new Date().toLocaleTimeString()}`;
 }
-
-// Ensure Initial Load
-fetchPreviewState();
-
-// --- INITIALIZATION ---
-loadClients();
-loadInvoices();
 
 window.resendInvoiceEmail = async function (id) {
     if (typeof showConfirm === 'function') {

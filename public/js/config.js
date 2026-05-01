@@ -14,14 +14,50 @@ const CONFIG = {
 // Attach to window for global access (simplifies inline script usage)
 window.CONFIG = CONFIG;
 
+let supabaseClientPromise = null;
+
+async function ensureSupabaseClient() {
+    if (window.supabaseClient) {
+        return window.supabaseClient;
+    }
+
+    if (!supabaseClientPromise) {
+        supabaseClientPromise = (async () => {
+            const timeoutAt = Date.now() + 5000;
+
+            while (!window.supabase?.createClient) {
+                if (Date.now() >= timeoutAt) {
+                    throw new Error('Supabase library not loaded');
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, 25));
+            }
+
+            if (!window.supabaseClient) {
+                window.supabaseClient = window.supabase.createClient(
+                    CONFIG.SUPABASE_URL,
+                    CONFIG.SUPABASE_ANON_KEY
+                );
+            }
+
+            return window.supabaseClient;
+        })().catch((error) => {
+            supabaseClientPromise = null;
+            throw error;
+        });
+    }
+
+    return supabaseClientPromise;
+}
+
+window.ensureSupabaseClient = ensureSupabaseClient;
+
 /**
  * Wrapper around standard fetch that automatically injects the Supabase JWT.
  * Required for calling protected /api/* endpoints.
  */
 async function apiFetch(url, options = {}) {
-    if (!window.supabaseClient) {
-        throw new Error('Supabase client not initialized');
-    }
+    const supabaseClient = await ensureSupabaseClient();
     
     // Resolve full backend URL if it's a relative API route
     let fetchUrl = url;
@@ -29,7 +65,7 @@ async function apiFetch(url, options = {}) {
         fetchUrl = `${CONFIG.API_BASE_URL}${fetchUrl}`;
     }
 
-    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     const headers = {
         'Content-Type': 'application/json',
         ...(options.headers || {})
