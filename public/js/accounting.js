@@ -6,13 +6,7 @@ let chartInstance = null;
 let currentCompanyId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Reuse the Supabase client created by layout.js if it exists, otherwise create a new one
-    if (window.supabaseClient) {
-        supabase = window.supabaseClient;
-    } else {
-        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-        window.supabaseClient = supabase;
-    }
+    supabase = await window.ensureSupabaseClient();
 
     // Auth Check
     const { data: { session } } = await supabase.auth.getSession();

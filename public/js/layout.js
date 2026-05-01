@@ -2,10 +2,7 @@
 const CONFIG = window.CONFIG;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Initialize Supabase (requires SDK in HTML or dynamic import)
-    // For simplicity, we assume Supabase is loaded via CDN in the HTML files
-    const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-    window.supabaseClient = supabase;
+    const supabase = await window.ensureSupabaseClient();
 
     // 2. Check Authentication
     const { data: { session } } = await supabase.auth.getSession();
@@ -237,4 +234,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
 });
-
