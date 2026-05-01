@@ -931,6 +931,24 @@
             document.getElementById('summaryModal').classList.add('d-none');
         }
 
+        function showLoading(message = 'Processing Request...', subtext = 'Please wait while we contact the client\'s system.') {
+            const overlay = document.getElementById('loadingOverlay');
+            if (!overlay) return;
+
+            const heading = overlay.querySelector('h3');
+            const paragraph = overlay.querySelector('p');
+
+            if (heading) heading.innerText = message;
+            if (paragraph) paragraph.innerText = subtext;
+
+            overlay.classList.remove('d-none');
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.classList.add('d-none');
+        }
+
         // --- RENEWAL MODAL FUNCTIONS ---
         function openRenewalModal(serviceId, currentDate) {
             document.getElementById('renewalServiceId').value = serviceId;
@@ -1142,7 +1160,7 @@
                 const data = await res.json();
                 if (res.ok) {
                     await showAlert('Schedule updated successfully.', 'success');
-                    loadActiveServices();
+                    loadServices();
                 } else {
                     await showAlert('Failed to update: ' + data.error, 'error');
                 }
