@@ -876,9 +876,20 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 const actualInvoiceId = targetInvoice.id;
 
                 // 2. Update Invoice Status to Paid
+                const paymentReferenceId = resource.id || body.id;
+                const paymentAmount = Number(resource.amount ? resource.amount.value || resource.amount.total : targetInvoice.total_amount) || Number(targetInvoice.total_amount || 0);
+                const paidAt = new Date().toISOString();
                 const { error } = await supabase
                     .from('invoices')
-                    .update({ status: 'paid', remaining_amount: 0, payment_status: 'PAID' })
+                    .update({
+                        status: 'paid',
+                        remaining_amount: 0,
+                        payment_status: 'PAID',
+                        balance_due: 0,
+                        amount_paid: paymentAmount,
+                        amount_paid_this_payment: paymentAmount,
+                        paid_at: paidAt
+                    })
                     .eq('id', actualInvoiceId);
 
                 if (error) {
@@ -887,18 +898,21 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 }
 
                 // 3. Record Payment
-                const paymentAmount = resource.amount ? resource.amount.value || resource.amount.total : targetInvoice.total_amount;
                 const { error: paymentError } = await supabase.from('payments').insert({
                     invoice_id: actualInvoiceId,
                     amount: paymentAmount,
                     method: 'PayPal',
-                    reference_id: resource.id,
-                    payment_date: new Date().toISOString()
+                    reference_id: paymentReferenceId,
+                    payment_date: paidAt
                 });
 
                 if (paymentError) {
-                    console.error('Error inserting payment:', paymentError);
-                    throw paymentError;
+                    if (String(paymentError.code) === '23505') {
+                        console.log(`[PAYPAL] Payment ${paymentReferenceId} already recorded. Skipping duplicate insert.`);
+                    } else {
+                        console.error('Error inserting payment:', paymentError);
+                        throw paymentError;
+                    }
                 }
 
                 // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event for payment
@@ -935,7 +949,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 // 3.5 Automated Receipt (PDF & Email)
                 const emailSuccess = await sendPaymentReceipt(actualInvoiceId);
                 if (!emailSuccess) {
-                    throw new Error("Payment receipt email failed. Aborting webhook processing to allow retry.");
+                    console.error(`[PAYPAL] Receipt email failed for invoice ${actualInvoiceId}. Webhook will still be marked processed to avoid duplicate payment retries.`);
                 }
 
                 // 4. Handle Subscription Renewal Logic
@@ -2472,3 +2486,4 @@ app.listen(PORT, '0.0.0.0', () => {
         console.error('Failed to trigger initial subscription routines:', err);
     }
 });
+
