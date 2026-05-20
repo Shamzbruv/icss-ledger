@@ -259,6 +259,7 @@ async function loadInvoices() {
                                     <button class="btn btn-sm btn-outline-light" onclick="resendInvoiceEmail('${inv.id}')" title="Resend Email">Resend</button>
                                     <button class="btn btn-sm btn-primary" onclick="updateStatusInvoice('${inv.id}', '${status}')">Update</button>
                                     <button class="btn btn-sm btn-danger" onclick="sendPaymentDeclinedAlert('${inv.id}')" title="Payment Declined">Decline Alert</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteInvoice('${inv.id}', '${inv.invoice_number}')" title="Delete Invoice">Delete</button>
                                 </div>
                             </td>
                          `;
@@ -764,5 +765,28 @@ window.sendPaymentDeclinedAlert = async function(id) {
     } catch (err) {
         if (typeof showAlert === 'function') showAlert('Failed to send alert: ' + err.message, 'error');
         else alert('Failed to send alert: ' + err.message);
+    }
+};
+
+// Delete Invoice
+window.deleteInvoice = async function(invoiceId, invoiceNumber) {
+    const confirmed = await showConfirm(
+        `Are you sure you want to permanently delete invoice ${invoiceNumber}? This cannot be undone.`,
+        'danger',
+        'Delete Invoice'
+    );
+    if (!confirmed) return;
+
+    try {
+        const res = await apiFetch(`/api/invoices/${invoiceId}`, { method: 'DELETE' });
+        if (res.ok) {
+            await showAlert(`Invoice ${invoiceNumber} has been deleted.`, 'success');
+            loadInvoices();
+        } else {
+            const err = await res.json();
+            showAlert('Error deleting invoice: ' + err.error, 'error');
+        }
+    } catch (err) {
+        showAlert('Failed to delete invoice: ' + err.message, 'error');
     }
 };

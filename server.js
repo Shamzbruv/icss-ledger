@@ -304,9 +304,9 @@ router.delete('/api/clients/:id', async (req, res) => {
         const { id } = req.params;
         if (!id) return res.status(400).json({ error: 'Client ID is required' });
 
-        // Check if client exists (optional, but good for specific error messages)
-        // With CASCADE delete, we can just delete. 
-        // Note: The schema has ON DELETE CASCADE for invoices, client_services, etc.
+        // Preserve invoices for accounting integrity — detach client reference instead of cascading.
+        // This sets client_id = NULL on all invoices so history is retained.
+        await supabase.from('invoices').update({ client_id: null }).eq('client_id', id);
 
         const { error } = await supabase
             .from('clients')
@@ -315,7 +315,7 @@ router.delete('/api/clients/:id', async (req, res) => {
 
         if (error) throw error;
 
-        res.json({ success: true, message: 'Client deleted successfully' });
+        res.json({ success: true, message: 'Client deleted. Invoice history has been preserved.' });
     } catch (err) {
         console.error('Error deleting client:', err);
         res.status(500).json({ error: err.message });
@@ -335,6 +335,26 @@ router.get('/api/invoices', async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
     res.json(data);
+});
+
+// Delete an invoice (admin only — for erroneous entries)
+router.delete('/api/invoices/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ error: 'Invoice ID is required' });
+
+        const { error } = await supabase
+            .from('invoices')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ success: true, message: 'Invoice deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting invoice:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Endpoint to fetch recent activity for the dashboard from multiple sources
