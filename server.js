@@ -714,19 +714,48 @@ router.post('/api/paypal/webhook', async (req, res) => {
     let webhookRow = null;
     try {
         const body = req.body;
-        console.log('Received PayPal Webhook:', JSON.stringify(body, null, 2));
+        const eventType = body.event_type || 'UNKNOWN';
+        console.log(`[PAYPAL] Received webhook: ${eventType} | Event ID: ${body.id}`);
 
-        // 0. Verify PayPal Signature
+        // --- STEP 0: Insert raw event to DB immediately for full observability ---
+        // This happens BEFORE signature check so we always have a record of what arrived.
+        const { data: earlyInsert } = await supabase
+            .from('paypal_webhook_events')
+            .upsert({
+                paypal_event_id: body.id,
+                event_type: eventType,
+                resource_id: body.resource?.id || null,
+                custom_id: body.resource?.custom_id || body.resource?.custom || null,
+                payload_jsonb: body,
+                status: 'received'
+            }, { onConflict: 'paypal_event_id', ignoreDuplicates: true })
+            .select('id, status')
+            .single();
+        if (earlyInsert) webhookRow = earlyInsert;
+
+        // --- STEP 1: Verify PayPal Signature ---
         let isValid = false;
         try {
             isValid = await verifyPayPalWebhookSignature(req.headers, req.body);
         } catch (verifyErr) {
-            console.error('PayPal Signature Verification Error:', verifyErr.message);
+            console.error('[PAYPAL] Signature Verification Error:', verifyErr.message);
         }
-        
+
         if (!isValid) {
-            console.warn('PayPal Webhook verification failed! Invalid signature.');
-            return res.status(401).send('Unauthorized Webhook');
+            console.warn(`[PAYPAL] Signature verification FAILED for event ${body.id}. Check PAYPAL_WEBHOOK_ID env var.`);
+            if (webhookRow) {
+                await supabase.from('paypal_webhook_events')
+                    .update({ status: 'failed', last_error: 'Signature verification failed' })
+                    .eq('id', webhookRow.id);
+            }
+            // Return 200 to stop PayPal retrying — the event IS recorded in DB for manual review
+            return res.status(200).send('Received (verification failed - check logs)');
+        }
+
+        // If event was already fully processed (idempotency), skip
+        if (earlyInsert && earlyInsert.status === 'processed') {
+            console.log(`[PAYPAL] Event ${body.id} already processed. Skipping.`);
+            return res.status(200).send('Already processed');
         }
 
         // Support standard captures, legacy recurring sales, and modern subscription payments
@@ -735,74 +764,72 @@ router.post('/api/paypal/webhook', async (req, res) => {
         const terminalEvents = new Set(['BILLING.SUBSCRIPTION.SUSPENDED', 'BILLING.SUBSCRIPTION.CANCELLED', 'BILLING.SUBSCRIPTION.EXPIRED']);
 
         const resource = body.resource || {};
-        let customId = resource.custom_id || resource.custom; // Invoice ID or Client Service ID
+        let customId = resource.custom_id || resource.custom;
 
+        // --- STEP 2: Multi-strategy client correlation ---
         if (!customId) {
-            const payerEmail = resource.subscriber?.email_address || resource.payer?.email_address;
-            console.warn(`[PAYPAL] Warning: custom_id missing from webhook payload. Attempting email fallback for: ${payerEmail}`);
+            // Strategy A: Match by payer email
+            const payerEmail = resource.subscriber?.email_address
+                || resource.payer?.email_address
+                || resource.payer_info?.email;
+            console.warn(`[PAYPAL] custom_id missing. Trying email fallback: ${payerEmail}`);
+
             if (payerEmail) {
                 const { data: client } = await supabase.from('clients').select('id').eq('email', payerEmail).single();
                 if (client) {
-                    const { data: svc } = await supabase.from('client_services').select('id').eq('client_id', client.id).eq('status', 'active').limit(1).single();
+                    const { data: svc } = await supabase.from('client_services')
+                        .select('id').eq('client_id', client.id).eq('status', 'active')
+                        .order('created_at', { ascending: false }).limit(1).single();
                     if (svc) {
                         customId = svc.id;
-                        console.log(`[PAYPAL] Fallback matched client service: ${customId}`);
+                        console.log(`[PAYPAL] Email fallback matched service: ${customId}`);
                     } else {
-                        const { data: inv } = await supabase.from('invoices').select('id').eq('client_id', client.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).single();
+                        const { data: inv } = await supabase.from('invoices')
+                            .select('id').eq('client_id', client.id).eq('status', 'pending')
+                            .order('created_at', { ascending: false }).limit(1).single();
                         if (inv) {
                             customId = inv.id;
-                            console.log(`[PAYPAL] Fallback matched invoice: ${customId}`);
+                            console.log(`[PAYPAL] Email fallback matched invoice: ${customId}`);
                         }
                     }
                 }
             }
+
+            // Strategy B: Match by PayPal billing agreement / subscription ID
             if (!customId) {
-                console.error('[PAYPAL] CRITICAL: Webhook missing custom_id and email fallback failed. Ensure PayPal buttons pass custom_id (client_service_id or invoice_id).');
-                throw new Error("Missing custom_id and unable to map to a client.");
+                const paypalSubId = resource.billing_agreement_id || resource.id;
+                if (paypalSubId) {
+                    console.warn(`[PAYPAL] Trying PayPal subscription ID fallback: ${paypalSubId}`);
+                    const { data: svcByPP } = await supabase.from('client_services')
+                        .select('id').eq('paypal_subscription_id', paypalSubId).single();
+                    if (svcByPP) {
+                        customId = svcByPP.id;
+                        console.log(`[PAYPAL] Subscription ID fallback matched service: ${customId}`);
+                    }
+                }
+            }
+
+            if (!customId) {
+                const warnMsg = `[PAYPAL] Could not correlate event ${body.id} (${eventType}) to any client. Payer email: ${resource.subscriber?.email_address || resource.payer?.email_address || 'unknown'}. Marking for manual review.`;
+                console.error(warnMsg);
+                if (webhookRow) {
+                    await supabase.from('paypal_webhook_events')
+                        .update({ status: 'failed', last_error: warnMsg })
+                        .eq('id', webhookRow.id);
+                }
+                // Return 200 so PayPal stops retrying — this needs manual fix of custom_id on subscription
+                return res.status(200).send('Received - client correlation failed, manual review required');
+            }
+
+            // Update the DB record with the resolved customId
+            if (webhookRow) {
+                await supabase.from('paypal_webhook_events')
+                    .update({ custom_id: customId })
+                    .eq('id', webhookRow.id);
             }
         }
 
-        // Phase 1: Idempotency Check
-        
-        // Check if event exists first
-        const { data: existingEvent } = await supabase
-            .from('paypal_webhook_events')
-            .select('id, status')
-            .eq('paypal_event_id', body.id)
-            .single();
-
-        if (existingEvent) {
-            if (existingEvent.status === 'processed') {
-                console.log(`[PAYPAL] Event ${body.id} already processed. Skipping.`);
-                return res.status(200).send('Already processed');
-            }
-            // If received or failed, we allow it to retry
-            console.log(`[PAYPAL] Event ${body.id} exists with status '${existingEvent.status}'. Retrying...`);
-            webhookRow = existingEvent;
-        } else {
-            // Insert as received
-            const { data: newEvent, error: insertErr } = await supabase
-                .from('paypal_webhook_events')
-                .insert({
-                    paypal_event_id: body.id,
-                    event_type: body.event_type,
-                    resource_id: resource.id || null,
-                    custom_id: customId || null,
-                    payload_jsonb: body,
-                    status: 'received'
-                })
-                .select('id')
-                .single();
-
-            if (insertErr && String(insertErr.code) === '23505') {
-                // Highly unlikely race condition where another process just inserted it
-                return res.status(200).send('Already processed');
-            } else if (insertErr) {
-                console.error('Failed to insert webhook event:', insertErr);
-                throw insertErr;
-            }
-            webhookRow = newEvent;
-        }
+        // webhookRow is already set from the early upsert above
 
 
         if (successEvents.has(body.event_type)) {
