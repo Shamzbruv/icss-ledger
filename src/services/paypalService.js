@@ -115,13 +115,18 @@ async function verifySingleWebhookId(headers, body, webhookId, token) {
 }
 
 /**
- * Validates the Webhook Signature with PayPal, trying all configured webhook IDs.
- * Supports PAYPAL_WEBHOOK_ID (primary) and PAYPAL_WEBHOOK_ID_2 (fallback for second app).
- * This allows both "iCreate Website" and "ICSS Ledger" PayPal apps to share one endpoint.
+ * Validates the Webhook Signature with PayPal to ensure authenticity.
+ * Uses PAYPAL_WEBHOOK_ID environment variable (set to the iCreate Website webhook ID).
  * @param {Object} headers Request headers
  * @param {Object} body Parsed request body
  */
 async function verifyPayPalWebhookSignature(headers, body) {
+    const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+
+    if (!webhookId) {
+        throw new Error('PAYPAL_WEBHOOK_ID is missing from environment variables');
+    }
+
     // Required PayPal Webhook Headers
     const authAlgo = headers['paypal-auth-algo'];
     const certUrl = headers['paypal-cert-url'];
@@ -134,32 +139,9 @@ async function verifyPayPalWebhookSignature(headers, body) {
         return false;
     }
 
-    // Collect all webhook IDs to try
-    const webhookIds = [
-        process.env.PAYPAL_WEBHOOK_ID,
-        process.env.PAYPAL_WEBHOOK_ID_2,
-    ].filter(Boolean);
-
-    if (webhookIds.length === 0) {
-        throw new Error('No PAYPAL_WEBHOOK_ID configured in environment variables');
-    }
-
     const token = await getPayPalAccessToken();
 
-    // Try each webhook ID — the one that matches the originating app will return SUCCESS
-    for (const webhookId of webhookIds) {
-        try {
-            const valid = await verifySingleWebhookId(headers, body, webhookId, token);
-            if (valid) {
-                console.log(`[PAYPAL] Signature verified successfully with webhook ID: ${webhookId}`);
-                return true;
-            }
-        } catch (err) {
-            console.warn(`[PAYPAL] Verification failed for webhook ID ${webhookId}: ${err.message}`);
-        }
-    }
-
-    return false;
+    return verifySingleWebhookId(headers, body, webhookId, token);
 }
 
 module.exports = {
