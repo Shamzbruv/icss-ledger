@@ -775,7 +775,15 @@ router.post('/api/paypal/webhook', async (req, res) => {
             console.warn(`[PAYPAL] custom_id missing. Trying email fallback: ${payerEmail}`);
 
             if (payerEmail) {
-                const { data: client } = await supabase.from('clients').select('id').eq('email', payerEmail).single();
+                // Check both primary email AND billing_email (e.g. spouse paying on behalf)
+                let { data: client } = await supabase.from('clients').select('id').eq('email', payerEmail).single();
+                if (!client) {
+                    const { data: billingClient } = await supabase.from('clients').select('id').eq('billing_email', payerEmail).single();
+                    if (billingClient) {
+                        client = billingClient;
+                        console.log(`[PAYPAL] Matched via billing_email for payer: ${payerEmail}`);
+                    }
+                }
                 if (client) {
                     const { data: svc } = await supabase.from('client_services')
                         .select('id').eq('client_id', client.id).eq('status', 'active')
