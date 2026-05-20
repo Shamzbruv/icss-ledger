@@ -59,29 +59,15 @@ async function getPayPalAccessToken() {
 }
 
 /**
- * Validates the Webhook Signature with PayPal to ensure authenticity
- * @param {Object} headers Request headers
- * @param {Object} body Parsed request body
+ * Attempts to verify a webhook signature against a single webhook ID.
+ * @returns {Promise<boolean>}
  */
-async function verifyPayPalWebhookSignature(headers, body) {
-    const webhookId = process.env.PAYPAL_WEBHOOK_ID;
-    
-    if (!webhookId) {
-        throw new Error('PAYPAL_WEBHOOK_ID is missing from environment variables');
-    }
-
-    // Required PayPal Webhook Headers
+async function verifySingleWebhookId(headers, body, webhookId, token) {
     const authAlgo = headers['paypal-auth-algo'];
     const certUrl = headers['paypal-cert-url'];
     const transmissionId = headers['paypal-transmission-id'];
     const transmissionSig = headers['paypal-transmission-sig'];
     const transmissionTime = headers['paypal-transmission-time'];
-
-    if (!authAlgo || !certUrl || !transmissionId || !transmissionSig || !transmissionTime) {
-        return false; // Missing header properties mean the request is likely not from PayPal
-    }
-
-    const token = await getPayPalAccessToken();
 
     const requestBody = JSON.stringify({
         auth_algo: authAlgo,
@@ -112,7 +98,6 @@ async function verifyPayPalWebhookSignature(headers, body) {
                 if (res.statusCode >= 200 && res.statusCode < 300) {
                     try {
                         const json = JSON.parse(resBody);
-                        // PayPal returns verification_status as SUCCESS or FAILURE
                         resolve(json.verification_status === 'SUCCESS');
                     } catch (e) {
                         reject(new Error('Failed to parse Webhook Verification response'));
@@ -127,6 +112,54 @@ async function verifyPayPalWebhookSignature(headers, body) {
         req.write(requestBody);
         req.end();
     });
+}
+
+/**
+ * Validates the Webhook Signature with PayPal, trying all configured webhook IDs.
+ * Supports PAYPAL_WEBHOOK_ID (primary) and PAYPAL_WEBHOOK_ID_2 (fallback for second app).
+ * This allows both "iCreate Website" and "ICSS Ledger" PayPal apps to share one endpoint.
+ * @param {Object} headers Request headers
+ * @param {Object} body Parsed request body
+ */
+async function verifyPayPalWebhookSignature(headers, body) {
+    // Required PayPal Webhook Headers
+    const authAlgo = headers['paypal-auth-algo'];
+    const certUrl = headers['paypal-cert-url'];
+    const transmissionId = headers['paypal-transmission-id'];
+    const transmissionSig = headers['paypal-transmission-sig'];
+    const transmissionTime = headers['paypal-transmission-time'];
+
+    if (!authAlgo || !certUrl || !transmissionId || !transmissionSig || !transmissionTime) {
+        console.warn('[PAYPAL] Missing required webhook headers.');
+        return false;
+    }
+
+    // Collect all webhook IDs to try
+    const webhookIds = [
+        process.env.PAYPAL_WEBHOOK_ID,
+        process.env.PAYPAL_WEBHOOK_ID_2,
+    ].filter(Boolean);
+
+    if (webhookIds.length === 0) {
+        throw new Error('No PAYPAL_WEBHOOK_ID configured in environment variables');
+    }
+
+    const token = await getPayPalAccessToken();
+
+    // Try each webhook ID — the one that matches the originating app will return SUCCESS
+    for (const webhookId of webhookIds) {
+        try {
+            const valid = await verifySingleWebhookId(headers, body, webhookId, token);
+            if (valid) {
+                console.log(`[PAYPAL] Signature verified successfully with webhook ID: ${webhookId}`);
+                return true;
+            }
+        } catch (err) {
+            console.warn(`[PAYPAL] Verification failed for webhook ID ${webhookId}: ${err.message}`);
+        }
+    }
+
+    return false;
 }
 
 module.exports = {
