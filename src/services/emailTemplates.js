@@ -784,4 +784,140 @@ function getSubscriptionRenewalTemplate(service) {
   return html;
 }
 
-module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate };
+
+/**
+ * Welcome / Onboarding Email — sent the moment a client's first subscription is activated.
+ * Distinct from the invoice email: this is a warm intro, not a billing notice.
+ * @param {Object} service - client_services row (with clients and service_plans joined)
+ */
+function getWelcomeSubscriptionTemplate(service) {
+  const client = service.clients || { name: 'Valued Client' };
+  const plan   = service.service_plans || { name: 'Subscription Service', price: 0 };
+
+  const freq = (() => {
+    const BILLING_FREQUENCIES = new Set(['monthly', 'yearly']);
+    const raw = plan.default_frequency || plan.billing_cycle || service.frequency || 'monthly';
+    const resolved = BILLING_FREQUENCIES.has(raw) ? raw : 'monthly';
+    return resolved.charAt(0).toUpperCase() + resolved.slice(1).toLowerCase();
+  })();
+
+  const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price || 0);
+  const renewalDate = service.next_renewal_date ? formatDate(service.next_renewal_date) : null;
+
+  const subject = `Welcome to iCreate Solutions & Services — ${plan.name} is Active!`;
+
+  const renewalRow = renewalDate ? `
+      <tr>
+        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">First Renewal</td>
+        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${renewalDate}</td>
+      </tr>` : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Welcome — iCreate Solutions & Services</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f0fdf4; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.10);">
+
+          <!-- HEADER BANNER -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 48px 40px; text-align:center;">
+              <div style="width:70px; height:70px; background:rgba(255,255,255,0.15); border-radius:50%; margin:0 auto 18px auto; display:flex; align-items:center; justify-content:center;">
+                <span style="font-size:36px; line-height:1;">🎉</span>
+              </div>
+              <p style="margin:0 0 6px 0; color:rgba(255,255,255,0.8); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Welcome Aboard</p>
+              <h1 style="margin:0 0 10px 0; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:-0.5px;">You're All Set!</h1>
+              <p style="margin:0; color:rgba(255,255,255,0.85); font-size:15px; line-height:1.6;">Your subscription to <strong>${plan.name}</strong> is now active.</p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding: 40px 44px 10px 44px;">
+              <p style="margin:0 0 10px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hello ${client.name},</p>
+              <p style="margin:0 0 28px 0; font-size:15px; color:#555555; line-height:1.7;">
+                Thank you for choosing <strong style="color:#1a1a1a;">iCreate Solutions &amp; Services</strong>. We're thrilled to have you with us. Your <strong style="color:#059669;">${plan.name}</strong> plan is active and we're already working behind the scenes to keep your digital presence in top shape.
+              </p>
+
+              <!-- SUBSCRIPTION CARD -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4; border-radius:14px; border:1.5px solid #a7f3d0; margin-bottom:30px;">
+                <tr>
+                  <td style="padding: 22px 26px;">
+                    <p style="margin:0 0 14px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#059669;">Your Subscription</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Plan</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${plan.name}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Billing Cycle</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${freq}</td>
+                      </tr>
+                      ${renewalRow}
+                      <tr>
+                        <td style="padding:10px 0 0 0; color:#059669; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Amount</td>
+                        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#059669; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${freq.toLowerCase()}</span></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- WHAT HAPPENS NEXT -->
+              <p style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#1a1a1a; text-transform:uppercase; letter-spacing:0.5px;">What happens next:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f0fdf4; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#059669; margin-right:12px; vertical-align:middle;">1</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">You'll receive your first invoice shortly via a separate email</span>
+                </td></tr>
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f0fdf4; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#059669; margin-right:12px; vertical-align:middle;">2</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Your subscription automatically renews — no action needed</span>
+                </td></tr>
+                <tr><td style="padding:10px 0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f0fdf4; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#059669; margin-right:12px; vertical-align:middle;">3</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Reply to this email anytime — we're here to help</span>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 0 44px 36px 44px; text-align:center;">
+              <a href="mailto:support@icreatesolutionsandservices.com?subject=Question%20about%20my%20${encodeURIComponent(plan.name)}%20subscription"
+                 style="display:inline-block; background:linear-gradient(135deg, #059669 0%, #047857 100%); color:#ffffff; text-decoration:none; padding:16px 36px; border-radius:50px; font-weight:700; font-size:15px; letter-spacing:0.3px; box-shadow:0 8px 24px rgba(5,150,105,0.35);">
+                Contact Support →
+              </a>
+              <p style="margin:16px 0 0 0; font-size:13px; color:#999;">Or simply reply to this email — we'd love to hear from you.</p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#1a1a1a; padding:28px 44px; text-align:center;">
+              <p style="margin:0 0 6px 0; color:#ffffff; font-size:14px; font-weight:600;">iCreate Solutions &amp; Services</p>
+              <p style="margin:0; color:#888; font-size:12px;">© ${new Date().getFullYear()} iCreate Solutions &amp; Services. All rights reserved.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const textBody = `Hello ${client.name},\n\nWelcome to iCreate Solutions & Services!\n\nYour ${plan.name} subscription is now active.\n\nPlan: ${plan.name}\nBilling Cycle: ${freq}\nAmount: ${price}/${freq.toLowerCase()}${renewalDate ? `\nFirst Renewal: ${renewalDate}` : ''}\n\nYou'll receive your first invoice separately. Your subscription auto-renews, so no action is needed.\n\nQuestions? Reply to this email or contact: support@icreatesolutionsandservices.com\n\nWelcome aboard,\niCreate Solutions & Services`;
+
+  return { subject, html, text: textBody };
+}
+
+module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate };

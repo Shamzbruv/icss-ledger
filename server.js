@@ -181,7 +181,7 @@ router.get('/login', (req, res) => {
 const { generateInvoicePDF } = require('./src/services/pdfService');
 const { sendInvoiceEmail } = require('./src/services/emailService');
 const { generateReferenceCode } = require('./src/services/referenceService');
-const { getInvoiceEmailContent } = require('./src/services/emailTemplates');
+const { getInvoiceEmailContent, getWelcomeSubscriptionTemplate } = require('./src/services/emailTemplates');
 const { sendPaymentReceipt } = require('./src/services/automationService');
 const { computeInvoiceState, validateInvoiceState } = require('./src/services/invoiceStateService');
 
@@ -905,8 +905,10 @@ router.post('/api/paypal/webhook', async (req, res) => {
                         targetInvoice = latestUnpaid;
                     } else {
                         console.log(`[BILLING] PayPal charged before cron. Auto-generating invoice for service ${clientServiceId}`);
+                        // Bug 3 fix: suppress the premature UNPAID email — sendPaymentReceipt
+                        // (called right after this block) will send the confirmed PAID receipt.
                         const { syncServiceActivation } = require('./src/services/subscriptionBillingService');
-                        await syncServiceActivation(clientServiceId);
+                        await syncServiceActivation(clientServiceId, { sendEmail: false, force: true });
                         
                         // Fetch the newly created invoice to attach payment to
                         const { data: newlyCreated } = await supabase
@@ -970,6 +972,13 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     }
                 }
 
+                // Bug 1 fix: Send the receipt email immediately after payment is recorded,
+                // before any secondary integrations (accounting outbox) that may be slow.
+                const emailSuccess = await sendPaymentReceipt(actualInvoiceId);
+                if (!emailSuccess) {
+                    console.error(`[PAYPAL] Receipt email failed for invoice ${actualInvoiceId}. Webhook will still be marked processed to avoid duplicate payment retries.`);
+                }
+
                 // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event for payment
                 try {
                     // Refetch with client to get full payload for projector
@@ -999,12 +1008,6 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     }
                 } catch (accErr) {
                     console.error('Accounting outbox event failed (PayPal):', accErr.message);
-                }
-
-                // 3.5 Automated Receipt (PDF & Email)
-                const emailSuccess = await sendPaymentReceipt(actualInvoiceId);
-                if (!emailSuccess) {
-                    console.error(`[PAYPAL] Receipt email failed for invoice ${actualInvoiceId}. Webhook will still be marked processed to avoid duplicate payment retries.`);
                 }
 
                 // 4. Handle Subscription Renewal Logic
@@ -1259,6 +1262,31 @@ router.post('/api/client-services/create', async (req, res) => {
             await syncServiceActivation(service.id);
         } catch (syncErr) {
             console.error('Failed to sync billing on insert:', syncErr);
+        }
+
+        // [WELCOME EMAIL] Send onboarding email immediately on subscription activation
+        try {
+            const emailService = require('./src/services/emailService');
+            // Fetch the full service record with client + plan joined for the template
+            const { data: fullService } = await supabase
+                .from('client_services')
+                .select('*, clients(id, name, email), service_plans(id, name, price, default_frequency)')
+                .eq('id', service.id)
+                .single();
+
+            if (fullService && fullService.clients?.email) {
+                const { subject, html, text } = getWelcomeSubscriptionTemplate(fullService);
+                await emailService.sendEmail(
+                    fullService.clients.email,
+                    subject,
+                    html,
+                    'iCreate Solutions <support@icreatesolutionsandservices.com>'
+                );
+                console.log(`[WELCOME] Sent welcome email to ${fullService.clients.email} for service ${service.id}`);
+            }
+        } catch (welcomeErr) {
+            // Non-fatal — don't fail the whole request if the welcome email errors
+            console.error('[WELCOME] Failed to send welcome email:', welcomeErr.message);
         }
 
         res.json({ success: true, service: { ...service, next_run_at: nextRun } });

@@ -159,7 +159,9 @@ function computeInvoiceState(rawInvoice, client) {
         state.emailSummaryRows = [
             { label: 'Service', value: state.serviceType },
             { label: 'Plan', value: rawInvoice.plan_name || 'Standard' },
-            { label: 'Billing Cycle', value: rawInvoice.billing_cycle || 'Monthly' },
+            { label: 'Billing Cycle', value: rawInvoice.billing_cycle
+                ? rawInvoice.billing_cycle.charAt(0).toUpperCase() + rawInvoice.billing_cycle.slice(1).toLowerCase()
+                : 'Monthly' },
             { label: 'Amount Charged', value: state.totalAmountFormatted },
             { label: isRenewal ? 'Renewal Date' : 'Start Date', value: formatDate(state.issueDate) },
             { label: 'Next Renewal', value: formatDate(state.renewalDate) }

@@ -7,7 +7,7 @@ const { getInvoiceEmailContent } = require('./emailTemplates');
 /**
  * Syncs a newly created Client Service to Accounting by generating its first invoice.
  */
-async function syncServiceActivation(serviceId) {
+async function syncServiceActivation(serviceId, options = {}) {
     try {
         const { data: service, error: svcError } = await supabase
             .from('client_services')
@@ -22,11 +22,11 @@ async function syncServiceActivation(serviceId) {
         if (svcError || !service) throw new Error('Service not found');
         if (service.status !== 'active') return;
 
-        if (service.next_billing_date && new Date(service.next_billing_date) > new Date()) {
+        if (!options.force && service.next_billing_date && new Date(service.next_billing_date) > new Date()) {
             return;
         }
 
-        await generateSubscriptionInvoice(service, { isRenewal: false });
+        await generateSubscriptionInvoice(service, { isRenewal: false, sendEmail: options.sendEmail !== false });
 
         const nextBilling = new Date();
         const syncFreq = service.frequency || service.service_plans?.default_frequency || 'monthly';
@@ -143,7 +143,7 @@ async function processRecurringBilling() {
     }
 }
 
-async function generateSubscriptionInvoice(service, { isRenewal = true } = {}) {
+async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmail = true } = {}) {
     const { data: seqData } = await supabase.rpc('get_next_invoice_sequence');
     const nextSeq = seqData || Math.floor(Math.random() * 1000);
     const invoiceNumber = `INV-ICSS-${String(nextSeq).padStart(3, '0')}`;
@@ -157,7 +157,15 @@ async function generateSubscriptionInvoice(service, { isRenewal = true } = {}) {
     const dueDate = new Date(issueDate);
     dueDate.setDate(dueDate.getDate() + 14);
 
-    const freq = service.frequency || service.service_plans?.billing_cycle || service.service_plans?.default_frequency || 'monthly';
+    // Resolve billing frequency — service.frequency may be the Client Care Pulse
+    // *check* frequency (e.g. 'weekly'), which is NOT the billing cycle. We only
+    // trust it for billing if it is a recognised billing period.
+    const BILLING_FREQUENCIES = new Set(['monthly', 'yearly']);
+    const rawFreq = service.service_plans?.default_frequency
+        || service.service_plans?.billing_cycle
+        || service.frequency
+        || 'monthly';
+    const freq = BILLING_FREQUENCIES.has(rawFreq) ? rawFreq : 'monthly';
     const renewalDate = new Date(issueDate);
     if (freq === 'yearly') {
         renewalDate.setFullYear(renewalDate.getFullYear() + 1);
@@ -230,10 +238,14 @@ async function generateSubscriptionInvoice(service, { isRenewal = true } = {}) {
         publish_status: 'pending'
     });
 
-    try {
-        await sendGeneratedInvoiceEmail(invoice, service, lineItem);
-    } catch (emailErr) {
-        console.error(`[BILLING] Failed to send invoice email for ${invoice.invoice_number}:`, emailErr.message);
+    if (sendEmail) {
+        try {
+            await sendGeneratedInvoiceEmail(invoice, service, lineItem);
+        } catch (emailErr) {
+            console.error(`[BILLING] Failed to send invoice email for ${invoice.invoice_number}:`, emailErr.message);
+        }
+    } else {
+        console.log(`[BILLING] Skipping premature invoice email for ${invoice.invoice_number} — payment receipt will be sent once payment is confirmed.`);
     }
 
     console.log(`[BILLING] Successfully generated invoice ${invoice.invoice_number} for service ${service.id}`);
@@ -269,5 +281,6 @@ async function getDefaultCompanyId() {
 module.exports = {
     syncServiceActivation,
     cancelServiceBilling,
-    processRecurringBilling
+    processRecurringBilling,
+    generateSubscriptionInvoice
 };
