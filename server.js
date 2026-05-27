@@ -1559,7 +1559,130 @@ router.delete('/api/client-services/delete/:id', async (req, res) => {
 // ... (existing code)
 
 // Trigger Batch Run (Protected by secret in production, open for now)
+// ONE-TIME FIX: Send Gary Mitchell welcome email + invoice
+let garyFixUsed = false;
+router.post('/api/jobs/fix-gary', async (req, res) => {
+    if (garyFixUsed) return res.status(410).json({ error: 'This endpoint has already been used and is now disabled.' });
+    const secret = req.headers['x-cron-secret'];
+    if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    garyFixUsed = true;
+    const log = [];
+    try {
+        const emailService = require('./src/services/emailService');
+        const { syncServiceActivation } = require('./src/services/subscriptionBillingService');
+        const { sendPaymentReceipt } = require('./src/services/automationService');
+
+        const GARY_CLIENT_ID = '6288f214-1c81-40bd-9d4a-933b5e8e2ce4';
+        const GARY_EMAIL = 'gtdiagularm@gmail.com';
+        const GARY_NAME = 'Gary Mitchell';
+
+        // 1. Find or create client_service
+        let { data: existingSvc } = await supabase.from('client_services')
+            .select('*, clients(id, name, email), service_plans(id, name, price, default_frequency)')
+            .eq('client_id', GARY_CLIENT_ID).eq('status', 'active').single();
+
+        if (!existingSvc) {
+            // Find best plan match by price ($78.19)
+            const { data: allPlans } = await supabase.from('service_plans').select('*');
+            let plan = allPlans ? allPlans.find(p => Math.abs(Number(p.price) - 78.19) < 1) : null;
+            if (!plan && allPlans && allPlans.length > 0) plan = allPlans[0];
+
+            const nextRenewal = new Date('2026-06-26');
+            const { data: newSvc, error: svcErr } = await supabase.from('client_services').insert({
+                client_id: GARY_CLIENT_ID,
+                plan_id: plan ? plan.id : null,
+                status: 'active',
+                frequency: 'monthly',
+                send_time: '09:00:00',
+                timezone: 'America/Jamaica',
+                service_meta_json: { paypal_subscription_id: 'I-87DC00RR1RYP' },
+                next_renewal_date: nextRenewal.toISOString().split('T')[0]
+            }).select('*, clients(id, name, email), service_plans(id, name, price, default_frequency)').single();
+
+            if (svcErr) throw new Error('Failed to create client_service: ' + svcErr.message);
+            existingSvc = newSvc;
+            log.push('Created client_service: ' + existingSvc.id);
+        } else {
+            log.push('Found existing client_service: ' + existingSvc.id);
+        }
+
+        // 2. Send welcome email
+        try {
+            const { subject, html } = getWelcomeSubscriptionTemplate(existingSvc);
+            await emailService.sendEmail(GARY_EMAIL, subject, html, 'iCreate Solutions <support@icreatesolutionsandservices.com>');
+            log.push('Welcome email sent to ' + GARY_EMAIL);
+        } catch (we) {
+            log.push('Welcome email FAILED: ' + we.message);
+        }
+
+        // 3. Generate first invoice and send receipt
+        try {
+            // Check if invoice already exists
+            const { data: existingInv } = await supabase.from('invoices')
+                .select('id').eq('client_id', GARY_CLIENT_ID).order('created_at', { ascending: false }).limit(1).single();
+
+            if (existingInv) {
+                // Mark paid and send receipt
+                await supabase.from('invoices').update({
+                    status: 'paid', payment_status: 'PAID', amount_paid: 78.19,
+                    remaining_amount: 0, balance_due: 0,
+                    paid_at: new Date('2026-05-26T17:23:05.000Z').toISOString()
+                }).eq('id', existingInv.id);
+
+                await supabase.from('payments').insert({
+                    invoice_id: existingInv.id,
+                    amount: 78.19,
+                    method: 'PayPal',
+                    reference_id: '66772221EJ100624K',
+                    payment_date: new Date('2026-05-26T17:23:05.000Z').toISOString()
+                });
+
+                const emailOk = await sendPaymentReceipt(existingInv.id);
+                log.push('Receipt email for existing invoice: ' + (emailOk ? 'sent' : 'FAILED'));
+            } else {
+                // Generate fresh invoice
+                await syncServiceActivation(existingSvc.id, { sendEmail: false, force: true });
+
+                // Fetch newly created invoice
+                const { data: newInv } = await supabase.from('invoices')
+                    .select('id').eq('client_id', GARY_CLIENT_ID).order('created_at', { ascending: false }).limit(1).single();
+
+                if (newInv) {
+                    // Mark it paid
+                    await supabase.from('invoices').update({
+                        status: 'paid', payment_status: 'PAID', amount_paid: 78.19,
+                        remaining_amount: 0, balance_due: 0,
+                        paid_at: new Date('2026-05-26T17:23:05.000Z').toISOString()
+                    }).eq('id', newInv.id);
+
+                    await supabase.from('payments').insert({
+                        invoice_id: newInv.id,
+                        amount: 78.19,
+                        method: 'PayPal',
+                        reference_id: '66772221EJ100624K',
+                        payment_date: new Date('2026-05-26T17:23:05.000Z').toISOString()
+                    });
+
+                    const emailOk = await sendPaymentReceipt(newInv.id);
+                    log.push('Invoice generated & receipt email: ' + (emailOk ? 'sent' : 'FAILED'));
+                } else {
+                    log.push('Invoice generation failed — no invoice found after sync.');
+                }
+            }
+        } catch (ie) {
+            log.push('Invoice/receipt FAILED: ' + ie.message);
+        }
+
+        res.json({ success: true, log });
+    } catch (err) {
+        res.status(500).json({ error: err.message, log });
+    }
+});
+
 router.post('/api/jobs/run-due-pulses', async (req, res) => {
+
     try {
         // Production: Require CRON_SECRET unconditionally in non-local envs.
         // If the secret is missing in production, block the route entirely.
