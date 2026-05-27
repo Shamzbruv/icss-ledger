@@ -782,6 +782,144 @@ router.post('/api/paypal/webhook', async (req, res) => {
         const successEvents = new Set(['PAYMENT.CAPTURE.COMPLETED', 'PAYMENT.SALE.COMPLETED', 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED']);
         const failureEvents = new Set(['PAYMENT.CAPTURE.DECLINED', 'PAYMENT.CAPTURE.DENIED', 'PAYMENT.SALE.REVERSED', 'BILLING.SUBSCRIPTION.PAYMENT.FAILED']);
         const terminalEvents = new Set(['BILLING.SUBSCRIPTION.SUSPENDED', 'BILLING.SUBSCRIPTION.CANCELLED', 'BILLING.SUBSCRIPTION.EXPIRED']);
+        // ✅ NEW: Handle brand new subscriptions created directly through PayPal
+        const activationEvents = new Set(['BILLING.SUBSCRIPTION.ACTIVATED', 'BILLING.SUBSCRIPTION.CREATED']);
+
+        // --- HANDLE NEW SUBSCRIPTION ACTIVATIONS ---
+        // This fires when a brand-new client signs up through PayPal directly,
+        // before any payment event is received. We auto-create the client + service + welcome email.
+        if (activationEvents.has(body.event_type)) {
+            console.log(`[PAYPAL] New subscription activation: ${body.event_type}`);
+            try {
+                const subscriber = resource.subscriber || {};
+                const subscriberEmail = subscriber.email_address || '';
+                const subscriberName = subscriber.name
+                    ? `${subscriber.name.given_name || ''} ${subscriber.name.surname || ''}`.trim()
+                    : subscriberEmail.split('@')[0];
+                const paypalSubId = resource.id; // e.g. I-87DC00RR1RYP
+                const paypalPlanId = resource.plan_id; // PayPal Plan ID
+                const amountValue = Number(resource.billing_info?.last_payment?.amount?.value
+                    || resource.shipping_amount?.value
+                    || 0);
+
+                if (!subscriberEmail) {
+                    console.warn('[PAYPAL][ACTIVATION] No subscriber email — cannot auto-create client.');
+                    if (webhookRow) {
+                        await supabase.from('paypal_webhook_events')
+                            .update({ status: 'failed', last_error: 'No subscriber email on activation event' })
+                            .eq('id', webhookRow.id);
+                    }
+                    return res.status(200).send('Received - missing subscriber email');
+                }
+
+                // 1. Find or create the client
+                let { data: existingClient } = await supabase.from('clients')
+                    .select('*').ilike('email', subscriberEmail).single();
+
+                if (!existingClient) {
+                    const { data: defaultComp } = await supabase.from('companies').select('id').limit(1).single();
+                    const { data: newClient, error: clientErr } = await supabase.from('clients').insert({
+                        name: subscriberName,
+                        email: subscriberEmail.toLowerCase(),
+                        company_id: defaultComp ? defaultComp.id : null
+                    }).select().single();
+                    if (clientErr) throw new Error('Failed to create client: ' + clientErr.message);
+                    existingClient = newClient;
+                    console.log(`[PAYPAL][ACTIVATION] Created new client: ${existingClient.name} (${existingClient.id})`);
+                } else {
+                    console.log(`[PAYPAL][ACTIVATION] Found existing client: ${existingClient.name} (${existingClient.id})`);
+                }
+
+                // 2. Find the best matching service plan by price or PayPal plan description
+                let matchedPlan = null;
+                const { data: allPlans } = await supabase.from('service_plans').select('*');
+                if (allPlans && allPlans.length > 0) {
+                    // Try matching by PayPal plan description in the resource
+                    const planDesc = (resource.plan_overridden ? resource.plan_id : '') || '';
+                    const resourceDesc = (body.resource?.description || body.resource?.plan?.name || '').toLowerCase();
+                    // First: match by price
+                    if (amountValue > 0) {
+                        matchedPlan = allPlans.find(p => Math.abs(Number(p.price) - amountValue) < 0.50);
+                    }
+                    // Fallback: match by name substring
+                    if (!matchedPlan && resourceDesc) {
+                        matchedPlan = allPlans.find(p => resourceDesc.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(resourceDesc));
+                    }
+                    // Final fallback: first plan
+                    if (!matchedPlan) matchedPlan = allPlans[0];
+                }
+
+                // 3. Check if a service already exists for this client (idempotency)
+                const { data: existingService } = await supabase.from('client_services')
+                    .select('*').eq('client_id', existingClient.id).eq('status', 'active').single();
+
+                let clientService = existingService;
+                if (!clientService) {
+                    const nextRenewal = new Date();
+                    nextRenewal.setMonth(nextRenewal.getMonth() + 1);
+                    const { data: newService, error: svcErr } = await supabase.from('client_services').insert({
+                        client_id: existingClient.id,
+                        plan_id: matchedPlan ? matchedPlan.id : null,
+                        status: 'active',
+                        frequency: 'monthly',
+                        send_time: '09:00:00',
+                        timezone: 'America/Jamaica',
+                        service_meta_json: { paypal_subscription_id: paypalSubId, paypal_plan_id: paypalPlanId },
+                        next_renewal_date: nextRenewal.toISOString().split('T')[0]
+                    }).select('*, clients(id, name, email), service_plans(id, name, price, default_frequency)').single();
+                    if (svcErr) throw new Error('Failed to create client_service: ' + svcErr.message);
+                    clientService = newService;
+                    console.log(`[PAYPAL][ACTIVATION] Created client_service ${clientService.id} for ${existingClient.name}`);
+                } else {
+                    console.log(`[PAYPAL][ACTIVATION] Service already exists: ${clientService.id}`);
+                    // Fetch with joins for email template
+                    const { data: fullSvc } = await supabase.from('client_services')
+                        .select('*, clients(id, name, email), service_plans(id, name, price, default_frequency)')
+                        .eq('id', clientService.id).single();
+                    if (fullSvc) clientService = fullSvc;
+                }
+
+                // 4. Send welcome email
+                try {
+                    const emailService = require('./src/services/emailService');
+                    const { subject, html } = getWelcomeSubscriptionTemplate(clientService);
+                    await emailService.sendEmail(
+                        existingClient.email,
+                        subject,
+                        html,
+                        'iCreate Solutions <support@icreatesolutionsandservices.com>'
+                    );
+                    console.log(`[PAYPAL][ACTIVATION] Welcome email sent to ${existingClient.email}`);
+                } catch (welcomeErr) {
+                    console.error('[PAYPAL][ACTIVATION] Welcome email failed:', welcomeErr.message);
+                }
+
+                // 5. Generate first invoice (UNPAID — payment webhook will mark it PAID)
+                try {
+                    const { syncServiceActivation } = require('./src/services/subscriptionBillingService');
+                    await syncServiceActivation(clientService.id, { sendEmail: true, force: true });
+                    console.log(`[PAYPAL][ACTIVATION] First invoice generated for service ${clientService.id}`);
+                } catch (invErr) {
+                    console.error('[PAYPAL][ACTIVATION] Invoice generation failed:', invErr.message);
+                }
+
+                if (webhookRow) {
+                    await supabase.from('paypal_webhook_events')
+                        .update({ status: 'processed', processed_at: new Date().toISOString(), custom_id: clientService.id })
+                        .eq('id', webhookRow.id);
+                }
+                return res.status(200).send('OK');
+            } catch (activationErr) {
+                console.error('[PAYPAL][ACTIVATION] Error handling subscription activation:', activationErr.message);
+                if (webhookRow) {
+                    await supabase.from('paypal_webhook_events')
+                        .update({ status: 'failed', last_error: activationErr.message })
+                        .eq('id', webhookRow.id);
+                }
+                return res.status(200).send('Received - activation error logged');
+            }
+        }
+
 
         const resource = body.resource || {};
         let customId = resource.custom_id || resource.custom;
