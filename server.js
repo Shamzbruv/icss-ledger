@@ -136,7 +136,12 @@ const checkAuth = async (req, res, next) => {
 
     // --- JWT verification (primary path) ---
     const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    let token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    
+    if (!token && req.query.token) {
+        token = req.query.token;
+    }
+
     if (token) {
         const user = await verifySupabaseJwt(token);
         if (user) {
@@ -335,6 +340,44 @@ router.get('/api/invoices', async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
     res.json(data);
+});
+
+// Download PDF endpoint
+router.get('/api/invoices/download/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Fetch invoice
+        const { data: invoice, error: invError } = await supabase
+            .from('invoices')
+            .select('*, clients(*)')
+            .eq('id', id)
+            .single();
+
+        if (invError || !invoice) {
+            return res.status(404).json({ error: 'Invoice not found' });
+        }
+
+        // Fetch items
+        const { data: items, error: itemsError } = await supabase
+            .from('invoice_items')
+            .select('*')
+            .eq('invoice_id', id);
+
+        if (itemsError) throw itemsError;
+
+        const client = invoice.clients;
+        
+        // Generate PDF buffer
+        const pdfBuffer = await generateInvoicePDF(invoice, client, items || []);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${invoice.invoice_number}.pdf"`);
+        res.send(pdfBuffer);
+    } catch (error) {
+        console.error('Error downloading PDF:', error);
+        res.status(500).json({ error: 'Failed to generate PDF' });
+    }
 });
 
 // Delete an invoice (admin only — for erroneous entries)

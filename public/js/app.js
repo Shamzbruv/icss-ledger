@@ -535,7 +535,17 @@ window.submitStatusUpdate = async function () {
 };
 
 window.viewPDF = function (id) {
-    window.open(`/api/invoices/download/${id}`, '_blank');
+    const token = localStorage.getItem('supabase.auth.token');
+    let tokenStr = '';
+    if (token) {
+        try {
+            const session = JSON.parse(token);
+            if (session && session.access_token) {
+                tokenStr = `?token=${session.access_token}`;
+            }
+        } catch(e) {}
+    }
+    window.open(`/api/invoices/download/${id}${tokenStr}`, '_blank');
 };
 
 // --- LIVE PREVIEW LOGIC (Single Source of Truth) ---
