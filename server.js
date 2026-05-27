@@ -1880,7 +1880,7 @@ router.put('/api/client-services/:id/renewal', async (req, res) => {
 router.put('/api/client-services/:id/schedule', async (req, res) => {
     try {
         const { id } = req.params;
-        const { frequency, send_day_of_week, send_day_of_month } = req.body;
+        const { frequency, send_day_of_week, send_day_of_month, plan_id } = req.body;
 
         // Fetch existing first to recalculate next run
         const { data: service, error: fetchErr } = await supabase
@@ -1895,6 +1895,7 @@ router.put('/api/client-services/:id/schedule', async (req, res) => {
         service.frequency = frequency;
         service.send_day_of_week = send_day_of_week !== null && send_day_of_week !== '' ? parseInt(send_day_of_week) : null;
         service.send_day_of_month = send_day_of_month !== null && send_day_of_month !== '' ? parseInt(send_day_of_month) : null;
+        if (plan_id !== undefined) service.plan_id = plan_id;
         
         // Reset the pattern field if we are explicitly taking over
         service.send_week_of_month = null; 
@@ -1903,15 +1904,21 @@ router.put('/api/client-services/:id/schedule', async (req, res) => {
         const { calculateNextRun } = require('./src/services/clientCarePulseService');
         const next_run_at = calculateNextRun(service);
 
+        const updateData = { 
+            frequency: service.frequency,
+            send_day_of_week: service.send_day_of_week,
+            send_day_of_month: service.send_day_of_month,
+            send_week_of_month: null, // Clear out pattern if present
+            next_run_at 
+        };
+
+        if (plan_id !== undefined) {
+            updateData.plan_id = plan_id;
+        }
+
         const { data, error } = await supabase
             .from('client_services')
-            .update({ 
-                frequency: service.frequency,
-                send_day_of_week: service.send_day_of_week,
-                send_day_of_month: service.send_day_of_month,
-                send_week_of_month: null, // Clear out pattern if present
-                next_run_at 
-            })
+            .update(updateData)
             .eq('id', id)
             .select()
             .single();

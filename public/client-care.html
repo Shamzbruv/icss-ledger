@@ -567,8 +567,11 @@
                 const res = await apiFetch('/api/service-plans');
                 const plans = await res.json();
                 const select = document.getElementById('planSelect');
-                select.innerHTML = '<option value="">Select Plan</option>' +
+                const editSelect = document.getElementById('editPlanSelect');
+                const optionsHtml = '<option value="">Select Plan</option>' +
                     plans.map(p => `<option value="${p.id}">${p.name} ($${p.price})</option>`).join('');
+                select.innerHTML = optionsHtml;
+                if (editSelect) editSelect.innerHTML = optionsHtml;
             } catch (e) { console.error(e); }
         }
 
@@ -619,7 +622,7 @@
                         <td>${s.last_emailed_at ? new Date(s.last_emailed_at).toLocaleDateString() : 'Never'}</td>
                         <td>
                             <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
-                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month})">Edit Schedule</button>
+                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month})">Edit Service</button>
                             <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
                             <button class="btn btn-sm btn-warning" onclick="sendPaymentNudge('${s.id}')" title="Send payment reminder to client" style="margin-left: 5px;">💳 Payment Nudge</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
@@ -1105,8 +1108,9 @@
         applyTableLabels();
 
         // EDIT SCHEDULE LOGIC
-        window.openEditScheduleModal = function(serviceId, frequency, dayOfWeek, dayOfMonth) {
+        window.openEditScheduleModal = function(serviceId, planId, frequency, dayOfWeek, dayOfMonth) {
             document.getElementById('editScheduleServiceId').value = serviceId;
+            document.getElementById('editPlanSelect').value = planId || '';
             document.getElementById('editFrequencySelect').value = frequency || 'monthly';
             if (dayOfWeek !== null && dayOfWeek !== undefined && dayOfWeek !== 'null') {
                 document.getElementById('editSendDayOfWeek').value = dayOfWeek;
@@ -1136,6 +1140,7 @@
 
         window.submitScheduleUpdate = async function() {
             const serviceId = document.getElementById('editScheduleServiceId').value;
+            const plan_id = document.getElementById('editPlanSelect').value;
             const frequency = document.getElementById('editFrequencySelect').value;
             let send_day_of_week = null;
             let send_day_of_month = null;
@@ -1151,7 +1156,7 @@
                 const res = await apiFetch(`/api/client-services/${serviceId}/schedule`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ frequency, send_day_of_week, send_day_of_month })
+                    body: JSON.stringify({ frequency, send_day_of_week, send_day_of_month, plan_id })
                 });
                 
                 hideLoading();
@@ -1209,11 +1214,17 @@
     <div id="editScheduleModal" class="modal-overlay d-none">
         <div class="modal-content card fade-in" style="max-width: 500px; width: 90%;">
             <div class="modal-header">
-                <h3>Edit Schedule</h3>
+                <h3>Edit Plan & Schedule</h3>
                 <button class="btn btn-sm btn-outline-light" onclick="closeEditScheduleModal()">✕</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="editScheduleServiceId">
+                <div class="mb-3">
+                    <label>Plan</label>
+                    <select id="editPlanSelect" class="form-control">
+                        <option value="">Loading plans...</option>
+                    </select>
+                </div>
                 <div class="mb-3">
                     <label>Frequency</label>
                     <select id="editFrequencySelect" class="form-control" onchange="toggleEditScheduleFields()">
