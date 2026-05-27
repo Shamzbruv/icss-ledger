@@ -622,7 +622,7 @@
                         <td>${s.last_emailed_at ? new Date(s.last_emailed_at).toLocaleDateString() : 'Never'}</td>
                         <td>
                             <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
-                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month})">Edit Service</button>
+                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month}, '${encodeURIComponent(JSON.stringify(s.service_meta_json || {}))}')">Edit Service</button>
                             <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
                             <button class="btn btn-sm btn-warning" onclick="sendPaymentNudge('${s.id}')" title="Send payment reminder to client" style="margin-left: 5px;">💳 Payment Nudge</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
@@ -1108,19 +1108,64 @@
         applyTableLabels();
 
         // EDIT SCHEDULE LOGIC
-        window.openEditScheduleModal = function(serviceId, planId, frequency, dayOfWeek, dayOfMonth) {
+        window.openEditScheduleModal = function(serviceId, planId, frequency, dayOfWeek, dayOfMonth, metaStr) {
             document.getElementById('editScheduleServiceId').value = serviceId;
             document.getElementById('editPlanSelect').value = planId || '';
             document.getElementById('editFrequencySelect').value = frequency || 'monthly';
             if (dayOfWeek !== null && dayOfWeek !== undefined && dayOfWeek !== 'null') {
                 document.getElementById('editSendDayOfWeek').value = dayOfWeek;
+            } else {
+                document.getElementById('editSendDayOfWeek').value = '1';
             }
             if (dayOfMonth !== null && dayOfMonth !== undefined && dayOfMonth !== 'null') {
                 document.getElementById('editSendDayOfMonth').value = dayOfMonth;
+            } else {
+                document.getElementById('editSendDayOfMonth').value = '1';
             }
             
+            // Handle Metadata
+            let meta = {};
+            try { if (metaStr) meta = JSON.parse(decodeURIComponent(metaStr)); } catch(e){}
+            
+            document.getElementById('editWebsiteUrl').value = meta.website_url || '';
+            document.getElementById('editDomainName').value = meta.domain || '';
+            
+            const apiContainer = document.getElementById('editApiUrlsContainer');
+            apiContainer.innerHTML = '';
+            if (meta.api_urls && meta.api_urls.length > 0) {
+                meta.api_urls.forEach(url => window.addEditApiUrlField(url));
+            }
+            
+            const ccContainer = document.getElementById('editCcEmailsContainer');
+            ccContainer.innerHTML = '';
+            if (meta.cc_emails && meta.cc_emails.length > 0) {
+                meta.cc_emails.forEach(email => window.addEditCcEmailField(email));
+            }
+
             toggleEditScheduleFields();
             document.getElementById('editScheduleModal').classList.remove('d-none');
+        };
+
+        window.addEditApiUrlField = function(val = '') {
+            const container = document.getElementById('editApiUrlsContainer');
+            const div = document.createElement('div');
+            div.className = 'd-flex mb-2';
+            div.innerHTML = `
+                <input type="url" name="editApiUrl[]" value="${val}" placeholder="https://api.example.com" class="form-control me-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(div);
+        };
+
+        window.addEditCcEmailField = function(val = '') {
+            const container = document.getElementById('editCcEmailsContainer');
+            const div = document.createElement('div');
+            div.className = 'd-flex mb-2';
+            div.innerHTML = `
+                <input type="email" name="editCcEmail[]" value="${val}" placeholder="colleague@example.com" class="form-control me-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(div);
         };
 
         window.closeEditScheduleModal = function() {
@@ -1151,12 +1196,23 @@
                 send_day_of_month = document.getElementById('editSendDayOfMonth').value || 1;
             }
 
+            const website_url = document.getElementById('editWebsiteUrl').value;
+            const domain = document.getElementById('editDomainName').value;
+            
+            const apiInputs = document.querySelectorAll('input[name="editApiUrl[]"]');
+            const api_urls = Array.from(apiInputs).map(i => i.value).filter(v => v.trim() !== '');
+
+            const ccInputs = document.querySelectorAll('input[name="editCcEmail[]"]');
+            const cc_emails = Array.from(ccInputs).map(i => i.value).filter(v => v.trim() !== '');
+
+            const serviceMeta = { website_url, domain, api_urls, cc_emails };
+
             try {
                 showLoading('Updating Schedule...');
                 const res = await apiFetch(`/api/client-services/${serviceId}/schedule`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ frequency, send_day_of_week, send_day_of_month, plan_id })
+                    body: JSON.stringify({ frequency, send_day_of_week, send_day_of_month, plan_id, serviceMeta })
                 });
                 
                 hideLoading();
@@ -1251,6 +1307,27 @@
                     <input type="number" id="editSendDayOfMonth" class="form-control" min="1" max="28" value="1">
                 </div>
                 <p class="text-muted small">The system will recalculate the next run date automatically based on these settings.</p>
+
+                <hr>
+                <h5 class="mb-2">Configuration</h5>
+                <div class="mb-2">
+                    <label>Website URL</label>
+                    <input type="url" id="editWebsiteUrl" class="form-control" placeholder="https://example.com">
+                </div>
+                <div class="mb-2">
+                    <label>Domain Name</label>
+                    <input type="text" id="editDomainName" class="form-control" placeholder="example.com">
+                </div>
+                <div class="mb-2">
+                    <label>API URLs (Optional)</label>
+                    <div id="editApiUrlsContainer"></div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="addEditApiUrlField()">+ Add Another API</button>
+                </div>
+                <div class="mb-2">
+                    <label>CC Emails (Optional)</label>
+                    <div id="editCcEmailsContainer"></div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="addEditCcEmailField()">+ Add Another CC Email</button>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeEditScheduleModal()">Cancel</button>

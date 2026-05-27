@@ -1880,7 +1880,7 @@ router.put('/api/client-services/:id/renewal', async (req, res) => {
 router.put('/api/client-services/:id/schedule', async (req, res) => {
     try {
         const { id } = req.params;
-        const { frequency, send_day_of_week, send_day_of_month, plan_id } = req.body;
+        const { frequency, send_day_of_week, send_day_of_month, plan_id, serviceMeta } = req.body;
 
         // Fetch existing first to recalculate next run
         const { data: service, error: fetchErr } = await supabase
@@ -1914,6 +1914,13 @@ router.put('/api/client-services/:id/schedule', async (req, res) => {
 
         if (plan_id !== undefined) {
             updateData.plan_id = plan_id;
+        }
+
+        if (serviceMeta) {
+            updateData.service_meta_json = {
+                ...(service.service_meta_json || {}),
+                ...serviceMeta
+            };
         }
 
         const { data, error } = await supabase
