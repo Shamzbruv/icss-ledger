@@ -534,18 +534,19 @@ window.submitStatusUpdate = async function () {
     }
 };
 
-window.viewPDF = function (id) {
-    const token = localStorage.getItem('supabase.auth.token');
+window.viewPDF = async function (id) {
+    const newWindow = window.open('about:blank', '_blank');
     let tokenStr = '';
-    if (token) {
-        try {
-            const session = JSON.parse(token);
-            if (session && session.access_token) {
-                tokenStr = `?token=${session.access_token}`;
-            }
-        } catch(e) {}
+    try {
+        const supabaseClient = await ensureSupabaseClient();
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.access_token) {
+            tokenStr = `?token=${session.access_token}`;
+        }
+    } catch(e) {
+        console.error("Auth token error", e);
     }
-    window.open(`/api/invoices/download/${id}${tokenStr}`, '_blank');
+    newWindow.location.href = `/api/invoices/download/${id}${tokenStr}`;
 };
 
 // --- LIVE PREVIEW LOGIC (Single Source of Truth) ---
