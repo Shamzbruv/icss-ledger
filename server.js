@@ -1559,6 +1559,90 @@ router.delete('/api/client-services/delete/:id', async (req, res) => {
 // ... (existing code)
 
 // Trigger Batch Run (Protected by secret in production, open for now)
+// ONE-TIME FIX: Correct Gary Mitchell's invoice amount to $78.19 and resend
+let garyAmountFixUsed = false;
+router.post('/api/jobs/fix-gary-amount', async (req, res) => {
+    if (garyAmountFixUsed) return res.status(410).json({ error: 'Already used.' });
+    const secret = req.headers['x-cron-secret'];
+    if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    garyAmountFixUsed = true;
+    const log = [];
+    try {
+        const { sendPaymentReceipt } = require('./src/services/automationService');
+        const GARY_CLIENT_ID = '6288f214-1c81-40bd-9d4a-933b5e8e2ce4';
+        const CORRECT_AMOUNT = 78.19;
+        const PLAN_NAME = 'Website Content Refresh';
+        const PAYPAL_TXN = '66772221EJ100624K';
+        const PAID_AT = new Date('2026-05-26T17:23:05.000Z').toISOString();
+
+        // Find Gary's most recent invoice
+        const { data: inv } = await supabase.from('invoices')
+            .select('id, invoice_number, total_amount')
+            .eq('client_id', GARY_CLIENT_ID)
+            .order('created_at', { ascending: false })
+            .limit(1).single();
+
+        if (!inv) throw new Error('No invoice found for Gary Mitchell');
+        log.push(`Found invoice: ${inv.invoice_number} (currently $${inv.total_amount})`);
+
+        // Correct the invoice amount, plan name, and ensure PAID status
+        const { error: updateErr } = await supabase.from('invoices').update({
+            total_amount: CORRECT_AMOUNT,
+            amount_paid: CORRECT_AMOUNT,
+            remaining_amount: 0,
+            balance_due: 0,
+            status: 'paid',
+            payment_status: 'PAID',
+            plan_name: PLAN_NAME,
+            notes: 'Website Content Refresh - May 2026',
+            paid_at: PAID_AT
+        }).eq('id', inv.id);
+        if (updateErr) throw new Error('Invoice update failed: ' + updateErr.message);
+        log.push(`Updated invoice to $${CORRECT_AMOUNT} for ${PLAN_NAME}`);
+
+        // Correct the invoice item
+        const { data: items } = await supabase.from('invoice_items').select('id').eq('invoice_id', inv.id);
+        if (items && items.length > 0) {
+            await supabase.from('invoice_items').update({
+                description: 'Website Content Refresh - May 2026',
+                quantity: 1,
+                unit_price: CORRECT_AMOUNT
+            }).eq('id', items[0].id);
+            log.push('Updated invoice line item');
+        } else {
+            await supabase.from('invoice_items').insert({
+                invoice_id: inv.id,
+                description: 'Website Content Refresh - May 2026',
+                quantity: 1,
+                unit_price: CORRECT_AMOUNT
+            });
+            log.push('Inserted invoice line item');
+        }
+
+        // Correct the payment record
+        const { data: existingPay } = await supabase.from('payments').select('id').eq('invoice_id', inv.id).single();
+        if (existingPay) {
+            await supabase.from('payments').update({ amount: CORRECT_AMOUNT, reference_id: PAYPAL_TXN }).eq('id', existingPay.id);
+        } else {
+            await supabase.from('payments').insert({
+                invoice_id: inv.id, amount: CORRECT_AMOUNT, method: 'PayPal',
+                reference_id: PAYPAL_TXN, payment_date: PAID_AT
+            });
+        }
+        log.push('Payment record corrected');
+
+        // Resend the receipt with the corrected invoice
+        const emailOk = await sendPaymentReceipt(inv.id);
+        log.push('Corrected receipt email: ' + (emailOk ? 'SENT' : 'FAILED'));
+
+        res.json({ success: true, log });
+    } catch (err) {
+        res.status(500).json({ error: err.message, log });
+    }
+});
+
 // ONE-TIME FIX: Send Gary Mitchell welcome email + invoice
 let garyFixUsed = false;
 router.post('/api/jobs/fix-gary', async (req, res) => {
