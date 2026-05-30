@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Careers | Reliable Shield Protection</title>
+
+    <link rel="icon" type="image/x-icon" href="images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Premium Styles -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .careers-hero {
+            height: 60vh;
+            background: linear-gradient(to right, #020617 30%, rgba(2, 6, 23, 0.6)),
+                url('images/career-hero-black-v2.png');
+            background-size: cover;
+            background-position: center 25%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .career-content {
+            max-width: 800px;
+            margin: 0 auto;
+            color: var(--text-steel);
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .requirements-list {
+            list-style: none;
+            margin: 30px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .requirements-list li {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-white);
+        }
+
+        .requirements-list i {
+            color: var(--gold-metallic);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container nav-inner">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Reliable Shield Logo" style="height: 80px;">
+            </a>
+
+            <!-- Desktop Nav -->
+            <div class="nav-links-desktop">
+                <a href="index.html">Home</a>
+                <a href="services.html">Services</a>
+                <a href="careers.html" class="active">Careers</a>
+                <a href="faq.html">FAQ</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+
+            <div class="nav-contact">
+                <a href="tel:8766798029"
+                    style="color:var(--text-white); text-decoration:none; font-size:0.9rem; transition:0.3s;"
+                    onmouseover="this.style.color='var(--gold-metallic)'"
+                    onmouseout="this.style.color='var(--text-white)'">
+                    <i class="fa-solid fa-phone" style="color:var(--gold-metallic)"></i> Office: (876) 679-8029
+                </a>
+                <a href="tel:8763978331" class="emergency-btn">
+                    <i class="fa-solid fa-mobile-screen"></i> CALL NOW
+                </a>
+            </div>
+
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-menu-btn" onclick="toggleMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Container -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">Home</a>
+        <a href="services.html">Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="faq.html">FAQ</a>
+        <a href="index.html#contact">Contact</a>
+        <a href="tel:8763978331" style="color: var(--accent-alert); border:none; margin-top:20px;">
+            <i class="fa-solid fa-phone"></i> CALL (876) 397-8331
+        </a>
+        <a href="tel:8763132183" style="color: var(--text-white); border:none; margin-top:10px; font-size: 0.9rem;">
+            <i class="fa-solid fa-mobile"></i> Alt: (876) 313-2183
+        </a>
+    </div>
+
+    <header class="careers-hero">
+        <div class="container animate-up">
+            <h1 style="font-size: 3.5rem;">Join The <span class="text-gold">Elite</span></h1>
+            <p
+                style="color: var(--text-white); font-size: 1.3rem; max-width: 700px; margin: 0 auto; letter-spacing: 1px;">
+                BUILD A CAREER. PROTECT YOUR COMMUNITY.
+            </p>
+        </div>
+    </header>
+
+    <section style="padding: 100px 0;">
+        <div class="container">
+            <div class="glass-panel" style="padding: 60px;">
+                <div class="section-header">
+                    <h2>Why Join Us?</h2>
+                </div>
+
+                <div class="career-content">
+                    <p style="margin-bottom: 20px;">
+                        Joining our team is more than just getting a job - it's an opportunity to build a career.
+                        We provide professional certification and training to help you become a qualified security
+                        guard.
+                    </p>
+                    <p>
+                        With us, you'll gain valuable skills, develop discipline, and have the chance to earn an
+                        honest and stable living while serving and protecting our community.
+                    </p>
+                </div>
+
+                <div style="margin-top: 60px;">
+                    <h3 style="color: white; margin-bottom: 20px; font-size: 1.5rem;">Application Requirements</h3>
+                    <ul class="requirements-list">
+                        <li><i class="fa-solid fa-id-card"></i> Valid Government ID</li>
+                        <li><i class="fa-solid fa-file-contract"></i> Police Record</li>
+                        <li><i class="fa-solid fa-hashtag"></i> TRN & NIS</li>
+                        <li><i class="fa-solid fa-file-lines"></i> Updated Resume</li>
+                        <li><i class="fa-solid fa-certificate"></i> PSRA License (Asset)</li>
+                        <li><i class="fa-solid fa-graduation-cap"></i> School Leaving Certificate</li>
+                    </ul>
+                </div>
+
+                <div
+                    style="margin-top: 60px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 40px;">
+                    <h3 style="color: white; margin-bottom: 15px;">How To Apply</h3>
+                    <p style="margin-bottom: 30px; color: var(--text-steel);">
+                        Send your resume and documents to our HR department.
+                    </p>
+
+                    <a href="mailto:reliableshield2025@gmail.com?subject=Application: [Your Name] - Security Officer"
+                        class="btn-primary">
+                        <i class="fa-solid fa-envelope"></i> Email Application
+                    </a>
+
+                    <p style="margin-top: 20px; font-size: 0.9rem; color: var(--text-steel);">
+                        <i class="fa-solid fa-circle-info" style="color: var(--gold-metallic);"></i>
+                        Subject Line: <strong>Application: [Your Name] - Security Officer</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-cta">
+        <div class="container">
+            <div class="contact-box">
+                <h2 style="margin-bottom: 15px;">Have Questions?</h2>
+                <div class="contact-details">
+                    <div class="contact-pill" onclick="window.location.href='tel:8766798029'">
+                        <i class="fa-solid fa-phone"></i> HR Office: (876) 679-8029
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="services.html">Services</a>
+                <a href="careers.html">Careers</a>
+                <a href="faq.html">FAQ</a>
+                <a href="mailto:reliableshield2025@gmail.com">Support</a>
+            </div>
+            <p>&copy; 2026 Reliable Shield Protection Limited. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function toggleMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+    </script>
+</body>
+
+</html>

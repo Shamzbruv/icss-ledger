@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-63WCDFCGPR"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-63WCDFCGPR');
+    </script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Our Portfolio | ICREATE SOLUTIONS &amp; SERVICES</title>
+    <link href="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png" rel="icon" type="image/png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet">
+    <style>
+        @import url('https://fonts.cdnfonts.com/css/neue-machina');
+
+        :root {
+            --primary: #0A1A3A;
+            --secondary: #00F5FF;
+            --accent: #D4AF37;
+            --dark: #050F1F;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FAFAFA;
+            color: var(--primary);
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Neue Machina', sans-serif;
+        }
+
+        .primary-bg {
+            background-color: var(--primary);
+        }
+
+        .primary-text {
+            color: var(--primary);
+        }
+
+        .secondary-bg {
+            background-color: var(--secondary);
+        }
+
+        .secondary-text {
+            color: var(--secondary);
+        }
+
+        .accent-bg {
+            background-color: var(--accent);
+        }
+
+        .accent-text {
+            color: var(--accent);
+        }
+
+        .glow-effect:hover {
+            box-shadow: 0 0 20px rgba(0, 245, 255, .7);
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--secondary);
+            transition: width .3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .digital-static {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .digital-static::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(to right, rgba(0, 245, 255, .1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 245, 255, .1) 1px, transparent 1px);
+            background-size: 4px 4px;
+            pointer-events: none;
+            z-index: 1;
+            opacity: .3;
+        }
+
+        /* Futuristic Portfolio Window */
+        .portfolio-section {
+            background-color: var(--dark);
+            position: relative;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        .portfolio-window-container {
+            perspective: 1500px;
+        }
+
+        .portfolio-window {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            background: rgba(10, 26, 58, 0.8);
+            height: 300px;
+            cursor: pointer;
+        }
+
+        .portfolio-window:hover {
+            transform: rotateX(5deg) translateY(-10px);
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.6);
+            border-color: var(--secondary);
+        }
+
+        .portfolio-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s ease;
+        }
+
+        .portfolio-window:hover .portfolio-image {
+            transform: scale(1.1);
+        }
+
+        .portfolio-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            z-index: 3;
+            transform: translateY(100px);
+            transition: transform 0.4s ease;
+        }
+
+        .portfolio-window:hover .portfolio-overlay {
+            transform: translateY(0);
+        }
+
+        .tech-border-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--secondary);
+            z-index: 4;
+            transition: all 0.3s ease;
+        }
+
+        .portfolio-window:hover .tech-border-corner {
+            width: 40px;
+            height: 40px;
+        }
+
+        .tl {
+            top: 10px;
+            left: 10px;
+            border-right: 0;
+            border-bottom: 0;
+        }
+
+        .tr {
+            top: 10px;
+            right: 10px;
+            border-left: 0;
+            border-bottom: 0;
+        }
+
+        .bl {
+            bottom: 10px;
+            left: 10px;
+            border-right: 0;
+            border-top: 0;
+        }
+
+        .br {
+            bottom: 10px;
+            right: 10px;
+            border-left: 0;
+            border-top: 0;
+        }
+
+        .fade-in {
+            animation: fadeIn .8s ease-in forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glitch {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Add basic glitch effect if needed or reuse from index */
+    </style>
+</head>
+
+<body class="relative bg-gray-900">
+    <nav class="primary-bg text-white fixed w-full z-50 shadow-lg digital-static">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <a class="text-2xl font-bold secondary-text flex items-center" href="index.html">
+                        <i class="fas fa-cube mr-2"></i>
+                        <span class="glitch" data-text="ICREATE">ICREATE</span>
+                    </a>
+                </div>
+                <div class="md:hidden">
+                    <button class="text-white focus:outline-none" id="mobile-menu-button">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a class="nav-link text-white hover:text-cyan-300 transition" href="index.html#home">Home</a>
+                    <a class="nav-link text-white hover:text-cyan-300 transition"
+                        href="index.html#services">Services</a>
+                    <a class="nav-link text-white hover:text-cyan-300 transition"
+                        href="index.html#portfolio">Portfolio</a>
+                    <a class="nav-link text-white hover:text-cyan-300 transition" href="index.html#about">About</a>
+                    <a class="nav-link text-white hover:text-cyan-300 transition"
+                        href="index.html#project-estimator">Contact</a>
+                </div>
+                <div class="hidden md:block">
+                    <a class="secondary-bg primary-text px-6 py-2 rounded-full font-bold hover:bg-cyan-400 transition glow-effect"
+                        href="index.html#project-estimator">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+            <div class="hidden md:hidden mt-4 pb-4" id="mobile-menu">
+                <a class="block py-2 text-white hover:text-cyan-300 transition" href="index.html#home">Home</a>
+                <a class="block py-2 text-white hover:text-cyan-300 transition" href="index.html#services">Services</a>
+                <a class="block py-2 text-white hover:text-cyan-300 transition"
+                    href="index.html#portfolio">Portfolio</a>
+                <a class="block py-2 text-white hover:text-cyan-300 transition" href="index.html#about">About</a>
+                <a class="block py-2 text-white hover:text-cyan-300 transition"
+                    href="index.html#project-estimator">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="portfolio-section pt-32 pb-20 digital-static">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Our <span class="secondary-text">Full</span>
+                    Gallery</h1>
+                <p class="text-lg text-gray-400 max-w-2xl mx-auto">
+                    Explore our complete collection of innovative digital solutions.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 portfolio-window-container">
+
+                <!-- Project: Multi Alumni -->
+                <a href="https://multialumni.org" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.05s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/multialumni_favicon.png" alt="Multi Alumni Inc"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Multi Alumni (MASS)</h3>
+                            <p class="text-cyan-300 text-sm">Non-Profit & Education</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: JamRok -->
+                <a href="https://jamrokengineering.com" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.1s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/jamrok_favicon.png" alt="JamRok Engineering"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">JamRok Engineering</h3>
+                            <p class="text-cyan-300 text-sm">Engineering</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: TBO -->
+                <a href="https://tbodestinationplanner.com" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.15s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/tbo_wedding.jpg" alt="TBO Destination Wedding Design"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Tashana Brown-O’Connor</h3>
+                            <p class="text-cyan-300 text-sm">Destination Weddings</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: Shellz Decor -->
+                <a href="projects/shellzdecor/index.html" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.2s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/shellz_text.png" alt="Shellz Decor" class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Shellz Decor</h3>
+                            <p class="text-cyan-300 text-sm">Event & Decor</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: Clive Beecher -->
+                <a href="projects/clive-beecher/index.html" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.25s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/clive_text.png" alt="Clive Beecher" class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Clive Beecher</h3>
+                            <p class="text-cyan-300 text-sm">Tours</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: Security Service -->
+                <a href="projects/security-service/index.html" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.3s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/security_text.png" alt="Security Service"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Security Service</h3>
+                            <p class="text-cyan-300 text-sm">Security</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: Hoiletts Technical Services -->
+                <a href="https://hoilettstechnicalservices.com" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.35s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/hoiletts_favicon.png" alt="Hoiletts Technical Services"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Hoiletts Technical Services</h3>
+                            <p class="text-cyan-300 text-sm">Technical Services</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: Only Vibz -->
+                <a href="projects/only-vibz/index.html" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.4s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/onlyvibz_text.png" alt="Only Vibz Tour"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Only Vibz Tour</h3>
+                            <p class="text-cyan-300 text-sm">Tourism</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: Windross Tailoring & Design -->
+                <a href="https://windrosstailoringanddesign.com/" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.45s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/windross_new_favicon.png" alt="Windross Tailoring & Design"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Windross Tailoring & Design</h3>
+                            <p class="text-cyan-300 text-sm">Fashion</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: iCrave Ghuchis -->
+                <a href="https://icraveghuchiscateringservices.com" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.5s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/icrave_favicon.png" alt="iCrave Ghuchis Catering Services"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">iCrave Ghuchis</h3>
+                            <p class="text-cyan-300 text-sm">Catering & Event Services</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: TLC Family Services -->
+                <a href="https://tlcfamilyservices.com" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.55s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/tlc_hero.png" alt="TLC Family Services"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">TLC Family Services</h3>
+                            <p class="text-cyan-300 text-sm">Family Services</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: Crossfire Worship Center -->
+                <a href="https://crossfireworshipcenter.org" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.6s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/crossfire_hero.jpg" alt="Crossfire Worship Center"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">Crossfire Worship Center</h3>
+                            <p class="text-cyan-300 text-sm">Religious Organization</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: D'Appliance Genie (Local Folder) -->
+                <a href="/Users/Bakers/Documents/Websites/My Clients/Dave/index.html" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.65s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/genie_favicon.png" alt="D'Appliance Genie"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">D'Appliance Genie</h3>
+                            <p class="text-cyan-300 text-sm">Appliance Repair</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Project: 876 Curate 4 U -->
+                <a href="https://876curate4u.com" target="_blank" class="group">
+                    <div class="portfolio-window fade-in" style="animation-delay: 0.7s;">
+                        <div class="tech-border-corner tl"></div>
+                        <div class="tech-border-corner tr"></div>
+                        <div class="tech-border-corner bl"></div>
+                        <div class="tech-border-corner br"></div>
+                        <img src="assets/images/portfolio/curate4u_favicon.png" alt="876 Curate 4 U"
+                            class="portfolio-image">
+                        <div class="portfolio-overlay">
+                            <h3 class="text-xl font-bold text-white">876 Curate 4 U</h3>
+                            <p class="text-cyan-300 text-sm">Wedding & Event Planning</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="mt-16 text-center">
+                <a href="index.html#project-estimator"
+                    class="inline-block border-2 border-cyan-300 text-white px-10 py-3 rounded-full font-bold hover:bg-cyan-900 transition glow-effect">
+                    Start Your Project
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="primary-bg text-white py-12 digital-static">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+                <div class="fade-in">
+                    <a class="text-2xl font-bold secondary-text flex items-center mb-6" href="index.html">
+                        <i class="fas fa-cube mr-2"></i>
+                        <span class="glitch" data-text="ICREATE">ICREATE</span>
+                    </a>
+                    <p class="text-gray-300 mb-4">Transforming ideas into seamless digital experiences through
+                        innovative technology solutions.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-6">Company</h3>
+                    <ul class="space-y-3">
+                        <li><a class="text-gray-300 hover:text-cyan-300" href="index.html#home">Home</a></li>
+                        <li><a class="text-gray-300 hover:text-cyan-300" href="index.html#services">Services</a></li>
+                        <li><a class="text-gray-300 hover:text-cyan-300" href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-12 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2023 ICREATE Solutions & Services. All rights reserved.
+                    <a href="/login"
+                        class="text-gray-600 hover:text-cyan-300 ml-2 transition" title="Restricted Access">
+                        <i class="fas fa-lock"></i>
+                    </a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('mobile-menu-button').addEventListener('click', function () {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+
+</html>

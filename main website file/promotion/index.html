@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Halona</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&family=Creepster&display=swap"
+        rel="stylesheet">
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --bg-angel-1: #ffafbd;
+            --bg-angel-2: #ffc3a0;
+            --bg-hell-1: #2b0000;
+            --bg-hell-2: #000000;
+            --text-hell: #ff0000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--bg-angel-1), var(--bg-angel-2));
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            transition: background 1s ease;
+        }
+
+        /* --- HELL MODE --- */
+        body.hell-mode {
+            background: radial-gradient(circle, var(--bg-hell-1), var(--bg-hell-2));
+        }
+
+        body.hell-mode .splash,
+        body.hell-mode .container,
+        body.hell-mode .heart-container {
+            display: none !important;
+        }
+
+        .hell-container {
+            display: none;
+            text-align: center;
+            color: var(--text-hell);
+            z-index: 2000;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-image: url('https://media.giphy.com/media/Lopx9eUi34rbq/giphy.gif');
+            background-size: cover;
+            background-blend-mode: overlay;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        body.hell-mode .hell-container {
+            display: flex;
+        }
+
+        .hell-title {
+            font-family: 'Creepster', cursive;
+            font-size: clamp(4rem, 10vw, 8rem);
+            color: #ff0000;
+            text-shadow: 0 0 20px #ff0000;
+            margin-bottom: 20px;
+            animation: shake 0.5s infinite;
+        }
+
+        .hell-text {
+            font-family: 'Creepster', cursive;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: #fff;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .survive-btn {
+            font-family: 'Creepster', cursive;
+            font-size: 2.5rem;
+            padding: 20px 60px;
+            background: #000;
+            color: #ff0000;
+            border: 3px solid #ff0000;
+            cursor: pointer;
+            box-shadow: 0 0 30px #ff0000;
+            transition: all 0.3s;
+            animation: pulseHell 1s infinite;
+            text-transform: uppercase;
+        }
+
+        .survive-btn:hover {
+            background: #ff0000;
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        /* --- ANGEL MODE --- */
+        .splash {
+            position: fixed;
+            inset: 0;
+            background: #fff0f6;
+            display: flex;
+            place-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeOut 1.5s ease forwards 3.5s;
+        }
+
+        .splash h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: #d32f2f;
+            opacity: 0;
+            animation: zoomIn 1.5s ease forwards 0.5s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            animation: contentFadeIn 1s ease forwards 3.8s;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        h1.main-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            color: #d32f2f;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #5d4037;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.8;
+        }
+
+        .heart-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 2rem;
+            color: #fff;
+            opacity: 0.3;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+
+        .message-box::before {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(45deg, #ff4081, #ff79a9, #ff4081);
+            z-index: -1;
+            border-radius: 24px;
+            opacity: 0.4;
+        }
+
+        .message-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.2rem;
+            color: #d32f2f;
+            margin: 20px 0;
+            display: block;
+        }
+
+        .buttons-container {
+            position: relative;
+            height: 200px;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .valentine-button {
+            position: absolute;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 16px 40px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            white-space: nowrap;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        #yesButton {
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
+            color: white;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 101;
+        }
+
+        #noButton {
+            background: linear-gradient(to right, #f44336, #ff9800);
+            color: white;
+            left: 50%;
+            top: 80%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Floating free mode for No button */
+        #noButton.free-roam {
+            position: fixed;
+            z-index: 9999;
+        }
+
+        .hint {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            font-style: italic;
+            color: #d32f2f;
+            opacity: 0;
+            transition: opacity 0.3s;
+            height: 20px;
+        }
+
+        .success-message {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+            z-index: 102;
+        }
+
+        .success-message h2 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5rem;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .hearts-anim {
+            font-size: 3rem;
+            color: #ff4081;
+            margin: 20px 0;
+            animation: heartBeat 1.5s infinite;
+        }
+
+        .share-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #ff4081;
+        }
+
+        .share-button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            color: #fff;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulseHell {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 20px #ff0000;
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 50px #ff0000;
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 20px #ff0000;
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            to {
+                opacity: 0;
+                pointer-events: none;
+            }
+        }
+
+        @keyframes contentFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes heartBeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+
+            10% {
+                transform: translate(-1px, -2px) rotate(-1deg);
+            }
+
+            20% {
+                transform: translate(-3px, 0px) rotate(1deg);
+            }
+
+            30% {
+                transform: translate(3px, 2px) rotate(0deg);
+            }
+
+            40% {
+                transform: translate(1px, -1px) rotate(1deg);
+            }
+
+            50% {
+                transform: translate(-1px, 2px) rotate(-1deg);
+            }
+
+            60% {
+                transform: translate(-3px, 1px) rotate(0deg);
+            }
+
+            70% {
+                transform: translate(3px, 1px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(-1px, -1px) rotate(1deg);
+            }
+
+            90% {
+                transform: translate(1px, 2px) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(1px, -2px) rotate(-1deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1.main-title {
+                font-size: 3rem;
+            }
+
+            .message-text {
+                font-size: 1.8rem;
+            }
+
+            .valentine-button {
+                padding: 12px 30px;
+                font-size: 1.2rem;
+            }
+
+            .buttons-container {
+                height: 250px;
+            }
+
+            .hell-title {
+                font-size: 4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="splash">
+        <h1>Halona my Queen</h1>
+    </div>
+    <div class="heart-container" id="backgroundHearts"></div>
+
+    <!-- Angel Container -->
+    <div class="container" id="angelContainer">
+        <div class="header">
+            <h1 class="main-title">Will You Be My Valentine?</h1>
+            <p class="subtitle">I have a question for you...</p>
+        </div>
+
+        <div class="message-box" id="messageBox">
+            <p class="message" id="introText">Dear Halona,</p>
+            <p class="message-text" id="mainQuestion">You make my heart skip a beat every time I see you. This
+                Valentine's Day, I'd be honored if you'd be mine.</p>
+            <p class="message">What do you say?</p>
+
+            <div class="buttons-container" id="zone">
+                <button id="yesButton" class="valentine-button">YES! 💖</button>
+                <button id="noButton" class="valentine-button">No</button>
+            </div>
+
+            <div class="hint" id="hint">Nice try! 😉</div>
+        </div>
+
+        <div id="successMessage" class="success-message">
+            <h2>Yay! ❤️</h2>
+            <p>I knew you'd make the right choice!</p>
+            <div class="hearts-anim">💖💖💖💖💖</div>
+            <p>I promise to make it special!</p>
+            <div class="share-section">
+                <p>Share this moment:</p>
+                <button class="share-button" id="copyLinkBtn"><i class="fas fa-link"></i> Copy Link</button>
+                <button class="share-button" id="tweetBtn"><i class="fab fa-twitter"></i> Tweet</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Made with <i class="fas fa-heart"></i> for Halona</p>
+        </div>
+    </div>
+
+    <!-- Hell Container -->
+    <div class="hell-container">
+        <div class="hell-title">WRONG CHOICE!</div>
+        <div class="hell-text">THERE IS NO ESCAPE...</div>
+        <button class="survive-btn" id="surviveBtn">SURVIVE</button>
+    </div>
+
+    <script>
+        const heartContainer = document.getElementById('backgroundHearts');
+        for (let i = 0; i < 20; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerHTML = Math.random() > 0.5 ? '❤️' : '💖';
+            heart.style.left = `${Math.random() * 100}%`;
+            heart.style.top = `${Math.random() * 100}%`;
+            heart.style.animationDelay = `${Math.random() * 5}s`;
+            heart.style.fontSize = `${Math.random() * 1.5 + 1}rem`;
+            heartContainer.appendChild(heart);
+        }
+
+        let attemptCount = 0;
+        let isChasing = false;
+        let isFreeRoaming = false;
+        const MAX_ATTEMPTS = 5;
+
+        const yesBtn = document.getElementById("yesButton");
+        const noBtn = document.getElementById("noButton");
+        const hint = document.getElementById("hint");
+        const messageBox = document.getElementById("messageBox");
+        const successMessage = document.getElementById("successMessage");
+        const surviveBtn = document.getElementById("surviveBtn");
+        const body = document.body;
+
+        let mouseX = 0, mouseY = 0;
+
+        // Mobile Detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+        let vx = 0, vy = 0; // Velocity
+        let autoRoamAngle = Math.random() * Math.PI * 2;
+
+        function updateNoButtonPosition() {
+            if (noBtn.style.display === 'none') {
+                isChasing = false;
+                return;
+            }
+
+            // On mobile, force start free roam immediately if not already
+            if (isMobile && !isFreeRoaming) {
+                isFreeRoaming = true;
+                noBtn.classList.add('free-roam');
+                document.body.appendChild(noBtn);
+                const b = noBtn.getBoundingClientRect();
+                noBtn.style.left = `${b.left}px`;
+                noBtn.style.top = `${b.top}px`;
+                noBtn.style.transform = 'none';
+            }
+
+            const b = noBtn.getBoundingClientRect();
+
+            // 1. Mouse/Touch Repulsion
+            const btnCenterX = b.left + b.width / 2;
+            const btnCenterY = b.top + b.height / 2;
+            const dist = Math.hypot(mouseX - btnCenterX, mouseY - btnCenterY);
+            const radius = 150;
+
+            if (dist < radius) {
+                // Activate free roam for desktop on interaction
+                if (!isFreeRoaming) {
+                    isFreeRoaming = true;
+                    noBtn.classList.add('free-roam');
+                    document.body.appendChild(noBtn);
+                    noBtn.style.left = `${b.left}px`;
+                    noBtn.style.top = `${b.top}px`;
+                    noBtn.style.transform = 'none';
+                }
+
+                attemptCount++;
+                const pushFactor = (radius - dist) / radius;
+                const speed = 15 * pushFactor;
+                const dx = btnCenterX - mouseX;
+                const dy = btnCenterY - mouseY;
+                const len = Math.sqrt(dx * dx + dy * dy) || 0.1;
+
+                // Add to velocity
+                vx += (dx / len) * speed;
+                vy += (dy / len) * speed;
+
+                if (Math.random() < 0.2) {
+                    hint.style.opacity = 1;
+                    hint.innerText = ["Too slow!", "Not this one!", "Try the other one!", "Nope!", "Can't catch me!"][Math.floor(Math.random() * 5)];
+                }
+            }
+
+            // 2. Mobile Auto-Roam (Drift)
+            if (isMobile) {
+                // Change direction slowly
+                autoRoamAngle += (Math.random() - 0.5) * 0.2;
+                vx += Math.cos(autoRoamAngle) * 0.5;
+                vy += Math.sin(autoRoamAngle) * 0.5;
+            }
+
+            // Apply Velocity with Friction
+            vx *= 0.92;
+            vy *= 0.92;
+
+            let newX = noBtn.offsetLeft + vx;
+            let newY = noBtn.offsetTop + vy;
+
+            // Boundaries (Bounce off walls)
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            if (newX < 0) { newX = 0; vx *= -0.8; }
+            if (newX > winW - b.width) { newX = winW - b.width; vx *= -0.8; }
+            if (newY < 0) { newY = 0; vy *= -0.8; }
+            if (newY > winH - b.height) { newY = winH - b.height; vy *= -0.8; }
+
+            noBtn.style.left = `${newX}px`;
+            noBtn.style.top = `${newY}px`;
+
+            // Keep running loop if mobile or chasing
+            if (isMobile || isChasing) {
+                requestAnimationFrame(updateNoButtonPosition);
+            }
+        }
+
+        // Start loop immediately for mobile check
+        requestAnimationFrame(updateNoButtonPosition);
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            if (!isChasing && !isMobile) {
+                isChasing = true;
+                requestAnimationFrame(updateNoButtonPosition);
+            }
+        });
+
+        noBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            body.classList.add('hell-mode');
+            noBtn.style.display = 'none'; // Remove button from Hell screen
+        });
+
+        surviveBtn.addEventListener('click', () => {
+            body.classList.remove('hell-mode');
+            noBtn.style.display = 'none'; // Gone forever
+            yesBtn.style.left = '50%';
+            yesBtn.style.top = '50%';
+            yesBtn.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            yesBtn.innerText = "YES 💖";
+
+            document.getElementById('introText').innerText = "Welcome back...";
+            document.getElementById('mainQuestion').innerText = "I told you there was no other choice. Will you be mine now?";
+            hint.style.display = 'none';
+        });
+
+        yesBtn.addEventListener('click', () => {
+            isChasing = false;
+            messageBox.style.display = 'none';
+            document.querySelector('.subtitle').style.display = 'none';
+            successMessage.style.display = 'block';
+            launchConfetti();
+        });
+
+        function launchConfetti() {
+            const duration = 3000;
+            const end = Date.now() + duration;
+            (function frame() {
+                confetti({
+                    particleCount: 5, angle: 60, spread: 55, origin: { x: 0 },
+                    colors: ['#ff4081', '#ff79a9']
+                });
+                confetti({
+                    particleCount: 5, angle: 120, spread: 55, origin: { x: 1 },
+                    colors: ['#ff4081', '#ff79a9']
+                });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        document.getElementById('copyLinkBtn').addEventListener('click', () => { navigator.clipboard.writeText(window.location.href); alert('Link copied!'); });
+        document.getElementById('tweetBtn').addEventListener('click', () => { window.open(`https://twitter.com/intent/tweet?text=She%20said%20yes!`, '_blank'); });
+
+    </script>
+</body>
+
+</html>

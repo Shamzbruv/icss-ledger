@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excursions - Only Vibes Tourz Ja</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Poppins:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="booking.css">
+
+    <style>
+        :root {
+            --lush-green: #2d6a4f;
+            --sun-gold: #ffb703;
+            --ocean-blue: #023e8a;
+            --sand-beige: #fefae0;
+            --night-black: #0a0e17;
+            --neon-blue: #00b4d8;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --radius-xl: 16px;
+            --gradient-gold: linear-gradient(135deg, #ffb703, #fb8500);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--night-black);
+            color: #fff;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 5%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            background: rgba(10, 14, 23, 0.8);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-family: 'Lobster', cursive;
+            font-size: 2rem;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--sun-gold);
+        }
+
+        .nav-links a {
+            color: #dbeafe;
+            text-decoration: none;
+            margin: 0 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px var(--neon-blue);
+        }
+
+        .btn-book {
+            background: var(--gradient-gold);
+            color: var(--night-black);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.4);
+            border: 2px solid transparent;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn-book:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(255, 183, 3, 0.6);
+            background: transparent;
+            border-color: var(--sun-gold);
+            color: var(--sun-gold);
+        }
+
+        /* --- HERO HEADER --- */
+        .page-header {
+            height: 60vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: url('https://images.unsplash.com/photo-1550951666-da644c3ebb2b?q=80&w=2670&auto=format&fit=crop') center/cover;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(10, 14, 23, 0.4), var(--night-black));
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .header-content h1 {
+            font-size: 4.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #fff, var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-content p {
+            font-size: 1.3rem;
+            color: #dbeafe;
+        }
+
+        /* --- CATEGORY SECTIONS --- */
+        .category-section {
+            padding: 80px 5%;
+        }
+
+        .cat-title {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .cat-title h2 {
+            font-size: 3rem;
+            color: white;
+            display: inline-block;
+            position: relative;
+            z-index: 2;
+        }
+
+        .cat-title span {
+            display: block;
+            color: var(--sun-gold);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        /* --- EXCURSION GRID COPY --- */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .excursion-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            transition: 0.4s;
+            position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .excursion-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 10px 30px rgba(0, 180, 216, 0.2);
+        }
+
+        .card-img-wrap {
+            height: 250px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .excursion-card:hover .card-img-wrap img {
+            transform: scale(1.1);
+        }
+
+        .badge-premium {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--sun-gold);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            border: 1px solid var(--sun-gold);
+            font-weight: 700;
+        }
+
+        .card-content {
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .card-content p {
+            color: #a8b2d1;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 20px;
+        }
+
+        .price-tag {
+            color: var(--neon-blue);
+            font-weight: 700;
+        }
+
+        .btn-inquire {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        .btn-inquire:hover {
+            background: var(--neon-blue);
+            color: var(--night-black);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: #000;
+            color: white;
+            padding: 80px 5% 40px;
+            text-align: center;
+            margin-top: 80px;
+            border-top: 1px solid #111;
+        }
+
+        .social-row a {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 15px;
+            transition: 0.3s;
+        }
+
+        .social-row a:hover {
+            color: var(--sun-gold);
+        }
+
+        @media (max-width: 768px) {
+            .header-content h1 {
+                font-size: 3rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">OnlyVibes<span>Tourz</span></a>
+        <div class="nav-links">
+            <a href="index.html#about">About Adrian</a>
+            <a href="excursions.html" style="color: var(--neon-blue);">Excursions</a>
+            <a href="index.html#vibes">The Vibe</a>
+        </div>
+        <a href="javascript:void(0)" onclick="openBooking('General Inquiry')" class="btn-book">Book Now</a>
+    </nav>
+
+    <header class="page-header">
+        <div class="header-content">
+            <h1>Island Adventures</h1>
+            <p>Curated experiences for the ultimate Jamaican getaway.</p>
+        </div>
+    </header>
+
+    <!-- CUSTOM TRIP BUILDER CTA -->
+    <div style="text-align: center; margin: 60px 0 20px;">
+        <p style="color: #a8b2d1; margin-bottom: 20px;">Don't see exactly what you want?</p>
+        <a href="javascript:void(0)" onclick="openBooking('Custom Trip', true)" class="btn-book"
+            style="font-size: 1.1rem; padding: 15px 40px; background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue);">
+            <i class="fa-solid fa-map-location-dot"></i> Build Your Own Trip
+        </a>
+    </div>
+
+    <!-- SECTION 1: ADVENTURE -->
+    <section class="category-section">
+        <div class="cat-title">
+            <span>Thrills & Action</span>
+            <h2>Adventure Time</h2>
+        </div>
+        <div class="card-grid container">
+
+            <!-- Dunn's River -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Must Do</span>
+                    <img src="https://images.unsplash.com/photo-1518331398864-1cb66bd5989d?q=80&w=800&auto=format&fit=crop"
+                        alt="Dunns River Falls">
+                </div>
+                <div class="card-content">
+                    <h3>Dunn's River Falls</h3>
+                    <p>Climb the world-famous 600ft waterfall. Join a human chain or trek it solo for the ultimate
+                        refreshing challenge.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">Entry ~$25</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Dunns River Falls')" class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Blue Hole -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Trending</span>
+                    <img src="https://images.unsplash.com/photo-1549488347-19416590f0ca?q=80&w=800&auto=format&fit=crop"
+                        alt="Blue Hole Jamaica">
+                </div>
+                <div class="card-content">
+                    <h3>Cool Blue Hole</h3>
+                    <p>The "glossy" alternative to Dunn's. Jump off cliffs into deep turquoise pools and explore hidden
+                        caves.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">Entry ~$25</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Cool Blue Hole')" class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Mystic Mountain -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Premium</span>
+                    <img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=800&auto=format&fit=crop"
+                        alt="Mystic Mountain">
+                </div>
+                <div class="card-content">
+                    <h3>Mystic Mountain</h3>
+                    <p>Ride the rainforest bobsled, fly through the canopy on the SkyExplorer, and enjoy panoramic views
+                        of Ocho Rios.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">Premium Pkg</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Mystic Mountain')" class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Horseback -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Unique</span>
+                    <img src="https://images.unsplash.com/photo-1534063806283-e08398b16335?q=80&w=800&auto=format&fit=crop"
+                        alt="Horseback Riding">
+                </div>
+                <div class="card-content">
+                    <h3>Horseback Ride 'n' Swim</h3>
+                    <p>Ride through historic estates and finish with a bucket-list experience: swimming with your horse
+                        in the Caribbean Sea.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">~$90+</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Horseback Ride n Swim')"
+                            class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- SECTION 2: RELAXATION -->
+    <section class="category-section" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+        <div class="cat-title">
+            <span>Chill Vibes</span>
+            <h2>Relax & Unwind</h2>
+        </div>
+        <div class="card-grid container">
+
+            <!-- Martha Brae -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Romantic</span>
+                    <img src="https://images.unsplash.com/photo-1596895111956-bf1cf0599ce5?q=80&w=800&auto=format&fit=crop"
+                        alt="Bamboo Rafting">
+                </div>
+                <div class="card-content">
+                    <h3>Martha Brae Rafting</h3>
+                    <p>Float down the river on a 30ft bamboo raft. Captain steered, surrounded by jungle. The ultimate
+                        peace.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">~$80/raft</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Martha Brae Rafting')"
+                            class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Puerto Seco -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Luxury Beach</span>
+                    <img src="https://images.unsplash.com/photo-1535262412227-85541e910204?q=80&w=800&auto=format&fit=crop"
+                        alt="Beach Club">
+                </div>
+                <div class="card-content">
+                    <h3>Puerto Seco Beach Club</h3>
+                    <p>A high-end beach day with infinity pools, water park, and cabanas. Perfect for a glossy,
+                        comfortable vibe.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">Entry ~$20</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Puerto Seco Beach')" class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- White River Tubing -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Fun</span>
+                    <img src="https://images.unsplash.com/photo-1522509172605-2b02a2817812?q=80&w=800&auto=format&fit=crop"
+                        alt="Tubing">
+                </div>
+                <div class="card-content">
+                    <h3>White River Tubing</h3>
+                    <p>Drift down the crystal clear river on an inner tube. Guided, safe, and super refreshing.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">Entry ~$30</span>
+                        <a href="javascript:void(0)" onclick="openBooking('White River Tubing')"
+                            class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- SECTION 3: CULTURE & HIDDEN GEMS -->
+    <section class="category-section">
+        <div class="cat-title">
+            <span>Hidden Gems & Culture</span>
+            <h2>Authentic Jamaica</h2>
+        </div>
+        <div class="card-grid container">
+
+            <!-- Bob Marley -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Iconic</span>
+                    <img src="https://images.unsplash.com/photo-1555567540-c3d3dd54d3cd?q=80&w=800&auto=format&fit=crop"
+                        alt="Bob Marley">
+                </div>
+                <div class="card-content">
+                    <h3>Bob Marley's Nine Mile</h3>
+                    <p>A pilgrimage to the birthplace and resting place of the King of Reggae. Feel the spirit in the
+                        mountains of St. Ann.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">Entry ~$30</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Bob Marley Nine Mile')"
+                            class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Spanish Bridge -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Secret Spot</span>
+                    <img src="https://images.unsplash.com/photo-1626154625208-8e815e4787a2?q=80&w=800&auto=format&fit=crop"
+                        alt="River Swing">
+                </div>
+                <div class="card-content">
+                    <h3>Spanish Bridge</h3>
+                    <p>An old colonial bridge turned local swimming spot. Rope swings, blue water, and zero crowds.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">Small Fee</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Spanish Bridge')" class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Konoko Falls -->
+            <article class="excursion-card">
+                <div class="card-img-wrap">
+                    <span class="badge-premium">Nature</span>
+                    <img src="https://images.unsplash.com/photo-1548574505-5e239809ee19?q=80&w=800&auto=format&fit=crop"
+                        alt="Konoko Falls">
+                </div>
+                <div class="card-content">
+                    <h3>Konoko Falls & Garden</h3>
+                    <p>A beautiful botanical garden with a climbable waterfall that feels like a private oasis. Great
+                        for photos.</p>
+                    <div class="card-meta">
+                        <span class="price-tag">Entry ~$20</span>
+                        <a href="javascript:void(0)" onclick="openBooking('Konoko Falls')" class="btn-inquire">Book
+                            Tour</a>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <footer>
+        <div class="social-row">
+            <a href="https://www.facebook.com/Adrianonlyvibestourzja/"><i class="fa-brands fa-facebook"></i></a>
+            <a href="https://www.instagram.com/adrianonlyvibestourzja/"><i class="fa-brands fa-instagram"></i></a>
+        </div>
+        <p style="opacity: 0.6; font-size: 0.8rem;">&copy; 2026 Only Vibes Tourz Ja.</p>
+    </footer>
+
+    <script src="booking.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services | Reliable Shield Protection</title>
+
+    <link rel="icon" type="image/x-icon" href="images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Premium Styles -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .services-hero {
+            height: 60vh;
+            background: linear-gradient(to right, #020617 30%, rgba(2, 6, 23, 0.6)),
+                url('images/services-bg.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .pricing-card {
+            background: var(--bg-armor);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .pricing-card:hover {
+            border-color: var(--gold-metallic);
+            transform: translateY(-5px);
+        }
+
+        .price-badge {
+            background: rgba(251, 191, 36, 0.1);
+            color: var(--gold-metallic);
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin: 20px 0;
+            color: var(--text-steel);
+        }
+
+        .pricing-features li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pricing-features i {
+            color: #10b981;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container nav-inner">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Reliable Shield Logo" style="height: 80px;">
+            </a>
+
+            <!-- Desktop Nav -->
+            <div class="nav-links-desktop">
+                <a href="index.html">Home</a>
+                <a href="services.html" class="active">Services</a>
+                <a href="careers.html">Careers</a>
+                <a href="faq.html">FAQ</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+
+            <div class="nav-contact">
+                <a href="tel:8766798029"
+                    style="color:var(--text-white); text-decoration:none; font-size:0.9rem; transition:0.3s;"
+                    onmouseover="this.style.color='var(--gold-metallic)'"
+                    onmouseout="this.style.color='var(--text-white)'">
+                    <i class="fa-solid fa-phone" style="color:var(--gold-metallic)"></i> Office: (876) 679-8029
+                </a>
+                <a href="tel:8763978331" class="emergency-btn">
+                    <i class="fa-solid fa-mobile-screen"></i> CALL NOW
+                </a>
+            </div>
+
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-menu-btn" onclick="toggleMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Container -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">Home</a>
+        <a href="services.html">Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="faq.html">FAQ</a>
+        <a href="index.html#contact">Contact</a>
+        <a href="tel:8763978331" style="color: var(--accent-alert); border:none; margin-top:20px;">
+            <i class="fa-solid fa-phone"></i> CALL (876) 397-8331
+        </a>
+        <a href="tel:8763132183" style="color: var(--text-white); border:none; margin-top:10px; font-size: 0.9rem;">
+            <i class="fa-solid fa-mobile"></i> Alt: (876) 313-2183
+        </a>
+    </div>
+
+    <header class="services-hero">
+        <div class="container animate-up">
+            <h1 style="font-size: 3.5rem;">Operational <span class="text-gold">Capabilities</span></h1>
+            <p style="color: var(--text-steel); font-size: 1.2rem; max-width: 600px; margin: 0 auto;">Full-spectrum
+                security solutions tailored for high-risk commercial and residential environments.</p>
+        </div>
+    </header>
+
+    <section style="padding: 100px 0;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Defense Tiers</h2>
+                <p>Choose the level of protection that matches your risk profile.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Tier 1 -->
+                <div class="pricing-card">
+                    <div class="price-badge">ROUTINE CHECKS</div>
+                    <h3>Assistant & Check-ins</h3>
+                    <p style="color: var(--text-steel); font-size: 0.9rem;">Mobile patrols and property verification.
+                    </p>
+
+                    <ul class="pricing-features">
+                        <li><i class="fa-solid fa-check"></i> Randomized Guard Tours</li>
+                        <li><i class="fa-solid fa-check"></i> Asset Protection Presence</li>
+                        <li><i class="fa-solid fa-check"></i> <strong>FREE Guard Tour System</strong></li>
+                    </ul>
+                    <a href="index.html#contact" class="btn-secondary"
+                        style="display:block; text-align:center; margin-top:20px; font-size:0.8rem;">Request Quote</a>
+                </div>
+
+                <!-- Tier 2 -->
+                <div class="pricing-card"
+                    style="border-color: var(--gold-metallic); box-shadow: 0 0 20px rgba(251, 191, 36, 0.1);">
+                    <div class="price-badge" style="background: var(--gold-metallic); color: black; font-weight:700;">
+                        POPULAR</div>
+                    <h3>Armed & Unarmed</h3>
+                    <p style="color: var(--text-steel); font-size: 0.9rem;">Static guards for business & home.</p>
+
+                    <ul class="pricing-features">
+                        <li><i class="fa-solid fa-check"></i> <strong>Armed or Unarmed Options</strong></li>
+                        <li><i class="fa-solid fa-check"></i> <strong>FREE Body Cam</strong></li>
+                        <li><i class="fa-solid fa-check"></i> Crime Deterrence</li>
+                        <li><i class="fa-solid fa-check"></i> Reduced Liability</li>
+                    </ul>
+                    <a href="index.html#contact" class="btn-primary"
+                        style="display:block; text-align:center; margin-top:20px; font-size:0.8rem;">Select Plan</a>
+                </div>
+
+                <!-- Tier 3 -->
+                <div class="pricing-card">
+                    <div class="price-badge">EXECUTIVE</div>
+                    <h3>V.I.P. & Escort</h3>
+                    <p style="color: var(--text-steel); font-size: 0.9rem;">Personal protection & transport.</p>
+
+                    <ul class="pricing-features">
+                        <li><i class="fa-solid fa-check"></i> Personal Protecion Officers</li>
+                        <li><i class="fa-solid fa-check"></i> Secure Escort Services</li>
+                        <li><i class="fa-solid fa-check"></i> 24/7 Peace of Mind</li>
+                        <li><i class="fa-solid fa-check"></i> <strong>FREE Response</strong></li>
+                    </ul>
+                    <a href="index.html#contact" class="btn-secondary"
+                        style="display:block; text-align:center; margin-top:20px; font-size:0.8rem;">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Additional Service Details -->
+    <section class="glass-panel" style="padding: 80px 0; border-left:none; border-right:none; margin-bottom: -50px;">
+        <div class="container tech-grid">
+            <div class="tech-image" style="background-image: url('images/faq-bg.png');">
+            </div>
+            <div class="tech-content">
+                <h2>Rapid Deployment</h2>
+                <p style="color: var(--text-steel); margin-bottom: 20px;">We possess the capability to deploy officers
+                    within 24 hours of contract signing. Our fleet of patrol vehicles is constantly moving through key
+                    zones in Spanish Town and Kingston, ensuring that backup is always nearby.</p>
+                <a href="faq.html" style="color: var(--gold-metallic); text-decoration: none; font-weight: 700;">Read
+                    FAQ <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-cta">
+        <div class="container">
+            <div class="contact-box">
+                <h2 style="margin-bottom: 15px;">Custom Solution Needed?</h2>
+                <p style="color: var(--text-steel); font-size: 1.1rem;">We build custom security protocols for complex
+                    environments.</p>
+
+                <div class="contact-details">
+                    <div class="contact-pill" onclick="window.location.href='tel:8763978331'">
+                        <i class="fa-solid fa-phone"></i> (876) 397-8331
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="services.html">Services</a>
+                <a href="faq.html">FAQ</a>
+                <a href="mailto:reliableshield2025@gmail.com">Support</a>
+            </div>
+            <p>&copy; 2026 Reliable Shield Protection Limited. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function toggleMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+    </script>
+</body>
+
+</html>

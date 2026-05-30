@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clive Beecher Tours | Elite Jamaican Chauffeur</title>
+    <link rel="icon" type="image/png" href="beecher-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ========================================
+           THEME: MIDNIGHT TROPICS
+           ========================================
+        */
+        :root {
+            --bg-deep: #030f0d;
+            /* Deepest Jungle Black */
+            --bg-card: #0a1f1c;
+            /* Dark Emerald */
+            --gold: #d4af37;
+            /* Metallic Gold */
+            --gold-hover: #f9d976;
+            --text-main: #f0fdfa;
+            /* Off-white/Ice */
+            --text-muted: #889c9b;
+            /* Muted Teal Grey */
+            --glass: rgba(10, 31, 28, 0.75);
+            --border: rgba(212, 175, 55, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Playfair Display', serif;
+            color: var(--text-main);
+            font-weight: 400;
+            /* Elegant thin weight */
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: 0.3s;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        img {
+            width: 100%;
+            display: block;
+        }
+
+        /* UTILITIES */
+        .text-gold {
+            color: var(--gold);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gold), #9e8237);
+            color: #000;
+            padding: 18px 40px;
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: none;
+            cursor: pointer;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+            background: var(--gold-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 14px 30px;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-outline:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* ========================================
+           NAVIGATION
+           ========================================
+        */
+        nav {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 25px 0;
+            background: linear-gradient(to bottom, rgba(3, 15, 13, 0.9), transparent);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo img {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3));
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: -5px;
+            left: 0;
+            background: var(--gold);
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* MOBILE NAVIGATION CSS */
+        .mobile-menu-btn {
+            display: none;
+            font-size: 24px;
+            color: var(--white);
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 2002;
+        }
+
+        .mobile-nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(3, 15, 13, 0.98);
+            z-index: 2001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.4s ease;
+        }
+
+        .mobile-nav-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mobile-nav-overlay a {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: var(--text-main);
+            text-decoration: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.4s;
+        }
+
+        .mobile-nav-overlay.active a {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-nav-overlay.active a:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .mobile-nav-overlay.active a:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .mobile-nav-overlay.active a:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        /* ========================================
+           HERO SECTION
+           ========================================
+        */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            /* Dark Tropical Background Image */
+            background:
+                linear-gradient(to right, rgba(3, 15, 13, 0.8), rgba(3, 15, 13, 0.4)),
+                url('https://images.unsplash.com/photo-1596323604364-795325770c8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .booking-widget {
+            background: rgba(10, 31, 28, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            max-width: 480px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+            animation: slideIn 1s ease-out;
+            position: relative;
+        }
+
+        /* Pulsing Social Proof */
+        .live-activity {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 0 rgba(46, 204, 113, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .booking-widget h1 {
+            font-size: 42px;
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+
+        .booking-widget p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--gold);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 18px 20px;
+            font-size: 16px;
+            font-family: 'Manrope', sans-serif;
+            transition: 0.3s;
+            border-radius: 0;
+            /* Sharp, sleek edges */
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+        }
+
+        /* Elegant Dropdown Arrow */
+        select.form-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23d4af37%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 20px center;
+            background-size: 12px;
+            padding-right: 40px;
+        }
+
+        /* Estimated Price Display */
+        #priceEstimate {
+            border: 1px solid var(--border);
+            background: rgba(212, 175, 55, 0.05);
+            padding: 15px;
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        #priceValue {
+            color: var(--gold);
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        /* ========================================
+           FLEET SECTION
+           ========================================
+        */
+        .section {
+            padding: 100px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .separator {
+            width: 80px;
+            height: 2px;
+            background: var(--gold);
+            margin: 20px auto 0;
+        }
+
+        .fleet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .vehicle-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.4s;
+
+        }
+
+        .vehicle-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--gold);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .vehicle-img-container {
+            height: 250px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .vehicle-img {
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .vehicle-card:hover .vehicle-img {
+            transform: scale(1.05);
+        }
+
+        .vehicle-content {
+            padding: 30px;
+        }
+
+        .vehicle-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .vehicle-price {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--gold);
+        }
+
+        .features-list li {
+            font-size: 14px;
+            color: var(--text-muted);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .features-list li i {
+            color: var(--gold);
+            font-size: 12px;
+        }
+
+        /* ========================================
+           SERVICES (Minimalist)
+           ========================================
+        */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            /* Gap creates the border lines */
+            background: linear-gradient(to right, transparent, var(--gold), transparent);
+            /* Fading separators */
+            padding-top: 2px;
+        }
+
+        .service-item {
+            background: var(--bg-deep);
+            /* Cover the gradient background */
+            padding: 40px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .service-item:hover {
+            background: var(--bg-card);
+        }
+
+        .service-icon {
+            font-size: 40px;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        /* ========================================
+           AUTOCOMPLETE & JS UI
+           ========================================
+        */
+        .suggestions-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid var(--gold);
+            z-index: 100;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: var(--gold);
+            color: black;
+        }
+
+        .suggestion-item:hover small {
+            color: #333;
+        }
+
+        .suggestion-item small {
+            display: block;
+            color: var(--text-muted);
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        /* ========================================
+           FOOTER
+           ========================================
+        */
+        footer {
+            background: #000;
+            padding: 80px 0 40px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer-logo {
+            width: 150px;
+            margin: 0 auto 30px;
+            opacity: 0.8;
+        }
+
+        .copyright {
+            font-size: 12px;
+            color: #444;
+            margin-top: 20px;
+        }
+
+        /* MOBILE */
+        @media(max-width: 900px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero {
+                align-items: center;
+                /* Center vertically on mobile too, or keep top */
+                padding-top: 100px;
+                padding-bottom: 50px;
+                min-height: auto;
+                /* Allow content to dictate height */
+            }
+
+            .booking-widget {
+                margin: 0;
+                width: 100%;
+                max-width: 100%;
+                padding: 30px 20px;
+            }
+
+            .booking-widget h1 {
+                font-size: 32px;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                background: none;
+                margin-top: 30px;
+            }
+
+            .service-item {
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                padding: 30px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .input-group {
+                margin-bottom: 15px;
+                /* Add spacing for stacked inputs */
+            }
+        }
+
+        /* MODAL STYLES */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--gold);
+            padding: 40px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            animation: zoomIn 0.3s ease-out;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .close-modal:hover {
+            color: var(--gold);
+        }
+
+        .vehicle-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .vehicle-option:hover,
+        .vehicle-option.selected {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .vehicle-option input[type="radio"] {
+            display: none;
+            /* Hide default radio */
+        }
+
+        .option-details h4 {
+            color: var(--text-main);
+            margin-bottom: 4px;
+            font-size: 16px;
+        }
+
+        .option-details p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .option-price {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 18px;
+        }
+
+        /* Trip Type Toggle */
+        .trip-type-wrapper {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .trip-type-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .trip-type-label input {
+            accent-color: var(--gold);
+            transform: scale(1.2);
+        }
+
+        #returnFields {
+            display: none;
+        }
+
+        #returnFields.active {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container nav-content">
+            <div class="nav-logo">
+                <img src="https://i.postimg.cc/cHxbc8Mb/D-Appliance-Favicon-Logo.png" alt="Clive Beecher"
+                    style="opacity:0">
+                <h3 style="color:white; letter-spacing: 1px;">CLIVE <span class="text-gold">BEECHER</span></h3>
+            </div>
+            <div class="nav-links">
+                <a href="#fleet">Our Fleet</a>
+                <a href="#services">Services</a>
+                <a href="#contact">Contact</a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNav">
+        <a href="#fleet" onclick="toggleMobileMenu()">Our Fleet</a>
+        <a href="#services" onclick="toggleMobileMenu()">Services</a>
+        <a href="#contact" onclick="toggleMobileMenu()">Contact</a>
+    </div>
+    </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="booking-widget">
+                <h1>Jamaica.<br>In Style.</h1>
+                <p>Premium Chauffeur Services</p>
+
+                <form id="bookingForm" onsubmit="handleSearch(event)">
+                    <!-- Trip Type Toggle -->
+                    <div class="trip-type-wrapper">
+                        <label class="trip-type-label">
+                            <input type="radio" name="tripType" value="oneway" checked onchange="toggleTripType()">
+                            One Way
+                        </label>
+                        <label class="trip-type-label">
+                            <input type="radio" name="tripType" value="roundtrip" onchange="toggleTripType()">
+                            Round Trip
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Pickup Location</label>
+                        <input type="text" id="pickupInput" class="form-input" placeholder="Airport, Hotel, Villa..."
+                            autocomplete="off">
+                        <div id="pickupSuggestions" class="suggestions-box"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Destination</label>
+                        <input type="text" id="destinationInput" class="form-input" placeholder="Where to?"
+                            autocomplete="off">
+                        <div id="destSuggestions" class="suggestions-box"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Passengers</label>
+                        <input type="number" id="paxInput" class="form-input" value="1" min="1"
+                            onchange="recalculateTripCosts()" oninput="recalculateTripCosts()">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Preferred Vehicle</label>
+                        <select id="vehicleInput" class="form-input" onchange="updateDisplayedPrice()">
+                            <option value="">Any Vehicle (Best Price)</option>
+                            <option value="sedan">Executive Sedan (BMW 5 Series)</option>
+                            <option value="alphard">Luxury MPV (Alphard)</option>
+                            <option value="voxy">Comfort MPV (Voxy)</option>
+                            <option value="hiace">Private Bus (Hiace)</option>
+                            <option value="coaster">Large Bus (Coaster)</option>
+                        </select>
+                    </div>
+
+                    <div id="priceEstimate">
+                        <div style="display:flex; justify-content:space-between; align-items:end;">
+                            <span style="font-size:12px; text-transform:uppercase; color:white;">Estimated Total</span>
+                            <span style="font-family:'Playfair Display'; font-size:28px; color:var(--gold);">$<span
+                                    id="priceValue">0</span></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="mainDate" class="form-input" required>
+                        </div>
+                        <div class="col form-group">
+                            <label class="form-label">Time</label>
+                            <input type="time" id="mainTime" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <div class="row" id="returnFields">
+                        <div class="col form-group">
+                            <label class="form-label">Return Date</label>
+                            <input type="date" id="returnDate" class="form-input">
+                        </div>
+                        <div class="col form-group">
+                            <label class="form-label">Return Time</label>
+                            <input type="time" id="returnTime" class="form-input">
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="openBookingModal()" class="btn" style="width: 100%;">Book
+                        Trip</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section id="fleet" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>The Royal Fleet</h2>
+                <p>Impeccably maintained vehicles for your comfort and safety.</p>
+                <div class="separator"></div>
+            </div>
+
+            <div class="fleet-grid">
+                <!-- Executive Sedan (BMW 5 Series) -->
+                <div class="vehicle-card" data-vehicle="sedan">
+                    <div class="vehicle-img-container">
+                        <img src="images/sedan.jpg" class="vehicle-img" alt="Executive Sedan">
+                    </div>
+                    <div class="vehicle-content">
+                        <div class="vehicle-top">
+                            <h3>Executive Sedan</h3>
+                            <span class="vehicle-price" id="price-sedan">$80+</span>
+                        </div>
+                        <ul class="features-list">
+                            <li><i class="fa-solid fa-car"></i> BMW 5 Series</li>
+                            <li><i class="fa-solid fa-user"></i> Max 3 Passengers</li>
+                            <li><i class="fa-solid fa-suitcase"></i> 2 Suitcases</li>
+                            <li><i class="fa-solid fa-wifi"></i> Free Wi-Fi</li>
+                        </ul>
+                        <button onclick="bookVehicle('Executive Sedan (BMW 5 Series)')" class="btn-outline"
+                            style="width:100%; margin-top:20px;">Book Sedan</button>
+                    </div>
+                </div>
+
+                <!-- Luxury MPV (Alphard) -->
+                <div class="vehicle-card" data-vehicle="alphard">
+                    <div class="vehicle-img-container">
+                        <img src="images/alphard.jpg" class="vehicle-img" alt="Toyota Alphard">
+                    </div>
+                    <div class="vehicle-content">
+                        <div class="vehicle-top">
+                            <h3>Luxury MPV</h3>
+                            <span class="vehicle-price" id="price-alphard">$100+</span>
+                        </div>
+                        <ul class="features-list">
+                            <li><i class="fa-solid fa-car"></i> Toyota Alphard</li>
+                            <li><i class="fa-solid fa-user"></i> Max 5 Passengers</li>
+                            <li><i class="fa-solid fa-suitcase"></i> 4 Suitcases</li>
+                            <li><i class="fa-solid fa-martini-glass"></i> VIP Comfort</li>
+                        </ul>
+                        <button onclick="bookVehicle('Luxury MPV (Toyota Alphard)')" class="btn"
+                            style="width:100%; margin-top:20px;">Book Alphard</button>
+                    </div>
+                </div>
+
+                <!-- Comfort MPV (Voxy) -->
+                <div class="vehicle-card" data-vehicle="voxy">
+                    <div class="vehicle-img-container">
+                        <img src="images/voxy.jpg" class="vehicle-img" alt="Toyota Voxy">
+                    </div>
+                    <div class="vehicle-content">
+                        <div class="vehicle-top">
+                            <h3>Comfort MPV</h3>
+                            <span class="vehicle-price" id="price-voxy">$90+</span>
+                        </div>
+                        <ul class="features-list">
+                            <li><i class="fa-solid fa-car"></i> Toyota Voxy 2017</li>
+                            <li><i class="fa-solid fa-user"></i> Max 6 Passengers</li>
+                            <li><i class="fa-solid fa-suitcase"></i> 4 Suitcases</li>
+                            <li><i class="fa-solid fa-wifi"></i> Free Wi-Fi</li>
+                        </ul>
+                        <button onclick="bookVehicle('Comfort MPV (Toyota Voxy)')" class="btn-outline"
+                            style="width:100%; margin-top:20px;">Book Voxy</button>
+                    </div>
+                </div>
+
+                <!-- Private Coach (Hiace) -->
+                <div class="vehicle-card" data-vehicle="hiace">
+                    <div class="vehicle-img-container">
+                        <img src="images/hiace.jpg" style="object-position: 50% 60%;" class="vehicle-img"
+                            alt="Toyota Hiace">
+                    </div>
+                    <div class="vehicle-content">
+                        <div class="vehicle-top">
+                            <h3>Private Bus</h3>
+                            <span class="vehicle-price" id="price-hiace">$120+</span>
+                        </div>
+                        <ul class="features-list">
+                            <li><i class="fa-solid fa-bus"></i> Toyota Hiace</li>
+                            <li><i class="fa-solid fa-user"></i> Max 12 Passengers</li>
+                            <li><i class="fa-solid fa-suitcase"></i> 10 Suitcases</li>
+                            <li><i class="fa-solid fa-music"></i> Audio System</li>
+                        </ul>
+                        <button onclick="bookVehicle('Private Bus (Hiace)')" class="btn-outline"
+                            style="width:100%; margin-top:20px;">Book Hiace</button>
+                    </div>
+                </div>
+
+                <!-- Large Group (Coaster) -->
+                <div class="vehicle-card" data-vehicle="coaster">
+                    <div class="vehicle-img-container">
+                        <img src="images/coaster.jpg" class="vehicle-img" alt="Toyota Coaster">
+                    </div>
+                    <div class="vehicle-content">
+                        <div class="vehicle-top">
+                            <h3>Coaster Bus</h3>
+                            <span class="vehicle-price" id="price-coaster">$200+</span>
+                        </div>
+                        <ul class="features-list">
+                            <li><i class="fa-solid fa-bus"></i> Toyota Coaster</li>
+                            <li><i class="fa-solid fa-user"></i> Max 25 Passengers</li>
+                            <li><i class="fa-solid fa-suitcase"></i> 20+ Suitcases</li>
+                            <li><i class="fa-solid fa-users"></i> Ideal for Groups</li>
+                        </ul>
+                        <button onclick="bookVehicle('Coaster Bus')" class="btn"
+                            style="width:100%; margin-top:20px;">Book Coaster</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="section" style="background-color: #010807;">
+        <div class="container">
+            <div class="services-grid">
+                <div class="service-item">
+                    <i class="fa-solid fa-plane-arrival service-icon"></i>
+                    <h3>Airport Transfers</h3>
+                    <p style="color:var(--text-muted); margin-top:10px;">Seamless pickups from MBJ & KIN. We track your
+                        flight status.</p>
+                </div>
+                <div class="service-item">
+                    <i class="fa-solid fa-stopwatch service-icon"></i>
+                    <h3>Hourly Charter</h3>
+                    <p style="color:var(--text-muted); margin-top:10px;">Your chauffeur on standby for business meetings
+                        or tours.</p>
+                </div>
+                <div class="service-item">
+                    <i class="fa-solid fa-route service-icon"></i>
+                    <h3>Island Tours</h3>
+                    <p style="color:var(--text-muted); margin-top:10px;">Explore Ocho Rios, Negril, and Portland in
+                        absolute comfort.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="section"
+        style="background: linear-gradient(rgba(1, 28, 26, 0.9), rgba(1, 28, 26, 0.95)), url('https://upload.wikimedia.org/wikipedia/commons/e/e0/Clouds_over_the_Atlantic_Ocean.jpg') center/cover fixed; padding: 80px 20px;">
+        <div class="container" style="max-width: 900px;">
+            <div class="row" style="display:flex; flex-wrap:wrap; gap:40px; align-items:flex-start;">
+
+                <!-- Text / Info Side -->
+                <div class="col" style="flex:1; min-width:300px; color:white;">
+                    <div class="section-header" style="text-align:left; margin-bottom: 20px;">
+                        <span
+                            style="color:var(--gold); font-size:13px; letter-spacing:2px; text-transform:uppercase;">VIP
+                            Services</span>
+                        <h2 style="font-size:36px; margin-top:5px;">Concierge Request</h2>
+                        <div class="separator" style="margin: 15px 0; width:50px;"></div>
+                    </div>
+                    <p style="color:var(--text-muted); line-height:1.8; margin-bottom:30px;">
+                        Need something special? From wedding logistics to private island tours, our team is ready to
+                        curate your perfect Jamaican experience. Tell us what you need, and we'll handle the details.
+                    </p>
+
+                    <div class="info-item" style="display:flex; gap:15px; margin-bottom:20px;">
+                        <div
+                            style="width:40px; height:40px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; border-radius:50%; color:var(--gold);">
+                            <i class="fa-solid fa-phone"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin:0; font-size:14px; color:var(--text-main);">Call / WhatsApp</h4>
+                            <p style="margin:5px 0 0; font-size:14px; color:var(--text-muted);">+1 (876) 779-6722</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Side -->
+                <div class="col" style="flex:1.3; min-width:300px;">
+                    <div
+                        style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.2); padding: 30px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <form onsubmit="sendToWhatsapp(event)" style="text-align: left;">
+                            <div class="form-group">
+                                <label class="form-label">Service Type</label>
+                                <select id="contactService" class="form-input">
+                                    <option value="General Inquiry">General Inquiry</option>
+                                    <option value="Airport Transfer">Airport Transfer</option>
+                                    <option value="Daily Charter / Hourly">Daily Charter / Hourly</option>
+                                    <option value="Tour or Excursion">Tour or Excursion</option>
+                                    <option value="Wedding / Event">Wedding / Event</option>
+                                    <option value="Corporate Travel">Corporate Travel</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col form-group">
+                                    <label class="form-label">Travel Date (Optional)</label>
+                                    <input type="date" id="contactDate" class="form-input">
+                                </div>
+                                <div class="col form-group">
+                                    <label class="form-label">Passengers</label>
+                                    <input type="number" id="contactPax" class="form-input" placeholder="e.g. 4"
+                                        min="1">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Your Name</label>
+                                <input type="text" id="contactName" class="form-input" required placeholder="John Doe">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Additional Details / Special Requests</label>
+                                <textarea id="contactMessage" class="form-input" rows="3"
+                                    placeholder="Tell us more about your trip..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn" style="width: 100%;">Contact via WhatsApp</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <h3 style="letter-spacing: 2px; margin-bottom: 20px;">CLIVE BEECHER TOURS</h3>
+            <div class="nav-links" style="justify-content: center; margin-bottom: 30px;">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Book Now</a>
+            </div>
+            <p class="copyright">&copy; 2026 Clive Beecher Tours Jamaica. All Rights Reserved.</p>
+        </div>
+        </div>
+    </footer>
+
+    <!-- BOOKING MODAL -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeBookingModal()">&times;</button>
+            <h2 style="text-align:center; margin-bottom:10px;">Complete Your Booking</h2>
+            <p style="text-align:center; color:var(--text-muted); margin-bottom:30px; font-size:14px;">Select your
+                vehicle and provide your details.</p>
+
+            <form onsubmit="finalizeBooking(event)">
+                <!-- Vehicle Selection -->
+                <div class="form-group">
+                    <label class="form-label">Select Vehicle</label>
+                    <div id="vehicleSelectionList">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <div class="separator" style="margin: 30px auto; width:50px;"></div>
+
+                <!-- Contact Details -->
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="modalName" class="form-input" required placeholder="John Doe">
+                </div>
+
+                <div class="row">
+                    <div class="col form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="modalEmail" class="form-input" required placeholder="john@example.com">
+                    </div>
+                    <div class="col form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" id="modalPhone" class="form-input" required placeholder="+1 (555) 000-0000">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%;">Send Request via WhatsApp</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- GOOGLE MAPS API - REPLACE 'YOUR_API_KEY_HERE' WITH REAL KEY -->
+    <script async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCVGZyJy5-AXwfB40I34x00rAWLbyMa7k&libraries=places&callback=initMap"></script>
+
+    <script>
+        // === CONFIGURATION ===
+        // Cost per km in USD
+        const VEHICLE_RATES = {
+            sedan: { name: "Executive Sedan (BMW 5 Series)", base: 40, perKm: 2.0 },
+            alphard: { name: "Luxury MPV (Toyota Alphard)", base: 60, perKm: 2.5 },
+            voxy: { name: "Comfort MPV (Toyota Voxy)", base: 50, perKm: 2.2 },
+            hiace: { name: "Private Bus (Toyota Hiace)", base: 70, perKm: 3.0 },
+            coaster: { name: "Large Bus (Toyota Coaster)", base: 100, perKm: 4.5 }
+        };
+
+        let map, directionsService, distanceMatrixService;
+        let autocompletePickup, autocompleteDest;
+
+        // Store current calculated prices for the modal
+        let currentTripData = {
+            distanceKm: 0,
+            durationText: "",
+            pickup: "",
+            dest: "",
+            costs: {}
+        };
+
+        function initMap() {
+            // Check if Google Maps is actually loaded (API key might be missing/invalid)
+            if (typeof google === 'undefined' || !google.maps) {
+                console.warn("Google Maps API not loaded. Using pure fallback.");
+                return;
+            }
+
+            distanceMatrixService = new google.maps.DistanceMatrixService();
+
+            // Setup Autocomplete
+            const pickupInput = document.getElementById('pickupInput');
+            const destInput = document.getElementById('destinationInput');
+
+            const options = {
+                componentRestrictions: { country: "jm" }, // Restrict to Jamaica
+                fields: ["formatted_address", "geometry", "name"],
+                strictBounds: false,
+            };
+
+            autocompletePickup = new google.maps.places.Autocomplete(pickupInput, options);
+            autocompleteDest = new google.maps.places.Autocomplete(destInput, options);
+
+            // Listen for selection
+            autocompletePickup.addListener("place_changed", () => calculateRoute());
+            autocompleteDest.addListener("place_changed", () => calculateRoute());
+        }
+
+        function calculateRoute() {
+            if (!autocompletePickup || !autocompleteDest) return;
+
+            const pickupPlace = autocompletePickup.getPlace();
+            const destPlace = autocompleteDest.getPlace();
+
+            if (!pickupPlace || !pickupPlace.geometry || !destPlace || !destPlace.geometry) {
+                return; // User hasn't selected both yet
+            }
+
+            // Call Distance Matrix
+            distanceMatrixService.getDistanceMatrix(
+                {
+                    origins: [pickupPlace.geometry.location],
+                    destinations: [destPlace.geometry.location],
+                    travelMode: google.maps.TravelMode.DRIVING,
+                },
+                (response, status) => {
+                    if (status !== "OK") {
+                        console.error("Distance Matrix failed: " + status);
+                        return;
+                    }
+
+                    const element = response.rows[0].elements[0];
+                    if (element.status === "OK") {
+                        const distanceText = element.distance.text;
+                        const durationText = element.duration.text;
+                        const distanceKm = element.distance.value / 1000; // meters to km
+
+                        updatePrices(distanceKm, durationText);
+                    }
+                }
+            );
+        }
+
+        function updatePrices(distanceKm, durationText) {
+            // Get Trip Details
+            const pax = parseInt(document.getElementById('paxInput').value) || 1;
+            const isRoundTrip = document.querySelector('input[name="tripType"][value="roundtrip"]').checked;
+
+            // Calculate multiplier
+            // Base = 1.0 (One Way)
+            // Round Trip = Base + (Base * 0.8) = 1.8
+            const legMultiplier = isRoundTrip ? 1.8 : 1.0;
+            const totalMultiplier = legMultiplier * pax;
+
+            // Calculate costs
+            // Formula: (BasePrice + (Dist * PerKm)) * Multiplier
+            const costSedan = Math.round((VEHICLE_RATES.sedan.base + (distanceKm * VEHICLE_RATES.sedan.perKm)) * totalMultiplier);
+            const costAlphard = Math.round((VEHICLE_RATES.alphard.base + (distanceKm * VEHICLE_RATES.alphard.perKm)) * totalMultiplier);
+            const costVoxy = Math.round((VEHICLE_RATES.voxy.base + (distanceKm * VEHICLE_RATES.voxy.perKm)) * totalMultiplier);
+            const costHiace = Math.round((VEHICLE_RATES.hiace.base + (distanceKm * VEHICLE_RATES.hiace.perKm)) * totalMultiplier);
+            const costCoaster = Math.round((VEHICLE_RATES.coaster.base + (distanceKm * VEHICLE_RATES.coaster.perKm)) * totalMultiplier);
+
+            // Store in global object for the modal to use
+            currentTripData.costs = {
+                sedan: costSedan,
+                alphard: costAlphard,
+                voxy: costVoxy,
+                hiace: costHiace,
+                coaster: costCoaster
+            };
+            currentTripData.distanceKm = distanceKm;
+            currentTripData.durationText = durationText;
+
+            // Update Main Estimate Display based on selection
+            updateDisplayedPrice();
+
+            // VISUAL FEEDBACK: Update cards
+            document.getElementById('price-sedan').innerText = `$${costSedan}`;
+            document.getElementById('price-alphard').innerText = `$${costAlphard}`;
+            document.getElementById('price-voxy').innerText = `$${costVoxy}`;
+            document.getElementById('price-hiace').innerText = `$${costHiace}`;
+            document.getElementById('price-coaster').innerText = `$${costCoaster}`;
+        }
+
+        function toggleTripType() {
+            const isRoundTrip = document.querySelector('input[name="tripType"][value="roundtrip"]').checked;
+            const returnFields = document.getElementById('returnFields');
+            if (isRoundTrip) {
+                returnFields.classList.add('active');
+                document.getElementById('returnDate').setAttribute('required', 'true');
+                document.getElementById('returnTime').setAttribute('required', 'true');
+            } else {
+                returnFields.classList.remove('active');
+                document.getElementById('returnDate').removeAttribute('required');
+                document.getElementById('returnTime').removeAttribute('required');
+            }
+            // Trigger price update if we have distance
+            if (currentTripData.distanceKm) {
+                updatePrices(currentTripData.distanceKm, currentTripData.durationText);
+            }
+        }
+
+        function recalculateTripCosts() {
+            if (currentTripData.distanceKm) {
+                updatePrices(currentTripData.distanceKm, currentTripData.durationText);
+            }
+        }
+
+        function updateDisplayedPrice() {
+            if (!currentTripData.distanceKm) return; // No route yet
+
+            const selected = document.getElementById('vehicleInput').value;
+            const durationText = currentTripData.durationText;
+            let displayPrice = 0;
+
+            if (selected && currentTripData.costs[selected]) {
+                // Show specific price
+                displayPrice = currentTripData.costs[selected];
+                document.getElementById('priceValue').innerHTML = `${displayPrice} <span style="font-size:14px; color:white;">(${durationText})</span>`;
+            } else {
+                // Show lowest "Starting From"
+                const lowest = Math.min(currentTripData.costs.sedan, currentTripData.costs.voxy);
+                document.getElementById('priceValue').innerHTML = `${lowest}+ <span style="font-size:14px; color:white;">(${durationText})</span>`;
+            }
+
+            document.getElementById('priceEstimate').style.display = 'block';
+        }
+
+        // --- MODAL & BOOKING LOGIC ---
+
+        function openBookingModal() {
+            const pick = document.getElementById('pickupInput').value;
+            const dest = document.getElementById('destinationInput').value;
+
+            if (!pick || !dest) {
+                alert("Please enter a Pickup Location and Destination first.");
+                return;
+            }
+
+            // Sync inputs to global
+            currentTripData.pickup = pick;
+            currentTripData.dest = dest;
+
+            // Get selected vehicle from widget
+            const widgetSelection = document.getElementById('vehicleInput').value;
+
+            // Populate Modal Vehicle Options
+            const list = document.getElementById('vehicleSelectionList');
+            list.innerHTML = ""; // Clear existing
+
+            const keys = Object.keys(VEHICLE_RATES);
+            keys.forEach((key, index) => {
+                const vehicle = VEHICLE_RATES[key];
+
+                // Try to get cost from global state
+                let cost = currentTripData.costs[key];
+
+                // FAIL-SAFE: If cost is missing but we have distance, calculate it now
+                if (!cost && currentTripData.distanceKm > 0) {
+                    cost = Math.round(vehicle.base + (currentTripData.distanceKm * vehicle.perKm));
+                }
+
+                const priceDisplay = cost ? `$${cost}` : "Request Quote";
+
+                // Selection Logic: Match widget selection, or default to first
+                let isSelected = '';
+                let activeClass = '';
+
+                if (widgetSelection === key) {
+                    isSelected = 'checked';
+                    activeClass = 'selected';
+                } else if (!widgetSelection && index === 0) {
+                    isSelected = 'checked';
+                    activeClass = 'selected';
+                }
+
+                // Get max pax text
+                let pax = "3-5";
+                if (key.includes("coaster")) pax = "25";
+                else if (key.includes("hiace")) pax = "12";
+                else if (key.includes("voxy")) pax = "6";
+
+                const html = `
+                    <label class="vehicle-option ${activeClass}" onclick="selectModalVehicle(this)">
+                        <div class="option-details">
+                            <h4>${vehicle.name}</h4>
+                            <p>Max Passengers: ${pax} &bull; 2-4 Suitcases</p>
+                        </div>
+                        <input type="radio" name="selectedVehicle" value="${vehicle.name}" data-price="${priceDisplay}" ${isSelected}>
+                        <div class="option-price">${priceDisplay}</div>
+                    </label>
+                `;
+                list.innerHTML += html;
+            });
+
+            document.getElementById('bookingModal').classList.add('active');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('bookingModal').classList.remove('active');
+        }
+
+        // Close on click outside
+        window.onclick = function (event) {
+            const modal = document.getElementById('bookingModal');
+            if (event.target == modal) closeBookingModal();
+        }
+
+        function selectModalVehicle(element) {
+            // Remove selected class from all
+            document.querySelectorAll('.vehicle-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            // Check the radio inside
+            element.querySelector('input[type="radio"]').checked = true;
+        }
+
+        function finalizeBooking(e) {
+            e.preventDefault();
+
+            // Get Data
+            const name = document.getElementById('modalName').value;
+            const email = document.getElementById('modalEmail').value;
+            const phone = document.getElementById('modalPhone').value;
+
+            // Fallback for Date/Time since they aren't in the modal form but are in the main widget
+            const mainDate = document.getElementById('mainDate').value || "Not Specified";
+            const mainTime = document.getElementById('mainTime').value || "Not Specified";
+
+            // Trip Details
+            const isRoundTrip = document.querySelector('input[name="tripType"][value="roundtrip"]').checked;
+            const tripTypeStr = isRoundTrip ? "Round Trip 🔄" : "One Way ➡️";
+            const pax = document.getElementById('paxInput').value || "1";
+
+            let dateStr = `${mainDate} @ ${mainTime}`;
+            if (isRoundTrip) {
+                const retDate = document.getElementById('returnDate').value || "TBD";
+                const retTime = document.getElementById('returnTime').value || "TBD";
+                dateStr += `\n📅 *Return:* ${retDate} @ ${retTime}`;
+            }
+
+            // Get selected vehicle
+            const selectedRadio = document.querySelector('input[name="selectedVehicle"]:checked');
+            const vehicleName = selectedRadio ? selectedRadio.value : "Any Vehicle";
+            const price = selectedRadio ? selectedRadio.getAttribute('data-price') : "TBD";
+
+            const pick = currentTripData.pickup;
+            const dest = currentTripData.dest;
+
+            // Build Message
+            const msg = `*New Booking Request* 🚖\n\n` +
+                `👤 *Guest:* ${name}\n` +
+                `📧 *Email:* ${email}\n` +
+                `📞 *Phone:* ${phone}\n\n` +
+                `🚘 *Vehicle:* ${vehicleName}\n` +
+                `👥 *Passengers:* ${pax}\n` +
+                `🔄 *Type:* ${tripTypeStr}\n` +
+                `💰 *Est. Cost:* ${price}\n` +
+                `📍 *Pickup:* ${pick}\n` +
+                `🏁 *Dropoff:* ${dest}\n` +
+                `📅 *Departure:* ${dateStr}\n\n` +
+                `Please confirm this booking.`;
+
+            window.open(`https://wa.me/18767796722?text=${encodeURIComponent(msg)}`, '_blank');
+            closeBookingModal();
+        }
+
+        // --- FALLBACK LOGIC IF API KEY IS MISSING ---
+        // (Reusing the previous simple matrix for fallback)
+        const LOCATIONS = [
+            { name: "Montego Bay Airport (MBJ)", zone: "MBJ" },
+            { name: "Kingston Airport (KIN)", zone: "KIN" },
+            { name: "Negril", zone: "Negril" },
+            { name: "Ocho Rios", zone: "OchoRios" },
+            { name: "Runaway Bay", zone: "RunawayBay" },
+            { name: "Falmouth", zone: "Falmouth" },
+            { name: "Lucea", zone: "Lucea" },
+            { name: "Portland", zone: "Portland" },
+            { name: "Old Harbour", zone: "OldHarbour" },
+            { name: "Spanish Town", zone: "SpanishTown" },
+            { name: "Mandeville", zone: "Mandeville" },
+            { name: "Blue Hole", zone: "OchoRios" },
+            { name: "Dunn's River Falls", zone: "OchoRios" }
+        ];
+
+        // Simple approximate distances in KM for fallback calculations
+        const DISTANCES_KM = {
+            "MBJ": { "Negril": 80, "OchoRios": 100, "Falmouth": 35, "Lucea": 40, "KIN": 180, "Portland": 190 },
+            "KIN": { "OchoRios": 85, "Portland": 100, "MBJ": 180 },
+            // Add reverse mappings dynamically if needed, or just specific key pairs
+        };
+
+        function setupFallbackAutocomplete() {
+            // This runs if Google Maps fails to load
+            const pickupBox = document.getElementById('pickupSuggestions');
+            const destBox = document.getElementById('destSuggestions');
+
+            setupSimpleAutocomplete(document.getElementById('pickupInput'), pickupBox, true);
+            setupSimpleAutocomplete(document.getElementById('destinationInput'), destBox, false);
+        }
+
+        let selPickupZone = null, selDestZone = null;
+
+        function setupSimpleAutocomplete(input, box, isPickup) {
+            input.addEventListener('input', (e) => {
+                const val = e.target.value.toLowerCase();
+                if (val.length < 1) { box.style.display = 'none'; return; }
+                const matches = LOCATIONS.filter(l => l.name.toLowerCase().includes(val));
+
+                box.innerHTML = matches.map(l =>
+                    `<div class="suggestion-item" onclick="fallbackSelect('${l.name}', '${l.zone}', ${isPickup})"><strong>${l.name}</strong></div>`
+                ).join('');
+                box.style.display = matches.length ? 'block' : 'none';
+            });
+        }
+
+        window.fallbackSelect = function (name, zone, isPickup) {
+            const input = isPickup ? document.getElementById('pickupInput') : document.getElementById('destinationInput');
+            const box = isPickup ? document.getElementById('pickupSuggestions') : document.getElementById('destSuggestions');
+            input.value = name;
+            box.style.display = 'none';
+            if (isPickup) selPickupZone = zone; else selDestZone = zone;
+            calculateFallbackPrice();
+        }
+
+        function calculateFallbackPrice() {
+            if (!selPickupZone || !selDestZone) return;
+
+            let dist = 100; // Default fallback dist
+
+            // Try to find match
+            if (DISTANCES_KM[selPickupZone] && DISTANCES_KM[selPickupZone][selDestZone]) dist = DISTANCES_KM[selPickupZone][selDestZone];
+            else if (DISTANCES_KM[selDestZone] && DISTANCES_KM[selDestZone][selPickupZone]) dist = DISTANCES_KM[selDestZone][selPickupZone];
+
+            updatePrices(dist, "~" + (dist / 60).toFixed(1) + "h");
+        }
+
+
+        // --- UTILS ---
+
+        function handleSearch(e) {
+            e.preventDefault();
+            const pick = document.getElementById('pickupInput').value;
+            const dest = document.getElementById('destinationInput').value;
+            const price = document.getElementById('priceValue').innerText;
+            const vehicle = document.getElementById('vehicleInput').value || "Any Vehicle";
+
+            const mainDate = document.getElementById('mainDate').value || "Not Specified";
+            const mainTime = document.getElementById('mainTime').value || "Not Specified";
+            const pax = document.getElementById('paxInput').value || "1";
+
+            const isRoundTrip = document.querySelector('input[name="tripType"][value="roundtrip"]').checked;
+            const tripTypeStr = isRoundTrip ? "Round Trip 🔄" : "One Way ➡️";
+
+            let dateStr = `${mainDate} @ ${mainTime}`;
+            if (isRoundTrip) {
+                const retDate = document.getElementById('returnDate').value || "TBD";
+                const retTime = document.getElementById('returnTime').value || "TBD";
+                dateStr += `\n📅 *Return:* ${retDate} @ ${retTime}`;
+            }
+
+            const msg = `*Booking Inquiry*\n\n` +
+                `📍 *Pickup:* ${pick}\n` +
+                `🏁 *Dropoff:* ${dest}\n` +
+                `🔄 *Type:* ${tripTypeStr}\n` +
+                `👥 *Passengers:* ${pax}\n` +
+                `📅 *Departure:* ${dateStr}\n` +
+                `🚗 *Vehicle:* ${vehicle}\n` +
+                `💰 *Estimated Quote:* ${price}\n\n` +
+                `Please confirm availability.`;
+
+            window.open(`https://wa.me/18767796722?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        window.bookVehicle = function (vehicle) {
+            const pick = document.getElementById('pickupInput').value;
+            const dest = document.getElementById('destinationInput').value;
+
+            // Determine the specific price if we have calculated it
+            let vehiclePrice = "Request Quote";
+            // Map vehicle name to ID to grab price
+            let vid = "";
+            if (vehicle.includes("Sedan")) vid = "price-sedan";
+            if (vehicle.includes("Alphard")) vid = "price-alphard";
+            if (vehicle.includes("Voxy")) vid = "price-voxy";
+            if (vehicle.includes("Hiace")) vid = "price-hiace";
+            if (vehicle.includes("Coaster")) vid = "price-coaster";
+
+            if (vid) {
+                const p = document.getElementById(vid).innerText;
+                if (p && !p.includes("+")) vehiclePrice = p; // If it's a calculated price (no + suffix usually unless we kept it)
+                else vehiclePrice = p; // Just take whatever is there
+            }
+
+            let msg = `I am interested in booking the *${vehicle}*.`;
+            if (pick && dest) {
+                msg += `\n\n📍 *Route:* ${pick} to ${dest}`;
+                msg += `\n💰 *Estimated:* ${vehiclePrice}`;
+            }
+            msg += `\n\nPlease provide final rates and availability.`;
+
+            window.open(`https://wa.me/18767796722?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function sendToWhatsapp(e) {
+            e.preventDefault();
+            const service = document.getElementById('contactService').value;
+            const date = document.getElementById('contactDate').value;
+            const pax = document.getElementById('contactPax').value;
+            const name = document.getElementById('contactName').value;
+            const msgBody = document.getElementById('contactMessage').value;
+
+            let fullMsg = `*Concierge Inquiry* 🛎️\n\n` +
+                `📌 *Type:* ${service}\n` +
+                `👤 *Name:* ${name}\n`;
+
+            if (date) fullMsg += `📅 *Date:* ${date}\n`;
+            if (pax) fullMsg += `👥 *Pax:* ${pax}\n`;
+
+            fullMsg += `\n📝 *Details:* ${msgBody}`;
+
+            window.open(`https://wa.me/18767796722?text=${encodeURIComponent(fullMsg)}`, '_blank');
+        }
+
+
+        function toggleMobileMenu() {
+            const nav = document.getElementById('mobileNav');
+            const btnIcon = document.querySelector('.mobile-menu-btn i');
+            nav.classList.toggle('active');
+
+            if (nav.classList.contains('active')) {
+                btnIcon.classList.remove('fa-bars');
+                btnIcon.classList.add('fa-times');
+            } else {
+                btnIcon.classList.remove('fa-times');
+                btnIcon.classList.add('fa-bars');
+            }
+        }
+    </script>
+</body>
+
+</html>

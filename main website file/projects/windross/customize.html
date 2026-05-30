@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Studio | Windross Tailoring</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* ========================================
+           THEME: MIDNIGHT GOLD (Wizard Edition)
+           ========================================
+        */
+        :root {
+            /* Metallic Gold */
+            --gold-primary: #D4AF37;
+            --gold-gradient: linear-gradient(135deg, #BF953F 0%, #FCF6BA 40%, #B38728 60%, #AA771C 100%);
+            --gold-glow: 0 0 20px rgba(212, 175, 55, 0.2);
+
+            /* Dark Environment */
+            --bg-body: #050505;
+            --bg-panel: #0F0F0F;
+            --bg-border: #222;
+
+            /* Text */
+            --text-main: #F5F5F7;
+            --text-muted: #86868B;
+
+            --ease-lux: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000000 80%);
+        }
+
+        /* Anti-Theft */
+        img {
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            height: 80px;
+            background: rgba(15, 15, 15, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--bg-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 0 20px;
+                height: 70px;
+            }
+
+            .nav-center {
+                display: none;
+                /* Hide intermediate step text on mobile to prevent collision */
+            }
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: white;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .nav-center {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            color: var(--gold-primary);
+            letter-spacing: 1px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--bg-border);
+            padding: 10px 24px;
+            border-radius: 2px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .action-btn:hover {
+            border-color: white;
+        }
+
+        /* --- WIZARD CONTAINER --- */
+        .wizard-container {
+            margin-top: 120px;
+            /* Nav buffer */
+            margin-bottom: 100px;
+            /* Footer buffer */
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 20px;
+        }
+
+        /* PROGRESS BAR */
+        .progress-track {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .progress-track::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--bg-border);
+            z-index: 1;
+        }
+
+        .step-dot {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-panel);
+            border: 1px solid var(--bg-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            color: var(--text-muted);
+            font-family: 'Playfair Display', serif;
+            transition: 0.3s;
+        }
+
+        .step-dot.active {
+            border-color: var(--gold-primary);
+            color: var(--gold-primary);
+            background: var(--bg-body);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .step-dot.completed {
+            background: var(--gold-primary);
+            color: black;
+            border-color: var(--gold-primary);
+        }
+
+        /* HEADER */
+        .step-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 2.5rem);
+            margin: 0 0 10px 0;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .step-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* OPTIONS GRID */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            animation: slideUp 0.5s ease;
+        }
+
+        .option-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--bg-border);
+            border-radius: 4px;
+            padding: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-card:hover {
+            border-color: #444;
+            transform: translateY(-2px);
+        }
+
+        .option-card.selected {
+            border-color: var(--gold-primary);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05), transparent);
+        }
+
+        .option-card.selected::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gold-primary);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .card-icon {
+            color: var(--gold-primary);
+            margin-right: 15px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            flex: 1;
+        }
+
+        .card-price {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* COLOR SWATCHES */
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* MEASUREMENT FORM */
+        .measurement-group {
+            margin-bottom: 30px;
+        }
+
+        .measurement-group h3 {
+            color: var(--gold-primary);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--bg-border);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .measure-field {
+            background: var(--bg-panel);
+            border: 1px solid var(--bg-border);
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        .measure-field label {
+            display: block;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .measure-field p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin: 0 0 15px 0;
+            line-height: 1.4;
+        }
+
+        .measure-field input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--bg-border);
+            color: white;
+            padding: 12px;
+            border-radius: 2px;
+            font-family: inherit;
+        }
+
+        .measure-field input:focus {
+            border-color: var(--gold-primary);
+        }
+
+        /* FOOTER ACTIONS */
+        .wizard-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--bg-border);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .btn-nav {
+            padding: 12px 30px;
+            border-radius: 2px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-prev {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+        }
+
+        .btn-prev:hover {
+            color: white;
+            border-color: var(--bg-border);
+        }
+
+        .btn-next {
+            background: var(--gold-gradient);
+            color: black;
+        }
+
+        .btn-next:hover {
+            box-shadow: var(--gold-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Adjustments for Wizard Footer */
+        /* Mobile Adjustments for Wizard Footer */
+        @media (max-width: 768px) {
+            .wizard-footer {
+                flex-direction: column;
+                padding: 15px 20px;
+                gap: 15px;
+                height: auto;
+                background: var(--bg-panel);
+                border-top: 1px solid var(--bg-border);
+            }
+
+            .wizard-footer>div {
+                width: 100%;
+                text-align: center;
+            }
+
+            .total-estimate {
+                order: 1;
+                /* Price on Top */
+                margin-bottom: 0;
+            }
+
+            .btn-next {
+                order: 2;
+                /* Button Below */
+                width: 100%;
+                justify-content: center;
+                padding: 16px;
+                font-size: 1rem;
+            }
+
+            /* Hide previous button text to save space, make it icon only or small top link? */
+            /* User didn't complain about Prev. Let's make it a small link at bottom or top-left */
+            .btn-prev {
+                display: none;
+                /* Templarily hide to solve overcrowding as it wasn't requested */
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .wizard-container {
+                padding: 0 15px;
+                margin-top: 100px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .wizard-footer {
+                padding: 15px 20px;
+            }
+
+            .step-header h1 {
+                font-size: 2rem;
+            }
+
+            .wizard-container {
+                padding-bottom: 150px !important;
+                /* Tightened buffer */
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">Windross</a>
+        <div class="nav-center">Bespoke Studio</div>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <a href="gallery.html"
+                style="color:var(--text-muted); text-decoration:none; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Gallery</a>
+            <button class="action-btn" onclick="window.location.href='index.html'">Exit</button>
+        </div>
+    </nav>
+
+    <div class="wizard-container" id="app">
+        <!-- Injected by JS -->
+    </div>
+
+    <div class="wizard-footer">
+        <button id="btn-back" class="btn-nav btn-prev" onclick="handleBack()">
+            <i data-lucide="arrow-left"></i> Back
+        </button>
+        <div style="text-align: right;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">
+                Estimated Total</div>
+            <div id="price-display" style="font-family: 'Playfair Display', serif; font-size: 1.25rem;">$850</div>
+        </div>
+        <button id="btn-next" class="btn-nav btn-next" onclick="handleNext()">
+            Next Step <i data-lucide="arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        // --- DATA WITH DYNAMIC RELATIONSHIPS ---
+
+        // 1. Fabric Definitions (Source of Truth for Colors)
+        const fabricData = {
+            'cool-wool': {
+                name: 'Cool Wool',
+                desc: 'A lightweight, breathable fabric with a smooth, matte finish. Perfect for tropical climates, it offers excellent air circulation while maintaining a crisp, tailored look.',
+                colors: ['Black', 'Blue', 'Navy Blue', 'Royal Blue', 'Cream', 'White', 'Grey', 'Dark Grey', 'Red', 'Olive Green', 'Pink', 'Dark Pink', 'Light Pink']
+            },
+            'king-wool': {
+                name: 'King Wool',
+                desc: 'A fabric of distinction. Features a richer, denser weave that drapes beautifully. It has a subtle sheen and a structured feel, commanding authority and elegance.',
+                colors: ['Black', 'Blue', 'Dark Grey', 'Light Grey', 'Cream', 'White', 'Light Khaki', 'Dark Khaki']
+            },
+            '2020-material': {
+                name: '2020 Material',
+                desc: 'A modern, high-performance textile similar to King Wool but with enhanced durability. It offers a sharp, contemporary silhouette and resists wrinkling.',
+                colors: ['Black', 'Blue', 'Dark Grey', 'Light Grey', 'Cream', 'White', 'Light Khaki', 'Dark Khaki']
+            },
+            'termal-wool': {
+                name: 'Termal Wool',
+                desc: 'Designed for comfort and warmth. This fabric has a brushed, soft texture that traps heat without being bulky. It feels substantial and cozy against the skin.',
+                colors: ['Black', 'Blue', 'Grey', 'Dark Grey', 'Light Grey', 'Light Khaki']
+            }
+        };
+
+        // 2. Steps Config
+        const steps = [
+            {
+                id: 'texture',
+                title: 'Fabric Texture',
+                desc: 'Step 1: Choose the foundation of your suit. The texture determines how the suit feels and drapes.',
+                type: 'texture' // Custom logic
+            },
+            {
+                id: 'color',
+                title: 'Fabric Colour',
+                desc: 'Step 2: select a colour available for your chosen fabric.',
+                type: 'color' // Dynamic options
+            },
+            {
+                id: 'jacket',
+                title: 'Jacket Style',
+                desc: 'Define the cut and fastening of the jacket.',
+                items: [
+                    { id: 'j-single-2', name: 'Single Breasted (2 Button)', desc: 'The timeless standard. Versatile and modern.', price: 0, icon: 'shirt' },
+                    { id: 'j-single-1', name: 'Single Breasted (1 Button)', desc: 'Sleek and formal. Creates a deep V-shape.', price: 0, icon: 'shirt' },
+                    { id: 'j-double-6', name: 'Double Breasted (6 Button)', desc: 'Power and presence. Broadens the chest.', price: 50, icon: 'shield' },
+                    { id: 'j-mandarin', name: 'Mandarin Collar', desc: 'Minimalist elegance. No lapels.', price: 80, icon: 'minus-circle' }
+                ]
+            },
+            {
+                id: 'lapels',
+                title: 'Lapel Design',
+                desc: 'The lapel sets the tone of formality.',
+                items: [
+                    { id: 'l-notch', name: 'Notch Lapel', desc: 'The versatile standard. Collar meets lapel at an angle.', price: 0, icon: 'check-circle' },
+                    { id: 'l-peak', name: 'Peak Lapel', desc: 'Points upward. Highly formal and broadens shoulders.', price: 20, icon: 'triangle' },
+                    { id: 'l-shawl', name: 'Shawl Lapel', desc: 'Continuous curve. Used for tuxedos.', price: 30, icon: 'circle' }
+                ]
+            },
+            {
+                id: 'pants',
+                title: 'Trouser Fit',
+                desc: 'Tailor the finish of your pants.',
+                items: [
+                    { id: 'p-no-pleat', name: 'Flat Front', desc: 'Clean and slimming. Modern choice.', price: 0, icon: 'scissors' },
+                    { id: 'p-pleat', name: 'Single Pleat', desc: 'Classic comfort with a single fold.', price: 15, icon: 'layers' },
+                    { id: 'p-cuff', name: 'Cuffed Hem', desc: 'Adds weight for a straighter hang.', price: 10, icon: 'arrow-down-to-line' }
+                ]
+            },
+            {
+                id: 'vest',
+                title: 'Waistcoat',
+                desc: 'Optional 3rd piece for formality.',
+                items: [
+                    { id: 'v-none', name: 'No Vest (2-Piece)', desc: 'Standard suit configuration.', price: 0, icon: 'x-circle' },
+                    { id: 'v-add', name: 'Add Vest (3-Piece)', desc: 'Includes matching waistcoat.', price: 150, icon: 'plus-circle' }
+                ]
+            },
+            {
+                id: 'measurements',
+                title: 'Measurements',
+                desc: 'Please provide your measurements following the guide below.',
+                type: 'measurements',
+                sections: [
+                    {
+                        title: 'Blazer Measurements',
+                        fields: [
+                            { id: 'chest', label: 'Chest', desc: 'Around the fullest part of the chest, keeping the tape measure level.' },
+                            { id: 'torso_waist', label: 'Torso Waist', desc: 'Around the narrowest part of the torso.' },
+                            { id: 'shoulder', label: 'Shoulder', desc: 'From the edge of one shoulder, across the back, to the edge of the other shoulder.' },
+                            { id: 'sleeve', label: 'Sleeve Length', desc: 'From the centre back of the neck, over the shoulder, and down to the wrist.' },
+                            { id: 'jacket_len', label: 'Jacket Length', desc: 'From the base of the collar, down the centre back, to the desired length.' }
+                        ]
+                    },
+                    {
+                        title: 'Pants Measurements',
+                        fields: [
+                            { id: 'pant_waist', label: 'Pant Waist', desc: 'Around the natural waistline.' },
+                            { id: 'inseam', label: 'Inseam', desc: 'From the crotch, down the inside of the leg, to the desired pant length.' },
+                            { id: 'outseam', label: 'Outseam', desc: 'From the waist, down the outside of the leg, to the desired pant length.' },
+                            { id: 'thigh', label: 'Thigh', desc: 'Around the fullest part of the thigh.' },
+                            { id: 'rise', label: 'Rise', desc: 'From the crotch, up to the top of the pants (front and back).' }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'details',
+                title: 'Final Details',
+                desc: 'Please provide your contact and delivery information to complete the order.',
+                type: 'details'
+            }
+        ];
+
+        // --- STATE ---
+        let currentStepIndex = 0;
+        let selections = {
+            measurements: {},
+            details: {}
+        };
+
+        const BASE_PRICE = 850;
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Pre-select defaults for static steps ONLY
+            steps.forEach(step => {
+                if (step.items) {
+                    selections[step.id] = step.items[0];
+                }
+            });
+            // Default texture
+            const firstFabricKey = Object.keys(fabricData)[0];
+            selections['texture'] = { id: firstFabricKey, ...fabricData[firstFabricKey] };
+
+            // Default color (based on default texture)
+            selections['color'] = { id: fabricData[firstFabricKey].colors[0], name: fabricData[firstFabricKey].colors[0], price: 0 };
+
+            render();
+
+            // Anti-Theft: Disable right-click and drag on images
+            document.querySelectorAll('img').forEach(img => {
+                img.addEventListener('contextmenu', (e) => e.preventDefault());
+                img.addEventListener('dragstart', (e) => e.preventDefault());
+            });
+        });
+
+        // --- RENDER ---
+        function render() {
+            const container = document.getElementById('app');
+            const step = steps[currentStepIndex];
+
+            // 1. Progress
+            let progressHtml = '<div class="progress-track">';
+            steps.forEach((s, idx) => {
+                let classes = 'step-dot';
+                if (idx < currentStepIndex) classes += ' completed';
+                if (idx === currentStepIndex) classes += ' active';
+                progressHtml += `
+                    <div class="${classes}">
+                        ${idx < currentStepIndex ? '<i data-lucide="check" width="16"></i>' : (idx + 1)}
+                    </div>
+                `;
+            });
+            progressHtml += '</div>';
+
+            // 2. Header
+            const headerHtml = `
+                <div class="step-header">
+                    <div style="color:var(--gold-primary); text-transform:uppercase; letter-spacing:2px; font-size:0.8rem; margin-bottom:10px;">
+                        Step ${currentStepIndex + 1} of ${steps.length}
+                    </div>
+                    <h1>${step.title}</h1>
+                    <p>${step.desc}</p>
+                </div>
+            `;
+
+            // 3. Content Generation
+            let contentHtml = '';
+
+            // TYPE: TEXTURE
+            if (step.type === 'texture') {
+                contentHtml += '<div class="options-grid">';
+                Object.entries(fabricData).forEach(([key, data]) => {
+                    const isSelected = selections['texture'] && selections['texture'].id === key;
+                    contentHtml += `
+                        <div class="option-card ${isSelected ? 'selected' : ''}" onclick="selectTexture('${key}')">
+                            <div class="card-header">
+                                <i data-lucide="layers" class="card-icon" width="24"></i>
+                                <div class="card-title">${data.name}</div>
+                            </div>
+                            <div class="card-desc">${data.desc}</div>
+                        </div>
+                    `;
+                });
+                contentHtml += '</div>';
+            }
+            // TYPE: COLOR
+            else if (step.type === 'color') {
+                const currentTextureId = selections['texture'].id;
+                const availableColors = fabricData[currentTextureId].colors;
+
+                contentHtml += '<div class="options-grid">';
+                availableColors.forEach(color => {
+                    const isSelected = selections['color'] && selections['color'].id === color;
+                    const hex = getColorHex(color);
+
+                    contentHtml += `
+                        <div class="option-card ${isSelected ? 'selected' : ''}" onclick="selectColor('${color}')">
+                            <div class="card-header">
+                                <div class="color-dot" style="background-color:${hex}"></div>
+                                <div class="card-title">${color}</div>
+                            </div>
+                            <div class="card-desc">Selected from ${fabricData[currentTextureId].name} palette.</div>
+                        </div>
+                    `;
+                });
+                contentHtml += '</div>';
+            }
+            // TYPE: MEASUREMENTS
+            else if (step.type === 'measurements') {
+                contentHtml += '<div class="measurement-form" style="padding-bottom:50px;">';
+                step.sections.forEach(section => {
+                    contentHtml += `<div class="measurement-group"><h3>${section.title}</h3><div class="options-grid">`; // Re-using grid for layout
+                    section.fields.forEach(field => {
+                        const val = selections.measurements[field.id] || '';
+                        contentHtml += `
+                            <div class="measure-field">
+                                <label>${field.label}</label>
+                                <p>${field.desc}</p>
+                                <input type="text" placeholder="e.g. 40cm" value="${val}" onchange="saveMeasurement('${field.id}', this.value)">
+                            </div>
+                        `;
+                    });
+                    contentHtml += `</div></div>`;
+                });
+                contentHtml += '</div>';
+            }
+            // TYPE: DETAILS
+            else if (step.type === 'details') {
+                const details = selections.details || {};
+
+                contentHtml += '<div class="measurement-form" style="padding-bottom:50px;">';
+
+                // 1. Personal Info
+                contentHtml += `
+                    <div class="measurement-group">
+                        <h3>Contact Information</h3>
+                        <div class="options-grid" style="grid-template-columns: 1fr;">
+                            <div class="measure-field">
+                                <label>Full Name</label>
+                                <input type="text" placeholder="John Doe" value="${details.name || ''}" onchange="saveDetail('name', this.value)">
+                            </div>
+                            <div class="measure-field">
+                                <label>Email Address</label>
+                                <input type="email" placeholder="john@example.com" value="${details.email || ''}" onchange="saveDetail('email', this.value)">
+                            </div>
+                            <div class="measure-field">
+                                <label>Phone Number</label>
+                                <input type="tel" placeholder="(876) 555-1234" value="${details.phone || ''}" onchange="saveDetail('phone', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 2. Location
+                contentHtml += `
+                    <div class="measurement-group">
+                        <h3>Order Type</h3>
+                         <div class="options-grid">
+                            <div class="option-card ${details.location === 'local' ? 'selected' : ''}" onclick="saveDetail('location', 'local'); toggleDetailsSections();">
+                                <div class="card-header">
+                                    <i data-lucide="map-pin" class="card-icon" width="24"></i>
+                                    <div class="card-title">Local (Jamaica)</div>
+                                </div>
+                                <div class="card-desc">I am currently in Jamaica.</div>
+                            </div>
+                            <div class="option-card ${details.location === 'abroad' ? 'selected' : ''}" onclick="saveDetail('location', 'abroad'); toggleDetailsSections();">
+                                <div class="card-header">
+                                    <i data-lucide="globe" class="card-icon" width="24"></i>
+                                    <div class="card-title">Overseas</div>
+                                </div>
+                                <div class="card-desc">International shipping required.</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 3. Delivery Method (Local Only)
+                const showDeliveryMethod = details.location === 'local';
+                contentHtml += `
+                    <div id="section-delivery-method" class="measurement-group" style="display: ${showDeliveryMethod ? 'block' : 'none'};">
+                        <h3>Delivery Method</h3>
+                        <div class="options-grid">
+                            <div class="option-card ${details.deliveryMethod === 'pickup' ? 'selected' : ''}" onclick="saveDetail('deliveryMethod', 'pickup'); toggleDetailsSections();">
+                                <div class="card-header">
+                                    <i data-lucide="store" class="card-icon" width="24"></i>
+                                    <div class="card-title">Store Pickup</div>
+                                </div>
+                                <div class="card-desc">Collect from our studio.</div>
+                            </div>
+                            <div class="option-card ${details.deliveryMethod === 'delivery' ? 'selected' : ''}" onclick="saveDetail('deliveryMethod', 'delivery'); toggleDetailsSections();">
+                                <div class="card-header">
+                                    <i data-lucide="truck" class="card-icon" width="24"></i>
+                                    <div class="card-title">Delivery</div>
+                                </div>
+                                <div class="card-desc">Courier delivery to your door.</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 4. Delivery Service (Local Delivery Only)
+                const showService = details.location === 'local' && details.deliveryMethod === 'delivery';
+                contentHtml += `
+                    <div id="section-delivery-service" class="measurement-group" style="display: ${showService ? 'block' : 'none'};">
+                        <h3>Choose Courier</h3>
+                        <div class="options-grid">
+                            <div class="option-card ${details.courier === 'knutsford' ? 'selected' : ''}" onclick="saveDetail('courier', 'knutsford');">
+                                <div class="card-header"><div class="card-title">Knutsford Express</div></div>
+                            </div>
+                            <div class="option-card ${details.courier === 'zipmail' ? 'selected' : ''}" onclick="saveDetail('courier', 'zipmail');">
+                                <div class="card-header"><div class="card-title">Zipmail</div></div>
+                            </div>
+                             <div class="option-card ${details.courier === 'tara' ? 'selected' : ''}" onclick="saveDetail('courier', 'tara');">
+                                <div class="card-header"><div class="card-title">Tara Courier</div></div>
+                            </div>
+                             <div class="option-card ${details.courier === 'bearer' ? 'selected' : ''}" onclick="saveDetail('courier', 'bearer');">
+                                <div class="card-header"><div class="card-title">Bearer Service</div></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 5. Address (Delivery Local OR Abroad)
+                const showAddress = details.location === 'abroad' || (details.location === 'local' && details.deliveryMethod === 'delivery');
+                contentHtml += `
+                    <div id="section-address" class="measurement-group" style="display: ${showAddress ? 'block' : 'none'};">
+                        <h3>Shipping Address</h3>
+                        <div class="options-grid" style="grid-template-columns: 1fr;">
+                             <div class="measure-field">
+                                <label>Address Line 1</label>
+                                <input type="text" placeholder="Street address" value="${details.address1 || ''}" onchange="saveDetail('address1', this.value)">
+                            </div>
+                             <div class="measure-field">
+                                <label>Address Line 2</label>
+                                <input type="text" placeholder="Apt, Suite, etc (optional)" value="${details.address2 || ''}" onchange="saveDetail('address2', this.value)">
+                            </div>
+                            <div class="measure-field">
+                                <label>City / Parish / State</label>
+                                <input type="text" placeholder="" value="${details.city || ''}" onchange="saveDetail('city', this.value)">
+                            </div>
+                             <div class="measure-field">
+                                <label>Country</label>
+                                <input type="text" placeholder="e.g. Jamaica, USA" value="${details.country || ''}" onchange="saveDetail('country', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                contentHtml += '</div>';
+            }
+            // TYPE: STANDARD/STATIC
+            else {
+                contentHtml += '<div class="options-grid">';
+                step.items.forEach(item => {
+                    const isSelected = selections[step.id].id === item.id;
+                    contentHtml += `
+                        <div class="option-card ${isSelected ? 'selected' : ''}" onclick="selectStatic('${step.id}', '${item.id}')">
+                            <div class="card-header">
+                                <i data-lucide="${item.icon}" class="card-icon" width="24"></i>
+                                <div class="card-title">${item.name}</div>
+                                ${item.price > 0 ? `<div class="card-price">+$${item.price}</div>` : ''}
+                            </div>
+                            <div class="card-desc">${item.desc}</div>
+                        </div>
+                    `;
+                });
+                contentHtml += '</div>';
+            }
+
+            container.innerHTML = progressHtml + headerHtml + contentHtml;
+            updateFooter();
+            lucide.createIcons();
+        }
+
+        // --- LOGIC ---
+        function selectTexture(key) {
+            selections['texture'] = { id: key, ...fabricData[key] };
+            const validColors = fabricData[key].colors;
+            selections['color'] = { id: validColors[0], name: validColors[0], price: 0 };
+            render();
+        }
+
+        function selectColor(colorName) {
+            selections['color'] = { id: colorName, name: colorName, price: 0 };
+            render();
+        }
+
+        function selectStatic(stepId, itemId) {
+            const step = steps.find(s => s.id === stepId);
+            const item = step.items.find(i => i.id === itemId);
+            selections[stepId] = item;
+            render();
+        }
+
+        function saveMeasurement(fieldId, value) {
+            if (!selections.measurements) selections.measurements = {};
+            selections.measurements[fieldId] = value;
+        }
+
+        function saveDetail(fieldId, value) {
+            if (!selections.details) selections.details = {};
+            selections.details[fieldId] = value;
+            // No full re-render for text inputs to keep focus, but re-render for selections to update UI state
+            if (['location', 'deliveryMethod', 'courier'].includes(fieldId)) {
+                // Determine if we need to reset downstream choices
+                if (fieldId === 'location') {
+                    if (value === 'abroad') {
+                        delete selections.details.deliveryMethod;
+                        delete selections.details.courier;
+                    }
+                }
+                render();
+            }
+        }
+
+        function toggleDetailsSections() {
+            // This is handled by render() now since we re-render on selection.
+            // Keeping function name if we want to switch to DOM manipulation later for smoother UX.
+        }
+
+        function getColorHex(name) {
+            const map = {
+                'Black': '#000000', 'Blue': '#1a237e', 'Navy Blue': '#0d47a1',
+                'Royal Blue': '#2962ff', 'Cream': '#fff59d', 'White': '#ffffff',
+                'Grey': '#9e9e9e', 'Dark Grey': '#424242', 'Light Grey': '#bdbdbd',
+                'Red': '#d32f2f', 'Olive Green': '#558b2f', 'Pink': '#f48fb1',
+                'Dark Pink': '#ad1457', 'Light Pink': '#f8bbd0', 'Light Khaki': '#f0f4c3',
+                'Dark Khaki': '#c0ca33'
+            };
+            return map[name] || '#888';
+        }
+
+        function handleNext() {
+            if (currentStepIndex < steps.length - 1) {
+                currentStepIndex++;
+                render();
+                window.scrollTo(0, 0);
+            } else {
+                finish();
+            }
+        }
+
+        function handleBack() {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                render();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function updateFooter() {
+            const backBtn = document.getElementById('btn-back');
+            const nextBtn = document.getElementById('btn-next');
+            const priceDisplay = document.getElementById('price-display');
+
+            backBtn.style.visibility = currentStepIndex === 0 ? 'hidden' : 'visible';
+
+            if (currentStepIndex === steps.length - 1) {
+                nextBtn.innerHTML = 'Send Request <i data-lucide="send"></i>';
+            } else {
+                nextBtn.innerHTML = 'Next Step <i data-lucide="arrow-right"></i>';
+            }
+
+            let total = BASE_PRICE;
+            Object.values(selections).forEach(item => {
+                if (item.price) total += item.price;
+            });
+            // Add Shipping Estimate Logic
+            const details = selections.details || {};
+            if (details.location === 'local' && details.deliveryMethod === 'delivery') {
+                // Placeholder estimate for local delivery
+                // total += 15; 
+            } else if (details.location === 'abroad') {
+                // Placeholder estimate for international shipping
+                // total += 50;
+            }
+
+            priceDisplay.innerText = '$' + total;
+        }
+
+        function finish() {
+            let message = "*New Custom Suit Request*\n\n";
+            let total = BASE_PRICE;
+
+            // 1. Config
+            const order = ['texture', 'color', 'jacket', 'lapels', 'pants', 'vest'];
+            order.forEach(key => {
+                if (selections[key]) {
+                    const item = selections[key];
+                    if (item.price) total += item.price;
+                    message += `*${capitalize(key)}:* ${item.name}\n`;
+                }
+            });
+
+            // 2. Measurements
+            message += `\n*MEASUREMENTS*\n`;
+            if (selections.measurements) {
+                // Blazer
+                message += `--- Blazer ---\n`;
+                message += `Chest: ${selections.measurements.chest || 'N/A'}\n`;
+                message += `Waist: ${selections.measurements.torso_waist || 'N/A'}\n`;
+                message += `Shoulder: ${selections.measurements.shoulder || 'N/A'}\n`;
+                message += `Sleeve: ${selections.measurements.sleeve || 'N/A'}\n`;
+                message += `Length: ${selections.measurements.jacket_len || 'N/A'}\n`;
+
+                // Pants
+                message += `--- Pants ---\n`;
+                message += `Waist: ${selections.measurements.pant_waist || 'N/A'}\n`;
+                message += `Inseam: ${selections.measurements.inseam || 'N/A'}\n`;
+                message += `Outseam: ${selections.measurements.outseam || 'N/A'}\n`;
+                message += `Thigh: ${selections.measurements.thigh || 'N/A'}\n`;
+                message += `Rise: ${selections.measurements.rise || 'N/A'}\n`;
+            } else {
+                message += `(No measurements provided)\n`;
+            }
+
+            // 3. Personal Details & Delivery
+            message += `\n*CUSTOMER DETAILS*\n`;
+            const details = selections.details || {};
+            message += `Name: ${details.name || 'N/A'}\n`;
+            message += `Email: ${details.email || 'N/A'}\n`;
+            message += `Phone: ${details.phone || 'N/A'}\n`;
+
+            const loc = details.location === 'local' ? 'Local (Jamaica)' : (details.location === 'abroad' ? 'Overseas' : 'N/A');
+            message += `Location: ${loc}\n`;
+
+            if (details.location === 'local') {
+                const method = details.deliveryMethod === 'pickup' ? 'Store Pickup' : 'Delivery';
+                message += `Method: ${method}\n`;
+                if (details.deliveryMethod === 'delivery') {
+                    const courierMap = { 'knutsford': 'Knutsford Express', 'zipmail': 'Zipmail', 'tara': 'Tara Courier', 'bearer': 'Bearer' };
+                    message += `Courier: ${courierMap[details.courier] || 'Not Selected'}\n`;
+                }
+            }
+
+            if (details.location === 'abroad' || (details.location === 'local' && details.deliveryMethod === 'delivery')) {
+                message += `\n*SHIPPING ADDRESS*\n`;
+                message += `${details.address1 || ''}\n`;
+                if (details.address2) message += `${details.address2}\n`;
+                message += `${details.city || ''}, ${details.country || ''}\n`;
+            }
+
+            message += `\n*Est. Total:* $${total} (Shipping TBD)\n\nSubmitted via Web Wizard.`;
+
+            const phone = "18765986434";
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+            window.open(url, '_blank');
+        }
+
+        function capitalize(s) {
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        // Anti-Theft: Disable right-click and drag on images
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('contextmenu', (e) => e.preventDefault());
+            img.addEventListener('dragstart', (e) => e.preventDefault());
+        });
+    </script>
+</body>
+
+</html>

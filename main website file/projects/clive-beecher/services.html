@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services | Clive Beecher Tours</title>
+    <link rel="icon" type="image/png" href="beecher-logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --black: #000000;
+            --white: #FFFFFF;
+            --grey-text: #666666;
+            --gold: #C6A87C;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--black);
+            background: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            background: var(--black);
+            padding: 20px 0;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .nav-logo img {
+            height: 40px;
+            filter: brightness(0) invert(1);
+        }
+
+        .nav-links a {
+            color: var(--white);
+            margin-left: 20px;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        header {
+            background: #f9f9f9;
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        p {
+            color: var(--grey-text);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .services-grid {
+            padding: 80px 0;
+        }
+
+        .service-item {
+            border-top: 1px solid #000;
+            padding-top: 30px;
+            margin-bottom: 60px;
+        }
+
+        .service-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .service-desc {
+            color: var(--grey-text);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .book-link {
+            text-decoration: none;
+            color: var(--black);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .book-link:hover {
+            color: var(--gold);
+        }
+
+        /* MOBILE NAVIGATION & RESPONSIVE */
+        .mobile-menu-btn {
+            display: none;
+            font-size: 24px;
+            color: var(--white);
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 2002;
+        }
+
+        .mobile-nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.4s ease;
+        }
+
+        .mobile-nav-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mobile-nav-overlay a {
+            font-family: var(--font-main);
+            font-size: 24px;
+            color: var(--white);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .services-grid {
+                padding: 40px 0;
+            }
+
+            .service-item {
+                margin-bottom: 40px;
+                padding-top: 20px;
+            }
+
+            header {
+                padding: 60px 0;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-content">
+            <a href="index.html" class="nav-logo"><img src="beecher-logo.png" alt="Logo"></a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="fleet.html">Fleet</a>
+                <a href="services.html">Services</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNav">
+        <a href="index.html">Home</a>
+        <a href="fleet.html">Fleet</a>
+        <a href="services.html">Services</a>
+    </div>
+
+
+    <header>
+        <div class="container">
+            <h1>Our Services</h1>
+            <p>We provide a premium travel experience tailored to your specific needs, whether for business or leisure.
+            </p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="services-grid">
+            <div class="service-item">
+                <h2 class="service-title">Airport Transfers</h2>
+                <p class="service-desc">Enjoy a seamless journey to and from the airport. Your personal chauffeur will
+                    track your flight and wait for you at the arrival terminal.</p>
+                <a href="#" onclick="contact('Airport Transfer')" class="book-link">Book Transfer →</a>
+            </div>
+
+            <div class="service-item">
+                <h2 class="service-title">Hourly Booking</h2>
+                <p class="service-desc">Have a chauffeur at your disposal for as long as you wish. Perfect for meetings,
+                    roadshows, or exploring the city.</p>
+                <a href="#" onclick="contact('Hourly Booking')" class="book-link">Reserve Hourly →</a>
+            </div>
+
+            <div class="service-item">
+                <h2 class="service-title">City to City</h2>
+                <p class="service-desc">A stress-free alternative to flights or trains. Travel between cities in the
+                    privacy and comfort of a top-class vehicle.</p>
+                <a href="#" onclick="contact('City to City')" class="book-link">Plan Journey →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fare Pricing & Transparency Section -->
+    <section id="rates" style="background: #f9f9f9; padding: 80px 0;">
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 50px;">
+                <h2 style="font-size: 32px; font-weight: 300; margin-bottom: 15px;">Transparent Pricing</h2>
+                <p style="max-width: 700px; margin: 0 auto; color: var(--grey-text);">
+                    Why pay strict metered rates? We offer exclusive flat rates for major destinations that save you
+                    money while ensuring a luxury experience.
+                </p>
+            </div>
+
+            <div class="rate-comparison"
+                style="background: var(--white); box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">
+                <!-- Group Size Selector -->
+                <div
+                    style="background: var(--black); padding: 20px; text-align: center; border-bottom: 1px solid #333;">
+                    <p style="color: var(--white); margin-bottom: 15px; font-size: 14px; letter-spacing: 1px;">SELECT
+                        GROUP SIZE FOR EXACT RATES</p>
+                    <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="updateRates(1)" id="btn-1" class="group-btn active"
+                            style="padding: 10px 20px; background: var(--gold); border: none; font-weight: 700; cursor: pointer;">1-2
+                            PASSENGERS</button>
+                        <button onclick="updateRates(2)" id="btn-2" class="group-btn"
+                            style="padding: 10px 20px; background: #333; color: #fff; border: 1px solid #444; cursor: pointer;">3-4
+                            PASSENGERS</button>
+                        <button onclick="updateRates(3)" id="btn-3" class="group-btn"
+                            style="padding: 10px 20px; background: #333; color: #fff; border: 1px solid #444; cursor: pointer;">5+
+                            PASSENGERS</button>
+                    </div>
+                </div>
+
+                <div class="table-container" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+                        <thead>
+                            <tr
+                                style="background: #f4f4f4; color: var(--black); text-align: left; border-bottom: 2px solid #ddd;">
+                                <th style="padding: 20px;">Destination</th>
+                                <th style="padding: 20px;">Avg. Distance</th>
+                                <th style="padding: 20px;">Standard Metered Rate*</th>
+                                <th style="padding: 20px; background: rgba(198, 168, 124, 0.1); color: var(--black);">
+                                    Your Flat Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rate-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div
+                    style="padding: 20px; background: #f4f4f4; font-size: 13px; color: var(--grey-text); border-top: 1px solid #eee;">
+                    <p>* Standard rates based on common tourist taxi fares of JMD 500-700 per km depending on provider.
+                        Flat rates shown are per vehicle/group, not per person.</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 50px; text-align: center;">
+                <p style="margin-bottom: 20px; font-size: 18px;">Traveling somewhere else?</p>
+                <a href="#" onclick="contact('Custom Quote')" class="book-link"
+                    style="display: inline-block; padding: 15px 40px; background: var(--black); color: var(--white); border-radius: 4px; font-size: 14px; letter-spacing: 1px;">Get
+                    A Custom Quote</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Pricing Data Configuration
+        const destinations = [
+            { name: "Mbota Bay / Local Hotels", dist: "~10 km", metered: "$30 - $45 USD", rates: ["Ask for Quote", "Ask for Quote", "Ask for Quote"] },
+            { name: "Falmouth / Trelawny", dist: "~35 km", metered: "$113 - $158 USD", rates: ["$50 USD", "$60 USD", "$70 USD"] },
+            { name: "Runaway Bay", dist: "~76 km", metered: "$245 - $343 USD", rates: ["$70 USD", "$85 USD", "$100 USD"] },
+            { name: "Ocho Rios", dist: "~102 km", metered: "$329 - $461 USD", rates: ["$90 USD", "$110 USD", "$130 USD"] },
+            { name: "St. Mary / Accabessa", dist: "~128 km", metered: "$413 - $578 USD", rates: ["$100 USD", "$120 USD", "$140 USD"] }
+        ];
+
+        let currentTier = 0; // 0: 1-2 pax, 1: 3-4 pax, 2: 5+ pax
+
+        function updateRates(tierIndex) {
+            // Update UI/State
+            currentTier = tierIndex - 1;
+
+            // Buttons
+            document.querySelectorAll('.group-btn').forEach((btn, idx) => {
+                if (idx === currentTier) {
+                    btn.style.background = 'var(--gold)';
+                    btn.style.color = 'black';
+                    btn.classList.add('active');
+                } else {
+                    btn.style.background = '#333';
+                    btn.style.color = '#fff';
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Table Render
+            const tbody = document.getElementById('rate-table-body');
+            tbody.innerHTML = ''; // Selectively update if needed, but rebuild is fast enough here
+
+            destinations.forEach(dest => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #eee';
+
+                // Determine rate display (highlighted)
+                const rate = dest.rates[currentTier];
+
+                tr.innerHTML = `
+                    <td style="padding: 20px; font-weight: 600;">${dest.name}</td>
+                    <td style="padding: 20px; color: var(--grey-text);">${dest.dist}</td>
+                    <td style="padding: 20px; color: #999; text-decoration: line-through;">${dest.metered}</td>
+                    <td style="padding: 20px; background: rgba(198, 168, 124, 0.1); color: var(--black); font-weight: 700; font-size: 18px;">${rate}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Init
+        updateRates(1);
+
+        function contact(service) {
+            let message = `Hi, I am interested in ${service}.`;
+
+            // Append group size context if specific rate selected
+            const groups = ["1-2 passengers", "3-4 passengers", "5+ passengers"];
+
+            if (service === 'Custom Quote') {
+                message += ` I am looking for a quote for ${groups[currentTier]}.`;
+            }
+
+            window.open(`https://wa.me/18767796722?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function toggleMobileMenu() {
+            const nav = document.getElementById('mobileNav');
+            const btnIcon = document.querySelector('.mobile-menu-btn i');
+            nav.classList.toggle('active');
+
+            if (nav.classList.contains('active')) {
+                btnIcon.classList.remove('fa-bars');
+                btnIcon.classList.add('fa-times');
+            } else {
+                btnIcon.classList.remove('fa-times');
+                btnIcon.classList.add('fa-bars');
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,32 @@
+/* === Logo Story Intro: START === */
+
+.logo-intro-video {
+  border-radius: 1rem;
+}
+
+.logo-intro-fallback.is-visible {
+  opacity: 1;
+}
+
+.logo-intro-scroll-cue.is-visible {
+  opacity: 1;
+  animation: introCueFloat 2s ease-in-out infinite;
+}
+
+@keyframes introCueFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .logo-intro-scroll-cue.is-visible {
+    animation: none;
+  }
+}
+
+/* === Logo Story Intro: END === */

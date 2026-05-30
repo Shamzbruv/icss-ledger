@@ -1,0 +1,94 @@
+/* Fluid Background Container - Scoped to Panel */
+.fluid-background {
+    position: absolute;
+    /* Changed from fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background: transparent;
+    /* Remove solid bg so it layers over section color */
+}
+
+/* Base Blob Styles */
+.fluid-blob {
+    position: absolute;
+    filter: blur(120px);
+    /* Increased blur for softer edges */
+    opacity: 0.15;
+    /* Much lower opacity for subtlety */
+    border-radius: 50%;
+    animation: float 25s infinite ease-in-out;
+    /* Slower animation */
+}
+
+/* Purple Blob */
+.fluid-blob.purple {
+    background: #9D4EDD;
+    width: 600px;
+    height: 600px;
+    top: -100px;
+    left: -100px;
+    animation-delay: 0s;
+}
+
+/* Green Blob */
+.fluid-blob.green {
+    background: #D4E6B5;
+    /* Soft Pastel Green */
+    width: 500px;
+    height: 500px;
+    bottom: -50px;
+    right: -50px;
+    animation-delay: -5s;
+    /* Removed opacity override so it inherits 0.15 */
+}
+
+/* Third Blob (White Overlay) to create "Smoke" effect */
+.fluid-blob.white-overlay {
+    background: white;
+    width: 800px;
+    height: 800px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(100px);
+    opacity: 0.4;
+    animation: breathe 15s infinite ease-in-out;
+}
+
+/* Keyframe Animations */
+@keyframes float {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(30px, 50px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+@keyframes breathe {
+
+    0%,
+    100% {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+        opacity: 0.2;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}

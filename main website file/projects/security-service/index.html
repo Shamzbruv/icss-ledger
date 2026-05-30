@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reliable Shield Protection | Elite Security Jamaica</title>
+
+    <link rel="icon" type="image/x-icon" href="images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Premium Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="container nav-inner">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Reliable Shield Logo" style="height: 80px;">
+            </a>
+
+            <!-- Desktop Nav -->
+            <div class="nav-links-desktop">
+                <a href="index.html" class="active">Home</a>
+                <a href="services.html">Services</a>
+                <a href="careers.html">Careers</a>
+                <a href="faq.html">FAQ</a>
+                <a href="#contact">Contact</a>
+            </div>
+
+            <div class="nav-contact">
+                <a href="tel:8766798029"
+                    style="color:var(--text-white); text-decoration:none; font-size:0.9rem; transition:0.3s;"
+                    onmouseover="this.style.color='var(--gold-metallic)'"
+                    onmouseout="this.style.color='var(--text-white)'">
+                    <i class="fa-solid fa-phone" style="color:var(--gold-metallic)"></i> Office: (876) 679-8029
+                </a>
+                <a href="tel:8763978331" class="emergency-btn">
+                    <i class="fa-solid fa-mobile-screen"></i> CALL NOW
+                </a>
+            </div>
+
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-menu-btn" onclick="toggleMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Container -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">Home</a>
+        <a href="services.html">Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="faq.html">FAQ</a>
+        <a href="#contact">Contact</a>
+        <a href="tel:8763978331" style="color: var(--accent-alert); border:none; margin-top:20px;">
+            <i class="fa-solid fa-phone"></i> CALL (876) 397-8331
+        </a>
+        <a href="tel:8763132183" style="color: var(--text-white); border:none; margin-top:10px; font-size: 0.9rem;">
+            <i class="fa-solid fa-mobile"></i> Alt: (876) 313-2183
+        </a>
+    </div>
+
+    <header class="hero">
+        <img src="images/logo.png" class="hero-side-logo" alt="Reliable Shield Logo">
+        <div class="container hero-content animate-up">
+            <div class="status-badge">
+                <div class="status-dot"></div> Systems Online
+            </div>
+            <h1>PROTECTION WITHOUT <br><span>COMPROMISE.</span></h1>
+            <p>Elite Armed & Unarmed Security. Body-cam equipped officers with digital patrol tracking. <strong>5-10
+                    Minute Response Time Guaranteed.</strong></p>
+
+            <div class="hero-actions">
+                <button onclick="contactWhatsApp()" class="btn-primary">
+                    <i class="fa-brands fa-whatsapp"></i> Get Protected
+                </button>
+                <button onclick="contactEmail()" class="btn-secondary">
+                    Request Quote
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="stats-bar">
+        <div class="container stats-grid">
+            <div class="stat-item">
+                <h3>FREE</h3>
+                <p>Body Cam & Guard Tour</p>
+            </div>
+            <div class="stat-item">
+                <h3>Asset</h3>
+                <p>Protection & Crime Deterrence</p>
+            </div>
+            <div class="stat-item">
+                <h3>Reduced</h3>
+                <p>Liability for You</p>
+            </div>
+            <div class="stat-item">
+                <h3>FREE</h3>
+                <p>Emergency Response</p>
+            </div>
+        </div>
+    </div>
+
+    <section class="services">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our Services</h2>
+                <p>Reliability when you need it the most.</p>
+            </div>
+
+            <div class="service-grid">
+                <div class="service-card">
+                    <i class="fa-solid fa-user-shield service-icon"></i>
+                    <h3>Armed & Unarmed Security</h3>
+                    <p>Professional guards for any environment. Fully vetted and trained officers.</p>
+                </div>
+
+                <div class="service-card">
+                    <i class="fa-solid fa-person-military-pointing service-icon"></i>
+                    <h3>V.I.P. Protection & Escort</h3>
+                    <p>Personal protection services and secure escort for high-profile clients.</p>
+                </div>
+
+                <div class="service-card">
+                    <i class="fa-solid fa-clipboard-check service-icon"></i>
+                    <h3>Routine Checks & Assistants</h3>
+                    <p>Mobile patrols, routine property checks, and security assistant services.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="officer-standards" style="padding: 100px 0; background: var(--bg-armor);">
+        <div class="container">
+            <div class="section-header">
+                <h2>The Reliable Standard</h2>
+                <p>Qualities that define our elite security personnel.</p>
+            </div>
+
+            <div class="standards-grid">
+                <div class="standard-card">
+                    <div class="std-icon"><i class="fa-solid fa-eye"></i></div>
+                    <h3>Alert & Observant</h3>
+                    <p>Must always stay aware of surroundings. Quickly notices unusual activities, safety hazards, or
+                        suspicious behavior.</p>
+                </div>
+                <div class="standard-card">
+                    <div class="std-icon"><i class="fa-solid fa-user-tie"></i></div>
+                    <h3>Professional & Disciplined</h3>
+                    <p>Shows respect in uniform, speech, and conduct. Follows company policies, client instructions, and
+                        security protocols.</p>
+                </div>
+                <div class="standard-card">
+                    <div class="std-icon"><i class="fa-solid fa-brain"></i></div>
+                    <h3>Calm Under Pressure</h3>
+                    <p>Can think clearly and act wisely during emergencies.</p>
+                </div>
+                <div class="standard-card">
+                    <div class="std-icon"><i class="fa-solid fa-comments"></i></div>
+                    <h3>Good Communication</h3>
+                    <p>Speaks politely but firmly when needed. Can write clear reports and give accurate updates.</p>
+                </div>
+                <div class="standard-card">
+                    <div class="std-icon"><i class="fa-solid fa-handshake"></i></div>
+                    <h3>Honest & Trustworthy</h3>
+                    <p>Handles client property responsibly. Never engages in theft, bribery, or favoritism. Builds trust
+                        with clients.</p>
+                </div>
+                <div class="standard-card">
+                    <div class="std-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <h3>Reasonable & Mentally Fit</h3>
+                    <p>Exercises good judgment when making decisions. Treats all individuals with respect, without bias.
+                    </p>
+                </div>
+                <div class="standard-card">
+                    <div class="std-icon"><i class="fa-solid fa-smile"></i></div>
+                    <h3>Customer-Service Oriented</h3>
+                    <p>Friendly, approachable, and helpful while maintaining security integrity.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tech-section">
+        <div class="container tech-grid">
+            <div class="tech-content">
+                <span style="color: var(--gold-metallic); letter-spacing: 2px; font-weight: 700;">ADVANCED
+                    SURVEILLANCE</span>
+                <h2 style="margin-top:10px;">Accountability Built-In.</h2>
+                <p style="color: var(--text-steel); font-size: 1.1rem;">We don't just promise security; we verify it.
+                    Every officer is equipped with modern technology to ensure transparency and rapid communication.</p>
+
+                <ul class="feature-list">
+                    <li><i class="fa-solid fa-video"></i> <span>Officer Body Cameras (Full Shift Recording)</span></li>
+                    <li><i class="fa-solid fa-tablet-screen-button"></i> <span>Digital Patrol Devices</span></li>
+                    <li><i class="fa-solid fa-walkie-talkie"></i> <span>Direct Dispatch Communication</span></li>
+                    <li><i class="fa-solid fa-file-contract"></i> <span>Free Response Calls (Contract Holders)</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="tech-image">
+                <div class="tech-overlay">
+                    <i class="fa-solid fa-circle" style="font-size: 8px;"></i> CAM_01 • REC • 1080P
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-cta" id="contact">
+        <div class="container">
+            <div class="contact-box">
+                <h2 style="margin-bottom: 15px;">Secure Your Property</h2>
+                <p style="color: var(--text-steel); font-size: 1.1rem;">Contact Command Center for immediate deployment
+                    or consultation.</p>
+
+                <div class="contact-details">
+                    <div class="contact-pill" onclick="window.location.href='tel:8763978331'">
+                        <i class="fa-solid fa-mobile-screen"></i> (876) 397-8331
+                        <button class="wa-trigger-btn" onclick="event.stopPropagation(); openWAModal()"
+                            style="margin-left:10px; border:none; padding:5px 10px; font-size:0.8rem;">
+                            <i class="fa-brands fa-whatsapp"></i> Chat
+                        </button>
+                    </div>
+                    <div class="contact-pill" onclick="window.location.href='tel:8763132183'">
+                        <i class="fa-solid fa-mobile-screen"></i> (876) 313-2183
+                        <button class="wa-trigger-btn" onclick="event.stopPropagation(); openWAModal()"
+                            style="margin-left:10px; border:none; padding:5px 10px; font-size:0.8rem;">
+                            <i class="fa-brands fa-whatsapp"></i> Chat
+                        </button>
+                    </div>
+                    <div class="contact-pill" onclick="window.location.href='tel:8766798029'">
+                        <i class="fa-solid fa-phone"></i> Office: (876) 679-8029
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-bottom: 20px;">
+                    <button onclick="openWAModal()" class="btn-primary" style="background:#25D366; color:white;">
+                        <i class="fa-brands fa-whatsapp"></i> Detailed WhatsApp Inquiry
+                    </button>
+                </div>
+
+                <p style="font-size: 0.9rem; color: var(--text-steel);">
+                    <i class="fa-solid fa-location-dot" style="color: var(--gold-metallic);"></i>
+                    76 St John's Rd, Spanish Town, Jamaica
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="services.html">Services</a>
+                <a href="careers.html">Careers</a>
+                <a href="faq.html">FAQ</a>
+                <a href="mailto:reliableshield2025@gmail.com">Support</a>
+            </div>
+            <p>&copy; 2026 Reliable Shield Protection Limited. All Rights Reserved.</p>
+            <p style="margin-top: 10px; opacity: 0.5;">Licensed & Insured Private Security.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Inline functions mapped to global modal now
+        function contactWhatsApp() {
+            openWAModal();
+        }
+
+        function contactEmail() {
+            window.location.href = "mailto:reliableshield2025@gmail.com?subject=Security Service Inquiry";
+        }
+
+        function contactPhone() {
+            window.location.href = "tel:8763978331";
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,198 @@
+/* Journal Premium Styles */
+:root {
+    --journal-bg: #0a0a0a;
+    --journal-text: #f0f0f0;
+    --journal-accent: var(--color-gold);
+    /* Fallback or existing var */
+}
+
+/* Journal-specific overrides for a darker, more premium mood if desired, 
+   or just keeping it consistent with light/glass theme. 
+   Let's go for a sophisticated dark section or just clean editorial. 
+   Given the glass nav is likely light/glass, we'll keep the page clean but use dark cards. */
+
+.journal-page {
+    padding-top: 120px;
+    padding-bottom: 80px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.journal-header {
+    text-align: center;
+    margin-bottom: 80px;
+    position: relative;
+}
+
+.journal-header h1 {
+    font-size: 4rem;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+}
+
+.journal-header p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* FEATURED STORY */
+.featured-story {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 0;
+    margin-bottom: 100px;
+    background: #f8f8f8;
+    /* Subtle contrast */
+    border-radius: 4px;
+    /* Minimal rounded corners */
+    overflow: hidden;
+    min-height: 600px;
+}
+
+.featured-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.featured-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s ease;
+}
+
+.featured-story:hover .featured-image-wrapper img {
+    transform: scale(1.03);
+}
+
+.featured-content {
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: white;
+}
+
+.eyebrow-date {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    display: block;
+}
+
+.featured-content h2 {
+    font-size: 2.5rem;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 24px;
+    font-family: 'Inter', sans-serif;
+    /* Or serif if we had one */
+}
+
+.featured-excerpt {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+/* STORY GRID */
+.story-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    columns: 2;
+    /* For masonry effect if we used columns, but grid is safer */
+    gap: 40px;
+}
+
+/* STANDARD STORY CARD */
+.story-card {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    /* user-select: none; */
+}
+
+.story-media {
+    aspect-ratio: 4/5;
+    overflow: hidden;
+    margin-bottom: 24px;
+    border-radius: 2px;
+}
+
+.story-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.story-card:hover .story-media img {
+    transform: scale(1.05);
+}
+
+.story-meta {
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.story-card h3 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.story-link {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.story-card:hover .story-link {
+    opacity: 1;
+}
+
+.story-link svg {
+    margin-left: 8px;
+    transition: transform 0.3s;
+}
+
+.story-card:hover .story-link svg {
+    transform: translateX(4px);
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .featured-story {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .featured-image-wrapper {
+        aspect-ratio: 16/9;
+    }
+
+    .featured-content {
+        padding: 40px 20px;
+    }
+
+    .journal-header h1 {
+        font-size: 2.5rem;
+    }
+}

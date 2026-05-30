@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Fleet | Clive Beecher Tours</title>
+    <link rel="icon" type="image/png" href="beecher-logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --black: #000000;
+            --charcoal: #1A1A1A;
+            --white: #FFFFFF;
+            --grey-light: #F2F2F2;
+            --grey-text: #666666;
+            --gold: #C6A87C;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--black);
+            background: var(--grey-light);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            background: var(--black);
+            padding: 20px 0;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .nav-logo img {
+            height: 40px;
+            filter: brightness(0) invert(1);
+        }
+
+        .nav-links a {
+            color: var(--white);
+            margin-left: 20px;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        header {
+            background: var(--white);
+            padding: 60px 0;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        p {
+            color: var(--grey-text);
+        }
+
+        .fleet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            padding: 60px 0;
+        }
+
+        .vehicle-card {
+            background: var(--white);
+            border: 1px solid #eee;
+            transition: transform 0.3s;
+        }
+
+        .vehicle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .vehicle-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .vehicle-content {
+            padding: 30px;
+        }
+
+        .vehicle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 20px;
+        }
+
+        .vehicle-name {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .vehicle-price {
+            color: var(--gold);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .features li {
+            color: var(--grey-text);
+            font-size: 14px;
+            padding: 5px 0;
+            border-bottom: 1px solid #f9f9f9;
+        }
+
+        .features li::before {
+            content: "•";
+            color: var(--gold);
+            margin-right: 10px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: var(--black);
+            color: var(--white);
+            text-align: center;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: var(--charcoal);
+        }
+
+        /* MOBILE NAVIGATION & RESPONSIVE */
+        .mobile-menu-btn {
+            display: none;
+            font-size: 24px;
+            color: var(--white);
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 2002;
+        }
+
+        .mobile-nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.4s ease;
+        }
+
+        .mobile-nav-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mobile-nav-overlay a {
+            font-family: var(--font-main);
+            font-size: 24px;
+            color: var(--white);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .fleet-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 40px 0;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .vehicle-img {
+                height: 200px;
+            }
+
+            .section-header p {
+                padding: 0 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-content">
+            <a href="index.html" class="nav-logo"><img src="beecher-logo.png" alt="Logo"></a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="fleet.html">Fleet</a>
+                <a href="services.html">Services</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNav">
+        <a href="index.html">Home</a>
+        <a href="fleet.html">Fleet</a>
+        <a href="services.html">Services</a>
+    </div>
+
+
+    <header>
+        <div class="container">
+            <h1>Our Premium Fleet</h1>
+            <p>Designed for comfort, styled for luxury.</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="fleet-grid">
+            <div class="vehicle-card">
+                <img src="fleet-image.png" alt="Sedan" class="vehicle-img">
+                <div class="vehicle-content">
+                    <div class="vehicle-header">
+                        <span class="vehicle-name">Business Sedan</span>
+                        <span class="vehicle-price">$80+</span>
+                    </div>
+                    <ul class="features">
+                        <li>Max. 3 Passengers</li>
+                        <li>Max. 2 Suitcases</li>
+                        <li>Leather Interior</li>
+                    </ul>
+                    <button class="btn" onclick="book('Business Sedan')">Select Vehicle</button>
+                </div>
+            </div>
+
+            <div class="vehicle-card">
+                <img src="fleet-image.png" alt="SUV" class="vehicle-img">
+                <div class="vehicle-content">
+                    <div class="vehicle-header">
+                        <span class="vehicle-name">Luxury SUV</span>
+                        <span class="vehicle-price">$120+</span>
+                    </div>
+                    <ul class="features">
+                        <li>Max. 5 Passengers</li>
+                        <li>Max. 5 Suitcases</li>
+                        <li>Panoramic Sunroof</li>
+                    </ul>
+                    <button class="btn" onclick="book('Luxury SUV')">Select Vehicle</button>
+                </div>
+            </div>
+
+            <div class="vehicle-card">
+                <img src="fleet-image.png" alt="Van" class="vehicle-img">
+                <div class="vehicle-content">
+                    <div class="vehicle-header">
+                        <span class="vehicle-name">Business Van</span>
+                        <span class="vehicle-price">$200+</span>
+                    </div>
+                    <ul class="features">
+                        <li>Max. 12 Passengers</li>
+                        <li>Conference Layout</li>
+                        <li>Extra Luggage Space</li>
+                    </ul>
+                    <button class="btn" onclick="book('Business Van')">Select Vehicle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function book(name) {
+            const message = `Hi, I am interested in booking the ${name}.`;
+            window.open(`https://wa.me/18767796722?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function toggleMobileMenu() {
+            const nav = document.getElementById('mobileNav');
+            const btnIcon = document.querySelector('.mobile-menu-btn i');
+            nav.classList.toggle('active');
+
+            if (nav.classList.contains('active')) {
+                btnIcon.classList.remove('fa-bars');
+                btnIcon.classList.add('fa-times');
+            } else {
+                btnIcon.classList.remove('fa-times');
+                btnIcon.classList.add('fa-bars');
+            }
+        }
+    </script>
+</body>
+
+</html>

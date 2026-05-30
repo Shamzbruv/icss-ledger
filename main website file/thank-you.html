@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful | ICREATE SOLUTIONS</title>
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0A1A3A;
+      --secondary: #00F5FF;
+      --accent: #D4AF37;
+      --dark: #050F1F;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--dark);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(rgba(0, 245, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 245, 255, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glowing orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: float 6s ease-in-out infinite;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 400px; height: 400px;
+      background: var(--secondary);
+      top: -100px; left: -100px;
+      animation-delay: 0s;
+    }
+    .orb-2 {
+      width: 300px; height: 300px;
+      background: #0099ff;
+      bottom: -80px; right: -80px;
+      animation-delay: 3s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-30px); }
+    }
+
+    /* Card */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(10, 26, 58, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 245, 255, 0.25);
+      border-radius: 24px;
+      padding: 56px 48px;
+      max-width: 520px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(0, 245, 255, 0.08), 0 25px 60px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tech corners */
+    .corner {
+      position: absolute;
+      width: 18px; height: 18px;
+      border: 2px solid var(--secondary);
+      opacity: 0.7;
+    }
+    .corner.tl { top: 14px; left: 14px; border-right: 0; border-bottom: 0; }
+    .corner.tr { top: 14px; right: 14px; border-left: 0; border-bottom: 0; }
+    .corner.bl { bottom: 14px; left: 14px; border-right: 0; border-top: 0; }
+    .corner.br { bottom: 14px; right: 14px; border-left: 0; border-top: 0; }
+
+    /* Success icon */
+    .icon-wrap {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(0,245,255,0.15), rgba(0,245,255,0.05));
+      border: 2px solid rgba(0, 245, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      animation: pulse-ring 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0, 245, 255, 0.3); }
+      50% { box-shadow: 0 0 0 16px rgba(0, 245, 255, 0); }
+    }
+
+    .icon-wrap i {
+      font-size: 2.2rem;
+      color: var(--secondary);
+    }
+
+    /* Checkmark animation */
+    .checkmark {
+      stroke-dasharray: 60;
+      stroke-dashoffset: 60;
+      animation: draw 0.8s ease forwards 0.3s;
+    }
+    @keyframes draw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .highlight {
+      color: var(--secondary);
+    }
+
+    .sub-text {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    /* Plan badge */
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 245, 255, 0.08);
+      border: 1px solid rgba(0, 245, 255, 0.2);
+      border-radius: 100px;
+      padding: 8px 20px;
+      font-size: 0.85rem;
+      color: var(--secondary);
+      font-weight: 600;
+      margin-bottom: 32px;
+      display: none; /* shown via JS if plan name is passed */
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(0, 245, 255, 0.2), transparent);
+      margin: 28px 0;
+    }
+
+    /* Info row */
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      text-align: left;
+      margin-bottom: 16px;
+    }
+    .info-row i {
+      color: var(--secondary);
+      font-size: 1rem;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .info-row span {
+      color: #94a3b8;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    /* Subscription ID */
+    .sub-id-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(0, 245, 255, 0.15);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 28px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      color: #64748b;
+      word-break: break-all;
+      display: none; /* shown via JS */
+    }
+    .sub-id-box span {
+      color: rgba(0, 245, 255, 0.7);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--secondary);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      margin-bottom: 12px;
+    }
+    .btn-primary:hover {
+      background: #00d4dd;
+      box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 24px;
+      background: transparent;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+    .btn-secondary:hover {
+      border-color: rgba(0, 245, 255, 0.3);
+      color: var(--secondary);
+    }
+
+    /* Logo */
+    .logo {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      color: var(--secondary);
+      font-weight: 800;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      letter-spacing: 1px;
+    }
+
+    /* Confetti particles */
+    .particle {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      opacity: 0;
+      animation: confetti 3s ease-in forwards;
+      z-index: 0;
+    }
+    @keyframes confetti {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <a href="index.html" class="logo">
+    <i class="fas fa-cube"></i> ICREATE
+  </a>
+
+  <!-- Glowing orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <!-- Main card -->
+  <div class="card">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <!-- Success icon -->
+    <div class="icon-wrap">
+      <i class="fas fa-check"></i>
+    </div>
+
+    <h1>You're <span class="highlight">All Set!</span></h1>
+    <p class="sub-text">
+      Your subscription is now active and secured through PayPal. Welcome aboard — we're excited to work with you!
+    </p>
+
+    <!-- Dynamic plan badge -->
+    <div class="plan-badge" id="plan-badge">
+      <i class="fas fa-star"></i>
+      <span id="plan-name-display"></span>
+    </div>
+
+    <!-- Subscription ID box -->
+    <div class="sub-id-box" id="sub-id-box">
+      Subscription ID: <span id="sub-id-display"></span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- What happens next -->
+    <div class="info-row">
+      <i class="fas fa-envelope"></i>
+      <span>A confirmation has been sent to your PayPal email address.</span>
+    </div>
+    <div class="info-row">
+      <i class="fas fa-headset"></i>
+      <span>Our team will reach out within <strong style="color:#e2e8f0;">24 hours</strong> to get your onboarding started.</span>
+    </div>
+    <div class="info-row">
+      <i class="fab fa-whatsapp"></i>
+      <span>Need help sooner? Message us on WhatsApp at <a href="https://wa.me/18765857469" target="_blank" style="color:var(--secondary);text-decoration:none;">+1 (876) 585-7469</a>.</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Buttons -->
+    <a href="index.html" class="btn-primary" id="home-btn">
+      <i class="fas fa-home"></i> Back to Main Page
+    </a>
+    <a href="subscriptions.html" class="btn-secondary">
+      <i class="fas fa-arrow-left"></i> View All Plans
+    </a>
+  </div>
+
+  <script>
+    // Parse query params passed from onApprove redirect
+    const params = new URLSearchParams(window.location.search);
+    const subId   = params.get('subscription_id');
+    const plan    = params.get('plan');
+
+    if (plan) {
+      const badge = document.getElementById('plan-badge');
+      document.getElementById('plan-name-display').textContent = plan + ' Plan';
+      badge.style.display = 'inline-flex';
+    }
+
+    if (subId) {
+      const box = document.getElementById('sub-id-box');
+      document.getElementById('sub-id-display').textContent = subId;
+      box.style.display = 'block';
+    }
+
+    // Launch confetti particles
+    function launchConfetti() {
+      const colors = ['#00F5FF', '#D4AF37', '#ffffff', '#00ccff', '#ffd700'];
+      for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.classList.add('particle');
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.top = '-10px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.animationDelay = (Math.random() * 2) + 's';
+        p.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+        p.style.width = (4 + Math.random() * 6) + 'px';
+        p.style.height = p.style.width;
+        document.body.appendChild(p);
+        // Remove after animation
+        setTimeout(() => p.remove(), 5000);
+      }
+    }
+    launchConfetti();
+  </script>
+
+</body>
+</html>

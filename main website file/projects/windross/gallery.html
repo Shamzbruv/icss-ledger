@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Gallery | Windross Tailoring</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --gold-primary: #D4AF37;
+            --bg-body: #050505;
+            --text-main: #F5F5F7;
+            --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        /* --- SMOOTH SCROLL & LUXURY BASE --- */
+        html.lenis {
+            height: auto;
+        }
+
+        /* Anti-Theft */
+        img {
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .lenis.lenis-smooth {
+            scroll-behavior: auto;
+        }
+
+        .lenis.lenis-smooth [data-lenis-prevent] {
+            overscroll-behavior: contain;
+        }
+
+        .lenis.lenis-stopped {
+            overflow: hidden;
+        }
+
+        .lenis.lenis-scrolling iframe {
+            pointer-events: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 0%, #111 0%, #000 80%);
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 1200px;
+            z-index: 1000;
+            background: rgba(15, 15, 15, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 100px;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.5s var(--ease-out-expo);
+        }
+
+        nav:hover {
+            background: rgba(15, 15, 15, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--gold-primary);
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+        }
+
+        /* --- HERO SECTION --- */
+        .gallery-hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .gallery-hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: 400;
+            margin: 0;
+            line-height: 0.85;
+            mix-blend-mode: exclusion;
+            color: #fff;
+            opacity: 0;
+            transform: translateY(100px);
+            animation: riseUp 1.5s var(--ease-out-expo) forwards;
+        }
+
+        .gallery-hero p {
+            margin-top: 30px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            color: var(--gold-primary);
+            opacity: 0;
+            animation: fadeIn 1.5s ease 0.5s forwards;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            mix-blend-mode: difference;
+        }
+
+        .line {
+            width: 100px;
+            height: 1px;
+            background: white;
+        }
+
+        /* --- GALLERY FLOW --- */
+        .gallery-container {
+            padding: 100px 5vw;
+        }
+
+        .gallery-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 200px;
+            position: relative;
+        }
+
+        .gallery-item {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            /* Almost full height photos */
+            overflow: hidden;
+            will-change: transform;
+        }
+
+        .gallery-item img {
+            width: 120%;
+            /* For parallax */
+            height: 120%;
+            object-fit: cover;
+            /* Improved Framing: Focus on top center to keep faces visible */
+            object-position: top center;
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            opacity: 0.8;
+            transition: opacity 0.5s;
+
+            /* Watermark Hiding: Clip the very bottom edge */
+            -webkit-clip-path: inset(0 0 20px 0);
+            clip-path: inset(0 0 20px 0);
+        }
+
+        .gallery-item:hover img {
+            opacity: 1;
+        }
+
+        /* Layout Variations */
+        .gallery-row:nth-child(even) {
+            justify-content: flex-end;
+        }
+
+        .gallery-row:nth-child(odd) {
+            justify-content: flex-start;
+        }
+
+        /* Specific Styling for text overlap */
+        .text-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            mix-blend-mode: difference;
+            pointer-events: none;
+            text-align: center;
+            width: 100%;
+        }
+
+        .text-overlay h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 5vw, 5rem);
+            color: white;
+            margin: 0;
+            font-style: italic;
+        }
+
+        .text-overlay span {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-style: normal;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .next-chapter {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .next-chapter h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: white;
+            transition: color 0.3s;
+        }
+
+        .next-chapter:hover h2 {
+            color: var(--gold-primary);
+        }
+
+
+        @keyframes riseUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* --- EXTENDED GALLERY (GRID) --- */
+        .extended-gallery {
+            padding: 50px 5vw 150px;
+            background-color: var(--bg-body);
+            position: relative;
+            z-index: 5;
+        }
+
+        .collection-header {
+            text-align: center;
+            margin-bottom: 80px;
+            opacity: 0.8;
+        }
+
+        .collection-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: white;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .collection-header p {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--gold-primary);
+            margin-top: 15px;
+        }
+
+        .gallery-grid {
+            /* Switch to Column layout for Pinterest-style Masonry */
+            column-count: 3;
+            column-gap: 30px;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            .gallery-grid {
+                column-count: 2;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .gallery-grid {
+                column-count: 1;
+            }
+        }
+
+        .gallery-grid-item {
+            display: inline-block;
+            /* Essential for column-count to not break items */
+            width: 100%;
+            margin-bottom: 30px;
+            /* Vertical gap */
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            /* No aspect-ratio: let image define height */
+        }
+
+        .gallery-grid-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.8s var(--ease-out-expo), filter 0.5s ease;
+            filter: grayscale(30%) brightness(0.8);
+        }
+
+        .gallery-grid-item:hover img {
+            transform: scale(1.05);
+            filter: grayscale(0%) brightness(1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">WINDROSS</a>
+        <div class="nav-links">
+            <a href="customize.html">Customize</a>
+            <a href="gallery.html" class="active">Gallery</a>
+            <a href="index.html#faq">FAQ</a>
+            <a href="book.html">Book</a>
+        </div>
+        <button class="mobile-toggle"><i data-lucide="menu"></i></button>
+    </nav>
+
+    <div class="gallery-hero">
+        <h1>The Art<br>Of Cloth</h1>
+        <p>Windross Tailoring • 2026 Collection</p>
+
+    </div>
+
+    <div class="gallery-container">
+
+        <!-- Image 1 -->
+        <div class="gallery-row" data-speed="0.1">
+            <div class="gallery-item">
+                <img src="images/gallery_1.png" alt="Bespoke Suit" data-speed="-0.2">
+                <div class="text-overlay">
+                    <h2>Precision</h2>
+                    <span>Every Stitch Counts</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image 2 -->
+        <div class="gallery-row" data-speed="0.05">
+            <div class="gallery-item" style="max-width: 600px; height: 80vh;">
+                <img src="images/gallery_2.png" alt="Classic Elegance" data-speed="-0.1">
+                <div class="text-overlay">
+                    <h2>Character</h2>
+                    <span>Defined by Style</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image 3 -->
+        <div class="gallery-row" data-speed="0.15">
+            <div class="gallery-item" style="max-width: 900px;">
+                <img src="images/gallery_3.jpg" alt="Gold Standard" data-speed="-0.15">
+                <div class="text-overlay">
+                    <h2>Excellence</h2>
+                    <span>The Gold Standard</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image 4 -->
+        <div class="gallery-row" data-speed="0.1">
+            <div class="gallery-item" style="height: 120vh;">
+                <img src="images/gallery_4.jpg" alt="Process" data-speed="-0.2">
+                <div class="text-overlay">
+                    <h2>Craft</h2>
+                    <span>Handmade in Jamaica</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image 5 -->
+        <div class="gallery-row" data-speed="0.05">
+            <div class="gallery-item" style="max-width: 700px; height: 90vh;">
+                <img src="images/gallery_5.jpg" alt="The Tailor" data-speed="-0.1">
+                <div class="text-overlay">
+                    <h2>Vision</h2>
+                    <span>Timeless Design</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Extended Gallery Grid -->
+    <div class="extended-gallery">
+        <div class="collection-header">
+            <h2>The Extended Collection</h2>
+            <p>A Closer Look</p>
+        </div>
+
+        <div class="gallery-grid">
+            <!-- New Images -->
+            <div class="gallery-grid-item"><img src="Windross Images/0231ed83-4cfd-41cc-bea9-8fbf4d5ff24c.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/109cc867-38a5-4997-83a9-760facb05108.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/11e6eb3d-0b49-4ee1-b725-e5e51220c63b.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/1f7663fb-ee59-4d7e-95d5-5972d790cfdb.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/2f1cfc6a-abb8-4161-9307-19bd163937a1.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/3297a9a9-e52b-4151-97df-38fd1849abda.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/348affbb-27a4-40f9-9aa0-7da6572a7844.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/556b114e-aee3-47b5-96ef-0a7539695ff4.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/5803d0e7-de88-4f1f-b82c-5270bd67a2bd.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/5c90c874-54f7-47cc-8364-464e4c1bb32c.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/5d5908c1-6c12-497a-b693-c4fb24bb1edb.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/8a958a8f-278d-4248-9521-f5926a798a27.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/8eda34ee-88b8-4451-b35a-5872637224d3.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img
+                    src="Windross Images/WhatsApp%20Image%202026-01-24%20at%205.49.14%20PM.jpeg" loading="lazy"
+                    alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img
+                    src="Windross Images/WhatsApp%20Image%202026-01-25%20at%202.10.21%20AM.jpeg" loading="lazy"
+                    alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/a60c46fc-36e5-42be-ae26-b0ca31ae4d65.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/ad5d012e-afe9-46c8-83c3-252c468a8876.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/d5e634f2-426c-49f4-a0ce-e104dbe5b440.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/e3fcac16-dec3-4b70-b12f-48c0350cc745.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+            <div class="gallery-grid-item"><img src="Windross Images/f18c3e5d-243a-422b-849a-a322f648d179.jpg"
+                    loading="lazy" alt="Windross Collection"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="next-chapter" onclick="window.location.href='customize.html'">
+            <p style="letter-spacing: 2px; text-transform: uppercase;">Next Chapter</p>
+            <h2>Create Yours</h2>
+        </div>
+    </footer>
+
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // 1. Initialize Smooth Scroll
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1,
+            smoothTouch: false,
+            touchMultiplier: 2,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+
+        requestAnimationFrame(raf);
+
+        // 2. Parallax Effect (Custom)
+        const items = document.querySelectorAll('.gallery-item img');
+
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+
+            items.forEach(img => {
+                const speed = parseFloat(img.getAttribute('data-speed'));
+                const parent = img.parentElement;
+                const rect = parent.getBoundingClientRect();
+
+                // Only animate if in view
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    // Simple parallax calculation
+                    // We move the image within its container based on scroll position
+                    const yPos = (rect.top - window.innerHeight / 2) * speed;
+                    img.style.transform = `translateY(${yPos}px) scale(1.1)`; // Scale to prevent gaps
+                }
+            });
+        });
+
+        // Anti-Theft: Disable right-click and drag on images
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('img').forEach(img => {
+                img.addEventListener('contextmenu', (e) => e.preventDefault());
+                img.addEventListener('dragstart', (e) => e.preventDefault());
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windross Tailoring | Bespoke Excellence</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* ========================================
+           THEME: MIDNIGHT GOLD (Bespoke Edition)
+           ========================================
+        */
+        :root {
+            /* Metallic Gold Gradient - The "Gold Thread" look */
+            --gold-primary: #D4AF37;
+            --gold-gradient: linear-gradient(135deg, #BF953F 0%, #FCF6BA 40%, #B38728 60%, #AA771C 100%);
+            --gold-subtle: rgba(212, 175, 55, 0.2);
+
+            /* Smoky Backgrounds */
+            --bg-body: #050505;
+            --bg-surface: #0a0a0a;
+            --bg-glass: rgba(20, 20, 20, 0.7);
+            --bg-glass-strong: rgba(15, 15, 15, 0.9);
+
+            /* UI Elements */
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-gold: rgba(191, 149, 63, 0.3);
+            --text-main: #F5F5F7;
+            --text-muted: #86868B;
+
+            --ease-lux: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            /* Subtle texture overlay */
+            background-image: radial-gradient(circle at 50% 0%, #151515 0%, #000000 80%);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            /* Prevent horizontal scroll */
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400;
+            color: white;
+            margin: 0;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: 0.3s;
+        }
+
+        /* --- UTILITIES --- */
+        .text-gold {
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* --- NAVIGATION (Floating Glass) --- */
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 1200px;
+            z-index: 1000;
+            background: var(--bg-glass-strong);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        /* Anti-Theft */
+        img {
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            bottom: -5px;
+            left: 0;
+            background: var(--gold-primary);
+            transform: scaleX(0);
+            transform-origin: bottom right;
+            transition: transform 0.4s var(--ease-lux);
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            z-index: 2000;
+        }
+
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.5s var(--ease-lux);
+        }
+
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mobile-link {
+            font-size: 2rem;
+            font-family: 'Playfair Display', serif;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.5s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Staggered animation delays for mobile links */
+        .mobile-menu-overlay.active .mobile-link:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .mobile-socials {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+            opacity: 0;
+            transition: 0.5s 0.4s;
+        }
+
+        .mobile-menu-overlay.active .mobile-socials {
+            opacity: 1;
+        }
+
+        /* Fix for mobile navigation display */
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--gold-primary);
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: 1px solid var(--border-glass);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .icon-btn:hover {
+            border-color: var(--gold-primary);
+            color: var(--gold-primary);
+        }
+
+        /* --- HERO SECTION (RE-ENGINEERED FOR SPLIT LAYOUT) --- */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding-top: 80px;
+        }
+
+        /* Hero Background Image (Darkened) */
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            /* Subtle dark gradient for depth */
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.95)),
+                url('https://images.unsplash.com/photo-1594938298603-c8148c47e356?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* The Grid System: This forces the text to the left and image to the right */
+        .hero-container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* 50% Left, 50% Right */
+            align-items: center;
+            height: 100vh;
+            position: relative;
+            z-index: 2;
+            padding: 0 40px;
+        }
+
+        /* Left Side: Text Content */
+        .hero-content {
+            grid-column: 1;
+            /* Locks text to the left column */
+            text-align: left;
+            z-index: 10;
+            padding-right: 40px;
+            max-width: 550px;
+            animation: fadeUp 1s var(--ease-lux);
+        }
+
+        /* Right Side: The Image Overlay */
+        .hero-image-overlay {
+            grid-column: 2;
+            /* Locks image to the right column */
+            display: flex;
+            justify-content: flex-end;
+            /* Pushes image to the far right edge */
+            align-items: flex-end;
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            animation: fadeInOverlay 1.5s var(--ease-lux) forwards;
+        }
+
+        .hero-image-overlay img {
+            height: 95%;
+            /* Adjust height to fit comfortably */
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            margin-right: -10%;
+            /* Pulls the subject slightly off-screen for expansive look */
+            filter: drop-shadow(-40px 20px 60px rgba(0, 0, 0, 0.8));
+
+            /* Watermark Hiding: Clip the very bottom edge (80px) where the logo sits */
+            -webkit-clip-path: inset(0 0 80px 0);
+            clip-path: inset(0 0 80px 0);
+
+            /* Executive Depth */
+
+            /* Since the new image is a JPG, we ensure it blends if the background is dark */
+            /* mix-blend-mode: lighten;  <-- Optional: Enable if the black background isn't matching perfectly */
+        }
+
+        @keyframes fadeInOverlay {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .eyebrow {
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gold-primary);
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 7vw, 4.5rem);
+            line-height: 1.1;
+            margin-bottom: 25px;
+            word-wrap: break-word;
+            /* Ensure clear wrapping */
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-weight: 300;
+            max-width: 600px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: flex-start;
+        }
+
+        .btn-primary {
+            background: var(--gold-gradient);
+            color: #000;
+            padding: 16px 32px;
+            border-radius: 2px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+            z-index: -1;
+        }
+
+        .btn-primary:hover::after {
+            left: 100%;
+            transition: 0.7s ease-in-out;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 16px 32px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: black;
+        }
+
+        .hero-metrics {
+            margin-top: 60px;
+            display: flex;
+            gap: 60px;
+            border-top: 1px solid var(--border-glass);
+            padding-top: 30px;
+            justify-content: flex-start;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-family: 'Playfair Display', serif;
+            color: white;
+            line-height: 1;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Hero Updates */
+        @media (max-width: 1024px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                /* Stack vertically on tablets/mobile */
+                text-align: center;
+                height: auto;
+                padding-top: 120px;
+                padding-bottom: 50px;
+            }
+
+            .hero-content {
+                grid-column: 1;
+                padding: 0;
+                margin-bottom: 40px;
+                text-align: center !important;
+                /* Force center alignment */
+                max-width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                /* Aligns flex children (btn, metrics) to center */
+            }
+
+            .hero-content h1,
+            .hero-content p,
+            .hero-content .eyebrow {
+                text-align: center;
+                width: 100%;
+            }
+
+            .hero-actions {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                /* Allow wrapping */
+                gap: 15px;
+                /* Smaller gap */
+            }
+
+            /* Stack buttons on very small screens or just general mobile */
+            @media (max-width: 480px) {
+                .hero-actions {
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                .btn-primary,
+                .btn-secondary {
+                    width: 100%;
+                    /* Full width buttons look good on mobile */
+                    max-width: 300px;
+                    justify-content: center;
+                }
+            }
+
+            .hero-metrics {
+                justify-content: center;
+                gap: 20px;
+                /* Reduced from 60px to prevent overflow */
+                flex-wrap: wrap;
+                /* Safety wrap */
+                width: 100%;
+            }
+
+            .hero-image-overlay {
+                grid-column: 1;
+                height: 50vh;
+                justify-content: center;
+                align-items: flex-end;
+            }
+
+            .hero-image-overlay img {
+                margin-right: 0;
+                height: 100%;
+            }
+        }
+
+        /* --- CUSTOMIZER PILLARS (New Teaser) --- */
+        .custom-teaser {
+            padding: 120px 24px;
+            background: linear-gradient(to bottom, #050505, #0f0f0f);
+            overflow: hidden;
+        }
+
+        .section-head {
+            text-align: center;
+            margin-bottom: 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-head h2 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #fff, #aaa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-head p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .pillar-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-glass);
+            border-radius: 4px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: 0.5s var(--ease-lux);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pillar-card:hover {
+            border-color: var(--gold-primary);
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.15);
+        }
+
+        .pillar-icon {
+            color: var(--gold-primary);
+            margin-bottom: 25px;
+            transform: scale(1);
+            transition: 0.5s var(--ease-lux);
+        }
+
+        @keyframes pulse-gold {
+            0% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(212, 175, 55, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+            }
+        }
+
+        .pillar-card:hover .pillar-icon {
+            transform: scale(1.2);
+            color: white;
+            filter: drop-shadow(0 0 15px var(--gold-primary));
+            animation: pulse-gold 2s infinite;
+        }
+
+        .pillar-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .pillar-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            position: relative;
+            z-index: 2;
+            line-height: 1.5;
+        }
+
+        /* Central Card (Heroic) */
+        .pillar-card.central {
+            height: 460px;
+            border-color: rgba(212, 175, 55, 0.3);
+            background: radial-gradient(circle at center, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+        }
+
+        .pillar-card.central:hover {
+            box-shadow: 0 0 60px rgba(212, 175, 55, 0.15);
+        }
+
+        .pillar-action {
+            margin-top: 30px;
+            color: var(--gold-primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: 0.5s var(--ease-lux);
+        }
+
+        .pillar-card:hover .pillar-action {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Abstract Background Elements in Cards */
+        .pillar-bg {
+            position: absolute;
+            inset: 0;
+            opacity: 0.1;
+            transition: 0.5s;
+            z-index: 1;
+        }
+
+        .pillar-card:hover .pillar-bg {
+            opacity: 0.2;
+            transform: scale(1.1);
+        }
+
+        /* --- JOURNAL TEASER --- */
+        .journal-teaser {
+            padding: 100px 24px;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .journal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .journal-card {
+            background: var(--bg-surface);
+            padding: 40px;
+            border: 1px solid var(--border-glass);
+            transition: 0.4s;
+            cursor: pointer;
+        }
+
+        .journal-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--gold-primary);
+        }
+
+        .journal-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 80px 24px;
+            text-align: center;
+            border-top: 1px solid var(--border-glass);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .pillars-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+
+            .pillar-card.central {
+                height: 400px;
+                order: -1;
+                /* Put Central first on mobile? Or maybe last? Let's keep normal order */
+                order: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* WhatsApp Floating Button */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--gold-primary);
+            color: black;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 5000;
+            transition: 0.5s var(--ease-lux);
+
+            /* Hidden by default */
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+
+        .whatsapp-float.visible {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.6);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">WINDROSS</a>
+
+        <div class="nav-links">
+            <a href="customize.html">Customize</a>
+            <a href="gallery.html">Gallery</a>
+            <a href="#faq">FAQ</a>
+            <a href="book.html">Book</a>
+        </div>
+
+        <button class="mobile-toggle" aria-label="Toggle Menu">
+            <i data-lucide="menu" width="28" height="28"></i>
+        </button>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay">
+        <a href="customize.html" class="mobile-link">Customize</a>
+        <a href="gallery.html" class="mobile-link">Gallery</a>
+        <a href="index.html#faq" class="mobile-link" onclick="toggleMenu()">FAQ</a>
+        <a href="book.html" class="mobile-link">Book</a>
+
+        <div class="mobile-socials">
+            <a href="https://www.instagram.com/windrosstailoring/?hl=en" target="_blank"><i
+                    data-lucide="instagram"></i></a>
+            <a href="https://www.facebook.com/david.windross/" target="_blank"><i data-lucide="facebook"></i></a>
+        </div>
+    </div>
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-container">
+
+            <div class="hero-content">
+                <span class="eyebrow">EST. 1998 • Jamaica</span>
+                <h1>The Art of <br><span class="text-gold">Bespoke Fitting.</span></h1>
+                <p>Experience the pinnacle of tailoring. Design your suit from over 700 premium fabrics.</p>
+                <div class="hero-actions">
+                    <a href="customize.html" class="btn-primary">Start Designing</a>
+                    <a href="book.html" class="btn-secondary">Book Appointment</a>
+                </div>
+
+                <div class="hero-metrics">
+                    <div class="metric">
+                        <p class="metric-value">700+</p>
+                        <p class="metric-label">Fabrics</p>
+                    </div>
+                    <div class="metric">
+                        <p class="metric-value">4 Wks</p>
+                        <p class="metric-label">Crafting Time</p>
+                    </div>
+                    <div class="metric">
+                        <p class="metric-value">100%</p>
+                        <p class="metric-label">Perfect Fit</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-image-overlay">
+                <!-- New Hero Image (Gold/Black Tuxedo) -->
+                <img src="images/hero_v2.jpg" alt="Bespoke Gentleman in Gold and Black Suit">
+            </div>
+        </div>
+    </section>
+
+    <section class="custom-teaser">
+        <header class="section-head">
+            <h2>You Are The Designer</h2>
+            <p>From the weave of the fabric to the width of the lapel, every detail is your choice.</p>
+        </header>
+
+        <div class="pillars-grid">
+            <!-- Card 1: Texture -->
+            <div class="pillar-card" onclick="window.location.href='customize.html'">
+                <div class="pillar-icon"><i data-lucide="layers" width="48" height="48"></i></div>
+                <h3>Texture</h3>
+                <p>Select from Cool Wool, King Wool, and more.</p>
+                <div class="pillar-bg"></div>
+            </div>
+
+            <!-- Card 2: Color -->
+            <div class="pillar-card central" onclick="window.location.href='customize.html'">
+                <div class="pillar-icon"><i data-lucide="palette" width="56" height="56"></i></div>
+                <h3>Colour</h3>
+                <p>A spectrum of shades tailored to your foundation.</p>
+                <div class="pillar-action">Start Designing <i data-lucide="arrow-right"></i></div>
+            </div>
+
+            <!-- Card 3: Form -->
+            <div class="pillar-card" onclick="window.location.href='customize.html'">
+                <div class="pillar-icon"><i data-lucide="scissors" width="48" height="48"></i></div>
+                <h3>Form</h3>
+                <p>Define your silhouette. Double-breasted, Mandarin, or Classic.</p>
+                <div class="pillar-bg"></div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <section class="peak-season-section">
+        <div class="container">
+            <header class="section-head" style="margin-bottom: 40px;">
+                <span class="eyebrow" style="color:var(--text-muted);">Jamaica's Tailoring Calendar</span>
+                <h2>Plan Your Fitting</h2>
+                <p>Demand fluctuates throughout the year. Use this insight to secure your consultation.</p>
+            </header>
+
+            <div class="graph-container">
+                <canvas id="seasonChart"></canvas>
+            </div>
+
+            <div class="info-notice">
+                <div class="notice-card">
+                    <i data-lucide="clock" class="notice-icon"></i>
+                    <div>
+                        <h3>Production Timeline</h3>
+                        <p>Please note that all bespoke commissions require <strong>3 to 4 weeks</strong> for
+                            completion. Perfection cannot be rushed.</p>
+                    </div>
+                </div>
+                <div class="notice-card highlight">
+                    <i data-lucide="alert-circle" class="notice-icon"></i>
+                    <div>
+                        <h3>Peak Season Advisory</h3>
+                        <p><strong>December</strong> is our busiest month. We strongly recommend booking your
+                            consultation 6-8 weeks in advance to guarantee your holiday delivery.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Style for the Graph Section -->
+    <style>
+        .peak-season-section {
+            padding: 100px 0;
+            background: #080808;
+            border-top: 1px solid var(--border-glass);
+            position: relative;
+        }
+
+        .graph-container {
+            max-width: 900px;
+            margin: 0 auto 60px auto;
+            position: relative;
+            height: 400px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+            border: 1px solid var(--border-glass);
+            border-radius: 4px;
+            padding: 20px;
+        }
+
+        .info-notice {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .notice-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-glass);
+            padding: 30px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            border-radius: 4px;
+        }
+
+        .notice-card.highlight {
+            border-color: rgba(212, 175, 55, 0.4);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .notice-icon {
+            color: var(--gold-primary);
+            flex-shrink: 0;
+        }
+
+        .notice-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        .notice-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .info-notice {
+                grid-template-columns: 1fr;
+            }
+
+            .graph-container {
+                height: 300px;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Register Plugin
+            Chart.register(ChartDataLabels);
+
+            const ctx = document.getElementById('seasonChart').getContext('2d');
+
+            // Gradient Fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(212, 175, 55, 0.5)'); // Gold top
+            gradient.addColorStop(1, 'rgba(212, 175, 55, 0.0)'); // Transparent bottom
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Client Demand',
+                        data: [65, 50, 60, 55, 80, 85, 60, 70, 55, 75, 90, 100],
+                        borderColor: '#D4AF37', // Gold
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#000',
+                        pointBorderColor: '#D4AF37',
+                        pointHoverBackgroundColor: '#D4AF37',
+                        pointHoverBorderColor: '#fff',
+                        pointRadius: [3, 3, 3, 3, 3, 6, 3, 3, 3, 3, 4, 8], // Larger points for peaks
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 40,
+                            right: 60,
+                            left: 20,
+                            bottom: 0
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#D4AF37',
+                            bodyColor: '#fff',
+                            borderColor: '#333',
+                            borderWidth: 1,
+                            displayColors: false,
+                            padding: 10,
+                        },
+                        datalabels: {
+                            align: 'top',
+                            color: '#D4AF37',
+                            font: {
+                                family: "'Playfair Display', serif",
+                                weight: 'bold',
+                                size: 14
+                            },
+                            formatter: function (value, context) {
+                                // Only label the peaks
+                                if (context.dataIndex === 5) return 'Summer Peak';
+                                if (context.dataIndex === 11) return 'Holiday Rush!';
+                                return '';
+                            },
+                            offset: 6,
+                            opacity: function (context) {
+                                return context.dataIndex === 5 || context.dataIndex === 11 ? 1 : 0;
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                display: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#e0e0e0', // Brighter text for readability
+                                font: {
+                                    family: "'Inter', sans-serif",
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        });
+    </script>
+
+    <!-- FAQ SECTION (Replaces Journal) -->
+    <section id="faq" class="faq-section">
+        <div class="container">
+            <div class="faq-layout">
+                <!-- FAQ Content -->
+                <div class="faq-content">
+                    <header class="section-head" style="text-align: left; margin-bottom: 40px;">
+                        <span class="eyebrow" style="color:var(--text-muted);">Common Questions</span>
+                        <h2>At Your Service</h2>
+                    </header>
+
+                    <div class="faq-grid">
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>How long does a custom suit take?</span>
+                                <i data-lucide="chevron-down"></i>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Our standard turnaround time is 3 to 4 weeks. This allows for meticulous cutting,
+                                    sewing, and fitting. During peak seasons (like December), we recommend booking 6-8
+                                    weeks in advance.</p>
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>Do I need an appointment?</span>
+                                <i data-lucide="chevron-down"></i>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Yes, consultations are by appointment only to ensure you receive our undivided
+                                    attention. You can book directly through our website.</p>
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>Where are you located?</span>
+                                <i data-lucide="chevron-down"></i>
+                            </button>
+                            <div class="faq-answer">
+                                <p>We are located at <strong>68 Hagley Park Road, MANCARE PLAZA</strong>. <br>Opening
+                                    Hours: Mon - Sat, 9:00am - 7:00pm.</p>
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>What is the price range?</span>
+                                <i data-lucide="chevron-down"></i>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Our bespoke commissions vary based on fabric selection. We carry everything from
+                                    durable everyday wools to luxury blends.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ Image (Sleek Side Profile) -->
+                <div class="faq-image-wrapper">
+                    <!-- New FAQ Image (Mustard Jacket) -->
+                    <img src="images/faq_v2.jpg" alt="Stylish Gentleman in Mustard Jacket">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo">WINDROSS</div>
+                <p>Bespoke Tailoring & Design</p>
+            </div>
+
+            <div class="footer-contact">
+                <h3>Visit Us</h3>
+                <p>68 Hagley Park Road<br>MANCARE PLAZA</p>
+                <p>Mon - Sat: 9:00am - 7:00pm</p>
+                <a href="tel:18765986434" class="phone-link"><i data-lucide="phone" width="14"></i> 876-598-6434</a>
+            </div>
+
+            <div class="footer-social">
+                <h3>Follow Us</h3>
+                <div class="social-links">
+                    <a href="https://www.instagram.com/windrosstailoring/?hl=en" target="_blank" aria-label="Instagram">
+                        <i data-lucide="instagram"></i>
+                    </a>
+                    <a href="https://www.facebook.com/david.windross/" target="_blank" aria-label="Facebook">
+                        <i data-lucide="facebook"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-copy">
+            <p>&copy; 2026 Windross Tailoring. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <style>
+        /* --- FAQ SECTION --- */
+        .faq-section {
+            padding: 100px 24px;
+            background: #050505;
+        }
+
+        .faq-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .faq-image-wrapper {
+            position: relative;
+            height: 600px;
+            overflow: hidden;
+            border-radius: 4px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .faq-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(20%);
+            transition: 0.5s;
+
+            /* Watermark Hiding: Scale slightly to push corners out of view */
+            transform: scale(1.05);
+            /* Slight zoom to hide edges */
+        }
+
+        .faq-image-wrapper:hover img {
+            filter: grayscale(0%);
+            transform: scale(1.08);
+            /* Maintain zoom on hover */
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border-glass);
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .faq-item:hover {
+            border-color: rgba(212, 175, 55, 0.4);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .faq-question {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 20px 0;
+            color: white;
+            font-size: 1.1rem;
+            font-family: 'Playfair Display', serif;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .faq-question:hover {
+            color: var(--gold-primary);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .faq-answer p {
+            padding-bottom: 20px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            /* Adjust as needed */
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 900px) {
+            .faq-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .faq-image-wrapper {
+                height: 400px;
+                order: -1;
+                /* Image on top on mobile */
+            }
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 80px 24px 40px;
+            background: #000;
+            border-top: 1px solid var(--border-glass);
+            color: var(--text-muted);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-brand .logo {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .footer-contact h3,
+        .footer-social h3 {
+            color: white;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .footer-contact p {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .phone-link {
+            color: var(--gold-primary);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .phone-link:hover {
+            text-decoration: underline;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .social-links a {
+            color: white;
+            transition: 0.3s;
+        }
+
+        .social-links a:hover {
+            color: var(--gold-primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-copy {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+    </style>
+
+    <a href="https://wa.me/18765986434?text=Hello%20Windross%20Tailoring,%20I%20would%20like%20to%20inquire%20about%20a%20bespoke%20suit."
+        class="whatsapp-float" target="_blank" aria-label="Chat on WhatsApp">
+        <i data-lucide="message-circle" width="32" height="32"></i>
+    </a>
+
+    <script>
+        lucide.createIcons();
+
+        // FAQ Toggle Logic
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const item = button.parentElement;
+                item.classList.toggle('active');
+            });
+        });
+
+        // Mobile Menu Logic
+        const mobileToggle = document.querySelector('.mobile-toggle');
+        const mobileOverlay = document.querySelector('.mobile-menu-overlay');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            mobileOverlay.classList.toggle('active');
+
+            // Switch Icon
+            const icon = mobileToggle.querySelector('i');
+            if (isMenuOpen) {
+                // We'll manually swap the SVG for X
+                mobileToggle.innerHTML = '<i data-lucide="x" width="28" height="28"></i>';
+            } else {
+                mobileToggle.innerHTML = '<i data-lucide="menu" width="28" height="28"></i>';
+            }
+            lucide.createIcons();
+        }
+
+        mobileToggle.addEventListener('click', toggleMenu);
+
+        // WhatsApp Visibility (Intersection Observer)
+        const whatsappBtn = document.querySelector('.whatsapp-float');
+        const faqSection = document.querySelector('#faq');
+
+        if (faqSection && whatsappBtn) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    // Toggle visibility based on if FAQ is in view
+                    if (entry.isIntersecting) {
+                        whatsappBtn.classList.add('visible');
+                    } else {
+                        whatsappBtn.classList.remove('visible');
+                    }
+                });
+            }, {
+                root: null, // viewport
+                threshold: 0.1 // Trigger when 10% of FAQ is visible
+            });
+
+            observer.observe(faqSection);
+        }
+
+        // Anti-Theft: Disable right-click and drag on images
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('contextmenu', (e) => e.preventDefault());
+            img.addEventListener('dragstart', (e) => e.preventDefault());
+        });
+    </script>
+</body>
+
+</html>

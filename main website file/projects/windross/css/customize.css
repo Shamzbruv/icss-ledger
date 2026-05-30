@@ -1,0 +1,206 @@
+/* ============ Customizer Layout (SUITSUPPLY-inspired) ============ */
+
+.customizer-layout {
+    min-height: 100vh;
+    padding-top: calc(var(--nav-height) + 24px);
+    padding-bottom: 90px;
+    display: grid;
+    grid-template-columns: 320px 1fr 360px;
+    gap: 18px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+/* Left step nav */
+.customizer-nav {
+    position: sticky;
+    top: calc(var(--nav-height) + 18px);
+    align-self: start;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.customizer-nav .pill {
+    text-align: left;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: rgba(255, 255, 255, .04);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all .18s ease;
+    font-weight: 500;
+}
+
+.customizer-nav .pill:hover {
+    border-color: rgba(255, 255, 255, .25);
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+}
+
+.customizer-nav .pill.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+/* Middle preview */
+.preview-area {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 640px;
+}
+
+.preview-placeholder {
+    flex: 1;
+    position: relative;
+    background: radial-gradient(circle at 30% 20%, #1f1f21 0%, #0b0b0c 60%, #000 100%);
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.suit-preview {
+    width: 100%;
+    height: 100%;
+    max-height: 720px;
+    object-fit: cover;
+    object-position: center;
+    filter: contrast(1.05) saturate(1.05);
+}
+
+/* Right option tray */
+.option-tray {
+    position: sticky;
+    top: calc(var(--nav-height) + 18px);
+    align-self: start;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - (var(--nav-height) + 36px));
+}
+
+.tray-header {
+    padding: 16px 18px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+    font-weight: 600;
+}
+
+.price-indicator {
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.tray-scroll {
+    padding: 12px;
+    overflow: auto;
+    display: grid;
+    gap: 10px;
+}
+
+/* Fabric option card (must look premium) */
+.option-card {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .03);
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+
+.option-card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, .28);
+    background: rgba(255, 255, 255, .05);
+}
+
+.option-card.selected {
+    border-color: #fff;
+    background: rgba(255, 255, 255, .08);
+}
+
+.option-card .swatch {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    background-size: cover;
+    background-position: center;
+}
+
+.option-card .label {
+    display: block;
+    line-height: 1.2;
+}
+
+.option-card .label:first-of-type {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.option-card .label:last-of-type {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+/* Bottom action dock */
+.action-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, .7);
+    backdrop-filter: blur(18px);
+    border-top: 1px solid var(--border-subtle);
+    padding: 14px 18px;
+    display: flex;
+    justify-content: center;
+    z-index: 999;
+}
+
+.action-dock .btn-primary {
+    min-width: 320px;
+}
+
+/* Responsive: stack layout */
+@media (max-width: 1100px) {
+    .customizer-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .customizer-nav,
+    .option-tray {
+        position: relative;
+        top: auto;
+        max-height: none;
+    }
+
+    .preview-area {
+        min-height: 420px;
+    }
+}

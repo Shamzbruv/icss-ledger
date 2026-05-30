@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<link rel="icon" type="image/png" href="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
+<html lang="en">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-63WCDFCGPR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-63WCDFCGPR');
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscription Plans | ICREATE SOLUTIONS & SERVICES</title>
+  <meta name="description"
+    content="Choose from our range of subscription services including hosting, web maintenance, app monitoring, graphic design, and business automation solutions.">
+  <meta name="keywords"
+    content="subscription plans, web hosting, app monitoring, graphic design subscription, business automation, iCreate Solutions pricing">
+  <link rel="canonical" href="https://icreatesolutionsandservices.com/subscriptions.html">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://icreatesolutionsandservices.com/subscriptions">
+  <meta property="og:title" content="Subscription Plans | ICREATE SOLUTIONS & SERVICES">
+  <meta property="og:description"
+    content="Choose from our range of subscription services including hosting, web maintenance, app monitoring, graphic design, and business automation solutions.">
+  <meta property="og:image" content="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://icreatesolutionsandservices.com/subscriptions">
+  <meta property="twitter:title" content="Subscription Plans | ICREATE SOLUTIONS & SERVICES">
+  <meta property="twitter:description"
+    content="Choose from our range of subscription services including hosting, web maintenance, app monitoring, graphic design, and business automation solutions.">
+  <meta property="twitter:image" content="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
+
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --secondary-color: #06b6d4;
+      --accent-color: #3b82f6;
+      --text-light: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    .primary-bg {
+      background-color: var(--primary-color);
+    }
+
+    .secondary-bg {
+      background-color: var(--secondary-color);
+    }
+
+    .accent-bg {
+      background-color: var(--accent-color);
+    }
+
+    .primary-text {
+      color: var(--primary-color);
+    }
+
+    .secondary-text {
+      color: var(--secondary-color);
+    }
+
+    .accent-text {
+      color: var(--accent-color);
+    }
+
+    .text-light {
+      color: var(--text-light);
+    }
+
+    .hero-gradient {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #1e3a8a 100%);
+    }
+
+    .digital-static {
+      position: relative;
+    }
+
+    .digital-static::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .glow-effect {
+      box-shadow: 0 0 5px rgba(6, 182, 212, 0.5);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .glow-effect:hover {
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.8);
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .plan-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid #e2e8f0;
+      overflow: visible !important;
+      /* ensure badges aren't clipped */
+    }
+
+    .plan-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .featured-plan {
+      border: 2px solid var(--secondary-color);
+      transform: scale(1.05);
+    }
+
+    .featured-plan:hover {
+      transform: scale(1.05) translateY(-5px);
+    }
+
+    .feature-badge {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--secondary-color);
+      color: var(--primary-color);
+      padding: 6px 18px;
+      border-radius: 25px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+
+      100% {
+        transform: translateY(0px);
+      }
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .glitch {
+      position: relative;
+    }
+
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .glitch::before {
+      left: 2px;
+      text-shadow: -1px 0 #ff00ff;
+      clip: rect(44px, 450px, 56px, 0);
+      animation: glitch-anim 5s infinite linear alternate-reverse;
+    }
+
+    .glitch::after {
+      left: -2px;
+      text-shadow: -1px 0 #00ffff;
+      clip: rect(44px, 450px, 56px, 0);
+      animation: glitch-anim2 5s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-anim {
+      0% {
+        clip: rect(42px, 9999px, 44px, 0);
+      }
+
+      5% {
+        clip: rect(12px, 9999px, 59px, 0);
+      }
+
+      10% {
+        clip: rect(48px, 9999px, 29px, 0);
+      }
+
+      15% {
+        clip: rect(42px, 9999px, 73px, 0);
+      }
+
+      20% {
+        clip: rect(63px, 9999px, 27px, 0);
+      }
+
+      25% {
+        clip: rect(34px, 9999px, 55px, 0);
+      }
+
+      30% {
+        clip: rect(86px, 9999px, 73px, 0);
+      }
+
+      35% {
+        clip: rect(20px, 9999px, 20px, 0);
+      }
+
+      40% {
+        clip: rect(26px, 9999px, 60px, 0);
+      }
+
+      45% {
+        clip: rect(25px, 9999px, 66px, 0);
+      }
+
+      50% {
+        clip: rect(57px, 9999px, 98px, 0);
+      }
+
+      55% {
+        clip: rect(5px, 9999px, 46px, 0);
+      }
+
+      60% {
+        clip: rect(82px, 9999px, 31px, 0);
+      }
+
+      65% {
+        clip: rect(54px, 9999px, 27px, 0);
+      }
+
+      70% {
+        clip: rect(28px, 9999px, 99px, 0);
+      }
+
+      75% {
+        clip: rect(45px, 9999px, 69px, 0);
+      }
+
+      80% {
+        clip: rect(23px, 9999px, 85px, 0);
+      }
+
+      85% {
+        clip: rect(54px, 9999px, 84px, 0);
+      }
+
+      90% {
+        clip: rect(45px, 9999px, 47px, 0);
+      }
+
+      95% {
+        clip: rect(37px, 9999px, 20px, 0);
+      }
+
+      100% {
+        clip: rect(4px, 9999px, 91px, 0);
+      }
+    }
+
+    @keyframes glitch-anim2 {
+      0% {
+        clip: rect(65px, 9999px, 100px, 0);
+      }
+
+      5% {
+        clip: rect(52px, 9999px, 74px, 0);
+      }
+
+      10% {
+        clip: rect(79px, 9999px, 85px, 0);
+      }
+
+      15% {
+        clip: rect(75px, 9999px, 5px, 0);
+      }
+
+      20% {
+        clip: rect(67px, 9999px, 61px, 0);
+      }
+
+      25% {
+        clip: rect(14px, 9999px, 79px, 0);
+      }
+
+      30% {
+        clip: rect(1px, 9999px, 66px, 0);
+      }
+
+      35% {
+        clip: rect(86px, 9999px, 30px, 0);
+      }
+
+      40% {
+        clip: rect(23px, 9999px, 98px, 0);
+      }
+
+      45% {
+        clip: rect(85px, 9999px, 72px, 0);
+      }
+
+      50% {
+        clip: rect(71px, 9999px, 75px, 0);
+      }
+
+      55% {
+        clip: rect(2px, 9999px, 48px, 0);
+      }
+
+      60% {
+        clip: rect(30px, 9999px, 16px, 0);
+      }
+
+      65% {
+        clip: rect(59px, 9999px, 50px, 0);
+      }
+
+      70% {
+        clip: rect(41px, 9999px, 62px, 0);
+      }
+
+      75% {
+        clip: rect(2px, 9999px, 82px, 0);
+      }
+
+      80% {
+        clip: rect(47px, 9999px, 73px, 0);
+      }
+
+      85% {
+        clip: rect(3px, 9999px, 27px, 0);
+      }
+
+      90% {
+        clip: rect(26px, 9999px, 55px, 0);
+      }
+
+      95% {
+        clip: rect(42px, 9999px, 97px, 0);
+      }
+
+      100% {
+        clip: rect(38px, 9999px, 49px, 0);
+      }
+    }
+
+    /* Focus styles for accessibility */
+    button:focus,
+    a:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid var(--secondary-color);
+      outline-offset: 2px;
+    }
+
+    /* Reduced motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+
+    /* Mobile layout tweaks */
+    @media (max-width: 768px) {
+      nav .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .hero-content {
+        padding-top: 5rem;
+        padding-bottom: 3rem;
+      }
+
+      .plan-card {
+        margin-bottom: 1.5rem;
+      }
+
+      .featured-plan {
+        transform: none;
+      }
+
+      .featured-plan:hover {
+        transform: translateY(-5px);
+      }
+
+      .feature-badge {
+        top: 8px;
+        right: auto;
+        font-size: 0.75rem;
+        padding: 4px 12px;
+      }
+    }
+  </style>
+</head>
+
+<body class="relative smooth-scroll">
+  <nav class="primary-bg text-white fixed w-full z-50 shadow-lg digital-static">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center">
+          <a href="index.html" class="text-2xl font-bold secondary-text flex items-center">
+            <i class="fas fa-cube mr-2"></i>
+            <span class="glitch" data-text="ICREATE">ICREATE</span>
+          </a>
+        </div>
+
+        <div class="md:hidden">
+          <button id="mobile-menu-button" class="text-white focus:outline-none" aria-label="Toggle menu"
+            aria-expanded="false">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+        </div>
+
+        <div class="hidden md:flex space-x-8">
+          <a href="index.html#home" class="nav-link text-white hover:text-cyan-300 transition">Home</a>
+          <a href="index.html#services" class="nav-link text-white hover:text-cyan-300 transition">Services</a>
+          <a href="index.html#portfolio" class="nav-link text-white hover:text-cyan-300 transition">Portfolio</a>
+          <a href="index.html#about" class="nav-link text-white hover:text-cyan-300 transition">About</a>
+          <a href="index.html#contact" class="nav-link text-white hover:text-cyan-300 transition">Contact</a>
+          <a href="subscriptions.html" class="nav-link text-cyan-300 font-bold transition">Subscriptions</a>
+        </div>
+
+        <div class="hidden md:block">
+          <a href="subscriptions.html"
+            class="secondary-bg primary-text px-6 py-2 rounded-full font-bold hover:bg-cyan-400 transition glow-effect">
+            Get Started
+          </a>
+        </div>
+      </div>
+
+      <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4">
+        <a href="index.html#home" class="block py-2 text-white hover:text-cyan-300 transition">Home</a>
+        <a href="index.html#services" class="block py-2 text-white hover:text-cyan-300 transition">Services</a>
+        <a href="index.html#portfolio" class="block py-2 text-white hover:text-cyan-300 transition">Portfolio</a>
+        <a href="index.html#about" class="block py-2 text-white hover:text-cyan-300 transition">About</a>
+        <a href="index.html#contact" class="block py-2 text-white hover:text-cyan-300 transition">Contact</a>
+        <a href="subscriptions.html" class="block py-2 text-cyan-300 font-bold transition">Subscriptions</a>
+        <a href="subscriptions.html"
+          class="secondary-bg primary-text w-full mt-3 px-6 py-2 rounded-full font-bold hover:bg-cyan-400 transition text-center block">
+          Get Started
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero-gradient min-h-96 flex items-center relative overflow-hidden pt-20 digital-static">
+    <div class="absolute inset-0 opacity-20">
+      <div class="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-cyan-300 blur-3xl animate-pulse"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-32 h-32 rounded-full bg-cyan-300 blur-3xl animate-pulse"
+        style="animation-delay: 1s;"></div>
+    </div>
+
+    <div class="container mx-auto px-6 py-16 hero-content">
+      <div class="text-center fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">
+          Subscription <span class="secondary-text">Plans</span>
+        </h1>
+        <p class="text-xl text-gray-300 mb-4 max-w-2xl mx-auto">
+          Choose the perfect subscription plan for your business needs. All plans include premium support and regular
+          updates.
+        </p>
+        <p class="text-lg secondary-text italic">Where Creativity Meets Technology</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16 fade-in">
+        <h2 class="text-3xl md:text-4xl font-bold primary-text mb-4">Choose Your <span
+            class="secondary-text">Plan</span></h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Flexible subscription options designed to grow with your business. Cancel anytime.
+        </p>
+      </div>
+
+      <div
+        class="max-w-3xl mx-auto mb-12 p-4 bg-gray-100 border border-gray-300 text-gray-800 rounded-lg shadow fade-in"
+        role="alert">
+        <div class="flex items-start">
+          <div class="flex-shrink-0 pt-1">
+            <i class="fas fa-info-circle text-blue-600 text-2xl"></i>
+          </div>
+          <div class="ml-4 text-left">
+            <h4 class="font-bold text-lg primary-text">Important Pricing Information</h4>
+            <p class="text-gray-700 mt-1">All subscription plans are priced in USD. To cover secure payment gateway
+              costs, a <strong>15% service & processing fee</strong> will be added to the plan price.</p>
+            <p class="text-gray-700 mt-2">This will be clearly itemized for your review at checkout before you complete
+              your purchase.</p>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Professional Hosting</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-server text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$30</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Reliable hosting solution for your professional website with guaranteed uptime
+              and security.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> High-performance
+                servers</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> CPanel Access</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Daily backups</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> SSL certificate
+                included</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-9FL12940T1207713ENECQJ4A" data-plan-name="Professional Hosting"
+                data-paypal-container="paypal-button-container-P-9FL12940T1207713ENECQJ4A">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-9FL12940T1207713ENECQJ4A" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in featured-plan relative">
+          <div class="feature-badge">MOST POPULAR</div>
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Hosting + Domain</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-globe text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$38</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Complete hosting solution with domain management for your online presence.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Domain registration &
+                management</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Hosting - No CPanel
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Free SSL Certificate
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> DNS management</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-5XH29947G9064044FNECQMQY" data-plan-name="Hosting + Domain"
+                data-paypal-container="paypal-button-container-P-5XH29947G9064044FNECQMQY">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-5XH29947G9064044FNECQMQY" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <!--
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in featured-plan relative">
+          <div class="feature-badge" style="background-color: #10b981; color: white;">BEST VALUE</div>
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Annual Pre-paid Plan</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-calendar-check text-white"></i>
+              </div>
+            </div>
+            <div class="mb-2">
+              <span class="text-3xl font-bold primary-text">$447</span>
+              <span class="text-gray-500">/year</span>
+            </div>
+            <div class="mb-6 inline-block bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full">
+              Saves $10.35
+            </div>
+            <p class="text-gray-600 mb-6">Complete hosting solution paid annually for maximum savings.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Domain registration &
+                management</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Hosting + CPanel
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Free SSL Certificate
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> DNS management</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-2YW66931MW5313906NFVMOWQ" data-plan-name="Annual Pre-paid Plan"
+                data-paypal-container="paypal-button-container-P-2YW66931MW5313906NFVMOWQ">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-2YW66931MW5313906NFVMOWQ" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+        -->
+
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Web Maintenance</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-tools text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$49.99</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Keep your website running smoothly with regular maintenance and updates.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Regular updates &
+                patches</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Security monitoring
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Performance
+                optimization</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Content updates</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-5LN44950730912624NECQLRQ" data-plan-name="Web Maintenance"
+                data-paypal-container="paypal-button-container-P-5LN44950730912624NECQLRQ">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-5LN44950730912624NECQLRQ" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">App Monitoring</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-mobile-alt text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$150</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Comprehensive monitoring and update service for your mobile applications.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> 24/7 app monitoring
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Regular feature updates
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Bug fixes & patches
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Performance analytics
+              </li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-3ME55562GX964564ENECRUBA" data-plan-name="App Monitoring"
+                data-paypal-container="paypal-button-container-P-3ME55562GX964564ENECRUBA">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-3ME55562GX964564ENECRUBA" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Graphic Design</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-paint-brush text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$80</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Regular design work for your marketing materials and digital assets.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Custom graphics
+                creation</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Social media templates
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Brand consistency</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Quick turnaround</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-7347581535896321PNECRW6A" data-plan-name="Graphic Design"
+                data-paypal-container="paypal-button-container-P-7347581535896321PNECRW6A">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-7347581535896321PNECRW6A" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Business Automation</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-robot text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$120</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Streamline your business processes with custom automation solutions.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Workflow automation
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> API integrations</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Process optimization
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Custom reporting</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-1PR36418LS475621RNECRZJY" data-plan-name="Business Automation"
+                data-paypal-container="paypal-button-container-P-1PR36418LS475621RNECRZJY">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-1PR36418LS475621RNECRZJY" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Industry Automation</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-industry text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$250</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Advanced automation solutions tailored to specific industry needs.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Industry-specific
+                workflows</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Compliance automation
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Multi-system
+                integration</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Advanced analytics</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-5CM47756734472516NECR24Q" data-plan-name="Industry Automation"
+                data-paypal-container="paypal-button-container-P-5CM47756734472516NECR24Q">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-5CM47756734472516NECR24Q" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Content Refresh</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-sync-alt text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$67.99</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Keep your website content fresh and engaging with regular updates.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Content strategy</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Blog posts & articles
+              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Image updates</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> SEO optimization</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-00F6350522773701SNECR4RI" data-plan-name="Content Refresh"
+                data-paypal-container="paypal-button-container-P-00F6350522773701SNECR4RI">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-00F6350522773701SNECR4RI" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin WiPay Link Generator -->
+      <div id="admin-wipay-generator" class="hidden mt-20 border-t border-gray-100 pt-10 fade-in flex justify-center pb-12">
+        <details class="group w-full max-w-lg bg-gray-50 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 open:shadow-md">
+          <summary class="flex justify-between items-center cursor-pointer p-5 text-gray-500 font-medium hover:text-cyan-600 list-none outline-none focus:ring-2 focus:ring-cyan-500 rounded-xl">
+            <span class="flex items-center text-sm tracking-wide"><i class="fas fa-link mr-3 opacity-60"></i> Generate Payment Link (Admin)</span>
+            <span class="transition-transform duration-300 group-open:rotate-180 opacity-60"><i class="fas fa-chevron-down"></i></span>
+          </summary>
+          <div class="p-6 bg-white border-t border-gray-100 rounded-b-xl relative">
+            <div class="mb-4">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Currency</label>
+              <select id="wipay-currency" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none text-gray-700 bg-white shadow-sm appearance-none">
+                <option value="USD">USD (US Dollar)</option>
+                <option value="JMD">JMD (Jamaican Dollar)</option>
+                <option value="GBP">GBP (British Pound)</option>
+                <option value="CAD">CAD (Canadian Dollar)</option>
+                <option value="EUR">EUR (Euro)</option>
+              </select>
+            </div>
+            <div class="mb-5">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Amount</label>
+              <div class="relative">
+                <span class="absolute left-4 top-3.5 text-gray-500 font-medium" id="currency-symbol">$</span>
+                <input type="number" id="wipay-amount" placeholder="0.00" min="1" step="0.01" class="w-full border border-gray-300 rounded-lg pl-9 pr-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none text-gray-700 shadow-sm" style="font-size: 1.1rem;">
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl p-4 mb-6 border border-cyan-100 flex justify-between items-center shadow-sm">
+              <span class="text-sm text-cyan-800 font-semibold flex items-center">
+                <i class="fas fa-sync-alt mr-2 text-cyan-600 text-xs"></i> To be processed (JMD)
+              </span>
+              <span id="wipay-jmd-amount" class="text-xl font-bold text-cyan-700">J$0.00</span>
+            </div>
+            
+            <button id="generate-wipay-link" class="w-full py-3.5 rounded-xl secondary-bg text-white font-bold hover:bg-cyan-500 transition shadow-md flex justify-center items-center active:scale-95 duration-200">
+              <i class="fas fa-magic mr-2"></i> Generate WiPay Link
+            </button>
+            
+            <div id="wipay-output-container" class="mt-6 hidden animate-fade-in">
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"><i class="fas fa-share-alt mr-1"></i> Shareable Client Link</label>
+              <div class="flex items-stretch shadow-sm rounded-lg overflow-hidden border border-gray-200 focus-within:ring-2 focus-within:ring-cyan-500">
+                <input type="text" id="wipay-generated-link" readonly class="w-full bg-gray-50 px-4 py-3 text-sm text-gray-600 outline-none font-mono tracking-tight selection:bg-cyan-200">
+                <button id="wipay-copy-link" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 text-sm font-bold transition flex items-center border-l border-gray-300 shadow-inner">
+                  <i class="far fa-copy mr-1.5"></i> <span id="wipay-copy-text">Copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Terms acknowledgement modal -->
+  <div id="terms-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999] hidden px-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 relative shadow-2xl">
+      <button id="close-terms-modal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        aria-label="Close terms notice">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+      <h3 class="text-2xl font-bold primary-text mb-3">Before You Subscribe</h3>
+      <p class="text-gray-700 mb-3">
+        You are about to start the
+        <span id="terms-plan-name" class="font-semibold secondary-text">subscription</span>
+        with ICREATE Solutions &amp; Services.
+      </p>
+      <p class="text-gray-700 mb-3">
+        All subscriptions are governed by our
+        <a href="terms.html" target="_blank" class="text-cyan-600 font-semibold underline">
+          Terms &amp; Conditions
+        </a>.
+        This includes clients in Jamaica, the United States, Canada and other international locations.
+      </p>
+      <p class="text-gray-700 mb-4">
+        Please review the full Terms &amp; Conditions before you continue to the secure payment page.
+      </p>
+      <div class="flex items-start space-x-3 mb-2">
+        <input type="checkbox" id="terms-checkbox" class="mt-1 h-4 w-4 text-cyan-600 border-gray-300 rounded">
+        <label for="terms-checkbox" class="text-gray-700 text-sm md:text-base">
+          I confirm that I have read, understand and agree to the ICREATE Solutions &amp; Services Subscription
+          Terms &amp; Conditions.
+        </label>
+      </div>
+      <p id="terms-error" class="text-red-500 text-sm mb-2 hidden">
+        Please tick the box above to confirm you have read and agree to the Terms &amp; Conditions.
+      </p>
+      <button id="continue-to-payment"
+        class="mt-4 w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect">
+        Continue to payment
+      </button>
+      <p class="text-xs text-gray-500 mt-3">
+        After you continue, the PayPal Subscribe and Debit or Credit Card buttons for your selected plan will appear.
+        Click one of them to complete your payment securely.
+      </p>
+    </div>
+  </div>
+
+
+  <section class="py-16 primary-bg text-white digital-static">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-12 fade-in">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Frequently Asked <span class="secondary-text">Questions</span>
+        </h2>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto">Find answers to common questions about our subscription
+          plans.</p>
+      </div>
+
+      <div class="max-w-4xl mx-auto">
+        <div class="space-y-6">
+          <div
+            class="bg-blue-900 bg-opacity-30 backdrop-blur-sm rounded-xl p-6 border border-cyan-300 border-opacity-20 fade-in">
+            <h3 class="text-xl font-bold mb-3">Can I change my plan later?</h3>
+            <p class="text-gray-300">Yes, you can upgrade or downgrade your subscription plan at any time. Changes will
+              be reflected in your next billing cycle.</p>
+          </div>
+
+          <div
+            class="bg-blue-900 bg-opacity-30 backdrop-blur-sm rounded-xl p-6 border border-cyan-300 border-opacity-20 fade-in"
+            style="animation-delay: 0.1s;">
+            <h3 class="text-xl font-bold mb-3">What payment methods do you accept?</h3>
+            <p class="text-gray-300">We accept all major credit cards and PayPal. As noted in our pricing section, a
+              <strong class="text-white">15% service & processing fee</strong> is added at checkout to cover secure
+              payment gateway costs. All transactions are secure and encrypted.
+            </p>
+          </div>
+          <div
+            class="bg-blue-900 bg-opacity-30 backdrop-blur-sm rounded-xl p-6 border border-cyan-300 border-opacity-20 fade-in"
+            style="animation-delay: 0.2s;">
+            <h3 class="text-xl font-bold mb-3">Is there a contract or long-term commitment?</h3>
+            <p class="text-gray-300">No, all our subscription plans are month-to-month with no long-term contracts. You
+              can cancel anytime.</p>
+          </div>
+
+          <div
+            class="bg-blue-900 bg-opacity-30 backdrop-blur-sm rounded-xl p-6 border border-cyan-300 border-opacity-20 fade-in"
+            style="animation-delay: 0.3s;">
+            <h3 class="text-xl font-bold mb-3">Do you offer discounts for annual payments?</h3>
+            <p class="text-gray-300">Yes, we offer a 10% discount for annual payments on all subscription plans. Contact
+              us for more information.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="max-w-4xl mx-auto bg-gray-100 rounded-2xl p-8 md:p-12 text-center fade-in">
+        <h2 class="text-3xl md:text-4xl font-bold primary-text mb-4">Need a <span class="secondary-text">Custom</span>
+          Solution?</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">If our standard plans don't fit your specific needs, we
+          can create a custom subscription tailored to your business.</p>
+        <a href="index.html#contact"
+          class="secondary-bg primary-text px-8 py-3 rounded-full font-bold hover:bg-cyan-400 transition glow-effect inline-block">
+          Contact Us for Custom Plan
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="primary-bg text-white py-12 digital-static">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div class="fade-in">
+          <a href="index.html" class="text-2xl font-bold secondary-text flex items-center mb-6">
+            <i class="fas fa-cube mr-2"></i>
+            ICREATE
+          </a>
+          <p class="text-gray-300 mb-4">Transforming ideas into seamless digital experiences through innovative
+            technology solutions.</p>
+          <p class="text-sm secondary-text italic mb-4">Where Creativity Meets Technology</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-300 hover:text-cyan-300 transition"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-gray-300 hover:text-cyan-300 transition"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-300 hover:text-cyan-300 transition"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="text-gray-300 hover:text-cyan-300 transition"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+
+        <div class="fade-in" style="animation-delay: 0.1s;">
+          <h3 class="text-lg font-bold mb-4">Services</h3>
+          <ul class="space-y-2">
+            <li><a href="index.html#services" class="text-gray-300 hover:text-cyan-300 transition">Web Development</a>
+            </li>
+            <li><a href="index.html#services" class="text-gray-300 hover:text-cyan-300 transition">App Development</a>
+            </li>
+            <li><a href="index.html#services" class="text-gray-300 hover:text-cyan-300 transition">Graphic Design</a>
+            </li>
+            <li><a href="index.html#services" class="text-gray-300 hover:text-cyan-300 transition">Business
+                Automation</a></li>
+          </ul>
+        </div>
+
+        <div class="fade-in" style="animation-delay: 0.2s;">
+          <h3 class="text-lg font-bold mb-4">Company</h3>
+          <ul class="space-y-2">
+            <li><a href="index.html#about" class="text-gray-300 hover:text-cyan-300 transition">About Us</a></li>
+            <li><a href="index.html#portfolio" class="text-gray-300 hover:text-cyan-300 transition">Portfolio</a></li>
+            <li><a href="subscriptions.html" class="text-gray-300 hover:text-cyan-300 transition">Plans & Pricing</a>
+            </li>
+            <li><a href="index.html#contact" class="text-gray-300 hover:text-cyan-300 transition">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="fade-in" style="animation-delay: 0.3s;">
+          <h3 class="text-lg font-bold mb-4">Contact</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start">
+              <i class="fas fa-map-marker-alt mr-3 mt-1 secondary-text"></i>
+              <span class="text-gray-300">Kingston, Jamaica</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fas fa-phone mr-3 secondary-text"></i>
+              <span class="text-gray-300">+1 (876) 582-5685</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fas fa-envelope mr-3 secondary-text"></i>
+              <span class="text-gray-300">icreatesolutions.ja@gmail.com</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-700 mt-12 pt-8 text-center">
+        <p class="text-gray-400">
+          © <span id="admin-secret-trigger" class="cursor-pointer transition hover:text-gray-300">2025</span> ICREATE SOLUTIONS & SERVICES. All rights reserved.
+          <a href="Promotion/index.html" id="valentine-secret" class="text-pink-500 hover:text-pink-400 ml-2 hidden"
+            title="A Secret for You">
+            <i class="fas fa-heart animate-pulse"></i>
+          </a>
+          <a href="/login"
+            class="text-gray-600 hover:text-cyan-300 ml-2 transition" title="Restricted Access">
+            <i class="fas fa-lock"></i>
+          </a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <button id="back-to-top"
+    class="fixed bottom-8 right-8 w-12 h-12 secondary-bg text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 opacity-0 invisible hover:bg-cyan-400"
+    aria-label="Back to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+
+  <script>
+    // Mobile menu toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMenuButton && mobileMenu) {
+      mobileMenuButton.addEventListener('click', function () {
+        mobileMenu.classList.toggle('hidden');
+        this.setAttribute('aria-expanded', mobileMenu.classList.contains('hidden') ? 'false' : 'true');
+      });
+    }
+
+    // Back to top button
+    const backToTopButton = document.getElementById('back-to-top');
+    if (backToTopButton) {
+      window.addEventListener('scroll', function () {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.remove('opacity-0', 'invisible');
+          backToTopButton.classList.add('opacity-100', 'visible');
+        } else {
+          backToTopButton.classList.remove('opacity-100', 'visible');
+          backToTopButton.classList.add('opacity-0', 'invisible');
+        }
+      });
+
+      backToTopButton.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    // Fade in animation on scroll
+    const fadeElements = document.querySelectorAll('.fade-in');
+    function fadeInOnScroll() {
+      fadeElements.forEach(element => {
+        const elementTop = element.getBoundingClientRect().top;
+        const elementVisible = 150;
+        if (elementTop < window.innerHeight - elementVisible) {
+          element.classList.add('visible');
+        }
+      });
+    }
+    window.addEventListener('scroll', fadeInOnScroll);
+    fadeInOnScroll();
+
+    // Terms & Conditions modal before payment
+    const termsModal = document.getElementById('terms-modal');
+    const termsCheckbox = document.getElementById('terms-checkbox');
+    const termsError = document.getElementById('terms-error');
+    const termsPlanName = document.getElementById('terms-plan-name');
+    const closeTermsModalBtn = document.getElementById('close-terms-modal');
+    const continueToPaymentBtn = document.getElementById('continue-to-payment');
+    let selectedPlanConfig = null;
+
+    document.querySelectorAll('.open-terms-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        selectedPlanConfig = {
+          planId: button.dataset.planId,
+          planName: button.dataset.planName,
+          containerId: button.dataset.paypalContainer,
+          button: button
+        };
+
+        if (termsPlanName) {
+          termsPlanName.textContent = selectedPlanConfig.planName;
+        }
+        if (termsCheckbox) {
+          termsCheckbox.checked = false;
+        }
+        if (termsError) {
+          termsError.classList.add('hidden');
+        }
+        if (termsModal) {
+          termsModal.classList.remove('hidden');
+        }
+      });
+    });
+
+    if (closeTermsModalBtn && termsModal) {
+      closeTermsModalBtn.addEventListener('click', () => {
+        termsModal.classList.add('hidden');
+      });
+    }
+
+    if (termsModal) {
+      termsModal.addEventListener('click', (event) => {
+        if (event.target === termsModal) {
+          termsModal.classList.add('hidden');
+        }
+      });
+    }
+
+    // PayPal loader + per-plan rendering
+    const paypalScript = document.createElement('script');
+    paypalScript.src = 'https://www.paypal.com/sdk/js?client-id=AcZepw5A-5sfpLzhtTmLPgS_kwSt2VnzHUis6o-aUaOY_cp2I8jLz5dtr0WqDlumCWdBWKA4ggXfpczU&vault=true&intent=subscription&currency=USD';
+    paypalScript.setAttribute('data-sdk-integration-source', 'button-factory');
+    document.head.appendChild(paypalScript);
+
+    let paypalScriptLoaded = false;
+    const renderedPlans = {};
+
+    paypalScript.onload = function () {
+      paypalScriptLoaded = true;
+    };
+
+    function renderPayPalButtonsForPlan(planId, containerId) {
+      if (renderedPlans[containerId]) {
+        return;
+      }
+
+      if (!window.paypal || !paypalScriptLoaded) {
+        alert('The secure payment system is still loading. Please wait a moment and try again.');
+        return;
+      }
+
+      paypal.Buttons({
+        style: {
+          shape: 'rect',
+          color: 'blue',
+          layout: 'vertical',
+          label: 'subscribe'
+        },
+        createSubscription: function (data, actions) {
+          console.log('Creating subscription for Plan ID:', planId);
+          return actions.subscription.create({
+            'plan_id': planId,
+            'application_context': {
+              'shipping_preference': 'NO_SHIPPING'
+            }
+          }).catch(function (err) {
+            console.error('Create Subscription Error:', err);
+            alert('Failed to initiate subscription: ' + JSON.stringify(err));
+          });
+        },
+        onApprove: function (data, actions) {
+          const containerEl = document.getElementById(containerId);
+          let planName = '';
+          if (containerEl) {
+            const card = containerEl.closest('.plan-card');
+            if (card) {
+              const heading = card.querySelector('h3');
+              if (heading) {
+                planName = heading.textContent.trim();
+              }
+            }
+          }
+          // Redirect to branded thank-you page with subscription details
+          const params = new URLSearchParams({
+            subscription_id: data.subscriptionID || '',
+            plan: planName
+          });
+          window.location.href = 'thank-you.html?' + params.toString();
+        },
+        onError: function (err) {
+          console.error('PayPal Error:', err);
+          alert('PayPal Error: ' + JSON.stringify(err));
+        }
+      }).render('#' + containerId);
+
+      renderedPlans[containerId] = true;
+    }
+
+    if (continueToPaymentBtn) {
+      continueToPaymentBtn.addEventListener('click', () => {
+        if (!termsCheckbox || !termsCheckbox.checked) {
+          if (termsError) {
+            termsError.classList.remove('hidden');
+          }
+          return;
+        }
+
+        if (termsModal) {
+          termsModal.classList.add('hidden');
+        }
+
+        if (selectedPlanConfig && selectedPlanConfig.containerId && selectedPlanConfig.planId) {
+          const container = document.getElementById(selectedPlanConfig.containerId);
+          if (container) {
+            container.classList.remove('hidden');
+            renderPayPalButtonsForPlan(selectedPlanConfig.planId, selectedPlanConfig.containerId);
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          if (selectedPlanConfig.button) {
+            selectedPlanConfig.button.classList.add('hidden');
+          }
+        }
+      });
+    }
+    // Valentine's Secret Link Logic
+    document.addEventListener('DOMContentLoaded', function () {
+      const secretLink = document.getElementById('valentine-secret');
+      if (secretLink) {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        // Deadline is Feb 15th
+        const deadline = new Date(currentYear, 1, 15);
+
+        // Show link if today is before the deadline
+        if (now < deadline) {
+          secretLink.classList.remove('hidden');
+        }
+      }
+    });
+
+    // WiPay Link Generator Logic
+    document.addEventListener("DOMContentLoaded", () => {
+      const currencySelect = document.getElementById('wipay-currency');
+      const amountInput = document.getElementById('wipay-amount');
+      const jmdAmountDisplay = document.getElementById('wipay-jmd-amount');
+      const generateBtn = document.getElementById('generate-wipay-link');
+      const outputContainer = document.getElementById('wipay-output-container');
+      const generatedLinkInput = document.getElementById('wipay-generated-link');
+      const copyBtn = document.getElementById('wipay-copy-link');
+      const copyText = document.getElementById('wipay-copy-text');
+      const currencySymbolDisplay = document.getElementById('currency-symbol');
+      
+      let exchangeRates = null;
+      const JMD_FALLBACK_RATE = 156.50; // Fallback USD to JMD rate
+      
+      const symbols = { 'USD': '$', 'JMD': 'J$', 'GBP': '£', 'CAD': 'C$', 'EUR': '€' };
+
+      // Fetch rates on load for dynamic conversion
+      fetch('https://open.er-api.com/v6/latest/USD')
+        .then(res => res.json())
+        .then(data => {
+            if(data && data.rates) exchangeRates = data.rates;
+        })
+        .catch(err => console.error("Could not fetch exchange rates:", err));
+        
+      function calculateJMD() {
+        if(!amountInput.value || parseFloat(amountInput.value) <= 0) {
+          jmdAmountDisplay.textContent = 'J$0.00';
+          return 0;
+        }
+        
+        const currency = currencySelect.value;
+        const amount = parseFloat(amountInput.value);
+        let jmdTotal = 0;
+        
+        if(currency === 'JMD') {
+          jmdTotal = amount;
+        } else {
+          // If exchange rates failed to load, use a basic hardcoded fallback roughly accurate as of 2026
+          let rateUSD = exchangeRates ? exchangeRates[currency] : (currency === 'GBP' ? 0.78 : currency === 'CAD' ? 1.35 : currency === 'EUR' ? 0.91 : 1);
+          let toJmdRate = exchangeRates ? exchangeRates['JMD'] : JMD_FALLBACK_RATE;
+          
+          const usdAmount = amount / rateUSD;
+          jmdTotal = usdAmount * toJmdRate;
+        }
+        
+        jmdAmountDisplay.textContent = new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(jmdTotal);
+        return jmdTotal.toFixed(2);
+      }
+      
+      if(currencySelect && amountInput) {
+        currencySelect.addEventListener('change', () => {
+          currencySymbolDisplay.textContent = symbols[currencySelect.value] || '$';
+          calculateJMD();
+          outputContainer.classList.add('hidden');
+        });
+        
+        amountInput.addEventListener('input', () => {
+          calculateJMD();
+          outputContainer.classList.add('hidden');
+        });
+        
+        generateBtn.addEventListener('click', () => {
+          const jmdAmt = calculateJMD();
+          if(jmdAmt <= 0) {
+            alert('Please enter a valid amount.');
+            return;
+          }
+          
+          // Generate raw link back to self proxy pay.html
+          const link = `${window.location.origin}/pay.html?amount=${jmdAmt}&desc=Custom_Invoice`;
+          generatedLinkInput.value = link;
+          outputContainer.classList.remove('hidden');
+          copyText.textContent = 'Copy';
+        });
+        
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(generatedLinkInput.value).then(() => {
+            copyText.textContent = 'Copied!';
+            copyBtn.classList.add('bg-green-100', 'text-green-800');
+            setTimeout(() => {
+              copyText.textContent = 'Copy';
+              copyBtn.classList.remove('bg-green-100', 'text-green-800');
+            }, 3000);
+          });
+        });
+      }
+      // Admin Toggle Logic (Secret Triple Click + Long Press + URL Parameter)
+      const secretTrigger = document.getElementById('admin-secret-trigger');
+      const adminGenerator = document.getElementById('admin-wipay-generator');
+      let clickCount = 0;
+      let clickTimer;
+      let longPressTimer;
+      
+      if(secretTrigger && adminGenerator) {
+        // Prevent text selection entirely for the trigger area
+        secretTrigger.style.userSelect = 'none';
+        secretTrigger.style.webkitUserSelect = 'none';
+        
+        function toggleAdminModule() {
+          adminGenerator.classList.toggle('hidden');
+          if(!adminGenerator.classList.contains('hidden')) {
+            adminGenerator.scrollIntoView({behavior: 'smooth', block: 'center'});
+          }
+          clickCount = 0;
+        }
+
+        // Mouse clicks (Desktop)
+        secretTrigger.addEventListener('click', () => {
+          clickCount++;
+          clearTimeout(clickTimer);
+          clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
+          
+          if(clickCount >= 3) {
+            toggleAdminModule();
+          }
+        });
+
+        // Touch long-press (Mobile)
+        secretTrigger.addEventListener('touchstart', (e) => {
+          longPressTimer = setTimeout(() => {
+            toggleAdminModule();
+          }, 1000); // 1 second long press needed
+        }, {passive: true});
+
+        secretTrigger.addEventListener('touchend', () => {
+          clearTimeout(longPressTimer);
+        });
+        
+        secretTrigger.addEventListener('touchmove', () => {
+          clearTimeout(longPressTimer);
+        });
+        
+        // Also show if ?admin=true is in URL
+        if(window.location.search.includes('admin=true')) {
+           adminGenerator.classList.remove('hidden');
+        }
+      }
+    });
+
+  </script>
+
+</body>
+
+</html>

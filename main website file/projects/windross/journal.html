@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Journal | Windross Tailoring</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* ========================================
+           THEME: MIDNIGHT GOLD (Editorial Edition)
+           ========================================
+        */
+        :root {
+            /* Metallic Gold */
+            --gold-primary: #D4AF37;
+            --gold-gradient: linear-gradient(135deg, #BF953F 0%, #FCF6BA 40%, #B38728 60%, #AA771C 100%);
+
+            /* Dark Environment */
+            --bg-body: #050505;
+            --bg-panel: rgba(20, 20, 20, 0.6);
+            --bg-glass-strong: rgba(15, 15, 15, 0.9);
+            --bg-card: #0a0a0a;
+
+            /* Borders & Text */
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-main: #F5F5F7;
+            --text-muted: #86868B;
+
+            --ease-lux: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000000 80%);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400;
+            color: white;
+            margin: 0;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: 0.3s;
+        }
+
+        /* --- NAVIGATION (Shared) --- */
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 1200px;
+            z-index: 1000;
+            background: var(--bg-glass-strong);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--gold-primary);
+        }
+
+        /* --- MOBILE MENU (Shared) --- */
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            z-index: 2000;
+        }
+
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.5s var(--ease-lux);
+        }
+
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mobile-link {
+            font-size: 2rem;
+            font-family: 'Playfair Display', serif;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.5s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .mobile-socials {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+            opacity: 0;
+            transition: 0.5s 0.4s;
+        }
+
+        .mobile-menu-overlay.active .mobile-socials {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: 1px solid var(--border-glass);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .icon-btn:hover {
+            border-color: var(--gold-primary);
+            color: var(--gold-primary);
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .journal-page {
+            padding-top: 160px;
+            padding-bottom: 80px;
+        }
+
+        /* --- HEADER --- */
+        .journal-header {
+            text-align: center;
+            margin-bottom: 80px;
+            animation: fadeUp 1s var(--ease-lux);
+        }
+
+        .journal-header h1 {
+            font-size: 5rem;
+            line-height: 1;
+            margin-bottom: 20px;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(191, 149, 63, 0.2);
+        }
+
+        .journal-header p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-top: 1px solid var(--border-glass);
+            display: inline-block;
+            padding-top: 20px;
+        }
+
+        /* --- FEATURED STORY --- */
+        .featured-story {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 0;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-glass);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 80px;
+            animation: fadeUp 1s var(--ease-lux) 0.2s backwards;
+        }
+
+        .featured-image-wrapper {
+            position: relative;
+            height: 100%;
+            min-height: 400px;
+            overflow: hidden;
+        }
+
+        .featured-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.8s var(--ease-lux);
+            filter: grayscale(20%);
+        }
+
+        .featured-story:hover .featured-image-wrapper img {
+            transform: scale(1.05);
+            filter: grayscale(0%);
+        }
+
+        .featured-content {
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-left: 1px solid var(--border-glass);
+        }
+
+        .eyebrow-date {
+            color: var(--gold-primary);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .featured-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .featured-excerpt {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin-bottom: 30px;
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            width: fit-content;
+            color: white;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--gold-primary);
+            padding-bottom: 5px;
+            transition: 0.3s;
+        }
+
+        .btn-secondary:hover {
+            color: var(--gold-primary);
+            border-bottom-color: white;
+        }
+
+        /* --- STORY GRID --- */
+        .story-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            animation: fadeUp 1s var(--ease-lux) 0.4s backwards;
+        }
+
+        .story-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 4px;
+            overflow: hidden;
+            transition: 0.4s;
+            display: block;
+        }
+
+        .story-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--gold-primary);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .story-media {
+            height: 250px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .story-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.6s;
+            filter: grayscale(40%);
+        }
+
+        .story-card:hover .story-media img {
+            transform: scale(1.1);
+            filter: grayscale(0%);
+        }
+
+        .story-content {
+            padding: 30px;
+        }
+
+        .story-meta {
+            font-size: 0.7rem;
+            color: var(--gold-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .story-content h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .story-link {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .story-card:hover .story-link {
+            color: white;
+            gap: 12px;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 900px) {
+            .journal-header h1 {
+                font-size: 3.5rem;
+            }
+
+            .featured-story {
+                grid-template-columns: 1fr;
+            }
+
+            .featured-content {
+                padding: 40px;
+                border-left: none;
+                border-top: 1px solid var(--border-glass);
+            }
+
+            .story-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">WINDROSS</a>
+
+        <div class="nav-links">
+            <a href="customize.html">Customize</a>
+            <a href="journal.html" class="active">Journal</a>
+            <a href="book.html">Book</a>
+        </div>
+
+        <button class="mobile-toggle" aria-label="Toggle Menu">
+            <i data-lucide="menu" width="28" height="28"></i>
+        </button>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay">
+        <a href="customize.html" class="mobile-link">Customize</a>
+        <a href="index.html#faq" class="mobile-link" onclick="toggleMenu()">FAQ</a>
+        <a href="book.html" class="mobile-link">Book</a>
+
+        <div class="mobile-socials">
+            <a href="https://www.instagram.com/windrosstailoring/?hl=en" target="_blank"><i
+                    data-lucide="instagram"></i></a>
+            <a href="https://www.facebook.com/david.windross/" target="_blank"><i data-lucide="facebook"></i></a>
+        </div>
+    </div>
+
+    <main class="journal-page container">
+
+        <header class="journal-header">
+            <h1>The Journal</h1>
+            <p>Notes on style, craft, and the modern gentleman.</p>
+        </header>
+
+        <article class="featured-story">
+            <div class="featured-image-wrapper">
+                <img src="images/journal_hero.png" alt="Bespoke Suit Detail">
+            </div>
+            <div class="featured-content">
+                <span class="eyebrow-date">Editor's Pick — Oct 12</span>
+                <h2>The Anatomy of a Perfect Fit</h2>
+                <p class="featured-excerpt">
+                    Beyond the fabric and the cut lies the true soul of a suit: the fit.
+                    Discover why a bespoke measurement profile is the ultimate luxury in a world of ready-to-wear.
+                </p>
+                <a href="#" class="btn-secondary">Read Full Story</a>
+            </div>
+        </article>
+
+        <div class="story-grid">
+
+            <a href="#" class="story-card">
+                <div class="story-media">
+                    <img src="images/journal_summer.png" alt="Linen Fabric Texture">
+                </div>
+                <div class="story-content">
+                    <div class="story-meta">Fabrics</div>
+                    <h3>Why Linen Defines the Summer Wardrobe</h3>
+                    <div class="story-link">Read Article <i data-lucide="arrow-right" width="16"></i></div>
+                </div>
+            </a>
+
+            <a href="#" class="story-card">
+                <div class="story-media">
+                    <img src="images/journal_fit.png" alt="Tailor Working">
+                </div>
+                <div class="story-content">
+                    <div class="story-meta">Craftsmanship</div>
+                    <h3>Behind the Seams: The Tailor's Art</h3>
+                    <div class="story-link">Read Article <i data-lucide="arrow-right" width="16"></i></div>
+                </div>
+            </a>
+
+            <a href="#" class="story-card">
+                <div class="story-media"
+                    style="background:#111; display:flex; align-items:center; justify-content:center;">
+                    <span
+                        style="font-family:'Inter'; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.2); font-size:0.8rem;">
+                        Coming Soon
+                    </span>
+                </div>
+                <div class="story-content">
+                    <div class="story-meta">Style Guide</div>
+                    <h3>Five Essentials Every Man Needs</h3>
+                    <div class="story-link">Read Article <i data-lucide="arrow-right" width="16"></i></div>
+                </div>
+            </a>
+
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // Mobile Menu Logic
+        const mobileToggle = document.querySelector('.mobile-toggle');
+        const mobileOverlay = document.querySelector('.mobile-menu-overlay');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            mobileOverlay.classList.toggle('active');
+
+            // Switch Icon
+            if (isMenuOpen) {
+                mobileToggle.innerHTML = '<i data-lucide="x" width="28" height="28"></i>';
+            } else {
+                mobileToggle.innerHTML = '<i data-lucide="menu" width="28" height="28"></i>';
+            }
+            lucide.createIcons();
+        }
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', toggleMenu);
+        }
+    </script>
+</body>
+
+</html>

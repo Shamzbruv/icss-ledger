@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalize Fitting | Windross Tailoring</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* ========================================
+           THEME: MIDNIGHT GOLD (Forms Edition)
+           ========================================
+        */
+        :root {
+            /* Metallic Gold */
+            --gold-primary: #D4AF37;
+            --gold-gradient: linear-gradient(135deg, #BF953F 0%, #FCF6BA 40%, #B38728 60%, #AA771C 100%);
+
+            /* Dark Environment */
+            --bg-body: #050505;
+            --bg-panel: rgba(20, 20, 20, 0.6);
+            --bg-input: rgba(255, 255, 255, 0.03);
+
+            /* Borders & Text */
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-main: #F5F5F7;
+            --text-muted: #86868B;
+
+            --ease-lux: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        /* Anti-Theft */
+        img {
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000000 80%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400;
+            color: white;
+            margin: 0;
+        }
+
+        /* --- NAVIGATION (Shared) --- */
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 1200px;
+            z-index: 1000;
+            background: rgba(15, 15, 15, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Fix for mobile nav overlap */
+        @media (max-width: 768px) {
+            nav {
+                padding: 12px 20px;
+            }
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .mobile-toggle {
+            display: none;
+        }
+
+        .nav-links a {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--gold-primary);
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: 1px solid var(--border-glass);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* --- PAGE CONTAINER --- */
+        .page {
+            padding-top: 140px;
+            padding-bottom: 80px;
+            max-width: 1000px;
+            margin: 0 auto;
+            min-height: 80vh;
+        }
+
+        /* --- STEP 1: CHOICE CARDS --- */
+        .measure-head {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeUp 0.8s var(--ease-lux);
+        }
+
+        .eyebrow {
+            color: var(--gold-primary);
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* --- MOBILE MENU (Shared) --- */
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            z-index: 2000;
+        }
+
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.5s var(--ease-lux);
+        }
+
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mobile-link {
+            font-size: 2rem;
+            font-family: 'Playfair Display', serif;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.5s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .mobile-socials {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+            opacity: 0;
+            transition: 0.5s 0.4s;
+        }
+
+        .mobile-menu-overlay.active .mobile-socials {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+        }
+
+        .measure-head h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+        }
+
+        .measure-head p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .measure-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            animation: fadeUp 1s var(--ease-lux) 0.2s backwards;
+        }
+
+        .measure-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-glass);
+            padding: 40px;
+            border-radius: 4px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.4s var(--ease-lux);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 300px;
+        }
+
+        .measure-card:hover {
+            border-color: var(--gold-primary);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Hover Glow */
+        .measure-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.1), transparent 60%);
+            opacity: 0;
+            transition: 0.4s;
+        }
+
+        .measure-card:hover::after {
+            opacity: 1;
+        }
+
+        .measure-icon {
+            font-size: 2rem;
+            color: var(--gold-primary);
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .measure-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .measure-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 50px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .badge.recommended {
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--gold-primary);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .badge.warning {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+
+        .measure-cta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gold-primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- FORMS (Measurements & Booking) --- */
+        .form-section h3 {
+            color: var(--gold-primary);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-glass);
+            color: white;
+            padding: 15px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--gold-primary);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+        }
+
+        /* --- BUTTONS --- */
+        .btn-primary {
+            background: var(--gold-gradient);
+            color: #050505;
+            padding: 15px 30px;
+            border-radius: 2px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 1px solid var(--border-glass);
+            padding: 15px 30px;
+            border-radius: 2px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-secondary:hover {
+            border-color: white;
+        }
+
+        /* --- WARNING BANNER --- */
+        .warning-banner {
+            background: rgba(212, 175, 55, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            color: var(--gold-primary);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+
+            .measure-grid,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .measure-head h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* --- MOBILE MENU (Shared) --- */
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            z-index: 2000;
+        }
+
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.5s var(--ease-lux);
+        }
+
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mobile-link {
+            font-size: 2rem;
+            font-family: 'Playfair Display', serif;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.5s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .mobile-menu-overlay.active .mobile-link:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .mobile-socials {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+            opacity: 0;
+            transition: 0.5s 0.4s;
+        }
+
+        .mobile-menu-overlay.active .mobile-socials {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="glass-nav" role="navigation" aria-label="Primary">
+        <div class="logo" role="banner" aria-label="Windross">
+            <a href="index.html" style="color:white; text-decoration:none;">WINDROSS</a>
+        </div>
+
+        <div class="nav-links" role="menubar" aria-label="Site sections">
+            <a href="customize.html">Customize</a>
+            <a href="gallery.html">Gallery</a>
+            <a href="index.html#faq">FAQ</a>
+            <a href="book.html" class="active">Book</a>
+        </div>
+
+        <button class="mobile-toggle" aria-label="Toggle Menu">
+            <i data-lucide="menu" width="28" height="28"></i>
+        </button>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay">
+        <a href="customize.html" class="mobile-link">Customize</a>
+        <a href="gallery.html" class="mobile-link">Gallery</a>
+        <a href="index.html#faq" class="mobile-link" onclick="toggleMenu()">FAQ</a>
+        <a href="book.html" class="mobile-link">Book</a>
+
+        <div class="mobile-socials">
+            <a href="https://www.instagram.com/windrosstailoring/?hl=en" target="_blank"><i
+                    data-lucide="instagram"></i></a>
+            <a href="https://www.facebook.com/david.windross/" target="_blank"><i data-lucide="facebook"></i></a>
+        </div>
+    </div>
+
+    <main id="book-app" class="page container">
+
+        <div id="view-choice" class="measure-choice">
+            <header class="measure-head">
+                <span class="eyebrow">Final Step</span>
+                <h1>Secure Your Fit</h1>
+                <p>Choose your preferred method for measurement collection.</p>
+            </header>
+
+            <div class="measure-grid">
+                <button class="measure-card" onclick="window.location.href='customize.html'">
+                    <div style="z-index: 2;">
+                        <div class="measure-icon"><i data-lucide="scan-line"></i></div>
+                        <div style="display:flex; align-items:center; margin-bottom:5px;">
+                            <h3>Digital Profile</h3>
+                            <span class="badge recommended">Recommended</span>
+                        </div>
+                        <p>Submit your measurements instantly via our guided digital form. Ideal for international
+                            clients.</p>
+                    </div>
+                    <div class="measure-cta" style="z-index: 2;">
+                        <span>Begin Profile</span><i data-lucide="arrow-right"></i>
+                    </div>
+                </button>
+
+                <button class="measure-card" onclick="showView('view-instore')">
+                    <div style="z-index: 2;">
+                        <div class="measure-icon"><i data-lucide="store"></i></div>
+                        <div style="display:flex; align-items:center; margin-bottom:5px;">
+                            <h3>In-Store Atelier</h3>
+                            <span class="badge warning">Service Fee</span>
+                        </div>
+                        <p>Book a private appointment at our Kingston atelier for a traditional tape measurement.</p>
+                    </div>
+                    <div class="measure-cta" style="z-index: 2;">
+                        <span>Book Appointment</span><i data-lucide="arrow-right"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div id="view-measurements" style="display:none; max-width:900px; margin:0 auto; animation: fadeUp 0.5s ease;">
+            <div style="text-align: center; margin-bottom: 50px;">
+                <span class="eyebrow">Digital Atelier</span>
+                <h2>Measurement Profile</h2>
+                <p style="color: var(--text-muted);">Please follow our guide for accuracy.</p>
+            </div>
+
+            <form class="measurement-form" onsubmit="window.handleMeasurementSubmit(event)">
+                <div class="form-section">
+                    <h3><i data-lucide="shirt"></i> Blazer Measurements</h3>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>Chest (cm)</label>
+                            <input name="chest" type="number" step="0.5" placeholder="Fullest part">
+                        </div>
+                        <div class="form-group">
+                            <label>Torso Waist (cm)</label>
+                            <input name="torso_waist" type="number" step="0.5" placeholder="Narrowest part">
+                        </div>
+                        <div class="form-group">
+                            <label>Shoulder (cm)</label>
+                            <input name="shoulder" type="number" step="0.5" placeholder="Shoulder to shoulder">
+                        </div>
+                        <div class="form-group">
+                            <label>Sleeve Length (cm)</label>
+                            <input name="sleeve" type="number" step="0.5" placeholder="Centre back to wrist">
+                        </div>
+                        <div class="form-group">
+                            <label>Jacket Length (cm)</label>
+                            <input name="jacket_length" type="number" step="0.5" placeholder="Base collar to hem">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i data-lucide="scissors"></i> Pants Measurements</h3>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>Pant Waist (cm)</label>
+                            <input name="pant_waist" type="number" step="0.5" placeholder="Natural waistline">
+                        </div>
+                        <div class="form-group">
+                            <label>Inseam (cm)</label>
+                            <input name="inseam" type="number" step="0.5" placeholder="Crotch to hem">
+                        </div>
+                        <div class="form-group">
+                            <label>Outseam (cm)</label>
+                            <input name="outseam" type="number" step="0.5" placeholder="Waist to hem">
+                        </div>
+                        <div class="form-group">
+                            <label>Thigh (cm)</label>
+                            <input name="thigh" type="number" step="0.5" placeholder="Fullest part">
+                        </div>
+                        <div class="form-group">
+                            <label>Rise (cm)</label>
+                            <input name="rise" type="number" step="0.5" placeholder="Crotch to top">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions"
+                    style="margin-top: 60px; display: flex; justify-content: space-between; align-items: center;">
+                    <button type="button" class="btn-secondary" onclick="showView('view-choice')">Back</button>
+                    <button type="submit" class="btn-primary">
+                        Submit Profile <i data-lucide="check" style="margin-left:8px; width:18px;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="view-instore" style="display:none; max-width:600px; margin:0 auto; animation: fadeUp 0.5s ease;">
+            <div class="warning-banner">
+                <i data-lucide="info"></i>
+                <div><strong>Note:</strong> In-house consultations may attract a service fee depending on location and
+                    requirements.</div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 40px;">
+                <span class="eyebrow">Kingston Atelier</span>
+                <h2>Request Appointment</h2>
+                <p style="color: var(--text-muted);">Fill out your details to secure a slot.</p>
+            </div>
+
+            <form class="booking-form" onsubmit="window.handleInStoreBooking(event)">
+
+                <div class="form-section">
+                    <h3><i data-lucide="user"></i> Personal Details</h3>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label>Full Name</label>
+                        <input name="name" type="text" required placeholder="John Doe">
+                    </div>
+                    <div class="grid-3" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input name="email" type="email" required placeholder="john@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input name="phone" type="tel" required placeholder="(876) 555-0123">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i data-lucide="calendar"></i> Preferred Slot</h3>
+                    <!-- Tip for Client: You can replace this section with a Google Calendar iframe or Calendly link for real-time booking. -->
+                    <div class="grid-3" style="grid-template-columns: 1fr 1fr; margin-bottom: 40px;">
+                        <div class="form-group">
+                            <label>Preferred Date</label>
+                            <input name="date" type="date" required min="2026-01-01" style="color-scheme: dark;">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Time</label>
+                            <select name="time">
+                                <option>10:00 AM</option>
+                                <option>12:00 PM</option>
+                                <option>02:00 PM</option>
+                                <option>04:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                    Request Appointment <i data-lucide="send" style="margin-left: 8px; width: 18px;"></i>
+                </button>
+
+                <button type="button" class="btn-secondary"
+                    style="width: 100%; margin-top: 15px; border:none; color: var(--text-muted);"
+                    onclick="showView('view-choice')">
+                    Back
+                </button>
+            </form>
+        </div>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // Mobile Menu Logic
+        const mobileToggle = document.querySelector('.mobile-toggle');
+        const mobileOverlay = document.querySelector('.mobile-menu-overlay');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            mobileOverlay.classList.toggle('active');
+
+            // Switch Icon
+            if (isMenuOpen) {
+                mobileToggle.innerHTML = '<i data-lucide="x" width="28" height="28"></i>';
+            } else {
+                mobileToggle.innerHTML = '<i data-lucide="menu" width="28" height="28"></i>';
+            }
+            lucide.createIcons();
+        }
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', toggleMenu);
+        }
+
+        function showView(id) {
+            document.querySelectorAll('main > div').forEach(div => div.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        window.handleInStoreBooking = (event) => {
+            event.preventDefault();
+            const form = event.target;
+
+            const name = form.elements['name'].value;
+            const email = form.elements['email'].value;
+            const clientPhone = form.elements['phone'].value;
+            const date = form.elements['date'].value;
+            const time = form.elements['time'].value;
+
+            const supportPhone = "18765986434";
+
+            const message = `*Appointment Request - Windross Tailoring*\n\n*CLIENT DETAILS*\nName: ${name}\nEmail: ${email}\nPhone: ${clientPhone}\n\n*REQUESTED SLOT*\n📅 Date: ${date}\n⏰ Time: ${time}`;
+
+            window.open(`https://wa.me/${supportPhone}?text=${encodeURIComponent(message)}`, '_blank');
+        };
+
+        window.handleMeasurementSubmit = (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const phone = "18765986434";
+            const getVal = (name) => form.querySelector(`input[name="${name}"]`)?.value || 'N/A';
+
+            const message = `*Digital Measurement Profile - Windross Tailoring* \n
+*BLAZER*
+Chest: ${getVal('chest')} cm
+Waist (Torso): ${getVal('torso_waist')} cm
+Shoulder: ${getVal('shoulder')} cm
+Sleeve: ${getVal('sleeve')} cm
+Jacket Length: ${getVal('jacket_length')} cm
+
+*PANTS*
+Waist (Pant): ${getVal('pant_waist')} cm
+Inseam: ${getVal('inseam')} cm
+Outseam: ${getVal('outseam')} cm
+Thigh: ${getVal('thigh')} cm
+Rise: ${getVal('rise')} cm`;
+
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+        };
+
+        // Anti-Theft: Disable right-click and drag on images
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('contextmenu', (e) => e.preventDefault());
+            img.addEventListener('dragstart', (e) => e.preventDefault());
+        });
+    </script>
+</body>
+
+</html>

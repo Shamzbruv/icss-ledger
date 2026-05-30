@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ | Reliable Shield Protection</title>
+
+    <link rel="icon" type="image/x-icon" href="images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Premium Styles -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .faq-hero {
+            height: 50vh;
+            background: linear-gradient(to right, #020617 30%, rgba(2, 6, 23, 0.6)),
+                url('images/faq-bg.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 80px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container nav-inner">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Reliable Shield Logo" style="height: 80px;">
+            </a>
+
+            <!-- Desktop Nav -->
+            <div class="nav-links-desktop">
+                <a href="index.html">Home</a>
+                <a href="services.html">Services</a>
+                <a href="careers.html">Careers</a>
+                <a href="faq.html" class="active">FAQ</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+
+            <div class="nav-contact">
+                <a href="tel:8766798029"
+                    style="color:var(--text-white); text-decoration:none; font-size:0.9rem; transition:0.3s;"
+                    onmouseover="this.style.color='var(--gold-metallic)'"
+                    onmouseout="this.style.color='var(--text-white)'">
+                    <i class="fa-solid fa-phone" style="color:var(--gold-metallic)"></i> Office: (876) 679-8029
+                </a>
+                <a href="tel:8763978331" class="emergency-btn">
+                    <i class="fa-solid fa-mobile-screen"></i> CALL NOW
+                </a>
+            </div>
+
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-menu-btn" onclick="toggleMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Container -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">Home</a>
+        <a href="services.html">Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="faq.html">FAQ</a>
+        <a href="index.html#contact">Contact</a>
+        <a href="tel:8763978331" style="color: var(--accent-alert); border:none; margin-top:20px;">
+            <i class="fa-solid fa-phone"></i> CALL (876) 397-8331
+        </a>
+        <a href="tel:8763132183" style="color: var(--text-white); border:none; margin-top:10px; font-size: 0.9rem;">
+            <i class="fa-solid fa-mobile"></i> Alt: (876) 313-2183
+        </a>
+    </div>
+
+    <header class="faq-hero">
+        <div class="container">
+            <h1 style="font-size: 3.5rem;">Secure <span class="text-gold">Intelligence</span></h1>
+            <p style="color: var(--text-steel); font-size: 1.2rem;">Common questions about our tactical operations and
+                coverage.</p>
+        </div>
+    </header>
+
+    <section style="padding: 80px 0;">
+        <div class="container">
+            <div class="faq-container">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        What areas do you cover in Jamaica?
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>We primarily operate out of Spanish Town and cover the greater St. Catherine and Kingston
+                            metropolitan areas for rapid response. Forstatic guard contracts, we deploy island-wide
+                            immediately upon contract finalization.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        What is your average response time?
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Our rapid response teams are strategically positioned to guarantee a <strong>5-10 minute
+                                response time</strong> for contract holders within our primary zones. Real-time GPS
+                            tracking allows dispatch to send the closest unit immediately.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        Are your officers armed?
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Yes, we offer both armed and unarmed security solutions based on your specific risk profile.
+                            All armed officers are fully licensed, vetted, and undergo rigorous tactical training
+                            including de-escalation techniques.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        Do you provide residential security?
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Absolutely. We provide comprehensive residential capabilities, ranging from gated community
+                            access control to personal property patrols and dedicated night-watch services.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        How do I get a quote?
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>You can request a free risk assessment and quote by calling our command center at (876)
+                            679-8029, emailing reliableshield2025@gmail.com, or using the contact buttons below to reach
+                            us on mobile.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-cta">
+        <div class="container">
+            <div class="contact-box">
+                <h2 style="margin-bottom: 15px;">Still have questions?</h2>
+                <p style="color: var(--text-steel); font-size: 1.1rem;">Our command center is online 24/7.</p>
+
+                <div class="contact-details">
+                    <div class="contact-pill" onclick="window.location.href='tel:8763978331'">
+                        <i class="fa-solid fa-mobile-screen"></i> (876) 397-8331
+                        <button class="wa-trigger-btn" onclick="event.stopPropagation(); openWAModal()"
+                            style="margin-left:10px; border:none; padding:5px 10px; font-size:0.8rem;">
+                            <i class="fa-brands fa-whatsapp"></i> Chat
+                        </button>
+                    </div>
+                    <div class="contact-pill" onclick="window.location.href='tel:8763132183'">
+                        <i class="fa-solid fa-mobile-screen"></i> (876) 313-2183
+                        <button class="wa-trigger-btn" onclick="event.stopPropagation(); openWAModal()"
+                            style="margin-left:10px; border:none; padding:5px 10px; font-size:0.8rem;">
+                            <i class="fa-brands fa-whatsapp"></i> Chat
+                        </button>
+                    </div>
+                    <div class="contact-pill" onclick="window.location.href='tel:8766798029'">
+                        <i class="fa-solid fa-phone"></i> Office: (876) 679-8029
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-bottom: 20px;">
+                    <button onclick="openWAModal()" class="btn-primary" style="background:#25D366; color:white;">
+                        <i class="fa-brands fa-whatsapp"></i> Detailed WhatsApp Inquiry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="services.html">Services</a>
+                <a href="faq.html">FAQ</a>
+                <a href="mailto:reliableshield2025@gmail.com">Support</a>
+            </div>
+            <p>&copy; 2026 Reliable Shield Protection Limited. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function contactWhatsApp() {
+            const phone = "18765120377";
+            const text = "Hello Reliable Shield. I have a question about your services.";
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+    </script>
+
+</body>
+
+</html>

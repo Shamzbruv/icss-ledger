@@ -1,0 +1,577 @@
+/* --- Global Variables & Theme --- */
+:root {
+    /* Palette */
+    --bg-white: #ffffff;
+    --bg-cream: #faf9f6;
+    --soft-purple: #f3e5f5;
+    --soft-green: #e8f5e9;
+    --accent-gold: #d4af37;
+    --accent-gold-light: #f9eeb6;
+    --text-dark: #2c2c2c;
+    --text-light: #666666;
+
+    /* Shadows */
+    --shadow-sm: 0 5px 20px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 15px 40px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 30px 60px rgba(0, 0, 0, 0.12);
+}
+
+/* --- Reset & Base --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html.lenis {
+    height: auto;
+}
+
+.lenis.lenis-smooth {
+    scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+    overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+    pointer-events: none;
+}
+
+html,
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: transparent !important;
+    color: var(--text-dark);
+    line-height: 1.8;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Page Transition Overlay */
+body {
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+}
+
+body.fade-out {
+    opacity: 0;
+}
+
+/* Create stacking context for all sections */
+section,
+header,
+footer,
+nav {
+    position: relative;
+    z-index: 10;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    color: var(--text-dark);
+}
+
+.script-font {
+    font-family: 'Great Vibes', cursive;
+    color: var(--accent-gold);
+    font-size: 2.5rem;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: 0.3s;
+}
+
+ul {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+/* --- Utility Classes & Animations --- */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Scroll Reveal Utility Classes */
+.reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 1s ease-out;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fluid-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.fluid-blob {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.5;
+    filter: blur(120px);
+    animation: float 25s ease-in-out infinite;
+}
+
+.fluid-blob.purple {
+    background: radial-gradient(circle, #e0b0ff, transparent 60%);
+    width: 80vw;
+    height: 80vw;
+    top: -50%;
+    left: -40%;
+    animation-delay: 0s;
+}
+
+.fluid-blob.green {
+    background: radial-gradient(circle, #d4af37, transparent 60%);
+    /* Gold */
+    width: 90vw;
+    height: 90vw;
+    bottom: -50%;
+    right: -40%;
+    animation-delay: -5s;
+}
+
+.fluid-blob.white-overlay {
+    background: radial-gradient(circle, #ffffff, transparent 80%);
+    width: 100vw;
+    height: 100vw;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.8;
+    animation: none;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(20px, -20px) scale(1.05);
+    }
+
+    66% {
+        transform: translate(-10px, 10px) scale(0.95);
+    }
+
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+
+/* --- Navigation --- */
+nav {
+    padding: 20px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.75);
+    /* Standard transparent white */
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    transition: 0.4s ease;
+}
+
+/* --- Burger Menu --- */
+.burger-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 25px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
+
+.burger-menu:focus {
+    outline: none;
+}
+
+.burger-menu span {
+    width: 100%;
+    height: 2px;
+    background: var(--text-dark);
+    border-radius: 10px;
+    transition: all 0.3s linear;
+    position: relative;
+    transform-origin: 1px;
+}
+
+.burger-menu.active span:nth-child(1) {
+    transform: rotate(45deg);
+}
+
+.burger-menu.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.burger-menu.active span:nth-child(3) {
+    transform: rotate(-45deg);
+}
+
+/* Mobile Nav Overlay */
+.mobile-nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    height: 100vh;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    transition: 0.4s cubic-bezier(0.77, 0.2, 0.05, 1.0);
+    z-index: 999;
+}
+
+.mobile-nav.active {
+    right: 0;
+}
+
+.mobile-nav a {
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+/* Variation for darker headers if needed: can use modifier class */
+
+.logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.nav-links {
+    display: flex;
+    gap: 35px;
+}
+
+.nav-link {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    position: relative;
+    cursor: pointer;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    bottom: -5px;
+    left: 0;
+    background: var(--accent-gold);
+    transition: 0.3s;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+.btn-outline {
+    border: 1px solid var(--text-dark);
+    padding: 12px 30px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.btn-outline:hover {
+    background: var(--text-dark);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+@media(max-width: 1024px) {
+
+    .nav-links,
+    .btn-outline {
+        display: none;
+    }
+
+    .burger-menu {
+        display: flex;
+    }
+
+    h1 {
+        font-size: clamp(2.5rem, 8vw, 4.5rem);
+    }
+
+    .script-font {
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+    }
+
+    section {
+        padding: clamp(60px, 10vh, 100px) 5%;
+    }
+
+    .about-bio,
+    .vision-frame {
+        padding: clamp(40px, 8vh, 80px) 5%;
+    }
+
+    .frame-container {
+        height: clamp(350px, 60vh, 600px);
+    }
+}
+
+/* --- Footer --- */
+footer {
+    background: #222;
+    color: white;
+    padding: 60px 5%;
+    text-align: center;
+}
+
+footer h3 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+.footer-socials {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+/* --- Scroll To Top --- */
+.scroll-to-top {
+    position: fixed;
+    bottom: 110px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: var(--bg-white);
+    border: 1px solid var(--accent-gold);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 999;
+    transition: 0.3s;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: var(--shadow-md);
+    color: var(--accent-gold);
+}
+
+.scroll-to-top.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.scroll-to-top:hover {
+    background: var(--accent-gold);
+    color: white;
+    transform: translateY(-5px);
+}
+
+.footer-socials i:hover {
+    color: var(--accent-gold);
+    transform: translateY(-3px);
+}
+
+/* --- Planning Toggle & Modal Styles --- */
+.planning-options {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
+.planning-btn {
+    padding: 10px 20px;
+    border: 1px solid #ddd;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.3s;
+    flex: 1;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.planning-btn.active {
+    background: var(--accent-gold);
+    color: white;
+    border-color: var(--accent-gold);
+}
+
+.info-trigger {
+    background: none;
+    border: none;
+    color: var(--accent-gold);
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 5px;
+    text-decoration: underline;
+}
+
+.planning-modal-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.planning-modal-list li {
+    padding: 10px 0;
+    border-bottom: 1px dashed #eee;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.planning-modal-list li i {
+    color: var(--accent-gold);
+    margin-top: 4px;
+}
+
+/* --- Shared Modal Styles --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-container {
+    background: white;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.modal-overlay.active .modal-container {
+    transform: translateY(0);
+}
+
+.modal-header {
+    padding: 20px 30px;
+    background: #f8f8f8;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 30px;
+    overflow-y: auto;
+}

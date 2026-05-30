@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Only Vibes Tourz Ja | The Real Jamaican Experience</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Poppins:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="booking.css">
+    <style>
+        :root {
+            /* GLOSSY DARK TROPICAL PALETTE */
+            --night-black: #0a0e17;
+            --deep-ocean: #001d3d;
+            --neon-blue: #00b4d8;
+            --tropical-teal: #0096c7;
+            --sun-gold: #ffb703;
+            --lush-green: #2d6a4f;
+            --text-light: #f0f8ff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+
+            /* Gradients */
+            --gradient-dark: linear-gradient(135deg, #0a0e17 0%, #001d3d 100%);
+            --gradient-gold: linear-gradient(135deg, #ffb703 0%, #fb8500 100%);
+            --gradient-blue: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+
+            /* Effects */
+            --shadow-neon: 0 0 20px rgba(0, 180, 216, 0.3);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --radius-xl: 40px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--night-black);
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 180, 216, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 183, 3, 0.05) 0%, transparent 20%);
+            color: var(--text-light);
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Lobster', cursive;
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+
+        a {
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--night-black);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--deep-ocean);
+            border-radius: 10px;
+            border: 2px solid var(--night-black);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
+        }
+
+        /* --- NAVIGATION (Dark Glass) --- */
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            z-index: 1000;
+            background: rgba(0, 29, 61, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 15px 40px;
+            border-radius: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-glass);
+            border: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+        }
+
+        .logo span {
+            color: var(--sun-gold);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            font-size: 1rem;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px var(--neon-blue);
+        }
+
+        /* Underline effect */
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--neon-blue);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .btn-book {
+            background: var(--gradient-gold);
+            color: var(--night-black);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.4);
+            border: 2px solid transparent;
+        }
+
+        .btn-book:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(255, 183, 3, 0.6);
+            background: transparent;
+            border-color: var(--sun-gold);
+            color: var(--sun-gold);
+        }
+
+        /* --- HERO SECTION (Cinematic) --- */
+        .hero {
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('images/hero.png') center/cover;
+            z-index: -1;
+            filter: brightness(0.8);
+            animation: zoomSlow 30s infinite alternate;
+        }
+
+        @keyframes zoomSlow {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.15);
+            }
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(10, 14, 23, 0.3), rgba(10, 14, 23, 0.8));
+            backdrop-filter: blur(2px);
+        }
+
+        .hero-content {
+            z-index: 2;
+            padding: 20px;
+            max-width: 900px;
+        }
+
+        .badge-juta {
+            background: rgba(45, 106, 79, 0.8);
+            border: 1px solid var(--lush-green);
+            padding: 8px 25px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-bottom: 25px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            box-shadow: 0 0 20px rgba(45, 106, 79, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(45, 106, 79, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(45, 106, 79, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(45, 106, 79, 0);
+            }
+        }
+
+        .hero h1 {
+            font-size: 6rem;
+            line-height: 1;
+            margin-bottom: 30px;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #fff, #bde0fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            margin-bottom: 50px;
+            font-weight: 300;
+            color: #dbeafe;
+        }
+
+        .btn-hero {
+            background: transparent;
+            color: white;
+            padding: 18px 45px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 180, 216, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background: var(--neon-blue);
+            transition: 0.4s;
+            z-index: -1;
+        }
+
+        .btn-hero:hover::before {
+            width: 100%;
+        }
+
+        .btn-hero:hover {
+            color: var(--night-black);
+            box-shadow: 0 0 40px rgba(0, 180, 216, 0.8);
+        }
+
+        /* --- WAVE SEPARATOR --- */
+        .hero-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+            transform: rotate(180deg);
+            z-index: 3;
+        }
+
+        .hero-wave svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 100px;
+        }
+
+        .hero-wave .shape-fill {
+            fill: var(--night-black);
+        }
+
+        @media (max-width: 768px) {
+            .hero-wave svg {
+                height: 50px;
+            }
+        }
+
+        /* --- ABOUT ADRIAN --- */
+        .about {
+            padding: 120px 10%;
+            display: flex;
+            align-items: center;
+            gap: 80px;
+            position: relative;
+        }
+
+        .about::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 400px;
+            height: 400px;
+            background: var(--sun-gold);
+            filter: blur(150px);
+            opacity: 0.05;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .about-img {
+            flex: 1;
+            position: relative;
+        }
+
+        .about-img img {
+            width: 100%;
+            border-radius: var(--radius-xl);
+            box-shadow: -20px 20px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            transition: 0.5s;
+        }
+
+        .about-img:hover img {
+            transform: rotate(2deg) scale(1.02);
+        }
+
+        .about-text {
+            flex: 1;
+        }
+
+        .section-tag {
+            color: var(--sun-gold);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .about h2 {
+            font-size: 3.5rem;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .about p {
+            color: #a8b2d1;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .about strong {
+            color: var(--neon-blue);
+        }
+
+        .stat-row {
+            display: flex;
+            gap: 50px;
+            margin-top: 40px;
+        }
+
+        .stat h3 {
+            font-size: 3rem;
+            color: var(--lush-green);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+
+        .stat span {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* --- TOURS & SERVICES --- */
+        .services {
+            padding: 120px 5%;
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+        }
+
+        .services-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .services-header h2 {
+            font-size: 4rem;
+            color: white;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        .tour-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            transition: 0.4s;
+            position: relative;
+        }
+
+        .tour-card:hover {
+            transform: translateY(-20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--neon-blue);
+        }
+
+        .card-img {
+            height: 300px;
+            width: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .tour-card:hover .card-img {
+            transform: scale(1.1);
+        }
+
+        .card-body {
+            padding: 40px;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(to top, var(--night-black), transparent);
+            margin-top: -100px;
+        }
+
+        .card-badge {
+            background: var(--gradient-gold);
+            color: var(--night-black);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 5;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .card-desc {
+            font-size: 1rem;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+
+        .card-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            text-align: center;
+            background: rgba(0, 180, 216, 0.1);
+            color: var(--neon-blue);
+            font-weight: 700;
+            border-radius: 50px;
+            border: 1px solid var(--neon-blue);
+            transition: 0.3s;
+        }
+
+        .card-btn:hover {
+            background: var(--neon-blue);
+            color: var(--night-black);
+            box-shadow: 0 0 20px rgba(0, 180, 216, 0.5);
+        }
+
+        /* --- VIDEO / VIBE SECTION --- */
+        .vibe-section {
+            background: linear-gradient(to bottom, var(--night-black), #001219);
+            padding: 120px 5%;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vibe-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/cubes.png');
+            opacity: 0.05;
+        }
+
+        .vibe-section h2 {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            color: var(--neon-blue);
+        }
+
+        .vibe-section p {
+            font-size: 1.3rem;
+            max-width: 700px;
+            margin: 0 auto 50px;
+            opacity: 0.8;
+        }
+
+        .insta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 60px;
+        }
+
+        .insta-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 20px;
+            transition: 0.3s;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            filter: grayscale(0.5);
+        }
+
+        .insta-img:hover {
+            transform: scale(1.05);
+            filter: grayscale(0);
+            border-color: var(--sun-gold);
+            box-shadow: 0 0 20px rgba(255, 183, 3, 0.2);
+        }
+
+        /* --- CONTACT --- */
+        .contact {
+            padding: 100px 5%;
+            margin-top: -80px;
+            /* Overlap effect */
+            position: relative;
+            z-index: 10;
+        }
+
+        .contact-box {
+            background: rgba(10, 14, 23, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 50px;
+            padding: 80px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 180, 216, 0.1) 0%, transparent 50%);
+            animation: rotateBG 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotateBG {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .contact-methods {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 2;
+        }
+
+        .method {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            min-width: 200px;
+            cursor: pointer;
+        }
+
+        .icon-circle {
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--text-light);
+            transition: 0.4s;
+            border: 1px solid var(--glass-border);
+        }
+
+        .method:hover .icon-circle {
+            background: var(--gradient-gold);
+            color: var(--night-black);
+            transform: rotate(360deg);
+            box-shadow: 0 0 30px rgba(255, 183, 3, 0.5);
+        }
+
+        .method strong {
+            font-size: 1.2rem;
+        }
+
+        .method span {
+            color: var(--neon-blue);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: #000;
+            color: white;
+            padding: 100px 5% 50px;
+            text-align: center;
+            margin-top: 50px;
+            border-top: 1px solid #111;
+        }
+
+        .footer-logo {
+            font-family: 'Lobster';
+            font-size: 2.5rem;
+            color: var(--neon-blue);
+            margin-bottom: 30px;
+            display: block;
+        }
+
+        .social-row {
+            margin-bottom: 40px;
+        }
+
+        .social-row a {
+            color: white;
+            font-size: 1.8rem;
+            margin: 0 20px;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+
+        .social-row a:hover {
+            opacity: 1;
+            color: var(--sun-gold);
+            transform: scale(1.2);
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+
+            .about {
+                flex-direction: column;
+                padding: 80px 5%;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .insta-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .contact-methods {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .contact-box {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="#" class="logo">OnlyVibes<span>Tourz</span></a>
+        <div class="nav-links">
+            <a href="#about" class="nav-link">About Adrian</a>
+            <a href="excursions.html" class="nav-link">Excursions</a>
+            <a href="#vibes" class="nav-link">The Vibe</a>
+        </div>
+        <a href="javascript:void(0)" onclick="openBooking('General Inquiry')" class="btn-book">Book Now</a>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <div class="badge-juta"><i class="fa-solid fa-certificate"></i> Certified Juta Tour Operator</div>
+            <h1>"Only Positive Vibes,<br>No Negative Vibes."</h1>
+            <p>Experience the glossy side of Jamaica. From VIP airport transfers to hidden waterfalls, we ride in style.
+            </p>
+
+            <a href="javascript:void(0)" onclick="openBooking('General Inquiry')" class="btn-hero">
+                <i class="fa-brands fa-whatsapp"></i> Start Your Journey
+            </a>
+        </div>
+
+        <div class="hero-wave">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"
+                preserveAspectRatio="none">
+                <path
+                    d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+                    class="shape-fill"></path>
+            </svg>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="about-img">
+            <img src="images/adrian_jeep.jpg" alt="Adrian with Jeep - Jamaica Tour Guide">
+        </div>
+        <div class="about-text">
+            <span class="section-tag">Meet Your Driver</span>
+            <h2>Adrian Davy</h2>
+            <p>Welcome to <strong>Only Vibes Tourz Ja!</strong> I am a certified JUTA tour operator based in Saint Ann.
+                My mission is to show you the <strong>authentic and premium</strong> side of our island—from the famous
+                Dunn's River to the best local food spots.</p>
+            <p>My motto is simple: <strong>"Sasco all about positive energy."</strong> When you ride with me, you're
+                family. Let's make memories that shine.</p>
+
+            <div class="stat-row">
+                <div class="stat">
+                    <h3>100%</h3>
+                    <span>Safe & Certified</span>
+                </div>
+                <div class="stat">
+                    <h3>5★</h3>
+                    <span>TripAdvisor Rated</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tours" class="services">
+        <div class="services-header">
+            <span class="section-tag">Island Adventures</span>
+            <h2>Premium Excursions</h2>
+        </div>
+
+        <div class="card-grid container">
+            <div class="tour-card">
+                <span class="card-badge">Most Popular</span>
+                <img src="images/dunns.png" class="card-img" alt="Dunns River">
+                <div class="card-body">
+                    <h3 class="card-title">Dunn's River Falls</h3>
+                    <p class="card-desc">Climb the world-famous falls and enjoy the refreshing natural pools. A
+                        completely refreshing experience.</p>
+                    <a href="javascript:void(0)" onclick="openBooking('Dunns River Falls')" class="card-btn">Inquire
+                        Now</a>
+                </div>
+            </div>
+
+            <div class="tour-card">
+                <span class="card-badge">Adventure</span>
+                <img src="images/horse.png" class="card-img" alt="Horseback">
+                <div class="card-body">
+                    <h3 class="card-title">Horseback Riding</h3>
+                    <p class="card-desc">Ride through the countryside and end with a splash in the Caribbean Sea at
+                        sunset.</p>
+                    <a href="javascript:void(0)" onclick="openBooking('Horseback Riding')" class="card-btn">Inquire
+                        Now</a>
+                </div>
+            </div>
+
+            <div class="tour-card">
+                <span class="card-badge">VIP Transfer</span>
+                <img src="images/van.png" class="card-img" alt="Airport">
+                <div class="card-body">
+                    <h3 class="card-title">Airport Transfers</h3>
+                    <p class="card-desc">Reliable, air-conditioned luxury pickup from Montego Bay (MBJ) or Kingston
+                        (KIN).</p>
+                    <a href="javascript:void(0)" onclick="openBooking('Airport Transfer')" class="card-btn">Get
+                        Quote</a>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="excursions.html" class="btn-hero" style="font-size: 1rem; padding: 15px 30px;">
+                <i class="fa-solid fa-compass"></i> View All Excursions
+            </a>
+        </div>
+    </section>
+
+    <section id="vibes" class="vibe-section">
+        <div class="vibe-content">
+            <h2>Catch The Vibe</h2>
+            <p>"Jig to who jig to you." Follow us on Instagram for daily island updates.</p>
+
+            <a href="https://www.instagram.com/adrianonlyvibestourzja/" class="btn-book"
+                style="background: white; color: var(--deep-ocean);">
+                <i class="fa-brands fa-instagram"></i> @onlyvibestourzja
+            </a>
+
+            <div class="insta-grid container">
+                <img src="https://images.unsplash.com/photo-1596895111956-bf1cf0599ce5?q=80&w=800&auto=format&fit=crop"
+                    class="insta-img">
+                <img src="https://images.unsplash.com/photo-1548574505-5e239809ee19?q=80&w=800&auto=format&fit=crop"
+                    class="insta-img">
+                <img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=800&auto=format&fit=crop"
+                    class="insta-img">
+                <img src="https://images.unsplash.com/photo-1528659560419-4b07fb6a0cb5?q=80&w=800&auto=format&fit=crop"
+                    class="insta-img">
+            </div>
+        </div>
+    </section>
+
+    <section class="contact">
+        <div class="contact-box">
+            <h2 style="font-family:'Lobster'; font-size: 4rem; color: var(--sun-gold); margin-bottom: 20px;">Book Your
+                Ride</h2>
+            <p style="color:white; font-size: 1.2rem; margin-bottom: 30px;">Ready for the best vibes in Jamaica? Contact
+                Adrian directly.</p>
+
+            <a href="javascript:void(0)" onclick="openBooking('Custom Trip', true)" class="btn-book"
+                style="background: transparent; border: 1px solid var(--sun-gold); color: var(--sun-gold); margin-bottom: 40px; display: inline-block;">
+                <i class="fa-solid fa-hammer"></i> Build Your Own Trip
+            </a>
+
+            <div class="contact-methods">
+                <a href="https://wa.me/18763120047" class="method">
+                    <div class="icon-circle"><i class="fa-brands fa-whatsapp"></i></div>
+                    <strong>WhatsApp</strong>
+                    <span>(876) 312-0047</span>
+                </a>
+
+                <a href="tel:18764557454" class="method">
+                    <div class="icon-circle"><i class="fa-solid fa-phone"></i></div>
+                    <strong>Call</strong>
+                    <span>(876) 455-7454</span>
+                </a>
+
+                <a href="mailto:onlyvibestourzja@gmail.com" class="method">
+                    <div class="icon-circle"><i class="fa-solid fa-envelope"></i></div>
+                    <strong>Email</strong>
+                    <span>Send Message</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <a href="#" class="footer-logo">Only Vibes Tourz Ja</a>
+        <div class="social-row">
+            <a href="https://www.facebook.com/Adrianonlyvibestourzja/"><i class="fa-brands fa-facebook"></i></a>
+            <a href="https://www.instagram.com/adrianonlyvibestourzja/"><i class="fa-brands fa-instagram"></i></a>
+        </div>
+        <p style="opacity: 0.6; font-size: 0.8rem;">&copy; 2026 Only Vibes Tourz Ja. Certified JUTA Operator.</p>
+    </footer>
+
+    <script>
+        // Smooth Scroll for Nav
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Simple Parallax for Hero
+        window.addEventListener('scroll', () => {
+            const scroll = window.pageYOffset;
+            const hero = document.querySelector('.hero-bg');
+            if (hero) {
+                hero.style.transform = `translateY(${scroll * 0.5}px) scale(${1 + scroll * 0.0005})`;
+            }
+        });
+    </script>
+
+    <script src="booking.js"></script>
+</body>
+
+</html>
