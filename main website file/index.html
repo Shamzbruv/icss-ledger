@@ -3150,9 +3150,10 @@
       const phone = form.querySelector('input[placeholder="Phone Number"]').value;
       const email = form.querySelector('input[placeholder="Email Address"]').value;
 
-      const projectStage = form.querySelector('select:nth-of-type(1)').value;
-      const timeline = form.querySelector('select:nth-of-type(2)').value;
-      const budget = form.querySelector('select:nth-of-type(3)').value;
+      const selects = form.querySelectorAll('select');
+      const projectStage = selects[0] ? selects[0].value : '';
+      const timeline = selects[1] ? selects[1].value : '';
+      const budget = selects[2] ? selects[2].value : '';
       const description = form.querySelector('textarea').value;
 
       // Collect Checkboxes
@@ -3204,9 +3205,10 @@
       const phone = form.querySelector('input[placeholder="Phone Number"]').value;
       const email = form.querySelector('input[placeholder="Email Address"]').value;
 
-      const projectStage = form.querySelector('select:nth-of-type(1)').value;
-      const timeline = form.querySelector('select:nth-of-type(2)').value;
-      const budget = form.querySelector('select:nth-of-type(3)').value;
+      const selects = form.querySelectorAll('select');
+      const projectStage = selects[0] ? selects[0].value : '';
+      const timeline = selects[1] ? selects[1].value : '';
+      const budget = selects[2] ? selects[2].value : '';
       const description = form.querySelector('textarea').value;
 
       // Collect Checkboxes
@@ -3652,9 +3654,10 @@
       const phone = form.querySelector('input[placeholder="Phone Number"]').value;
       const email = form.querySelector('input[placeholder="Email Address"]').value;
 
-      const projectStage = form.querySelector('select:nth-of-type(1)').value;
-      const timeline = form.querySelector('select:nth-of-type(2)').value;
-      const budget = form.querySelector('select:nth-of-type(3)').value;
+      const selects = form.querySelectorAll('select');
+      const projectStage = selects[0] ? selects[0].value : '';
+      const timeline = selects[1] ? selects[1].value : '';
+      const budget = selects[2] ? selects[2].value : '';
       const painPoints = form.querySelector('textarea').value;
 
       // Collect Checkboxes
@@ -3708,9 +3711,10 @@
       const phone = form.querySelector('input[placeholder="Phone Number"]').value;
       const email = form.querySelector('input[placeholder="Email Address"]').value;
 
-      const projectStage = form.querySelector('select:nth-of-type(1)').value;
-      const timeline = form.querySelector('select:nth-of-type(2)').value;
-      const budget = form.querySelector('select:nth-of-type(3)').value;
+      const selects = form.querySelectorAll('select');
+      const projectStage = selects[0] ? selects[0].value : '';
+      const timeline = selects[1] ? selects[1].value : '';
+      const budget = selects[2] ? selects[2].value : '';
       const painPoints = form.querySelector('textarea').value;
 
       // Collect Checkboxes
