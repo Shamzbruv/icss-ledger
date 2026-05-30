@@ -165,15 +165,16 @@ const checkAuth = async (req, res, next) => {
 // This router will be mounted at APP_BASE_PATH
 const router = express.Router();
 
-// Serve Static Files -> Public folder
+// Serve Static Files -> Main Website & Public folder
+router.use(express.static(path.join(__dirname, 'main website file')));
 router.use(express.static(path.join(__dirname, 'public')));
 
 // Apply Auth Middleware
 router.use(checkAuth);
 
-// Root Route - Serve Login Page
+// Root Route - Serve Main Website Landing Page
 router.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.sendFile(path.join(__dirname, 'main website file', 'index.html'));
 });
 
 router.get('/login', (req, res) => {
