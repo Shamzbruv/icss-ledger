@@ -762,7 +762,7 @@
       transition: color 0.2s;
     }
     #offer-bar-close:hover { color: #fff; }
-    body.offer-bar-visible nav { margin-top: 41px; }
+    body.offer-bar-visible nav { margin-top: var(--offer-bar-height, 41px); }
     @keyframes slideDown {
       from { transform: translateY(-100%); opacity: 0; }
       to   { transform: translateY(0);    opacity: 1; }
@@ -3951,11 +3951,25 @@
     }
 
     // ---- OFFER BAR ----
+    function updateOfferBarHeight() {
+      if (document.body.classList.contains('offer-bar-visible')) {
+        const bar = document.getElementById('offer-bar');
+        if (bar) {
+          document.documentElement.style.setProperty('--offer-bar-height', bar.offsetHeight + 'px');
+        }
+      } else {
+        document.documentElement.style.setProperty('--offer-bar-height', '0px');
+      }
+    }
+    window.addEventListener('resize', updateOfferBarHeight);
+
     (function () {
       if (sessionStorage.getItem('offerBarDismissed')) {
         document.getElementById('offer-bar').style.display = 'none';
       } else {
         document.body.classList.add('offer-bar-visible');
+        // Update height after render
+        setTimeout(updateOfferBarHeight, 50);
       }
     })();
 
