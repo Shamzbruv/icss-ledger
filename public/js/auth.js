@@ -1,7 +1,5 @@
-document.addEventListener('DOMContentLoaded', async () => {
+const initializeAuth = async () => {
     try {
-        const supabase = await window.ensureSupabaseClient();
-
         const loginForm = document.getElementById('loginForm');
         const loginError = document.getElementById('loginError');
         const submitBtn = document.getElementById('submitBtn');
@@ -20,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loginError.style.display = 'none';
 
                 try {
+                    const supabase = await window.ensureSupabaseClient();
                     const { data, error } = await supabase.auth.signInWithPassword({
                         email,
                         password
@@ -47,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Check if user is already logged in and on the login page
         const checkSession = async () => {
+            const supabase = await window.ensureSupabaseClient();
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                 if (window.location.pathname.endsWith('login.html') || window.location.pathname === '/' || window.location.pathname.endsWith('/login')) {
@@ -72,4 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             submitBtn.innerHTML = 'Sign In';
         }
     }
-});
+};
+
+// type="module" implies deferred execution, so DOM elements are ready.
+initializeAuth();
