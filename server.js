@@ -32,7 +32,9 @@ const allowedOrigins = [
     process.env.CLIENT_URL, // e.g. https://your-app.netlify.app
     'https://icss-command-center.netlify.app',
     'https://icss-ledger.onrender.com',
-    'https://icss-ledger-production.up.railway.app'
+    'https://icss-ledger-production.up.railway.app',
+    'https://icreatesolutionsandservices.com',
+    'https://www.icreatesolutionsandservices.com'
 ].filter(Boolean);
 
 const corsOptions = {
