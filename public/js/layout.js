@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </button>
             <nav class="main-nav" id="mainNav">
                 <a href="/dashboard" class="nav-link ${window.location.pathname === '/' || window.location.pathname === '/dashboard' ? 'active' : ''}">Dashboard</a>
+                <a href="/leads" class="nav-link ${window.location.pathname.includes('leads') ? 'active' : ''}">Leads</a>
                 <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}">Invoices</a>
                 <a href="/client-care-pulse" class="nav-link ${window.location.pathname.includes('client-care') ? 'active' : ''}">Client Care</a>
                 <a href="/accounting" class="nav-link ${window.location.pathname.includes('accounting') ? 'active' : ''}">Accounting</a>

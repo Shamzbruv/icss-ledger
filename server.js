@@ -135,6 +135,11 @@ const checkAuth = async (req, res, next) => {
     if (openApiPaths.some(p => currentPath.startsWith(p))) {
         return next();
     }
+    
+    // Allow public lead submission
+    if (currentPath === '/api/leads' && req.method === 'POST') {
+        return next();
+    }
 
     // --- JWT verification (primary path) ---
     const authHeader = req.headers['authorization'] || '';
@@ -2924,6 +2929,13 @@ router.get('/accounting', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'accounting.html'));
 });
 
+router.get('/leads', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'leads.html'));
+});
+
+// --- LEADS MODULE ---
+const leadsRoutes = require('./src/routes/leads');
+router.use('/api/leads', leadsRoutes);
 
 // Mount the router under the base path
 app.use(BASE_PATH, router);
