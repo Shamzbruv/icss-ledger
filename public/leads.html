@@ -224,7 +224,7 @@
 
         async function loadStats() {
             try {
-                const res = await fetch('/api/leads/stats');
+                const res = await apiFetch('/api/leads/stats');
                 if(res.ok) {
                     const stats = await res.json();
                     document.getElementById('statTotal').innerText = stats.total || 0;
@@ -243,14 +243,14 @@
             if(priority) url += `priority=${priority}`;
 
             try {
-                const res = await fetch(url);
+                const res = await apiFetch(url);
                 if(res.ok) {
                     allLeads = await res.json();
                     renderTable(allLeads);
                 }
             } catch(e) {
                 console.error('Failed to load leads', e);
-                document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load leads</td></tr>';
+                document.getElementById('leadsTableBody').textContent = 'Failed to load leads';
             }
         }
 
@@ -265,24 +265,48 @@
 
             leads.forEach(lead => {
                 const date = new Date(lead.created_at).toLocaleDateString();
-                const statusClass = `status-${lead.status ? lead.status.replace(/\s+/g, '') : 'New'}`;
-                const priorityClass = `priority-${lead.priority}`;
+                const statusClass = \`status-\${lead.status ? lead.status.replace(/\\s+/g, '') : 'New'}\`;
+                const priorityClass = \`priority-\${lead.priority}\`;
                 
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${date}</td>
-                    <td><strong>${lead.name}</strong><br><small class="text-muted">${lead.business_name || ''}</small></td>
-                    <td>${lead.email || ''}<br>${lead.phone || ''}</td>
-                    <td>${lead.lead_type || 'Unknown'}</td>
-                    <td>${lead.service_needed || lead.package_name || 'N/A'}<br><small class="text-muted">${lead.budget || ''}</small></td>
-                    <td class="${priorityClass}">${lead.priority || 'Warm'}</td>
-                    <td><span class="${statusClass}">${lead.status || 'New'}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-light" onclick="openLead(${lead.id})">View</button>
-                    </td>
-                `;
+                
+                const tdDate = document.createElement('td');
+                tdDate.textContent = date;
+                
+                const tdName = document.createElement('td');
+                tdName.innerHTML = \`<strong>\${escapeHTML(lead.name)}</strong><br><small class="text-muted">\${escapeHTML(lead.business_name || '')}</small>\`;
+                
+                const tdContact = document.createElement('td');
+                tdContact.innerHTML = \`\${escapeHTML(lead.email || '')}<br>\${escapeHTML(lead.phone || '')}\`;
+                
+                const tdType = document.createElement('td');
+                tdType.textContent = lead.lead_type || 'Unknown';
+                
+                const tdService = document.createElement('td');
+                tdService.innerHTML = \`\${escapeHTML(lead.service_needed || lead.package_name || 'N/A')}<br><small class="text-muted">\${escapeHTML(lead.budget || '')}</small>\`;
+                
+                const tdPriority = document.createElement('td');
+                tdPriority.className = priorityClass;
+                tdPriority.textContent = lead.priority || 'Warm';
+                
+                const tdStatus = document.createElement('td');
+                tdStatus.innerHTML = \`<span class="\${statusClass}">\${escapeHTML(lead.status || 'New')}</span>\`;
+                
+                const tdAction = document.createElement('td');
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-sm btn-outline-light';
+                btn.textContent = 'View';
+                btn.onclick = () => openLead(lead.id); // Safe closure binding without quotes issues
+                tdAction.appendChild(btn);
+
+                tr.append(tdDate, tdName, tdContact, tdType, tdService, tdPriority, tdStatus, tdAction);
                 tbody.appendChild(tr);
             });
+        }
+        
+        function escapeHTML(str) {
+            if(!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
         function filterTable() {
@@ -349,7 +373,7 @@
             const internal_notes = document.getElementById('modalInternalNotes').value;
 
             try {
-                const res = await fetch(`/api/leads/${id}`, {
+                const res = await apiFetch(\`/api/leads/\${id}\`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status, priority, internal_notes })

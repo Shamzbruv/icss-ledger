@@ -7,6 +7,14 @@ const CRM = {
         this.captureUTM();
         this.injectModals();
         this.initExitIntent();
+        this.initFormTiming();
+    },
+
+    initFormTiming() {
+        const now = Date.now().toString();
+        document.querySelectorAll('.form_start_time').forEach(el => {
+            el.value = now;
+        });
     },
 
     captureUTM() {
@@ -28,11 +36,17 @@ const CRM = {
     },
 
     async submitLead(payload) {
+        // Find form timing if triggered from an event
+        let submissionTimeMs = 0;
+        let honeypot = false;
+
         // Add UTM and common data
         const fullPayload = {
             ...payload,
             ...this.utmData,
-            source: 'Website Form'
+            submission_time_ms: submissionTimeMs,
+            honeypot: honeypot,
+            source: payload.source || 'Website Form'
         };
 
         try {
@@ -42,11 +56,14 @@ const CRM = {
                 body: JSON.stringify(fullPayload)
             });
             
-            if(!res.ok) throw new Error('Submission failed');
+            if(!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Submission failed');
+            }
             return true;
         } catch(e) {
             console.error('Lead capture error:', e);
-            return false;
+            throw e; // Must throw so callers trigger their catch blocks
         }
     },
 

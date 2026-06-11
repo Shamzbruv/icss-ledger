@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews Management - ICSS Command Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .sidebar { min-height: 100vh; background-color: #1a1d20; border-right: 1px solid #2b3035; }
+        .nav-link { color: #a1a5a9; margin-bottom: 0.5rem; border-radius: 0.375rem; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { color: #fff; background-color: #2b3035; }
+        .status-pending { color: #ffc107; font-weight: 500; }
+        .status-approved { color: #28a745; font-weight: 500; }
+        .status-hidden { color: #6c757d; font-weight: 500; }
+        .table > :not(caption) > * > * { background-color: #212529; color: #fff; border-bottom-color: #2b3035; }
+        .rating-stars { color: #ffc107; }
+    </style>
+</head>
+<body class="bg-dark text-light">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar placeholder for Layout component -->
+            <div class="col-md-3 col-lg-2 px-0 sidebar" id="sidebar-container"></div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 ms-auto px-4 py-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap items-center pt-3 pb-2 mb-4 border-bottom border-secondary">
+                    <h1 class="h2">Reviews Management</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="loadReviews()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-dark border-secondary">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Total Reviews</h6>
+                                <h2 class="card-title mb-0" id="statTotal">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark border-secondary">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-warning">Pending</h6>
+                                <h2 class="card-title mb-0 text-warning" id="statPending">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark border-secondary">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-success">Approved</h6>
+                                <h2 class="card-title mb-0 text-success" id="statApproved">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <select id="filterStatus" class="form-select bg-dark text-light border-secondary" onchange="filterTable()">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="hidden">Hidden</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filterRating" class="form-select bg-dark text-light border-secondary" onchange="filterTable()">
+                            <option value="">All Ratings</option>
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="2">2 Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Reviews Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark align-middle">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Rating</th>
+                                <th>Service</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviewsTableBody">
+                            <tr><td colspan="6" class="text-center">Loading reviews...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Detail Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Review Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="modalReviewId">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Name:</strong> <span id="modalName"></span><br>
+                            <strong>Business:</strong> <span id="modalBusiness"></span><br>
+                            <strong>URL:</strong> <a id="modalUrl" href="#" target="_blank" class="text-info"></a>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Service:</strong> <span id="modalService"></span><br>
+                            <strong>Rating:</strong> <span id="modalRating" class="rating-stars"></span><br>
+                            <strong>Date:</strong> <span id="modalDate"></span>
+                        </div>
+                    </div>
+                    <hr class="border-secondary">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Review Message</label>
+                        <div id="modalMessage" class="p-3 bg-dark border border-secondary rounded" style="white-space: pre-wrap;"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select id="modalStatusSelect" class="form-select bg-dark text-light border-secondary">
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="hidden">Hidden</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary justify-content-between">
+                    <button type="button" class="btn btn-outline-danger" onclick="deleteReview()">Delete Permanently</button>
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="saveReviewChanges()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/layout.js"></script>
+    
+    <script>
+        let allReviews = [];
+        let reviewModal;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Add sidebar logic from layout.js
+            if(typeof loadSidebar === 'function') {
+                document.getElementById('sidebar-container').innerHTML = loadSidebar('reviews');
+            }
+
+            reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            loadReviews();
+        });
+
+        // Wrapper to add Auth token
+        async function apiFetch(url, options = {}) {
+            const token = localStorage.getItem('token');
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+            const res = await fetch(url, options);
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
+            return res;
+        }
+
+        async function loadReviews() {
+            try {
+                const res = await apiFetch('/api/reviews/admin/all');
+                if(res.ok) {
+                    allReviews = await res.json();
+                    renderTable(allReviews);
+                    updateStats(allReviews);
+                }
+            } catch(e) {
+                console.error('Failed to load reviews', e);
+                document.getElementById('reviewsTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load reviews</td></tr>';
+            }
+        }
+
+        function updateStats(reviews) {
+            document.getElementById('statTotal').innerText = reviews.length;
+            document.getElementById('statPending').innerText = reviews.filter(r => r.status === 'pending').length;
+            document.getElementById('statApproved').innerText = reviews.filter(r => r.status === 'approved').length;
+        }
+
+        function filterTable() {
+            const status = document.getElementById('filterStatus').value;
+            const rating = document.getElementById('filterRating').value;
+            
+            let filtered = allReviews;
+            if(status) filtered = filtered.filter(r => r.status === status);
+            if(rating) filtered = filtered.filter(r => r.rating.toString() === rating);
+            
+            renderTable(filtered);
+        }
+
+        function renderTable(reviews) {
+            const tbody = document.getElementById('reviewsTableBody');
+            tbody.innerHTML = '';
+            
+            if(reviews.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No reviews found.</td></tr>';
+                return;
+            }
+
+            reviews.forEach(review => {
+                const date = new Date(review.created_at).toLocaleDateString();
+                const statusClass = `status-${review.status}`;
+                const safeName = escapeHTML(review.name);
+                const safeService = escapeHTML(review.service_completed || 'N/A');
+                
+                let stars = '';
+                for(let i=0; i<review.rating; i++) stars += '★';
+                
+                const tr = document.createElement('tr');
+                
+                const tdDate = document.createElement('td');
+                tdDate.textContent = date;
+                
+                const tdName = document.createElement('td');
+                tdName.innerHTML = `<strong>${safeName}</strong><br><small class="text-muted">${escapeHTML(review.business_name || '')}</small>`;
+                
+                const tdRating = document.createElement('td');
+                tdRating.className = 'rating-stars';
+                tdRating.textContent = stars;
+                
+                const tdService = document.createElement('td');
+                tdService.textContent = safeService;
+                
+                const tdStatus = document.createElement('td');
+                tdStatus.innerHTML = `<span class="${statusClass} text-capitalize">${escapeHTML(review.status)}</span>`;
+                
+                const tdAction = document.createElement('td');
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-sm btn-outline-light';
+                btn.textContent = 'Manage';
+                btn.onclick = () => openReview(review.id);
+                tdAction.appendChild(btn);
+
+                tr.append(tdDate, tdName, tdRating, tdService, tdStatus, tdAction);
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function escapeHTML(str) {
+            if(!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function openReview(id) {
+            const review = allReviews.find(r => r.id === id);
+            if(!review) return;
+
+            document.getElementById('modalReviewId').value = review.id;
+            document.getElementById('modalName').textContent = review.name;
+            document.getElementById('modalBusiness').textContent = review.business_name || 'N/A';
+            
+            const urlEl = document.getElementById('modalUrl');
+            if(review.website_url) {
+                urlEl.href = review.website_url;
+                urlEl.textContent = review.website_url;
+            } else {
+                urlEl.removeAttribute('href');
+                urlEl.textContent = 'N/A';
+            }
+
+            document.getElementById('modalService').textContent = review.service_completed || 'N/A';
+            
+            let stars = '';
+            for(let i=0; i<review.rating; i++) stars += '★';
+            document.getElementById('modalRating').textContent = stars;
+            
+            document.getElementById('modalDate').textContent = new Date(review.created_at).toLocaleString();
+            document.getElementById('modalMessage').textContent = review.message;
+            document.getElementById('modalStatusSelect').value = review.status;
+
+            reviewModal.show();
+        }
+
+        async function saveReviewChanges() {
+            const id = document.getElementById('modalReviewId').value;
+            const status = document.getElementById('modalStatusSelect').value;
+            
+            try {
+                const res = await apiFetch(`/api/reviews/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+
+                if(res.ok) {
+                    reviewModal.hide();
+                    loadReviews();
+                } else {
+                    alert('Failed to update review status');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Error updating review');
+            }
+        }
+        
+        async function deleteReview() {
+            if(!confirm('Are you sure you want to permanently delete this review?')) return;
+            
+            const id = document.getElementById('modalReviewId').value;
+            try {
+                const res = await apiFetch(`/api/reviews/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if(res.ok) {
+                    reviewModal.hide();
+                    loadReviews();
+                } else {
+                    alert('Failed to delete review');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Error deleting review');
+            }
+        }
+    </script>
+</body>
+</html>

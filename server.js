@@ -78,6 +78,11 @@ const checkSchema = async () => {
             throw new Error(`Missing columns in 'client_services': ${serviceError.message}`);
         }
 
+        const { error: leadsError } = await supabase.from('leads').select('id').limit(1);
+        if (leadsError && leadsError.message.includes('does not exist')) {
+            throw new Error(`Missing 'leads' table: ${leadsError.message}`);
+        }
+
         // If simple selects work, we assume schema is okay
         isSchemaValid = true;
         console.log('✅ Database Schema Check Passed');
@@ -140,6 +145,11 @@ const checkAuth = async (req, res, next) => {
     if (currentPath === '/api/leads' && req.method === 'POST') {
         return next();
     }
+    
+    // Allow public review fetch and submission
+    if (currentPath === '/api/reviews' && (req.method === 'GET' || req.method === 'POST')) {
+        return next();
+    }
 
     // --- JWT verification (primary path) ---
     const authHeader = req.headers['authorization'] || '';
@@ -179,7 +189,22 @@ router.use(express.static(path.join(__dirname, 'public')));
 // Apply Auth Middleware
 router.use(checkAuth);
 
-// Root Route - Serve Main Website Landing Page
+// Root Route - 
+const { generateInvoicePDF } = require('./src/services/pdfService');
+const { sendInvoiceEmail } = require('./src/services/emailService');
+const { generateReferenceCode } = require('./src/services/referenceService');
+const { getInvoiceEmailContent, getWelcomeSubscriptionTemplate } = require('./src/services/emailTemplates');
+const { sendPaymentReceipt } = require('./src/services/automationService');
+const { computeInvoiceState, validateInvoiceState } = require('./src/services/invoiceStateService');
+
+const leadsRouter = require('./src/routes/leads');
+const reviewsRouter = require('./src/routes/reviews');
+
+// MOUNT ROUTES
+router.use('/api/leads', leadsRouter);
+router.use('/api/reviews', reviewsRouter);
+
+// --- INVOICES API ---
 router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'main website file', 'index.html'));
 });
@@ -191,12 +216,6 @@ router.get('/login', (req, res) => {
 
 
 // --- ROUTES IMPORTS ---
-const { generateInvoicePDF } = require('./src/services/pdfService');
-const { sendInvoiceEmail } = require('./src/services/emailService');
-const { generateReferenceCode } = require('./src/services/referenceService');
-const { getInvoiceEmailContent, getWelcomeSubscriptionTemplate } = require('./src/services/emailTemplates');
-const { sendPaymentReceipt } = require('./src/services/automationService');
-const { computeInvoiceState, validateInvoiceState } = require('./src/services/invoiceStateService');
 
 // --- ACCOUNTING MODULE IMPORTS ---
 const {
