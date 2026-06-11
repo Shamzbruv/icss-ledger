@@ -904,6 +904,11 @@
               </ul>
               <div class="space-y-3">
                 <button
+                  onclick="document.getElementById('email-details-modal').classList.remove('hidden')"
+                  class="w-full py-2 rounded-lg bg-transparent border-2 border-cyan-500 text-cyan-600 font-bold hover:bg-cyan-50 transition glow-effect">
+                  View Full Details
+                </button>
+                <button
                   class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
                   data-plan-id="P-5U310187T43711805NIVMAJQ" data-plan-name="Expand Email Plan"
                   data-paypal-container="paypal-button-container-P-5U310187T43711805NIVMAJQ">
@@ -1015,6 +1020,95 @@
     </div>
   </div>
 
+  <!-- Email Plan Details Modal -->
+  <div id="email-details-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999] hidden px-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 relative shadow-2xl max-h-[90vh] overflow-y-auto">
+      <button onclick="document.getElementById('email-details-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" aria-label="Close details">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+      <h3 class="text-2xl font-bold primary-text mb-2">Expand Email Plan <span class="secondary-text">Details</span></h3>
+      <p class="text-gray-600 mb-6 border-b pb-4">A complete professional email suite with AI and advanced security.</p>
+      
+      <div class="space-y-4">
+        <div class="flex items-start">
+          <i class="fas fa-inbox mt-1 mr-3 text-cyan-500 w-5 text-center"></i>
+          <div>
+            <h4 class="font-bold text-gray-800">Mailboxes included & Storage</h4>
+            <p class="text-sm text-gray-600">3 Professional mailboxes. 10 GB storage per mailbox (30 GB total). Choose a secondary destination for all messages sent to your domain via Forwarding.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start">
+          <i class="fas fa-users mt-1 mr-3 text-cyan-500 w-5 text-center"></i>
+          <div>
+            <h4 class="font-bold text-gray-800">50 Aliases & Catch-all</h4>
+            <p class="text-sm text-gray-600">50 aliases per mailbox. Receive all emails sent to a non-existent or mistyped email address on your domain using the Catch-all feature.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start">
+          <i class="fas fa-robot mt-1 mr-3 text-cyan-500 w-5 text-center"></i>
+          <div>
+            <h4 class="font-bold text-gray-800">AI Email Assistant</h4>
+            <p class="text-sm text-gray-600">Add a few short notes, and the AI email assistant will create a confident, professional email.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start">
+          <i class="fas fa-globe mt-1 mr-3 text-cyan-500 w-5 text-center"></i>
+          <div>
+            <h4 class="font-bold text-gray-800">Secure Webmail & Calendar</h4>
+            <p class="text-sm text-gray-600">Access your email and calendar through a browser on any device. Manage your events, respond to invites, and keep your schedule organized.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start">
+          <i class="fas fa-shield-alt mt-1 mr-3 text-cyan-500 w-5 text-center"></i>
+          <div>
+            <h4 class="font-bold text-gray-800">Jellyfish Anti-Spam & 2FA</h4>
+            <p class="text-sm text-gray-600">Get full protection with our intelligent machine-learning spam filter. Add an extra layer of security with Two-Factor Authentication (2FA).</p>
+          </div>
+        </div>
+
+        <div class="flex items-start">
+          <i class="fas fa-lock mt-1 mr-3 text-cyan-500 w-5 text-center"></i>
+          <div>
+            <h4 class="font-bold text-gray-800">Storage Encryption</h4>
+            <p class="text-sm text-gray-600">Keep your data protected with advanced encryption on all data stored on our servers.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start">
+          <i class="fas fa-plug mt-1 mr-3 text-cyan-500 w-5 text-center"></i>
+          <div>
+            <h4 class="font-bold text-gray-800">IMAP/SMTP/POP3 & Sync</h4>
+            <p class="text-sm text-gray-600">Connect with third-party email clients using IMAP, SMTP, and POP3. Sync calendar/contacts via CalDAV & CardDAV. Generate application passwords for secure client access.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start">
+          <i class="fas fa-cogs mt-1 mr-3 text-cyan-500 w-5 text-center"></i>
+          <div>
+            <h4 class="font-bold text-gray-800">System Preferences & Auto-reply</h4>
+            <p class="text-sm text-gray-600">Change webmail's language and dark/light mode. Create custom auto-replies so you can respond while you're away.</p>
+          </div>
+        </div>
+      </div>
+      
+      <button onclick="document.getElementById('email-details-modal').classList.add('hidden')" class="mt-8 w-full py-3 rounded-lg bg-gray-100 text-gray-800 font-bold hover:bg-gray-200 transition">
+        Close Details
+      </button>
+    </div>
+  </div>
+  
+  <!-- Make sure clicking outside the modal closes it -->
+  <script>
+    document.getElementById('email-details-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.add('hidden');
+      }
+    });
+  </script>
 
   <section class="py-16 primary-bg text-white digital-static">
     <div class="container mx-auto px-6">
