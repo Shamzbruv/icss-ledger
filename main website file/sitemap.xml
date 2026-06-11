@@ -2,17 +2,47 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://icreatesolutionsandservices.com/</loc>
-    <lastmod>2026-02-05</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://icreatesolutionsandservices.com/subscriptions.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <loc>https://icreatesolutionsandservices.com/web-development.html</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://icreatesolutionsandservices.com/terms.html</loc>
-    <lastmod>2026-02-05</lastmod>
-    <priority>0.5</priority>
+    <loc>https://icreatesolutionsandservices.com/mobile-app-development.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://icreatesolutionsandservices.com/business-automation.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://icreatesolutionsandservices.com/graphic-design.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://icreatesolutionsandservices.com/ecommerce-solutions.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://icreatesolutionsandservices.com/cms-wordpress.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://icreatesolutionsandservices.com/custom-scripts.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://icreatesolutionsandservices.com/reviews.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
