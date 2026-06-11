@@ -83,6 +83,11 @@ const checkSchema = async () => {
             throw new Error(`Missing 'leads' table: ${leadsError.message}`);
         }
 
+        const { error: reviewsError } = await supabase.from('reviews').select('id').limit(1);
+        if (reviewsError && reviewsError.message.includes('does not exist')) {
+            throw new Error(`Missing 'reviews' table. Please run schema_reviews.sql: ${reviewsError.message}`);
+        }
+
         // If simple selects work, we assume schema is okay
         isSchemaValid = true;
         console.log('✅ Database Schema Check Passed');
@@ -2952,10 +2957,9 @@ router.get('/leads', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'leads.html'));
 });
 
-// --- LEADS MODULE ---
-const leadsRoutes = require('./src/routes/leads');
-router.use('/api/leads', leadsRoutes);
-
+router.get('/reviews-admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'reviews-admin.html'));
+});
 // Mount the router under the base path
 app.use(BASE_PATH, router);
 

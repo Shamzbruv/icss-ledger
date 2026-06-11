@@ -36,16 +36,12 @@ const CRM = {
     },
 
     async submitLead(payload) {
-        // Find form timing if triggered from an event
-        let submissionTimeMs = 0;
-        let honeypot = false;
-
-        // Add UTM and common data
+        // Add UTM and common data. Preserve honeypot and time if present.
         const fullPayload = {
             ...payload,
             ...this.utmData,
-            submission_time_ms: submissionTimeMs,
-            honeypot: honeypot,
+            submission_time_ms: payload.submission_time_ms ?? 0,
+            honeypot: payload.honeypot ?? '',
             source: payload.source || 'Website Form'
         };
 

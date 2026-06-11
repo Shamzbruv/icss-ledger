@@ -55,6 +55,19 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'Message too long' });
         }
 
+        // URL validation
+        let website_url = payload.website_url ? payload.website_url.trim() : null;
+        if (website_url) {
+            if (!website_url.startsWith('http://') && !website_url.startsWith('https://')) {
+                return res.status(400).json({ error: 'Website URL must start with http:// or https://' });
+            }
+            try {
+                new URL(website_url);
+            } catch (e) {
+                return res.status(400).json({ error: 'Invalid Website URL format' });
+            }
+        }
+
         const { data, error } = await supabase
             .from('reviews')
             .insert({
@@ -62,7 +75,7 @@ router.post('/', async (req, res) => {
                 name: payload.name,
                 business_name: payload.business_name,
                 rating: rating,
-                website_url: payload.website_url,
+                website_url: website_url,
                 service_completed: payload.service_completed,
                 message: msg
             })
