@@ -72,12 +72,12 @@ const CRM = {
                         <i class="fas fa-times text-xl"></i>
                     </button>
                     <div class="w-16 h-16 bg-cyan-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-400">
-                        <i class="fas fa-chart-line text-cyan-400 text-3xl"></i>
+                        <i class="fas fa-lightbulb text-cyan-400 text-3xl"></i>
                     </div>
                     <h3 class="text-2xl font-bold text-white mb-3">Wait! Don't leave empty-handed.</h3>
-                    <p class="text-gray-300 mb-6 text-sm">Before you go, let us show you exactly how to turn your website into a lead-generation machine. Claim your free 3-point growth audit.</p>
+                    <p class="text-gray-300 mb-6 text-sm">Before you go, let us show you exactly how a professional digital presence can attract more clients and automate your business. Claim your free digital growth strategy.</p>
                     <a href="#audit-cta" onclick="document.getElementById('crm-exit-popup').classList.add('hidden'); gtag('event','select_content',{content_name:'Exit Intent Audit CTA'})" class="block w-full bg-cyan-500 text-blue-900 font-bold py-3 px-6 rounded-full hover:bg-cyan-400 mb-3 transition">
-                        Get My Free Audit
+                        Get My Free Strategy
                     </a>
                     <button onclick="document.getElementById('crm-exit-popup').classList.add('hidden')" class="text-gray-500 text-xs hover:text-gray-300">
                         No thanks, I'm good.
