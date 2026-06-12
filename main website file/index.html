@@ -102,14 +102,17 @@
       --dark: #050F1F;
     }
 
-    html, body {
-      overscroll-behavior-y: none;
+    html {
+      background-color: var(--dark) !important;
     }
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #FAFAFA;
+      background-color: var(--dark) !important;
       color: var(--primary);
       overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     h1,
@@ -3228,7 +3231,7 @@
       </form>
     </div>
   </div>
-  <footer class="primary-bg text-white py-12 digital-static">
+  <footer class="primary-bg text-white py-12 digital-static mt-auto mb-0">
     <div class="container mx-auto px-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
         <div class="fade-in">
@@ -3285,7 +3288,7 @@
       </div>
       <div class="border-t border-gray-700 mt-12 pt-8 text-center">
         <p class="text-gray-400">
-          © 2023 ICREATE Solutions &amp; Services. All rights reserved.
+          © 2026 ICREATE Solutions &amp; Services. All rights reserved.
           <a href="Promotion/index.html" id="valentine-secret" class="text-pink-500 hover:text-pink-400 ml-2 hidden"
             title="A Secret for You">
             <i class="fas fa-heart animate-pulse"></i>
