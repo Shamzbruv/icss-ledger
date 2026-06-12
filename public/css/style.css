@@ -1018,3 +1018,6 @@ hr {
 .star-rating i.active, .star-rating i:hover, .star-rating i:hover ~ i { color: #facc15; }
 .star-rating { direction: rtl; display: inline-flex; }
 .star-rating i:hover ~ i { color: #facc15 !important; }
+
+/* Fix overscroll white background */
+html { background-color: var(--bg-body, #101014); }
