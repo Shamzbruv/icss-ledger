@@ -120,7 +120,7 @@ Timeline: ${payload.timeline}
 Message: ${msg}
                 `;
                 // Using existing email service - assuming it handles standard emails or we can mock standard params
-                // The sendInvoiceEmail signature is (to, subject, text, html, attachmentBuffer, filename, bcc)
+                // Call the generic sendEmail helper
                 // We'll pass null for attachment
                 await sendEmail(adminEmail, subject, `<pre>${textBody}</pre>`);
             }

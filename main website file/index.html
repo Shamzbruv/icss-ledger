@@ -3854,6 +3854,7 @@
           contactForm.reset();
           submitBtn.innerHTML = originalText;
           submitBtn.disabled = false;
+          gtag('event', 'generate_lead', { method: 'contact_form', form_id: 'contact_form' });
         }).catch(() => {
           const mailto = `mailto:iCreatesolutions.ja@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
           window.location.href = mailto;
@@ -3936,7 +3937,9 @@
         budget: budget,
         pain_point: painPoints,
         selected_needs: Array.from(checkboxes).map(cb => cb.value),
-        source: 'Industry Solution Form'
+        source: 'Industry Solution Form',
+        honeypot: form.querySelector('[name="website_url_hp"]')?.value || document.querySelector('[name="website_url_hp"]')?.value || '',
+        submission_time_ms: Date.now() - parseInt(form.querySelector('.form_start_time')?.value || document.querySelector('.form_start_time')?.value || Date.now())
       };
 
       CRM.submitLead(payload).then(() => {
@@ -3996,7 +3999,9 @@
         budget: budget,
         pain_point: painPoints,
         selected_needs: Array.from(checkboxes).map(cb => cb.value),
-        source: 'Industry Solution Form (WhatsApp)'
+        source: 'Industry Solution Form (WhatsApp)',
+        honeypot: form.querySelector('[name="website_url_hp"]')?.value || document.querySelector('[name="website_url_hp"]')?.value || '',
+        submission_time_ms: Date.now() - parseInt(form.querySelector('.form_start_time')?.value || document.querySelector('.form_start_time')?.value || Date.now())
       };
 
       const message = `*New Industry Inquiry for ${serviceName}*` +
@@ -4748,16 +4753,6 @@
               btn.disabled = false;
             }, 2000);
           });
-        });
-      }
-    })();
-
-    // ---- CONTACT FORM GA4 ----
-    (function () {
-      var cf = document.getElementById('contact-form');
-      if (cf) {
-        cf.addEventListener('submit', function () {
-          gtag('event', 'generate_lead', { method: 'contact_form', form_id: 'contact_form' });
         });
       }
     })();
