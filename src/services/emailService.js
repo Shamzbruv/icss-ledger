@@ -56,7 +56,7 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
     console.log('Resend Email sent successfully:', data ? data.id : 'No ID returned');
 }
 
-async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <no-reply@icreatesolutionsandservices.com>', bcc = null) {
+async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <support@icreatesolutionsandservices.com>', bcc = null) {
     try {
         assertResendConfigured();
 

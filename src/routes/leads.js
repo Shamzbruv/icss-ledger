@@ -103,9 +103,11 @@ router.post('/', async (req, res) => {
             return res.status(500).json({ error: 'Failed to save lead' });
         }
 
+        console.log(`[LEADS] Saved lead ${data.id} | ${payload.lead_type} | ${payload.email || payload.phone}`);
+
         // Email notification (non-blocking)
         try {
-            const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+            const adminEmail = process.env.ADMIN_EMAIL;
             if (adminEmail) {
                 const subject = `New Lead: ${payload.lead_type} - ${payload.name}`;
                 const textBody = `
@@ -122,10 +124,25 @@ Message: ${msg}
                 // Using existing email service - assuming it handles standard emails or we can mock standard params
                 // Call the generic sendEmail helper
                 // We'll pass null for attachment
-                await sendEmail(adminEmail, subject, `<pre>${textBody}</pre>`);
+                const emailSent = await sendEmail(adminEmail, subject, `<pre>${textBody}</pre>`);
+                if (!emailSent) {
+                    console.error('Lead notification email returned false');
+                } else {
+                    console.log('Lead notification email sent successfully');
+                }
+                
+                // Add email_notification_sent flag to form_data to keep track
+                const updatedFormData = payload.form_data || {};
+                updatedFormData.email_notification_sent = !!emailSent;
+                await supabase.from('leads').update({ form_data: updatedFormData }).eq('id', data.id);
+            } else {
+                console.warn('ADMIN_EMAIL not set, skipping lead notification email');
             }
         } catch (emailErr) {
             console.error('Lead notification email failed, but lead was saved:', emailErr);
+            const updatedFormData = payload.form_data || {};
+            updatedFormData.email_notification_sent = false;
+            await supabase.from('leads').update({ form_data: updatedFormData }).eq('id', data.id);
         }
 
         res.json({ success: true, message: 'Lead saved successfully', leadId: data.id });
@@ -140,6 +157,7 @@ Message: ${msg}
 // List all leads
 router.get('/', async (req, res) => {
     try {
+        console.log(`[LEADS] Admin list requested`);
         let query = supabase.from('leads').select('*').order('created_at', { ascending: false }).limit(100);
         
         if (req.query.status) query = query.eq('status', req.query.status);
@@ -160,6 +178,8 @@ router.get('/stats', async (req, res) => {
     try {
         const { data, error } = await supabase.from('leads').select('status, priority, lead_type, source');
         if (error) throw error;
+        
+        console.log(`[LEADS] Stats requested: ${data.length} leads found`);
 
         const stats = {
             total: data.length,

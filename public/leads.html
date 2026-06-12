@@ -65,6 +65,8 @@
     <div class="container fade-in">
         <h1 class="mb-4">Website Leads / CRM</h1>
 
+        <div id="errorBanner" class="d-none" style="background: #ff4757; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+
         <!-- Stats Row -->
         <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
             <div class="stat-card">
@@ -223,8 +225,20 @@
                     document.getElementById('statNew').innerText = stats.new || 0;
                     document.getElementById('statHot').innerText = stats.hot || 0;
                     document.getElementById('statWon').innerText = stats.won || 0;
+                    document.getElementById('errorBanner').classList.add('d-none');
+                } else {
+                    const errorText = await res.text();
+                    console.error('Failed to load stats:', res.status, errorText);
+                    const errorBanner = document.getElementById('errorBanner');
+                    errorBanner.innerText = `Failed to load lead stats: [${res.status}] ${errorText}`;
+                    errorBanner.classList.remove('d-none');
                 }
-            } catch(e) { console.error('Failed to load stats', e); }
+            } catch(e) { 
+                console.error('Failed to load stats', e); 
+                const errorBanner = document.getElementById('errorBanner');
+                errorBanner.innerText = `Failed to load lead stats: ${e.message}`;
+                errorBanner.classList.remove('d-none');
+            }
         }
 
         async function loadLeads() {
@@ -239,10 +253,14 @@
                 if(res.ok) {
                     allLeads = await res.json();
                     renderTable(allLeads);
+                } else {
+                    const errorText = await res.text();
+                    console.error('Failed to load leads:', res.status, errorText);
+                    document.getElementById('leadsTableBody').innerHTML = `<tr><td colspan="8" class="text-center" style="color: #ff4757;">Failed to load leads: [${res.status}] ${errorText}</td></tr>`;
                 }
             } catch(e) {
                 console.error('Failed to load leads', e);
-                document.getElementById('leadsTableBody').textContent = 'Failed to load leads';
+                document.getElementById('leadsTableBody').innerHTML = `<tr><td colspan="8" class="text-center" style="color: #ff4757;">Failed to load leads: ${e.message}</td></tr>`;
             }
         }
 
