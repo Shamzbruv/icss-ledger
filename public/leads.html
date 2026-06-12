@@ -275,8 +275,8 @@
 
             leads.forEach(lead => {
                 const date = new Date(lead.created_at).toLocaleDateString();
-                const statusClass = \`status-\${lead.status ? lead.status.replace(/\\s+/g, '') : 'New'}\`;
-                const priorityClass = \`priority-\${lead.priority}\`;
+                const statusClass = `status-${lead.status ? lead.status.replace(/\s+/g, '') : 'New'}`;
+                const priorityClass = `priority-${lead.priority}`;
                 
                 const tr = document.createElement('tr');
                 
@@ -284,23 +284,23 @@
                 tdDate.textContent = date;
                 
                 const tdName = document.createElement('td');
-                tdName.innerHTML = \`<strong>\${escapeHTML(lead.name)}</strong><br><small class="text-muted">\${escapeHTML(lead.business_name || '')}</small>\`;
+                tdName.innerHTML = `<strong>${escapeHTML(lead.name)}</strong><br><small class="text-muted">${escapeHTML(lead.business_name || '')}</small>`;
                 
                 const tdContact = document.createElement('td');
-                tdContact.innerHTML = \`\${escapeHTML(lead.email || '')}<br>\${escapeHTML(lead.phone || '')}\`;
+                tdContact.innerHTML = `${escapeHTML(lead.email || '')}<br>${escapeHTML(lead.phone || '')}`;
                 
                 const tdType = document.createElement('td');
                 tdType.textContent = lead.lead_type || 'Unknown';
                 
                 const tdService = document.createElement('td');
-                tdService.innerHTML = \`\${escapeHTML(lead.service_needed || lead.package_name || 'N/A')}<br><small class="text-muted">\${escapeHTML(lead.budget || '')}</small>\`;
+                tdService.innerHTML = `${escapeHTML(lead.service_needed || lead.package_name || 'N/A')}<br><small class="text-muted">${escapeHTML(lead.budget || '')}</small>`;
                 
                 const tdPriority = document.createElement('td');
                 tdPriority.className = priorityClass;
                 tdPriority.textContent = lead.priority || 'Warm';
                 
                 const tdStatus = document.createElement('td');
-                tdStatus.innerHTML = \`<span class="\${statusClass}">\${escapeHTML(lead.status || 'New')}</span>\`;
+                tdStatus.innerHTML = `<span class="${statusClass}">${escapeHTML(lead.status || 'New')}</span>`;
                 
                 const tdAction = document.createElement('td');
                 const btn = document.createElement('button');
