@@ -1013,3 +1013,8 @@ hr {
         flex: none !important;
     }
 }
+/* Star Rating CSS extracted from reviews.html */
+.star-rating i { cursor: pointer; color: #4b5563; transition: color 0.2s; }
+.star-rating i.active, .star-rating i:hover, .star-rating i:hover ~ i { color: #facc15; }
+.star-rating { direction: rtl; display: inline-flex; }
+.star-rating i:hover ~ i { color: #facc15 !important; }
