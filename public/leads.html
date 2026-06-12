@@ -209,16 +209,8 @@
     </div>
 
     <script>
-        // Check Auth
-        async function checkAuth() {
-            try {
-                const res = await fetch('/api/me');
-                if (!res.ok) window.location.href = '/login';
-            } catch (e) {
-                window.location.href = '/login';
-            }
-        }
-        checkAuth();
+        // Auth is handled by layout.js (checks Supabase session)
+        // All protected API calls use apiFetch() which attaches the JWT
 
         let allLeads = [];
 

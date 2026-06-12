@@ -130,12 +130,14 @@ router.patch('/:id', async (req, res) => {
     }
 });
 
-// Protected: Hard delete review
+// Protected: Soft-delete review (archive)
 router.delete('/:id', async (req, res) => {
     try {
-        const { error } = await supabase.from('reviews').delete().eq('id', req.params.id);
+        const { error } = await supabase.from('reviews')
+            .update({ status: 'deleted' })
+            .eq('id', req.params.id);
         if (error) throw error;
-        res.json({ success: true, message: 'Review deleted' });
+        res.json({ success: true, message: 'Review archived' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

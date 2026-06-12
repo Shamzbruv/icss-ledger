@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const supabase = require('../db');
-const { sendInvoiceEmail } = require('../services/emailService');
+const { sendEmail } = require('../services/emailService');
 
 // Public lead submission
 router.post('/', async (req, res) => {
@@ -122,7 +122,7 @@ Message: ${msg}
                 // Using existing email service - assuming it handles standard emails or we can mock standard params
                 // The sendInvoiceEmail signature is (to, subject, text, html, attachmentBuffer, filename, bcc)
                 // We'll pass null for attachment
-                await sendInvoiceEmail(adminEmail, subject, textBody, `<pre>${textBody}</pre>`, null, null, null);
+                await sendEmail(adminEmail, subject, `<pre>${textBody}</pre>`);
             }
         } catch (emailErr) {
             console.error('Lead notification email failed, but lead was saved:', emailErr);

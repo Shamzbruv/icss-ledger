@@ -77,12 +77,7 @@
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Business Automation", "description": "Workflow automation, CRM, custom systems" } }
       ]
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "5.0",
-      "reviewCount": "3",
-      "bestRating": "5"
-    },
+
     "sameAs": [
       "https://www.linkedin.com/in/shamar-baker-0b75a8284",
       "https://www.instagram.com/icreate_solutions/"
@@ -712,7 +707,7 @@
     }
 
     /* =============================================
-       CONVERSION FEATURES ΓÇö OFFER BAR, WHATSAPP FAB,
+       CONVERSION FEATURES — OFFER BAR, WHATSAPP FAB,
        QUOTE QUIZ, AUDIT CTA, COOKIE BANNER
     ============================================= */
 
@@ -1387,24 +1382,24 @@
   <div id="welcome-popup-overlay">
     <div class="welcome-popup-card">
       <button class="welcome-close" onclick="closeWelcomePopup()" aria-label="Close">&times;</button>
-      <span class="welcome-flag">≡ƒç»≡ƒç▓</span>
+      <span class="welcome-flag">🇯🇲</span>
       <h2>Welcome to iCreate Solutions!</h2>
       <p class="welcome-sub">What can we help you build today?</p>
       <div class="welcome-services-grid">
         <button class="welcome-service-btn" onclick="welcomeSelectService('Web Development')">
-          <span class="ws-icon">≡ƒîÉ</span>
+          <span class="ws-icon">🌐</span>
           <span>Website Development</span>
         </button>
         <button class="welcome-service-btn" onclick="welcomeSelectService('App Development')">
-          <span class="ws-icon">≡ƒô▒</span>
+          <span class="ws-icon">📱</span>
           <span>App Development</span>
         </button>
         <button class="welcome-service-btn" onclick="welcomeSelectService('Graphic Design')">
-          <span class="ws-icon">≡ƒÄ¿</span>
+          <span class="ws-icon">🎨</span>
           <span>Graphic Design</span>
         </button>
         <button class="welcome-service-btn" onclick="welcomeSelectService('Automation')">
-          <span class="ws-icon">ΓÜÖ∩╕Å</span>
+          <span class="ws-icon">⚙️</span>
           <span>Business Automation</span>
         </button>
       </div>
@@ -1475,7 +1470,7 @@
       <div class="flex flex-col md:flex-row items-center">
         <div class="md:w-1/2 mb-12 md:mb-0 fade-in">
           <h1 class="hero-title text-4xl md:text-6xl font-bold text-white mb-6">
-            A Globally Trusted <span class="secondary-text">Digital</span> Agency ΓÇö Websites, Apps & <span class="accent-text">Designs</span> That Deliver Results
+            A Globally Trusted <span class="secondary-text">Digital</span> Agency — Websites, Apps & <span class="accent-text">Designs</span> That Deliver Results
           </h1>
           <p class="text-xl md:text-2xl text-gray-300 font-light mb-8 max-w-2xl hero-subtitle fade-in"
             style="animation-delay: 0.2s">
@@ -1533,10 +1528,10 @@
 
         <!-- LEFT: Value Copy -->
         <div class="fade-in">
-          <div class="audit-badge">≡ƒöì Free Website Review</div>
-          <h2 class="text-3xl md:text-4xl font-bold primary-text mb-3">
-            See What I'd Improve on <span class="secondary-text">Your Website</span> ΓÇö Free
-          </h2>
+          <div class="audit-badge">🔍 Free Website Review</div>
+          <h3 class="text-2xl md:text-3xl font-bold primary-text mb-4">
+            See What I'd Improve on <span class="secondary-text">Your Website</span> — Free
+          </h3>
           <p class="text-gray-600 mb-1" style="font-size:0.95rem;">
             You'll receive <strong>3 specific, actionable improvements</strong> you can act on right away:
           </p>
@@ -1547,34 +1542,28 @@
             </li>
             <li>
               <span class="audit-checkmark"><i class="fas fa-check"></i></span>
-              <span><strong>Conversion gaps</strong> ΓÇö what's stopping visitors from contacting you</span>
+              <span><strong>Conversion gaps</strong> — what's stopping visitors from contacting you</span>
             </li>
-            <li>
-              <span class="audit-checkmark"><i class="fas fa-check"></i></span>
+            <li class="flex items-start">
+              <i class="fas fa-check-circle secondary-text mt-1 mr-3 flex-shrink-0"></i>
               <span><strong>Quick design or SEO wins</strong> you can fix today</span>
             </li>
           </ul>
 
           <!-- Sample Preview Card -->
-          <div class="audit-sample-card">
-            <div class="sample-tag"><i class="fas fa-file-alt mr-1"></i> Sample Audit Preview</div>
-            <div class="audit-sample-item">
-              <div class="bullet"></div>
-              <span>Your homepage takes <strong style="color:#00F5FF;">4.2s</strong> to load on mobile. Compress images &amp; enable lazy loading to cut that in half.</span>
-            </div>
-            <div class="audit-sample-item">
-              <div class="bullet"></div>
-              <span>Your main CTA button is <strong style="color:#00F5FF;">below the fold</strong> on iPhone screens ΓÇö moving it up could lift clicks by ~30%.</span>
-            </div>
-            <div class="audit-sample-item">
-              <div class="bullet"></div>
-              <span>You're missing a <strong style="color:#00F5FF;">meta description</strong> on 3 pages ΓÇö quick SEO fix with big visibility impact.</span>
-            </div>
+          <div class="audit-preview-box">
+            <div class="audit-preview-title"><i class="fas fa-file-alt mr-2"></i> SAMPLE AUDIT PREVIEW</div>
+            <ul class="audit-preview-list">
+              <li>Your homepage takes <strong style="color:#00F5FF;">4.2s</strong> to load on mobile. Compress images &
+                enable lazy loading to cut that in half.</li>
+              <li>Your main CTA button is <strong style="color:#00F5FF;">below the fold</strong> on iPhone screens — moving it up could lift clicks by ~30%.</li>
+              <li>You're missing a <strong style="color:#00F5FF;">meta description</strong> on 3 pages — quick SEO fix with big visibility impact.</li>
+            </ul>
           </div>
 
           <div class="audit-trust-note">
-            <i class="fab fa-whatsapp fa-lg"></i>
-            <span>Delivered via WhatsApp within 24 hours. Just actionable insights ΓÇö no pressure, no sales pitch.</span>
+            <i class="fab fa-whatsapp text-green-500 mr-2 text-lg"></i>
+            <span>Delivered via WhatsApp within 24 hours. Just actionable insights — no pressure, no sales pitch.</span>
           </div>
         </div>
 
@@ -1611,17 +1600,19 @@
                   <option value="Get more leads">Get more leads &amp; inquiries</option>
                   <option value="Look more professional">Look more professional online</option>
                   <option value="Improve search rankings">Improve search rankings</option>
-                  <option value="Not sure">Not sure ΓÇö help me figure it out</option>
+                  <option value="Not sure">Not sure — help me figure it out</option>
                 </select>
               </div>
-              <p style="font-size:0.73rem;color:#9ca3af;margin-bottom:12px;">By submitting you consent to iCreate Solutions contacting you via WhatsApp or email.</p>
-              <button type="submit" class="audit-submit-btn" id="audit-submit-btn">
-                <i class="fas fa-paper-plane mr-2"></i>Send My Audit Request
-              </button>
-              <p style="text-align:center;margin-top:8px;font-size:0.78rem;">
-                <a onclick="submitAuditFormWhatsApp(event)" style="color:var(--secondary);cursor:pointer;text-decoration:underline;"><i class="fab fa-whatsapp mr-1"></i>Or send via WhatsApp instead</a>
-              </p>
-              <p class="audit-microcopy">≡ƒöÆ Your info is safe. No spam, ever.</p>
+
+              <div class="relative w-full z-10">
+                <button type="submit" id="audit-submit-btn"
+                  class="w-full secondary-bg primary-text px-6 py-4 rounded-xl font-bold text-lg hover:bg-cyan-400 transition glow-effect flex items-center justify-center relative overflow-hidden group">
+                  <span class="relative z-10 flex items-center">
+                    Get My Free Audit <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                  </span>
+                </button>
+              </div>
+              <p class="audit-microcopy">🔒 Your info is safe. No spam, ever.</p>
             </form>
             <p class="audit-alt-link">
               Want a price instead? <a onclick="openQuizModal('Audit Alt Link')">Get an instant quote →</a>
@@ -1639,7 +1630,7 @@
       <div class="text-center mb-16 fade-in">
         <h2 class="text-3xl md:text-4xl font-bold primary-text mb-4">Your Premier <span class="secondary-text">Digital</span> Partner</h2>
         <p class="text-gray-600 text-lg max-w-3xl mx-auto">
-          Whether you need a professional website, a custom mobile app, or cutting-edge business automation ΓÇö iCreate Solutions delivers world-class results globally at competitive rates.
+          Whether you need a professional website, a custom mobile app, or cutting-edge business automation — iCreate Solutions delivers world-class results globally at competitive rates.
         </p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -2443,7 +2434,7 @@
           <span class="hidden md:block w-12 h-1 bg-cyan-400 ml-4"></span>
         </h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          Everything your business needs to launch, operate and scaleΓÇöwebsite, employee support, customer management, automation and more.
+          Everything your business needs to launch, operate and scale—website, employee support, customer management, automation and more.
         </p>
       </div>
 
@@ -2699,7 +2690,7 @@
             <img src="assets/images/portfolio/tbo_wedding.jpg" alt="TBO Destination Wedding Design"
               class="portfolio-image">
             <div class="portfolio-overlay">
-              <h3 class="text-xl font-bold text-white mb-1">Tashana Brown-OΓÇÖConnor</h3>
+              <h3 class="text-xl font-bold text-white mb-1">Tashana Brown-O’Connor</h3>
               <p class="text-cyan-300 text-sm">Destination Weddings</p>
             </div>
           </div>
@@ -2970,8 +2961,8 @@
       <div class="flex justify-center">
         <div class="team-member max-w-sm w-full fade-in">
           <div class="bg-gray-100 rounded-xl overflow-hidden shadow-lg relative group">
-            <img alt="Team Lead Photo" class="w-full h-auto object-cover aspect-square"
-              src="https://i.postimg.cc/sX05mmbk/1760580147247.png' border='0" />
+            <img alt="Shamar Baker - Founder" class="w-full h-auto object-cover aspect-square"
+              src="https://i.postimg.cc/sX05mmbk/1760580147247.png" />
             <div class="p-6 text-center">
               <h3 class="text-xl font-bold primary-text mb-1">Shamar Baker</h3>
               <p class="text-cyan-600 mb-3">Founder &amp; Digital Innovation Expert</p>
@@ -3106,15 +3097,15 @@
         </h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">Subscribe to our newsletter for the latest updates, tech
           insights, and exclusive offers.</p>
-        <form class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+        <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
   <!-- Spam Protection -->
   <input type="text" name="website_url_hp" style="display:none" tabindex="-1">
   <input type="hidden" name="form_start_time" class="form_start_time" value="">
 
-          <input
+          <input id="newsletter-email" name="email"
             class="flex-grow bg-white border border-gray-300 rounded-full px-6 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-300"
-            placeholder="Your email address" type="email" />
-          <button
+            placeholder="Your email address" type="email" required />
+          <button id="newsletter-submit-btn"
             class="secondary-bg primary-text px-6 py-3 rounded-full font-bold hover:bg-cyan-400 transition glow-effect whitespace-nowrap"
             type="submit">
             Subscribe
@@ -3304,6 +3295,8 @@
       </div>
     </div>
   </footer>
+  <!-- CRM Integration: must load before inline scripts that call CRM.submitLead() -->
+  <script src="js/crm-integration.js"></script>
   <script>
     // Mobile menu toggle
     document.getElementById('mobile-menu-button').addEventListener('click', function () {
@@ -3931,27 +3924,30 @@
       const checkboxes = form.querySelectorAll('input[type="checkbox"]:checked');
       const selectedNeeds = Array.from(checkboxes).map(cb => cb.value).join(', ');
 
-      const bodyLines = [
-        `Service Requested: ${serviceName}`,
-        `\n--- Client Details ---`,
-        `Name: ${name}`,
-        `Business: ${business}`,
-        `Phone: ${phone}`,
-        `Email: ${email}`,
-        `\n--- Project Scope ---`,
-        `Key Needs: ${selectedNeeds || 'None selected'}`,
-        `Stage: ${projectStage}`,
-        `Timeline: ${timeline}`,
-        `Budget: ${budget}`,
-        `\n--- Primary Pain Point ---`,
-        `${painPoints}`
-      ];
+      const payload = {
+        lead_type: 'Industry Inquiry',
+        service_needed: serviceName,
+        name: name,
+        business_name: business,
+        phone: phone,
+        email: email,
+        project_stage: projectStage,
+        timeline: timeline,
+        budget: budget,
+        pain_point: painPoints,
+        selected_needs: Array.from(checkboxes).map(cb => cb.value),
+        source: 'Industry Solution Form'
+      };
 
-      const mailto = `mailto:icreatesolutions.ja@gmail.com` +
-        `?subject=${encodeURIComponent(`New Industry Inquiry: ${serviceName}`)}` +
-        `&body=${encodeURIComponent(bodyLines.join('\n'))}`;
-
-      window.location.href = mailto;
+      CRM.submitLead(payload).then(() => {
+        CRM.showSuccess();
+        form.reset();
+        gtag('event', 'generate_lead', { method: 'industry_form', form_id: 'industry_solution' });
+      }).catch(() => {
+        const bodyLines = [`Service: ${serviceName}`, `Name: ${name}`, `Email: ${email}`, `Phone: ${phone}`];
+        const mailto = `mailto:icreatesolutions.ja@gmail.com?subject=${encodeURIComponent('Industry Inquiry: ' + serviceName)}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
+        window.location.href = mailto;
+      });
     }
 
     function submitSolutionFormWhatsApp(event, element) {
@@ -3988,6 +3984,21 @@
       const checkboxes = form.querySelectorAll('input[type="checkbox"]:checked');
       const selectedNeeds = Array.from(checkboxes).map(cb => cb.value).join(', ');
 
+      const payload = {
+        lead_type: 'Industry Inquiry (WhatsApp)',
+        service_needed: serviceName,
+        name: name,
+        business_name: business,
+        phone: phone,
+        email: email,
+        project_stage: projectStage,
+        timeline: timeline,
+        budget: budget,
+        pain_point: painPoints,
+        selected_needs: Array.from(checkboxes).map(cb => cb.value),
+        source: 'Industry Solution Form (WhatsApp)'
+      };
+
       const message = `*New Industry Inquiry for ${serviceName}*` +
         `\n\n*Client Details:*` +
         `\nName: ${name}` +
@@ -4002,9 +4013,17 @@
         `\n\n*Primary Pain Point:*` +
         `\n${painPoints}`;
 
-      const whatsappNumber = '18765857469';
-      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
+      CRM.submitLead(payload).then(() => {
+        const whatsappNumber = '18765857469';
+        const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+        gtag('event', 'generate_lead', { method: 'industry_whatsapp', form_id: 'industry_solution' });
+      }).catch(() => {
+        // Still open WhatsApp even if CRM save fails
+        const whatsappNumber = '18765857469';
+        const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+      });
     }
   </script>
 
@@ -4028,7 +4047,7 @@
         <button id="quiz-modal-close" onclick="closeQuizModal()" aria-label="Close quiz">×</button>
         <div class="quiz-step-label" id="quiz-step-label">Step 1 of 3</div>
         <div id="quiz-modal-title" style="font-size:1.2rem;font-weight:700;margin-bottom:4px;">Get Your Instant Quote</div>
-        <div style="font-size:0.82rem;opacity:0.75;">Answer a few quick questions ΓÇö takes under 60 seconds.</div>
+        <div style="font-size:0.82rem;opacity:0.75;">Answer a few quick questions — takes under 60 seconds.</div>
         <div class="quiz-progress-bar-track">
           <div class="quiz-progress-bar-fill" id="quiz-progress-fill" style="width:33%;"></div>
         </div>
@@ -4042,24 +4061,24 @@
           <p class="quiz-hint">Select the option that best fits your project.</p>
           <div class="quiz-service-cards">
             <div class="quiz-service-card" data-value="Website Design" onclick="selectService(this)" tabindex="0" onkeydown="if(event.key==='Enter')selectService(this)">
-              <div class="card-icon">≡ƒîÉ</div>
+              <div class="card-icon">🌐</div>
               <div class="card-label">Website Design</div>
             </div>
             <div class="quiz-service-card" data-value="Mobile App" onclick="selectService(this)" tabindex="0" onkeydown="if(event.key==='Enter')selectService(this)">
-              <div class="card-icon">≡ƒô▒</div>
+              <div class="card-icon">📱</div>
               <div class="card-label">Mobile App</div>
             </div>
             <div class="quiz-service-card" data-value="Graphic Design" onclick="selectService(this)" tabindex="0" onkeydown="if(event.key==='Enter')selectService(this)">
-              <div class="card-icon">≡ƒÄ¿</div>
+              <div class="card-icon">🎨</div>
               <div class="card-label">Graphic Design</div>
             </div>
             <div class="quiz-service-card" data-value="Business Automation" onclick="selectService(this)" tabindex="0" onkeydown="if(event.key==='Enter')selectService(this)">
-              <div class="card-icon">ΓÜÖ∩╕Å</div>
+              <div class="card-icon">⚙️</div>
               <div class="card-label">Business Automation</div>
             </div>
             <div class="quiz-service-card" data-value="Not sure yet" onclick="selectService(this)" tabindex="0" onkeydown="if(event.key==='Enter')selectService(this)" style="grid-column: span 2;">
-              <div class="card-icon">≡ƒñ╖</div>
-              <div class="card-label">Not sure yet ΓÇö help me decide</div>
+              <div class="card-icon">🤷</div>
+              <div class="card-label">Not sure yet — help me decide</div>
             </div>
           </div>
           <p id="quiz-step1-error" style="color:#ef4444;font-size:0.78rem;margin-top:10px;display:none;">Please select an option to continue.</p>
@@ -4115,14 +4134,14 @@
           </div>
 
           <div class="quiz-nav">
-            <button class="quiz-btn-back" onclick="quizBack(2)">ΓåÉ Back</button>
+            <button class="quiz-btn-back" onclick="quizBack(2)">← Back</button>
             <button class="quiz-btn-next" onclick="quizNext(2)">Next →</button>
           </div>
         </div>
 
         <!-- STEP 3: Contact details -->
         <div class="quiz-step" id="quiz-step-3">
-          <h3>Almost there ΓÇö where do we send your quote?</h3>
+          <h3>Almost there — where do we send your quote?</h3>
           <p class="quiz-hint">We'll send your quote via WhatsApp or email, whichever you prefer.</p>
 
           <div class="quiz-form-field" style="margin-top:16px;">
@@ -4148,14 +4167,14 @@
 
           <div class="quiz-nav" style="flex-direction: column;">
             <div style="display: flex; gap: 8px; width: 100%;">
-              <button class="quiz-btn-back" onclick="quizBack(3)">ΓåÉ Back</button>
+              <button class="quiz-btn-back" onclick="quizBack(3)">← Back</button>
               <button class="quiz-btn-next" onclick="submitQuiz()" style="background:linear-gradient(135deg,#0A1A3A,#003366);color:#00F5FF;flex: 2;">Send Quote Request <i class="fas fa-paper-plane ml-1"></i></button>
             </div>
             <p style="text-align:center;margin-top:12px;font-size:0.78rem;">
               <a onclick="submitQuizWhatsApp()" style="color:var(--secondary);cursor:pointer;text-decoration:underline;"><i class="fab fa-whatsapp mr-1"></i>Or send via WhatsApp instead</a>
             </p>
           </div>
-          <p style="text-align:center;font-size:0.73rem;color:#9ca3af;margin-top:10px;">≡ƒöÆ Your details are safe. No spam, ever.</p>
+          <p style="text-align:center;font-size:0.73rem;color:#9ca3af;margin-top:10px;">🔒 Your details are safe. No spam, ever.</p>
         </div>
 
       </div>
@@ -4236,13 +4255,33 @@
     (function() {
       // Check if it's the first visit and not coming from an anchor
       if (!sessionStorage.getItem('welcomeShown') && !window.location.hash) {
-        setTimeout(function() {
-          const popup = document.getElementById('welcome-popup-overlay');
+        var popupTriggered = false;
+        function showWelcome() {
+          if (popupTriggered) return;
+          popupTriggered = true;
+          var popup = document.getElementById('welcome-popup-overlay');
           if (popup) {
             popup.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling while open
+            document.body.style.overflow = 'hidden';
           }
-        }, 800); // Small delay to let the page load
+        }
+        // Trigger after 20 seconds
+        setTimeout(showWelcome, 20000);
+        // Trigger at 45% scroll
+        window.addEventListener('scroll', function onScroll() {
+          var scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+          if (scrollPercent >= 45) {
+            showWelcome();
+            window.removeEventListener('scroll', onScroll);
+          }
+        });
+        // Trigger on exit intent (mouse leaves top of window)
+        document.addEventListener('mouseleave', function onExit(e) {
+          if (e.clientY < 0) {
+            showWelcome();
+            document.removeEventListener('mouseleave', onExit);
+          }
+        });
       }
       // Always set it so it doesn't show again in the same session
       sessionStorage.setItem('welcomeShown', '1');
@@ -4399,28 +4438,31 @@
       var url = document.getElementById('quiz-url').value.trim() || 'Not provided';
       var features = Array.from(document.querySelectorAll('input[name="qfeat"]:checked')).map(function (c) { return c.value; }).join(', ') || 'None selected';
 
-      const bodyLines = [
-        `Service Needed: ${quizSelectedService}`,
-        `\n--- Client Details ---`,
-        `Name: ${name}`,
-        `Email: ${email}`,
-        `Phone: ${phone || 'Not provided'}`,
-        `\n--- Project Scope ---`,
-        `Budget: ${budget}`,
-        `Timeline: ${timeline}`,
-        `Features Needed: ${features}`,
-        `Website URL: ${url}`,
-        `\nLead Source: Instant Quote Quiz`
-      ];
+      const payload = {
+        lead_type: 'Instant Quote',
+        service_needed: quizSelectedService,
+        name: name,
+        email: email,
+        phone: phone,
+        budget: budget,
+        timeline: timeline,
+        website_url: url !== 'Not provided' ? url : '',
+        selected_features: Array.from(document.querySelectorAll('input[name="qfeat"]:checked')).map(function(c) { return c.value; }),
+        consent_given: true,
+        source: 'Instant Quote Quiz'
+      };
 
-      gtag('event', 'generate_lead', { method: 'instant_quote_quiz', form_id: 'quote_quiz' });
-
-      const mailto = `mailto:icreatesolutions.ja@gmail.com` +
-        `?subject=${encodeURIComponent(`New Instant Quote Request: ${name}`)}` +
-        `&body=${encodeURIComponent(bodyLines.join('\n'))}`;
-
-      window.location.href = mailto;
-      closeQuizModal();
+      CRM.submitLead(payload).then(() => {
+        gtag('event', 'generate_lead', { method: 'instant_quote_quiz', form_id: 'quote_quiz' });
+        closeQuizModal();
+        CRM.showSuccess();
+      }).catch(() => {
+        // Fallback to mailto if CRM fails
+        const bodyLines = [`Service: ${quizSelectedService}`, `Name: ${name}`, `Email: ${email}`, `Budget: ${budget}`];
+        const mailto = `mailto:icreatesolutions.ja@gmail.com?subject=${encodeURIComponent('Instant Quote Request: ' + name)}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
+        window.location.href = mailto;
+        closeQuizModal();
+      });
     }
 
     function submitQuizWhatsApp() {
@@ -4452,7 +4494,21 @@
       var url = document.getElementById('quiz-url').value.trim() || 'Not provided';
       var features = Array.from(document.querySelectorAll('input[name="qfeat"]:checked')).map(function (c) { return c.value; }).join(', ') || 'None selected';
 
-      var msg = '*New Instant Quote Lead* ≡ƒÜÇ\n';
+      var payload = {
+        lead_type: 'Instant Quote (WhatsApp)',
+        service_needed: quizSelectedService,
+        name: name,
+        email: email,
+        phone: phone,
+        budget: budget,
+        timeline: timeline,
+        website_url: url !== 'Not provided' ? url : '',
+        selected_features: Array.from(document.querySelectorAll('input[name="qfeat"]:checked')).map(function(c) { return c.value; }),
+        consent_given: true,
+        source: 'Instant Quote Quiz (WhatsApp)'
+      };
+
+      var msg = '*New Instant Quote Lead*\n';
       msg += 'Name: ' + name + '\n';
       msg += 'Email: ' + email + '\n';
       msg += 'Phone: ' + (phone || 'Not provided') + '\n';
@@ -4463,11 +4519,17 @@
       msg += 'Features Needed: ' + features + '\n';
       msg += 'Lead Source: Instant Quote Quiz';
 
-      gtag('event', 'generate_lead', { method: 'instant_quote_quiz', form_id: 'quote_quiz' });
-
-      var encoded = encodeURIComponent(msg);
-      window.open('https://wa.me/18765857469?text=' + encoded, '_blank');
-      closeQuizModal();
+      CRM.submitLead(payload).then(function() {
+        gtag('event', 'generate_lead', { method: 'instant_quote_quiz', form_id: 'quote_quiz' });
+        var encoded = encodeURIComponent(msg);
+        window.open('https://wa.me/18765857469?text=' + encoded, '_blank');
+        closeQuizModal();
+      }).catch(function() {
+        // Still open WhatsApp even if CRM save fails
+        var encoded = encodeURIComponent(msg);
+        window.open('https://wa.me/18765857469?text=' + encoded, '_blank');
+        closeQuizModal();
+      });
     }
 
     // ---- AUDIT FORM ----
@@ -4533,7 +4595,19 @@
         return;
       }
 
-      var msg = '*New Website Audit Request* ≡ƒöì\n';
+      var payload = {
+        lead_type: 'Free Website Audit (WhatsApp)',
+        name: name,
+        email: email,
+        website_url: url,
+        business_name: business,
+        goal: goal,
+        source: 'Audit CTA (WhatsApp)',
+        honeypot: form.querySelector('[name="website_url_hp"]') ? form.querySelector('[name="website_url_hp"]').value : '',
+        submission_time_ms: form.querySelector('.form_start_time') ? Date.now() - parseInt(form.querySelector('.form_start_time').value || Date.now()) : 5000
+      };
+
+      var msg = '*New Website Audit Request*\n';
       msg += 'Name: ' + name + '\n';
       msg += 'Email: ' + email + '\n';
       msg += 'Website URL: ' + url + '\n';
@@ -4541,16 +4615,25 @@
       msg += 'Main Goal: ' + goal + '\n';
       msg += 'Lead Source: Free Audit CTA';
 
-      gtag('event', 'generate_lead', { method: 'audit_request', form_id: 'audit_cta' });
-
-      var encoded = encodeURIComponent(msg);
-      window.open('https://wa.me/18765857469?text=' + encoded, '_blank');
-
       var btn = document.getElementById('audit-submit-btn');
-      btn.textContent = 'Γ£ô Sent! Check your WhatsApp.';
-      btn.style.background = '#25D366';
-      btn.style.color = '#fff';
+      var originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Sending...';
       btn.disabled = true;
+
+      CRM.submitLead(payload).then(function() {
+        gtag('event', 'generate_lead', { method: 'audit_request', form_id: 'audit_cta' });
+        var encoded = encodeURIComponent(msg);
+        window.open('https://wa.me/18765857469?text=' + encoded, '_blank');
+        btn.textContent = 'Sent! Check your WhatsApp.';
+        btn.style.background = '#25D366';
+        btn.style.color = '#fff';
+      }).catch(function() {
+        // Still open WhatsApp even if CRM save fails
+        var encoded = encodeURIComponent(msg);
+        window.open('https://wa.me/18765857469?text=' + encoded, '_blank');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      });
     }
 
     function submitPackageForm(e, packageName, formNum) {
@@ -4611,12 +4694,63 @@
         submission_time_ms: Date.now() - parseInt(form.querySelector('.form_start_time').value || Date.now())
       };
       
-      CRM.submitLead(payload);
+      var text = `Hi iCreate Solutions!\n\nI'm interested in the *${packageName}* package.\n\n*My Details:*\nName: ${name}\nEmail: ${email || 'Not provided'}\nPhone/WhatsApp: ${phone}\n\nPlease let me know the next steps!`;
 
-      var text = `Hi iCreate Solutions! 👋\n\nI'm interested in the *${packageName}* package.\n\n*My Details:*\nName: ${name}\nEmail: ${email || 'Not provided'}\nPhone/WhatsApp: ${phone}\n\nPlease let me know the next steps!`;
-      window.open(`https://wa.me/18765857469?text=${encodeURIComponent(text)}`, '_blank');
-      gtag('event', 'generate_lead', { method: 'whatsapp', form_id: 'package_form' });
+      CRM.submitLead(payload).then(function() {
+        gtag('event', 'generate_lead', { method: 'whatsapp', form_id: 'package_form' });
+        window.open(`https://wa.me/18765857469?text=${encodeURIComponent(text)}`, '_blank');
+      }).catch(function() {
+        // Still open WhatsApp even if CRM save fails
+        window.open(`https://wa.me/18765857469?text=${encodeURIComponent(text)}`, '_blank');
+      });
     }
+
+    // ---- NEWSLETTER FORM ----
+    (function () {
+      var nf = document.getElementById('newsletter-form');
+      if (nf) {
+        nf.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var emailInput = document.getElementById('newsletter-email');
+          var email = emailInput.value.trim();
+          if (!email) return;
+
+          var btn = document.getElementById('newsletter-submit-btn');
+          var originalText = btn.innerHTML;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Subscribing...';
+          btn.disabled = true;
+
+          var payload = {
+            lead_type: 'Newsletter Signup',
+            email: email,
+            name: email.split('@')[0],
+            source: 'Newsletter Form',
+            honeypot: nf.querySelector('[name="website_url_hp"]') ? nf.querySelector('[name="website_url_hp"]').value : '',
+            submission_time_ms: nf.querySelector('.form_start_time') ? Date.now() - parseInt(nf.querySelector('.form_start_time').value || Date.now()) : 5000
+          };
+
+          CRM.submitLead(payload).then(function() {
+            btn.innerHTML = '✓ Subscribed!';
+            btn.style.background = '#2ed573';
+            emailInput.value = '';
+            gtag('event', 'generate_lead', { method: 'newsletter', form_id: 'newsletter_form' });
+            setTimeout(function() {
+              btn.innerHTML = originalText;
+              btn.style.background = '';
+              btn.disabled = false;
+            }, 3000);
+          }).catch(function() {
+            btn.innerHTML = 'Error — try again';
+            btn.style.background = '#ff4757';
+            setTimeout(function() {
+              btn.innerHTML = originalText;
+              btn.style.background = '';
+              btn.disabled = false;
+            }, 2000);
+          });
+        });
+      }
+    })();
 
     // ---- CONTACT FORM GA4 ----
     (function () {

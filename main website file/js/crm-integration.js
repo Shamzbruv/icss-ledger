@@ -131,4 +131,7 @@ const CRM = {
     }
 };
 
+// Expose CRM globally so inline scripts can use window.CRM and CRM.*
+window.CRM = CRM;
+
 document.addEventListener('DOMContentLoaded', () => CRM.init());
