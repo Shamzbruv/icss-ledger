@@ -140,13 +140,13 @@ CREATE TABLE IF NOT EXISTS public.reviews (
 -- 2b. ADD COLUMNS IF NOT EXISTS (To safely patch existing tables)
 DO $$
 BEGIN
-  ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
-  ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+  ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+  ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS name TEXT;
   ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS business_name TEXT;
-  ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS rating INTEGER NOT NULL DEFAULT 5;
+  ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS rating INTEGER DEFAULT 5;
   ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS website_url TEXT;
   ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS service_completed TEXT;
-  ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS message TEXT NOT NULL DEFAULT '';
+  ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS message TEXT;
 EXCEPTION
   WHEN duplicate_column THEN null;
 END $$;
