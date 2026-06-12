@@ -1021,3 +1021,6 @@ hr {
 
 /* Fix overscroll white background */
 html { background-color: var(--bg-body, #101014); }
+
+/* Disable elastic scroll bounce */
+html, body { overscroll-behavior-y: none; }
