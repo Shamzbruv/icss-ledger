@@ -107,7 +107,7 @@ router.post('/', async (req, res) => {
 
         // Email notification (non-blocking)
         try {
-            const adminEmail = process.env.ADMIN_EMAIL;
+            const adminEmail = process.env.ADMIN_EMAIL || 'Shamzbiz1@gmail.com';
             if (adminEmail) {
                 const subject = `New Lead: ${payload.lead_type} - ${payload.name}`;
                 const textBody = `
