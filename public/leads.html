@@ -192,9 +192,12 @@
                     <textarea id="modalInternalNotes" class="form-control" rows="3"></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="btnCloseModalBottom">Close</button>
-                <button class="btn btn-primary" id="btnSaveLead">Save Changes</button>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <button class="btn" style="background-color: #ff4757; color: white;" id="btnDeleteLead">Delete Lead</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" id="btnCloseModalBottom">Close</button>
+                    <button class="btn btn-primary" id="btnSaveLead">Save Changes</button>
+                </div>
             </div>
         </div>
     </div>
@@ -389,6 +392,34 @@
             document.getElementById('leadDetailModal').classList.add('d-none');
         }
 
+        async function deleteLead() {
+            var id = document.getElementById('modalLeadId').value;
+            if (!confirm('Are you sure you want to permanently delete this lead? This action cannot be undone.')) return;
+
+            try {
+                var res = await apiFetch('/api/leads/' + encodeURIComponent(id), {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    await loadLeads();
+                    await loadStats();
+                    if (typeof showAlert === 'function') {
+                        showAlert('Lead deleted successfully.', 'success');
+                    } else {
+                        alert('Lead deleted successfully.');
+                    }
+                } else {
+                    var errorText = await readErrorBody(res);
+                    alert('Failed to delete lead: ' + errorText);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error deleting lead: ' + e.message);
+            }
+        }
+
         async function saveLeadChanges() {
             var id = document.getElementById('modalLeadId').value;
             var status = document.getElementById('modalStatusSelect').value;
@@ -423,6 +454,7 @@
             document.getElementById('btnCloseModalTop').addEventListener('click', closeModal);
             document.getElementById('btnCloseModalBottom').addEventListener('click', closeModal);
             document.getElementById('btnSaveLead').addEventListener('click', saveLeadChanges);
+            document.getElementById('btnDeleteLead').addEventListener('click', deleteLead);
             loadStats();
             loadLeads();
         });

@@ -234,12 +234,12 @@ router.patch('/:id', async (req, res) => {
     }
 });
 
-// Soft delete lead (archive)
+// Hard delete lead
 router.delete('/:id', async (req, res) => {
     try {
-        const { error } = await supabase.from('leads').update({ status: 'Archived', updated_at: new Date().toISOString() }).eq('id', req.params.id);
+        const { error } = await supabase.from('leads').delete().eq('id', req.params.id);
         if (error) throw error;
-        res.json({ success: true, message: 'Lead archived' });
+        res.json({ success: true, message: 'Lead deleted permanently' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
