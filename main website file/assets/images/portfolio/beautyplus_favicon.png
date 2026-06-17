@@ -1,0 +1,2575 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary SEO Metadata -->
+    <title>Beauty Plus Academy & Salon | Salon Services & Career Training Kingston, Jamaica</title>
+    <meta name="description" content="Beauty Plus Academy & Salon in Kingston, Jamaica offers professional salon services (makeup, nails, locs, braids, waxing) and accredited 8-week career certification courses." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://beautyplusacademyandsalon.com/" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://beautyplusacademyandsalon.com/" />
+    <meta property="og:title" content="Beauty Plus Academy & Salon | Salon & Training" />
+    <meta property="og:description" content="Professional salon services and 8-week beauty certification courses in Kingston, Jamaica. Learn makeup, nails, locs, braiding, waxing, and barbering." />
+    <meta property="og:image" content="https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1" />
+    <meta property="og:site_name" content="Beauty Plus Academy & Salon" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://beautyplusacademyandsalon.com/" />
+    <meta name="twitter:title" content="Beauty Plus Academy & Salon | Salon & Training" />
+    <meta name="twitter:description" content="Professional salon services and 8-week beauty certification courses in Kingston, Jamaica. Learn makeup, nails, locs, braiding, waxing, and barbering." />
+    <meta name="twitter:image" content="https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1" />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BeautySalon",
+          "@id": "https://beautyplusacademyandsalon.com/#salon",
+          "name": "Beauty Plus Salon",
+          "url": "https://beautyplusacademyandsalon.com/salon.html",
+          "logo": "https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1",
+          "image": "https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1",
+          "description": "Professional beauty salon in Kingston, Jamaica offering makeup, nails, locs, braiding, waxing, hair styling, cuts, and coloring.",
+          "telephone": "+18764580603",
+          "priceRange": "$$",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "38a Hagley Park Road",
+            "addressLocality": "Kingston 10",
+            "addressRegion": "Kingston",
+            "addressCountry": "JM"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 18.0068,
+            "longitude": -76.7975
+          },
+          "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            "opens": "09:00",
+            "closes": "19:00"
+          },
+          "sameAs": [
+            "https://www.fresha.com/a/beauty-plus-academy-salon-kingston-38a-hagley-park-road-e358wrqc",
+            "https://wa.me/18764580603"
+          ]
+        },
+        {
+          "@type": "EducationalOrganization",
+          "@id": "https://beautyplusacademyandsalon.com/#academy",
+          "name": "Beauty Plus Academy",
+          "url": "https://beautyplusacademyandsalon.com/enroll.html",
+          "logo": "https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1",
+          "description": "Professional beauty training school in Kingston, Jamaica offering 8-week certification courses in makeup, braiding, wig making, loctician skills, nail enhancement, waxing, and barbering.",
+          "telephone": "+18764580603",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "38a Hagley Park Road",
+            "addressLocality": "Kingston 10",
+            "addressRegion": "Kingston",
+            "addressCountry": "JM"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Icons & Preconnections -->
+    <link rel="icon" type="image/jpeg"
+        href="https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1">
+    <link rel="apple-touch-icon"
+        href="https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        :root {
+            --royal-blue: #071a52;
+            --royal-blue-2: #0b2a78;
+            --mid-blue: #0f3d9d;
+            --deep-navy: #030918;
+            --gold: #d6a83d;
+            --gold-2: #f5d47a;
+            --soft-gold: #fff1bd;
+            --cream: #fff9ed;
+            --white: #ffffff;
+            --muted: #6c7892;
+            --glass: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.24);
+            --shadow: 0 24px 80px rgba(3, 9, 24, 0.22);
+            --soft-shadow: 0 18px 60px rgba(7, 26, 82, 0.13);
+            --radius-xl: 34px;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --transition: 280ms ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-text-size-adjust: 100%;
+            background:
+                radial-gradient(circle at top left, rgba(245, 212, 122, 0.22), transparent 32rem),
+                radial-gradient(circle at 85% 8%, rgba(15, 61, 157, 0.22), transparent 28rem),
+                linear-gradient(180deg, #fffaf1 0%, #f6f8ff 45%, #fffaf1 100%);
+            color: #172033;
+            overflow-x: hidden;
+        }
+
+        .hero[id],
+        section[id],
+        footer[id] {
+            scroll-margin-top: 116px;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font-family: inherit;
+        }
+
+        .noise {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            opacity: 0.04;
+            z-index: 1;
+            background-image:
+                linear-gradient(90deg, #fff 1px, transparent 1px),
+                linear-gradient(#fff 1px, transparent 1px);
+            background-size: 24px 24px;
+            mix-blend-mode: multiply;
+        }
+
+        .royal-orb {
+            pointer-events: none;
+            position: fixed;
+            width: 240px;
+            height: 240px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(245, 212, 122, 0.7), rgba(245, 212, 122, 0.1) 45%, transparent 72%);
+            filter: blur(12px);
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            opacity: 0.65;
+            transition: transform 90ms linear;
+        }
+
+        .page {
+            position: relative;
+            z-index: 2;
+        }
+
+        .container {
+            width: min(1180px, calc(100% - 38px));
+            margin: 0 auto;
+        }
+
+        .top-banner {
+            background: linear-gradient(90deg, var(--deep-navy), var(--royal-blue), var(--mid-blue));
+            color: var(--soft-gold);
+            font-size: 0.92rem;
+            letter-spacing: 0.02em;
+            overflow: hidden;
+        }
+
+        .top-banner .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .top-banner i {
+            color: var(--gold-2);
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(20px);
+            background: rgba(255, 250, 241, 0.83);
+            border-bottom: 1px solid rgba(214, 168, 61, 0.24);
+        }
+
+        .nav-inner {
+            min-height: 82px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 260px;
+        }
+
+        .brand-logo {
+            width: 62px;
+            height: 62px;
+            object-fit: contain;
+            border-radius: 18px;
+            background: #fff;
+            padding: 6px;
+            box-shadow: 0 10px 30px rgba(7, 26, 82, 0.14);
+            border: 1px solid rgba(214, 168, 61, 0.25);
+        }
+
+        .brand-text strong {
+            display: block;
+            font-family: "Cinzel", serif;
+            color: var(--royal-blue);
+            letter-spacing: 0.02em;
+            font-size: clamp(1.02rem, 1.7vw, 1.28rem);
+            line-height: 1.05;
+        }
+
+        .brand-text span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            padding: 11px 13px;
+            border-radius: 999px;
+            color: #23304a;
+            font-weight: 700;
+            font-size: 0.92rem;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: rgba(214, 168, 61, 0.13);
+            color: var(--royal-blue);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-btn {
+            display: none;
+            width: 46px;
+            height: 46px;
+            border: 0;
+            border-radius: 50%;
+            color: var(--royal-blue);
+            background: rgba(214, 168, 61, 0.14);
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 0;
+            cursor: pointer;
+            border-radius: 999px;
+            padding: 14px 22px;
+            font-weight: 800;
+            transition: transform var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .btn-primary {
+            color: #071a52;
+            background: linear-gradient(135deg, var(--gold-2), var(--gold));
+            box-shadow: 0 14px 35px rgba(214, 168, 61, 0.28);
+        }
+
+        .btn-secondary {
+            color: var(--white);
+            background: linear-gradient(135deg, var(--royal-blue), var(--mid-blue));
+            box-shadow: 0 14px 35px rgba(7, 26, 82, 0.24);
+        }
+
+        .btn-light {
+            color: var(--royal-blue);
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+        }
+
+        .btn-outline {
+            color: var(--royal-blue);
+            background: transparent;
+            border: 1px solid rgba(214, 168, 61, 0.52);
+        }
+
+        .hero {
+            position: relative;
+            min-height: calc(100vh - 112px);
+            display: grid;
+            align-items: center;
+            padding: 94px 0 70px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 12% 12%, rgba(245, 212, 122, 0.28), transparent 32rem),
+                linear-gradient(135deg, rgba(7, 26, 82, 0.97), rgba(15, 61, 157, 0.9) 58%, rgba(3, 9, 24, 0.98)),
+                url("data:image/svg+xml,%3Csvg width='500' height='500' viewBox='0 0 500 500' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23f5d47a' stroke-opacity='0.18'%3E%3Cpath d='M0 250 C100 120 160 380 250 250 S400 120 500 250'/%3E%3Cpath d='M0 210 C100 80 160 340 250 210 S400 80 500 210'/%3E%3Cpath d='M0 290 C100 160 160 420 250 290 S400 160 500 290'/%3E%3C/g%3E%3C/svg%3E");
+            color: var(--white);
+        }
+
+        .hero:before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(3, 9, 24, 0.62), rgba(7, 26, 82, 0.15) 48%, rgba(3, 9, 24, 0.62)),
+                radial-gradient(circle at 72% 34%, rgba(245, 212, 122, 0.22), transparent 24rem);
+            z-index: 0;
+        }
+
+        .hero .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 15px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(245, 212, 122, 0.32);
+            color: var(--soft-gold);
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-size: 0.78rem;
+            margin-bottom: 22px;
+            backdrop-filter: blur(12px);
+        }
+
+        .hero h1 {
+            font-family: "Playfair Display", serif;
+            font-size: clamp(3.2rem, 8vw, 6.85rem);
+            line-height: 0.92;
+            letter-spacing: -0.06em;
+            max-width: 780px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 .gold {
+            display: block;
+            color: transparent;
+            background: linear-gradient(135deg, #fff9df 10%, var(--gold-2) 42%, var(--gold) 70%, #fff4c8);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .hero p {
+            color: rgba(255, 255, 255, 0.82);
+            font-size: clamp(1.05rem, 1.8vw, 1.28rem);
+            line-height: 1.75;
+            max-width: 680px;
+            margin-bottom: 30px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 38px;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            max-width: 760px;
+        }
+
+        .stat {
+            padding: 18px 14px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(14px);
+        }
+
+        .stat strong {
+            display: block;
+            font-family: "Cinzel", serif;
+            font-size: 1.32rem;
+            color: var(--gold-2);
+        }
+
+        .stat span {
+            display: block;
+            color: rgba(255, 255, 255, 0.73);
+            font-size: 0.82rem;
+            margin-top: 4px;
+            line-height: 1.35;
+        }
+
+        .hero-card {
+            position: relative;
+            padding: 24px;
+            border-radius: 40px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07));
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(22px);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28);
+            overflow: hidden;
+            min-height: 560px;
+            display: grid;
+            align-content: space-between;
+        }
+
+        .hero-card:before,
+        .hero-card:after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+        }
+
+        .hero-card:before {
+            width: 240px;
+            height: 240px;
+            background: rgba(245, 212, 122, 0.17);
+            top: -80px;
+            right: -70px;
+            filter: blur(4px);
+        }
+
+        .hero-card:after {
+            width: 300px;
+            height: 300px;
+            border: 1px solid rgba(245, 212, 122, 0.24);
+            bottom: -120px;
+            left: -80px;
+        }
+
+        .crest {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            place-items: center;
+            width: min(320px, 86%);
+            aspect-ratio: 1;
+            margin: 22px auto;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78) 58%, rgba(245, 212, 122, 0.28) 60%, rgba(214, 168, 61, 0.18) 67%, transparent 68%),
+                conic-gradient(from 0deg, rgba(245, 212, 122, 0.5), rgba(255, 255, 255, 0.16), rgba(245, 212, 122, 0.5));
+            box-shadow: inset 0 0 40px rgba(214, 168, 61, 0.16), 0 35px 80px rgba(0, 0, 0, 0.2);
+            animation: floatCrest 6s ease-in-out infinite;
+        }
+
+        .crest:before {
+            content: "";
+            position: absolute;
+            inset: 15px;
+            border: 1px solid rgba(7, 26, 82, 0.15);
+            border-radius: 50%;
+        }
+
+        .crest img {
+            width: 72%;
+            height: 72%;
+            object-fit: contain;
+            filter: drop-shadow(0 14px 20px rgba(7, 26, 82, 0.22));
+        }
+
+        @keyframes floatCrest {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(-1deg);
+            }
+
+            50% {
+                transform: translateY(-14px) rotate(1deg);
+            }
+        }
+
+        .hero-card-bottom {
+            position: relative;
+            z-index: 1;
+            background: rgba(3, 9, 24, 0.42);
+            border: 1px solid rgba(245, 212, 122, 0.21);
+            border-radius: 28px;
+            padding: 22px;
+        }
+
+        .hero-card-bottom h3 {
+            font-family: "Cinzel", serif;
+            color: var(--soft-gold);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .hero-card-bottom p {
+            font-size: 0.94rem;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .scroll-cue {
+            position: absolute;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.72);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }
+
+        .scroll-cue span {
+            width: 2px;
+            height: 36px;
+            border-radius: 999px;
+            background: linear-gradient(var(--gold-2), transparent);
+            animation: pulseLine 1.8s ease-in-out infinite;
+        }
+
+        @keyframes pulseLine {
+
+            0%,
+            100% {
+                transform: scaleY(0.55);
+                opacity: 0.45;
+            }
+
+            50% {
+                transform: scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        .wave {
+            line-height: 0;
+            margin-top: -1px;
+        }
+
+        .wave svg {
+            width: 100%;
+            height: 88px;
+            display: block;
+        }
+
+        section {
+            padding: 90px 0;
+            position: relative;
+        }
+
+        .section-heading {
+            text-align: center;
+            max-width: 840px;
+            margin: 0 auto 42px;
+        }
+
+        .section-kicker {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            color: var(--royal-blue);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-size: 0.78rem;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(214, 168, 61, 0.12);
+            border: 1px solid rgba(214, 168, 61, 0.23);
+            margin-bottom: 16px;
+        }
+
+        .section-heading h2 {
+            font-family: "Playfair Display", serif;
+            font-size: clamp(2.35rem, 5vw, 4.3rem);
+            line-height: 1;
+            letter-spacing: -0.045em;
+            color: var(--royal-blue);
+            margin-bottom: 18px;
+        }
+
+        .section-heading p {
+            font-size: 1.04rem;
+            color: var(--muted);
+            line-height: 1.78;
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 34px;
+            align-items: center;
+        }
+
+        .royal-card {
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(214, 168, 61, 0.22);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--soft-shadow);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .royal-card:before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(135deg, rgba(245, 212, 122, 0.18), transparent 25%),
+                radial-gradient(circle at top right, rgba(15, 61, 157, 0.1), transparent 32%);
+        }
+
+        .card-pad {
+            position: relative;
+            padding: 34px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 26px;
+        }
+
+        .feature-tile {
+            padding: 20px;
+            border-radius: 22px;
+            background: rgba(255, 249, 237, 0.78);
+            border: 1px solid rgba(214, 168, 61, 0.2);
+        }
+
+        .feature-tile i {
+            color: var(--gold);
+            font-size: 1.35rem;
+            margin-bottom: 12px;
+        }
+
+        .feature-tile strong {
+            display: block;
+            color: var(--royal-blue);
+            margin-bottom: 7px;
+            font-size: 1rem;
+        }
+
+        .feature-tile span {
+            display: block;
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 0.92rem;
+        }
+
+        .showcase-panel {
+            min-height: 520px;
+            border-radius: var(--radius-xl);
+            background:
+                linear-gradient(rgba(3, 9, 24, 0.34), rgba(3, 9, 24, 0.52)),
+                url("https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1400&q=80") center/cover;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            padding: 28px;
+            color: #fff;
+        }
+
+        .showcase-panel:after {
+            content: "";
+            position: absolute;
+            inset: 16px;
+            border: 1px solid rgba(245, 212, 122, 0.35);
+            border-radius: 26px;
+            pointer-events: none;
+        }
+
+        .showcase-panel-content {
+            position: relative;
+            z-index: 1;
+            padding: 22px;
+            border-radius: 24px;
+            background: rgba(3, 9, 24, 0.52);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(16px);
+            width: 100%;
+        }
+
+        .showcase-panel-content h3 {
+            font-family: "Cinzel", serif;
+            font-size: 1.42rem;
+            color: var(--gold-2);
+            margin-bottom: 10px;
+        }
+
+        .showcase-panel-content p {
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.66;
+        }
+
+        .services {
+            background:
+                linear-gradient(180deg, rgba(255, 249, 237, 0.82), rgba(247, 249, 255, 0.9)),
+                radial-gradient(circle at 100% 0%, rgba(214, 168, 61, 0.18), transparent 28rem);
+        }
+
+        .service-shell {
+            display: grid;
+            grid-template-columns: 330px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .service-sidebar {
+            position: sticky;
+            top: 105px;
+            padding: 18px;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(7, 26, 82, 0.98), rgba(3, 9, 24, 0.96));
+            border: 1px solid rgba(245, 212, 122, 0.23);
+            box-shadow: var(--shadow);
+            max-height: calc(100vh - 130px);
+            overflow: auto;
+        }
+
+        .service-sidebar::-webkit-scrollbar,
+        .category-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .service-sidebar::-webkit-scrollbar-thumb,
+        .category-scroll::-webkit-scrollbar-thumb {
+            background: rgba(245, 212, 122, 0.45);
+            border-radius: 999px;
+        }
+
+        .service-sidebar h3 {
+            font-family: "Cinzel", serif;
+            color: var(--gold-2);
+            font-size: 1.05rem;
+            padding: 12px 12px 16px;
+            border-bottom: 1px solid rgba(245, 212, 122, 0.2);
+            margin-bottom: 12px;
+        }
+
+        .category-list {
+            display: grid;
+            gap: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(245, 212, 122, 0.45) transparent;
+        }
+
+        .category-btn {
+            text-align: left;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 18px;
+            padding: 13px 13px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.78);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: var(--transition);
+            font-weight: 750;
+        }
+
+        .category-btn i {
+            color: var(--gold-2);
+            opacity: 0.82;
+        }
+
+        .category-btn:hover,
+        .category-btn.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(245, 212, 122, 0.23);
+            transform: translateX(4px);
+        }
+
+        .service-main {
+            min-width: 0;
+        }
+
+        .service-toolbar {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        .search-box input,
+        .form-control,
+        .form-grid input,
+        .form-grid select,
+        .form-grid textarea {
+            width: 100%;
+            border: 1px solid rgba(7, 26, 82, 0.12);
+            background: rgba(255, 255, 255, 0.86);
+            border-radius: 18px;
+            padding: 15px 16px;
+            outline: none;
+            transition: var(--transition);
+            color: #172033;
+            font-weight: 600;
+        }
+
+        .search-box input {
+            padding-left: 50px;
+        }
+
+        .search-box input:focus,
+        .form-control:focus,
+        .form-grid input:focus,
+        .form-grid select:focus,
+        .form-grid textarea:focus {
+            border-color: rgba(214, 168, 61, 0.7);
+            box-shadow: 0 0 0 5px rgba(214, 168, 61, 0.14);
+            background: #fff;
+        }
+
+        .service-headline {
+            padding: 28px;
+            border-radius: 28px;
+            background:
+                linear-gradient(135deg, rgba(7, 26, 82, 0.98), rgba(15, 61, 157, 0.88)),
+                radial-gradient(circle at top right, rgba(245, 212, 122, 0.22), transparent 20rem);
+            color: #fff;
+            margin-bottom: 18px;
+            box-shadow: var(--soft-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-headline:after {
+            content: "";
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            right: -50px;
+            top: -50px;
+            border-radius: 50%;
+            border: 1px solid rgba(245, 212, 122, 0.24);
+        }
+
+        .service-headline h3 {
+            position: relative;
+            font-family: "Playfair Display", serif;
+            font-size: clamp(1.8rem, 3vw, 2.7rem);
+            margin-bottom: 10px;
+        }
+
+        .service-headline p {
+            position: relative;
+            color: rgba(255, 255, 255, 0.78);
+            line-height: 1.68;
+            max-width: 760px;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.84);
+            border: 1px solid rgba(7, 26, 82, 0.1);
+            border-radius: 24px;
+            padding: 22px;
+            box-shadow: 0 14px 40px rgba(7, 26, 82, 0.08);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card-link {
+            cursor: pointer;
+        }
+
+        .service-card:before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            background: linear-gradient(135deg, rgba(245, 212, 122, 0.16), transparent 50%);
+            transition: var(--transition);
+        }
+
+        .service-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 22px 60px rgba(7, 26, 82, 0.14);
+            border-color: rgba(214, 168, 61, 0.42);
+        }
+
+        .service-card:hover:before {
+            opacity: 1;
+        }
+
+        .service-card-link:focus-visible {
+            outline: 3px solid rgba(214, 168, 61, 0.75);
+            outline-offset: 3px;
+        }
+
+        .service-top {
+            position: relative;
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 14px;
+        }
+
+        .service-title {
+            color: var(--royal-blue);
+            font-size: 1.08rem;
+            line-height: 1.34;
+            font-weight: 900;
+            overflow-wrap: anywhere;
+        }
+
+        .service-price {
+            flex: 0 0 auto;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(214, 168, 61, 0.13);
+            color: #6e4b00;
+            font-weight: 900;
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        .service-meta {
+            position: relative;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 0.86rem;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .service-desc {
+            position: relative;
+            color: #5b6578;
+            line-height: 1.62;
+            font-size: 0.94rem;
+            overflow-wrap: anywhere;
+        }
+
+        .service-actions {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(7, 26, 82, 0.08);
+        }
+
+        .service-action-note,
+        .service-action-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 0.86rem;
+        }
+
+        .service-action-note {
+            color: var(--muted);
+        }
+
+        .service-action-link {
+            color: var(--royal-blue);
+        }
+
+        .mini-note {
+            margin-top: 20px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(214, 168, 61, 0.12);
+            color: #594309;
+            font-weight: 700;
+            line-height: 1.55;
+            border: 1px solid rgba(214, 168, 61, 0.18);
+        }
+
+        .academy {
+            background:
+                linear-gradient(180deg, #071a52 0%, #0b2a78 52%, #030918 100%);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .academy:before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 12% 10%, rgba(245, 212, 122, 0.22), transparent 30rem),
+                radial-gradient(circle at 90% 35%, rgba(255, 255, 255, 0.12), transparent 25rem),
+                url("data:image/svg+xml,%3Csvg width='620' height='340' viewBox='0 0 620 340' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23f5d47a' stroke-opacity='0.12'%3E%3Cpath d='M0 80 C100 20 170 140 260 80 S460 20 620 100'/%3E%3Cpath d='M0 160 C100 100 170 220 260 160 S460 100 620 180'/%3E%3Cpath d='M0 240 C100 180 170 300 260 240 S460 180 620 260'/%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.95;
+        }
+
+        .academy .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .academy .section-kicker {
+            background: rgba(245, 212, 122, 0.16);
+            color: var(--gold-2);
+            border-color: rgba(245, 212, 122, 0.26);
+        }
+
+        .academy .section-heading h2 {
+            color: #fff;
+        }
+
+        .academy .section-heading p {
+            color: rgba(255, 255, 255, 0.76);
+        }
+
+        .academy-grid {
+            display: grid;
+            grid-template-columns: 0.92fr 1.08fr;
+            gap: 26px;
+            align-items: start;
+        }
+
+        .academy-card {
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .academy-card .card-pad {
+            padding: 28px;
+        }
+
+        .academy-card h3 {
+            font-family: "Cinzel", serif;
+            color: var(--gold-2);
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+
+        .academy-card p,
+        .academy-card li {
+            color: rgba(255, 255, 255, 0.78);
+            line-height: 1.72;
+        }
+
+        .requirements {
+            display: grid;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .req {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .req i {
+            color: var(--gold-2);
+            margin-top: 3px;
+        }
+
+        .course-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(245, 212, 122, 0.45) transparent;
+        }
+
+        .course-filter {
+            cursor: pointer;
+            border: 1px solid rgba(245, 212, 122, 0.24);
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.82);
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-weight: 800;
+            transition: var(--transition);
+        }
+
+        .course-filter.active,
+        .course-filter:hover {
+            color: var(--royal-blue);
+            background: linear-gradient(135deg, var(--gold-2), var(--gold));
+        }
+
+        .course-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .course-item {
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            overflow: hidden;
+        }
+
+        .course-toggle {
+            width: 100%;
+            padding: 18px 20px;
+            border: 0;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 14px;
+            align-items: center;
+            text-align: left;
+        }
+
+        .course-toggle strong {
+            font-size: 1.03rem;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+
+        .course-price {
+            color: var(--gold-2);
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .course-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 360ms ease;
+            border-top: 1px solid transparent;
+        }
+
+        .course-item.open .course-body {
+            max-height: 260px;
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .course-body-inner {
+            padding: 0 20px 20px;
+            color: rgba(255, 255, 255, 0.77);
+            line-height: 1.65;
+        }
+
+        .course-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .course-tags span {
+            display: inline-flex;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(245, 212, 122, 0.14);
+            color: var(--soft-gold);
+            font-weight: 800;
+            font-size: 0.78rem;
+        }
+
+        .registration {
+            background:
+                radial-gradient(circle at top left, rgba(214, 168, 61, 0.14), transparent 32rem),
+                linear-gradient(180deg, #fffaf1, #f7f9ff);
+        }
+
+        .form-shell {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(214, 168, 61, 0.22);
+            box-shadow: var(--soft-shadow);
+            border-radius: 34px;
+            overflow: hidden;
+        }
+
+        .form-top {
+            padding: 26px;
+            background: linear-gradient(135deg, var(--royal-blue), var(--mid-blue));
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-top:after {
+            content: "";
+            width: 170px;
+            height: 170px;
+            position: absolute;
+            right: -50px;
+            top: -70px;
+            border-radius: 50%;
+            background: rgba(245, 212, 122, 0.19);
+            border: 1px solid rgba(245, 212, 122, 0.25);
+        }
+
+        .form-top h3 {
+            position: relative;
+            font-family: "Cinzel", serif;
+            color: var(--gold-2);
+            font-size: 1.45rem;
+            margin-bottom: 8px;
+        }
+
+        .form-top p {
+            position: relative;
+            color: rgba(255, 255, 255, 0.76);
+            line-height: 1.62;
+        }
+
+        .form-toggle {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            background: transparent;
+            border: 0;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-toggle-copy {
+            display: grid;
+            gap: 6px;
+        }
+
+        .form-toggle-label {
+            color: rgba(255, 255, 255, 0.74);
+            font-size: 0.74rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .form-toggle strong {
+            font-family: "Cinzel", serif;
+            color: var(--gold-2);
+            font-size: 1.45rem;
+            line-height: 1.2;
+        }
+
+        .form-toggle small {
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 0.95rem;
+            line-height: 1.55;
+        }
+
+        .form-toggle-icon {
+            flex: 0 0 auto;
+            width: 52px;
+            height: 52px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(245, 212, 122, 0.22);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-collapsible {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 380ms ease;
+        }
+
+        .form-collapsible.open {
+            overflow: visible;
+        }
+
+        .form-body {
+            padding: 26px;
+        }
+
+        .form-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--royal-blue);
+            margin: 20px 0 14px;
+            font-family: "Cinzel", serif;
+            font-size: 1.06rem;
+        }
+
+        .form-section-title:first-child {
+            margin-top: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .form-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .field label {
+            display: block;
+            font-weight: 850;
+            color: #27324a;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .radio-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .schedule-options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .schedule-card {
+            align-items: flex-start;
+            line-height: 1.55;
+        }
+
+        .schedule-card span {
+            display: block;
+            overflow-wrap: anywhere;
+        }
+
+        .radio-card {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(7, 26, 82, 0.04);
+            border: 1px solid rgba(7, 26, 82, 0.08);
+            color: #27324a;
+            font-weight: 800;
+        }
+
+        .radio-card.disabled {
+            opacity: 0.58;
+            cursor: not-allowed;
+        }
+
+        .radio-card input {
+            width: auto;
+            accent-color: var(--gold);
+        }
+
+        .booking-panel {
+            margin-bottom: 18px;
+        }
+
+        .booking-note {
+            margin-top: 0;
+            display: grid;
+            gap: 6px;
+        }
+
+        .booking-note strong {
+            color: #594309;
+            font-size: 1rem;
+        }
+
+        .booking-note span {
+            color: rgba(89, 67, 9, 0.92);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .form-helper {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .payment-card {
+            position: sticky;
+            top: 105px;
+            background: linear-gradient(180deg, rgba(7, 26, 82, 0.98), rgba(3, 9, 24, 0.98));
+            color: #fff;
+            border-radius: 34px;
+            border: 1px solid rgba(245, 212, 122, 0.25);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .payment-card .card-pad {
+            padding: 26px;
+        }
+
+        .payment-card h3 {
+            font-family: "Cinzel", serif;
+            color: var(--gold-2);
+            margin-bottom: 14px;
+            font-size: 1.23rem;
+        }
+
+        .summary-box {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 13px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.76);
+            font-size: 0.92rem;
+        }
+
+        .summary-row strong {
+            color: #fff;
+            text-align: right;
+            overflow-wrap: anywhere;
+        }
+
+        .bank-details {
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 18px;
+            line-height: 1.68;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 0.92rem;
+            margin-bottom: 18px;
+        }
+
+        .bank-details strong {
+            color: #fff;
+        }
+
+        .sticky-cta {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 60;
+            display: grid;
+            gap: 10px;
+        }
+
+        .quick-btn {
+            width: 56px;
+            height: 56px;
+            display: grid;
+            place-items: center;
+            color: var(--royal-blue);
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-2), var(--gold));
+            box-shadow: 0 18px 40px rgba(3, 9, 24, 0.22);
+            transition: var(--transition);
+        }
+
+        .quick-btn:hover {
+            transform: translateY(-4px) scale(1.04);
+        }
+
+        .footer {
+            background: #030918;
+            color: rgba(255, 255, 255, 0.74);
+            padding: 56px 0 26px;
+            border-top: 1px solid rgba(245, 212, 122, 0.18);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr 0.8fr;
+            gap: 26px;
+            margin-bottom: 32px;
+        }
+
+        .footer h4 {
+            color: var(--gold-2);
+            font-family: "Cinzel", serif;
+            margin-bottom: 16px;
+        }
+
+        .footer p,
+        .footer a {
+            line-height: 1.72;
+            color: rgba(255, 255, 255, 0.72);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 22px;
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(26px);
+            transition: opacity 680ms ease, transform 680ms ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-panel {
+            display: none;
+        }
+
+        @media (hover: none) {
+
+            .btn:hover,
+            .quick-btn:hover,
+            .service-card:hover,
+            .category-btn:hover {
+                transform: none;
+            }
+        }
+
+        @media (max-width: 1040px) {
+            .hero-copy,
+            .hero-card,
+            .royal-card,
+            .showcase-panel,
+            .academy-card,
+            .form-card,
+            .payment-card {
+                width: 100%;
+                max-width: 760px;
+                margin-inline: auto;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .menu-btn {
+                display: grid;
+                place-items: center;
+            }
+
+            .mobile-panel {
+                display: block;
+                position: fixed;
+                left: 0;
+                right: 0;
+                top: 92px;
+                z-index: 49;
+                background: rgba(255, 250, 241, 0.96);
+                backdrop-filter: blur(18px);
+                border-bottom: 1px solid rgba(214, 168, 61, 0.24);
+                box-shadow: 0 26px 70px rgba(3, 9, 24, 0.14);
+                padding: 18px;
+                transform: translateY(-150%);
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: transform 300ms ease, opacity 300ms ease, visibility 300ms ease;
+            }
+
+            .mobile-panel.open {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            .mobile-panel a {
+                display: block;
+                padding: 15px 18px;
+                border-radius: 16px;
+                font-weight: 850;
+                color: var(--royal-blue);
+            }
+
+            .hero-grid,
+            .split,
+            .academy-grid,
+            .form-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-card {
+                min-height: 440px;
+            }
+
+            .service-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .service-sidebar {
+                position: relative;
+                top: auto;
+                max-height: none;
+            }
+
+            .category-list {
+                display: flex;
+                overflow-x: auto;
+                padding-bottom: 8px;
+                gap: 10px;
+                scroll-snap-type: x proximity;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .category-btn {
+                min-width: max-content;
+                scroll-snap-align: start;
+            }
+
+            .payment-card {
+                position: relative;
+                top: auto;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .top-banner {
+                font-size: 0.84rem;
+            }
+
+            .nav-inner {
+                min-height: 76px;
+                gap: 12px;
+            }
+
+            .mobile-panel {
+                top: 84px;
+            }
+
+            .hero {
+                min-height: auto;
+                padding: 76px 0 58px;
+            }
+
+            .hero-grid {
+                gap: 30px;
+            }
+
+            .hero-card {
+                min-height: auto;
+            }
+
+            .crest {
+                width: min(290px, 72vw);
+                margin: 8px auto 18px;
+            }
+
+            .showcase-panel {
+                min-height: 380px;
+                padding: 22px;
+            }
+
+            .service-grid,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .course-controls {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 6px;
+                margin-inline: -4px;
+                padding-inline: 4px;
+            }
+
+            .course-filter {
+                min-width: max-content;
+            }
+
+            .course-toggle {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .container {
+                width: min(100% - 24px, 1180px);
+            }
+
+            .royal-orb,
+            .scroll-cue,
+            .noise {
+                display: none;
+            }
+
+            .top-banner .container {
+                gap: 8px;
+                padding: 8px 0;
+            }
+
+            .nav-inner {
+                min-height: 72px;
+                gap: 10px;
+            }
+
+            .brand {
+                min-width: 0;
+                gap: 10px;
+            }
+
+            .brand-logo {
+                width: 54px;
+                height: 54px;
+            }
+
+            .brand-text strong {
+                font-size: 0.96rem;
+            }
+
+            .brand-text span {
+                font-size: 0.64rem;
+            }
+
+            .nav-actions .btn {
+                display: none;
+            }
+
+            .mobile-panel {
+                top: 78px;
+                padding: 14px 12px 18px;
+            }
+
+            .mobile-panel a {
+                padding: 14px;
+                font-size: 0.96rem;
+            }
+
+            .hero {
+                padding-top: 44px;
+                padding-bottom: 52px;
+                min-height: auto;
+            }
+
+            .hero-copy {
+                text-align: center;
+            }
+
+            .eyebrow {
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+                white-space: normal;
+                line-height: 1.5;
+                font-size: 0.68rem;
+                padding: 10px 12px;
+                margin-bottom: 18px;
+            }
+
+            .hero h1 {
+                font-size: clamp(2.85rem, 18vw, 4.3rem);
+                margin-bottom: 18px;
+            }
+
+            .hero p {
+                font-size: 1rem;
+                line-height: 1.68;
+                margin-bottom: 24px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                margin-bottom: 28px;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+            }
+
+            .hero-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                max-width: none;
+            }
+
+            .stat {
+                padding: 16px 14px;
+            }
+
+            .hero-card {
+                padding: 18px;
+                min-height: auto;
+                border-radius: 30px;
+            }
+
+            .crest {
+                width: min(250px, 78vw);
+                margin: 4px auto 14px;
+            }
+
+            .hero-card-bottom {
+                padding: 18px;
+            }
+
+            .service-grid,
+            .feature-grid,
+            .form-grid,
+            .radio-grid,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .service-toolbar .btn {
+                width: 100%;
+            }
+
+            .service-headline {
+                padding: 22px 20px;
+                border-radius: 24px;
+            }
+
+            .service-headline h3 {
+                font-size: 1.65rem;
+            }
+
+            .service-card {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
+            .service-top,
+            .service-actions,
+            .summary-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .service-price {
+                align-self: flex-start;
+            }
+
+            .summary-row strong {
+                text-align: left;
+            }
+
+            .form-grid .full {
+                grid-column: auto;
+            }
+
+            section {
+                padding: 70px 0;
+            }
+
+            .section-heading {
+                margin-bottom: 30px;
+            }
+
+            .section-heading h2 {
+                font-size: clamp(2rem, 11vw, 3rem);
+            }
+
+            .section-heading p {
+                font-size: 0.98rem;
+                line-height: 1.68;
+            }
+
+            .card-pad,
+            .form-body,
+            .form-top {
+                padding: 22px;
+            }
+
+            .showcase-panel {
+                min-height: 320px;
+                padding: 18px;
+            }
+
+            .sticky-cta {
+                right: 12px;
+                bottom: max(12px, env(safe-area-inset-bottom));
+                gap: 8px;
+            }
+
+            .quick-btn {
+                width: 50px;
+                height: 50px;
+            }
+
+            .form-toggle {
+                align-items: flex-start;
+            }
+
+            .form-toggle strong {
+                font-size: 1.2rem;
+            }
+
+            .form-toggle small {
+                font-size: 0.9rem;
+            }
+
+            .form-toggle-icon {
+                width: 44px;
+                height: 44px;
+            }
+
+            .schedule-card {
+                padding: 12px;
+            }
+
+            .schedule-card input {
+                margin-top: 4px;
+            }
+
+            .schedule-card span {
+                font-size: 0.92rem;
+            }
+
+            .bank-details {
+                padding: 16px;
+                font-size: 0.88rem;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .container {
+                width: min(100% - 20px, 1180px);
+            }
+
+            .top-banner .container {
+                align-items: flex-start;
+            }
+
+            .nav-inner {
+                min-height: 68px;
+            }
+
+            .brand-text strong {
+                font-size: 0.84rem;
+            }
+
+            .brand-text span {
+                font-size: 0.58rem;
+                letter-spacing: 0.08em;
+            }
+
+            .mobile-panel {
+                top: 74px;
+            }
+
+            .hero h1 {
+                font-size: clamp(2.35rem, 18vw, 3.5rem);
+                line-height: 0.95;
+            }
+
+            .hero-stats,
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .showcase-panel {
+                min-height: 280px;
+            }
+
+            .service-meta {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .academy-card .card-pad,
+            .payment-card .card-pad,
+            .card-pad,
+            .form-body,
+            .form-top {
+                padding: 18px;
+            }
+
+            .section-kicker {
+                font-size: 0.7rem;
+                padding: 7px 12px;
+            }
+
+            .schedule-card span {
+                font-size: 0.9rem;
+            }
+
+            .quick-btn {
+                width: 46px;
+                height: 46px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *:before,
+            *:after {
+                animation: none !important;
+                transition-duration: 0.01ms !important;
+                transition-delay: 0ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="noise"></div>
+    <div class="royal-orb" id="royalOrb"></div>
+
+    <div class="page">
+        <div class="top-banner">
+            <div class="container">
+                <i class="fa-solid fa-crown"></i>
+                <span>2026 enrollment is now open — June main classes and July teens summer classes are filling fast. Secure your spot today.</span>
+            </div>
+        </div>
+
+        <header class="navbar">
+            <div class="container nav-inner">
+                <a href="index.html" class="brand" aria-label="Beauty Plus Academy & Salon home">
+                    <img class="brand-logo"
+                        src="https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1"
+                        alt="Beauty Plus Academy & Salon Logo"
+                        fetchpriority="high"
+                        decoding="async">
+                    <div class="brand-text">
+                        <strong>Beauty Plus</strong>
+                        <span>Academy & Salon</span>
+                    </div>
+                </a>
+
+                <nav class="nav-links" aria-label="Primary navigation">
+                    <a href="index.html" class="active">Home</a>
+                    <a href="salon.html">Salon Services</a>
+                    <a href="enroll.html">Academy & Enroll</a>
+                    <a href="#contact">Contact</a>
+                </nav>
+
+                <div class="nav-actions">
+                    <a class="btn btn-primary" href="enroll.html"><i class="fa-solid fa-pen-nib"></i> Enroll Now</a>
+                    <button class="menu-btn" id="menuBtn" aria-label="Open menu"><i
+                            class="fa-solid fa-bars"></i></button>
+                </div>
+            </div>
+
+            <div class="mobile-panel" id="mobilePanel">
+                <a href="index.html">Home</a>
+                <a href="salon.html">Salon Services</a>
+                <a href="enroll.html">Academy & Enroll</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero" id="home">
+                <div class="container">
+                    <div class="hero-grid">
+                        <div class="hero-copy reveal">
+                            <div class="eyebrow"><i class="fa-solid fa-gem"></i> Royal Beauty • Professional Skills •
+                                Kingston</div>
+                            <h1>Where beauty becomes <span class="gold">royalty.</span></h1>
+                            <p>
+                                From flawless salon appointments to hands-on beauty training, Beauty Plus is where
+                                confidence is styled, talent is sharpened, and every client or student is treated with
+                                care, class, and intention.
+                            </p>
+                            <div class="hero-actions">
+                                <a class="btn btn-primary" href="salon.html"><i class="fa-solid fa-sparkles"></i> Book a Service</a>
+                                <a class="btn btn-light" href="enroll.html"><i class="fa-solid fa-graduation-cap"></i> Enroll in a Program</a>
+                            </div>
+
+                            <div class="hero-stats">
+                                <div class="stat">
+                                    <strong>20+</strong>
+                                    <span>Years of beauty training experience</span>
+                                </div>
+                                <div class="stat">
+                                    <strong>8</strong>
+                                    <span>Weeks of focused practical training</span>
+                                </div>
+                                <div class="stat">
+                                    <strong>153</strong>
+                                    <span>Beauty services available to request</span>
+                                </div>
+                                <div class="stat">
+                                    <strong>5.0</strong>
+                                    <span>Average client rating</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="hero-card reveal">
+                            <div class="crest">
+                                <img src="https://www.jotform.com/uploads/antwunwilson/form_files/clear_form_logo_background_colors_source_1771883276.jpg?nc=1"
+                                    alt="Beauty Plus Academy & Salon Logo"
+                                    fetchpriority="high"
+                                    decoding="async">
+                            </div>
+
+                            <div class="hero-card-bottom">
+                                <h3>Beauty Plus Academy</h3>
+                                <p>
+                                    Step into training that prepares you for real beauty work, real clients, and real
+                                    opportunities, whether you want to join a salon team or build a brand of your own.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scroll-cue">
+                    <span></span>
+                    Scroll
+                </div>
+            </section>
+
+            <div class="wave" aria-hidden="true">
+                <svg viewBox="0 0 1440 110" preserveAspectRatio="none">
+                    <path fill="#fffaf1"
+                        d="M0,64 C200,122 370,12 575,58 C760,100 890,118 1082,55 C1235,5 1350,30 1440,72 L1440,110 L0,110 Z">
+                    </path>
+                </svg>
+            </div>
+
+            <section id="about">
+                <div class="container">
+                    <div class="section-heading reveal">
+                        <div class="section-kicker"><i class="fa-solid fa-crown"></i> About The Brand</div>
+                        <h2>Beauty for clients. Training for future professionals.</h2>
+                        <p>
+                            Beauty Plus brings together polished salon services and practical beauty education in one
+                            trusted Kingston brand, giving clients a place to glow and students a place to grow.
+                        </p>
+                    </div>
+
+                    <div class="split">
+                        <div class="royal-card reveal">
+                            <div class="card-pad">
+                                <h3
+                                    style="font-family: 'Cinzel', serif; color: var(--royal-blue); font-size: 1.48rem; margin-bottom: 14px;">
+                                    Made to feel polished, welcoming, and worth coming back to.</h3>
+                                <p style="color: var(--muted); line-height: 1.78;">
+                                    Whether someone is booking a beauty service or taking the first step toward a new
+                                    career, Beauty Plus makes the journey feel clearer, warmer, and easier to say yes
+                                    to from the very beginning.
+                                </p>
+
+                                <div class="feature-grid">
+                                    <div class="feature-tile">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                        <strong>Royal Salon Care</strong>
+                                        <span>From soft glam to nails, waxes, braids, locs, colour, and treatments,
+                                            every service is designed to leave you feeling polished.</span>
+                                    </div>
+                                    <div class="feature-tile">
+                                        <i class="fa-solid fa-graduation-cap"></i>
+                                        <strong>Beauty Academy</strong>
+                                        <span>Hands-on training for aspiring artists, stylists, and beauty
+                                            entrepreneurs ready to build confidence and skill.</span>
+                                    </div>
+                                    <div class="feature-tile">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <strong>Kingston Location</strong>
+                                        <span>Visit us at 38a Hagley Park Road, Kingston 10 for appointments, classes,
+                                            and consultations.</span>
+                                    </div>
+                                    <div class="feature-tile">
+                                        <i class="fa-solid fa-award"></i>
+                                        <strong>Certification Pathway</strong>
+                                        <span>Serious students can pursue training aligned with HEART/NSTA Trust and
+                                            NCTVET/NVQ-J certification pathways.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="showcase-panel reveal">
+                            <div class="showcase-panel-content">
+                                <h3>Luxury beauty, made easy to book.</h3>
+                                <p>
+                                    Explore by category, discover the service that fits your moment, and send your
+                                    booking request in minutes with no clutter and no confusion.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════
+                 SALON TEASER SECTION
+            ═══════════════════════════════════════════════ -->
+            <section class="services" id="salon" style="background: linear-gradient(180deg, rgba(255,249,237,0.82), rgba(247,249,255,0.9)), radial-gradient(circle at 100% 0%, rgba(214,168,61,0.18), transparent 28rem);">
+                <div class="container">
+                    <div class="section-heading reveal">
+                        <div class="section-kicker"><i class="fa-solid fa-scissors"></i> Salon Services</div>
+                        <h2>Every beauty service you need, in one place.</h2>
+                        <p>
+                            From flawless makeup and creative nail art to loc retightening, knotless braids, waxing, and precision cuts — Beauty Plus offers over 153 services for every beauty moment.
+                        </p>
+                    </div>
+
+                    <!-- SALON SERVICE PREVIEW CARDS -->
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:32px;" class="reveal" id="salonTeaser">
+                        <div class="royal-card" style="text-align:center;">
+                            <div class="card-pad" style="padding:30px 24px;">
+                                <div style="width:56px;height:56px;border-radius:18px;background:rgba(214,168,61,0.12);border:1px solid rgba(214,168,61,0.24);display:grid;place-items:center;margin:0 auto 16px;font-size:1.3rem;color:var(--gold);">
+                                    <i class="fa-solid fa-brush"></i>
+                                </div>
+                                <strong style="display:block;font-family:'Cinzel',serif;color:var(--royal-blue);font-size:1rem;margin-bottom:8px;">Makeup & Glam</strong>
+                                <p style="color:var(--muted);font-size:0.88rem;line-height:1.65;">Soft glam, birthday glam, graduation looks, and bridal party makeup — all from JMD $4,500.</p>
+                            </div>
+                        </div>
+                        <div class="royal-card" style="text-align:center;">
+                            <div class="card-pad" style="padding:30px 24px;">
+                                <div style="width:56px;height:56px;border-radius:18px;background:rgba(214,168,61,0.12);border:1px solid rgba(214,168,61,0.24);display:grid;place-items:center;margin:0 auto 16px;font-size:1.3rem;color:var(--gold);">
+                                    <i class="fa-solid fa-crown"></i>
+                                </div>
+                                <strong style="display:block;font-family:'Cinzel',serif;color:var(--royal-blue);font-size:1rem;margin-bottom:8px;">Locs & Braiding</strong>
+                                <p style="color:var(--muted);font-size:0.88rem;line-height:1.65;">Expert loc retightening, knotless braids, consultations, and professional protective styles.</p>
+                            </div>
+                        </div>
+                        <div class="royal-card" style="text-align:center;">
+                            <div class="card-pad" style="padding:30px 24px;">
+                                <div style="width:56px;height:56px;border-radius:18px;background:rgba(214,168,61,0.12);border:1px solid rgba(214,168,61,0.24);display:grid;place-items:center;margin:0 auto 16px;font-size:1.3rem;color:var(--gold);">
+                                    <i class="fa-solid fa-hand-sparkles"></i>
+                                </div>
+                                <strong style="display:block;font-family:'Cinzel',serif;color:var(--royal-blue);font-size:1rem;margin-bottom:8px;">Nails & Waxing</strong>
+                                <p style="color:var(--muted);font-size:0.88rem;line-height:1.65;">Pedicures, nail art, brow lamination, full leg waxing, and more body care services.</p>
+                            </div>
+                        </div>
+                        <div class="royal-card" style="text-align:center;">
+                            <div class="card-pad" style="padding:30px 24px;">
+                                <div style="width:56px;height:56px;border-radius:18px;background:rgba(214,168,61,0.12);border:1px solid rgba(214,168,61,0.24);display:grid;place-items:center;margin:0 auto 16px;font-size:1.3rem;color:var(--gold);">
+                                    <i class="fa-solid fa-scissors"></i>
+                                </div>
+                                <strong style="display:block;font-family:'Cinzel',serif;color:var(--royal-blue);font-size:1rem;margin-bottom:8px;">Hair Services</strong>
+                                <p style="color:var(--muted);font-size:0.88rem;line-height:1.65;">Cuts, colour, relaxers, treatments, wigs, sew-ins, and wet services by trained professionals.</p>
+                            </div>
+                        </div>
+                        <div class="royal-card" style="text-align:center;">
+                            <div class="card-pad" style="padding:30px 24px;">
+                                <div style="width:56px;height:56px;border-radius:18px;background:rgba(214,168,61,0.12);border:1px solid rgba(214,168,61,0.24);display:grid;place-items:center;margin:0 auto 16px;font-size:1.3rem;color:var(--gold);">
+                                    <i class="fa-solid fa-eye"></i>
+                                </div>
+                                <strong style="display:block;font-family:'Cinzel',serif;color:var(--royal-blue);font-size:1rem;margin-bottom:8px;">Lash Services</strong>
+                                <p style="color:var(--muted);font-size:0.88rem;line-height:1.65;">Fusion lash sets and lash consultations for fuller, more defined eyes.</p>
+                            </div>
+                        </div>
+                        <div class="royal-card" style="text-align:center;">
+                            <div class="card-pad" style="padding:30px 24px;">
+                                <div style="width:56px;height:56px;border-radius:18px;background:rgba(214,168,61,0.12);border:1px solid rgba(214,168,61,0.24);display:grid;place-items:center;margin:0 auto 16px;font-size:1.3rem;color:var(--gold);">
+                                    <i class="fa-solid fa-spa"></i>
+                                </div>
+                                <strong style="display:block;font-family:'Cinzel',serif;color:var(--royal-blue);font-size:1rem;margin-bottom:8px;">Facials & Massage</strong>
+                                <p style="color:var(--muted);font-size:0.88rem;line-height:1.65;">Facial massage with light therapy, upper back scrubs, and full body massage consultations.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align:center;" class="reveal">
+                        <a class="btn btn-secondary" href="salon.html" style="padding:16px 36px;font-size:1.02rem;">
+                            <i class="fa-solid fa-arrow-right"></i> View All Services & Book an Appointment
+                        </a>
+                        <p style="color:var(--muted);margin-top:14px;font-size:0.9rem;">153+ services available. Click any service on the next page to open your WhatsApp booking request.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════
+                 ACADEMY TEASER SECTION
+            ═══════════════════════════════════════════════ -->
+            <section class="academy" id="academy">
+                <div class="container">
+                    <div class="section-heading reveal">
+                        <div class="section-kicker"><i class="fa-solid fa-school"></i> Beauty Plus Academy</div>
+                        <h2>Turn your passion for beauty into a profession.</h2>
+                        <p>
+                            Eight focused courses. Eight weeks. One day a week. Beauty Plus Academy has spent over 20 years helping aspiring artists become confident, certified beauty professionals.
+                        </p>
+                    </div>
+
+                    <div class="academy-grid">
+                        <div class="academy-card reveal">
+                            <div class="card-pad">
+                                <h3>Why Students Choose Beauty Plus</h3>
+                                <p>Trained and licensed instructors. Hands-on practical skills. HEART/NCTVET-aligned certification pathways. A supportive environment that's been building beauty careers for over 20 years.</p>
+                                <p style="margin-top:14px;">Whether you're building a career or launching a business, our courses are designed to prepare you for real work, real clients, and real results.</p>
+
+                                <div class="requirements">
+                                    <div class="req"><i class="fa-solid fa-id-card"></i><div><strong>Age 16+</strong><br>Students must be 16 years and older.</div></div>
+                                    <div class="req"><i class="fa-solid fa-clock"></i><div><strong>8 Weeks</strong><br>One day per week — mornings (9am–1pm) or evenings (5pm–8pm).</div></div>
+                                    <div class="req"><i class="fa-solid fa-money-bill-wave"></i><div><strong>JMD $5,000 Registration</strong><br>Pay by bank transfer or in person on the day of class.</div></div>
+                                    <div class="req"><i class="fa-solid fa-certificate"></i><div><strong>HEART/NCTVET Aligned</strong><br>NVQ-J certification pathway available for qualifying students.</div></div>
+                                </div>
+
+                                <a class="btn btn-primary" href="enroll.html" style="margin-top:22px;display:inline-flex;">
+                                    <i class="fa-solid fa-graduation-cap"></i> View All Courses & Enroll
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="academy-card reveal">
+                            <div class="card-pad">
+                                <h3>2026 Course Highlights</h3>
+                                <p style="margin-bottom:16px;">11 programmes starting from March and July 2026. Click any course to view full details and enroll.</p>
+
+                                <div class="course-list" style="display:grid;gap:12px;">
+                                    <a href="enroll.html#courses" class="course-item" style="border-radius:20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);overflow:hidden;text-decoration:none;transition:border-color 280ms ease;" onmouseover="this.style.borderColor='rgba(245,212,122,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.16)'">
+                                        <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;">
+                                            <span style="color:#fff;font-weight:800;"><i class="fa-solid fa-brush" style="color:var(--gold-2);margin-right:8px;"></i>Professional Makeup Artistry</span>
+                                            <span style="color:var(--gold-2);font-weight:900;white-space:nowrap;">JMD $65,000</span>
+                                        </div>
+                                    </a>
+                                    <a href="enroll.html#courses" class="course-item" style="border-radius:20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);overflow:hidden;text-decoration:none;transition:border-color 280ms ease;" onmouseover="this.style.borderColor='rgba(245,212,122,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.16)'">
+                                        <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;">
+                                            <span style="color:#fff;font-weight:800;"><i class="fa-solid fa-crown" style="color:var(--gold-2);margin-right:8px;"></i>Loctician Course</span>
+                                            <span style="color:var(--gold-2);font-weight:900;white-space:nowrap;">JMD $75,000</span>
+                                        </div>
+                                    </a>
+                                    <a href="enroll.html#courses" class="course-item" style="border-radius:20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);overflow:hidden;text-decoration:none;transition:border-color 280ms ease;" onmouseover="this.style.borderColor='rgba(245,212,122,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.16)'">
+                                        <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;">
+                                            <span style="color:#fff;font-weight:800;"><i class="fa-solid fa-scissors" style="color:var(--gold-2);margin-right:8px;"></i>Professional Barbering</span>
+                                            <span style="color:var(--gold-2);font-weight:900;white-space:nowrap;">JMD $65,000</span>
+                                        </div>
+                                    </a>
+                                    <a href="enroll.html#courses" class="course-item" style="border-radius:20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);overflow:hidden;text-decoration:none;transition:border-color 280ms ease;" onmouseover="this.style.borderColor='rgba(245,212,122,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.16)'">
+                                        <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;">
+                                            <span style="color:#fff;font-weight:800;"><i class="fa-solid fa-leaf" style="color:var(--gold-2);margin-right:8px;"></i>Full Body Wax Aesthetic</span>
+                                            <span style="color:var(--gold-2);font-weight:900;white-space:nowrap;">JMD $75,000</span>
+                                        </div>
+                                    </a>
+                                    <a href="enroll.html#courses" class="course-item" style="border-radius:20px;background:rgba(214,168,61,0.12);border:1px solid rgba(245,212,122,0.3);overflow:hidden;text-decoration:none;transition:border-color 280ms ease;" onmouseover="this.style.borderColor='rgba(245,212,122,0.6)'" onmouseout="this.style.borderColor='rgba(245,212,122,0.3)'">
+                                        <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;">
+                                            <span style="color:#fff;font-weight:800;"><i class="fa-solid fa-sun" style="color:var(--gold-2);margin-right:8px;"></i>Teens Summer Classes (July)</span>
+                                            <span style="color:var(--gold-2);font-weight:900;white-space:nowrap;">From JMD $25,000</span>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="mini-note" style="background:rgba(245,212,122,0.14);color:var(--soft-gold);border-color:rgba(245,212,122,0.23);margin-top:16px;">
+                                    <i class="fa-solid fa-bell"></i> 11 courses now available, including 3 new July Summer Classes for Teens.
+                                </div>
+
+                                <a class="btn btn-primary" href="enroll.html" style="width:100%;margin-top:18px;justify-content:center;display:flex;">
+                                    <i class="fa-solid fa-pen-nib"></i> Enroll in a 2026 Programme
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div class="sticky-cta">
+            <a class="quick-btn" href="enroll.html" aria-label="Enroll in a programme"><i class="fa-solid fa-pen-nib"></i></a>
+            <a class="quick-btn" href="https://wa.me/18764580603" target="_blank" rel="noopener"
+                aria-label="WhatsApp Beauty Plus"><i class="fa-brands fa-whatsapp"></i></a>
+            <a class="quick-btn" href="#home" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></a>
+        </div>
+
+        <footer class="footer" id="contact">
+            <div class="container">
+                <div class="footer-grid">
+                    <div>
+                        <h4>Beauty Plus Academy & Salon</h4>
+                        <p>Professional beauty services for clients and practical beauty training for students ready to
+                            grow.</p>
+                        <p><strong style="color: var(--gold-2);">Location:</strong> 38a Hagley Park Road, Kingston 10
+                        </p>
+                    </div>
+                    <div>
+                        <h4>Quick Links</h4>
+                        <a href="salon.html">Salon Services</a>
+                        <a href="enroll.html">Beauty Plus Academy</a>
+                        <a href="enroll.html#register">Enrollment Form</a>
+                        <a href="https://www.fresha.com/a/beauty-plus-academy-salon-kingston-38a-hagley-park-road-e358wrqc"
+                            target="_blank" rel="noopener">Book Online (Fresha)</a>
+                    </div>
+                    <div>
+                        <h4>Academy Contact</h4>
+                        <a href="https://wa.me/18764580603" target="_blank" rel="noopener">WhatsApp: 876-458-0603</a>
+                        <p>Registration Fee: JMD $5,000</p>
+                        <p>Classes: One day weekly for 8 weeks</p>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <span>© <span id="year"></span> Beauty Plus Academy & Salon. All Rights Reserved.</span>
+                    <span>Beauty Plus Academy & Salon serves clients, trains professionals, and celebrates beauty with
+                        purpose.</span>
+                    <span style="display:block; margin-top: 10px; font-size: 0.9em; opacity: 0.8;">Powered by <a href="https://icreatesolutionsandservices.com" target="_blank" rel="noopener" style="color:var(--gold-1); text-decoration:none; font-weight:600;">iCreate Solutions & Services</a></span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        /* ── NAV MOBILE ── */
+        const menuBtn = document.getElementById("menuBtn");
+        const mobilePanel = document.getElementById("mobilePanel");
+
+        menuBtn.addEventListener("click", () => {
+            mobilePanel.classList.toggle("open");
+            menuBtn.innerHTML = mobilePanel.classList.contains("open")
+                ? '<i class="fa-solid fa-xmark"></i>'
+                : '<i class="fa-solid fa-bars"></i>';
+        });
+
+        mobilePanel.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", () => {
+                mobilePanel.classList.remove("open");
+                menuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+            });
+        });
+
+        /* ── REVEAL ON SCROLL ── */
+        const revealEls = document.querySelectorAll(".reveal");
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add("visible");
+            });
+        }, { threshold: 0.1 });
+        revealEls.forEach(el => observer.observe(el));
+
+        /* ── PARALLAX ORB ── */
+        const orb = document.getElementById("royalOrb");
+        if (orb) {
+            if (window.matchMedia("(pointer: fine)").matches) {
+                window.addEventListener("pointermove", e => {
+                    orb.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+                });
+            } else {
+                orb.style.display = "none";
+            }
+        }
+
+        /* ── YEAR ── */
+        document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+</body>
+
+</html>
