@@ -2108,11 +2108,13 @@ router.post('/api/invoices/resend', async (req, res) => {
 
             updatedFields.amount_paid = paymentStatus === 'DEPOSIT'
                 ? (parseFloat(updatedFields.deposit_percent || 0) / 100) * totalAmount
-                : (paymentStatus === 'PARTIAL' ? parseFloat(amountPaid || invoice.amount_paid || 0) : (paymentStatus === 'PAID' ? totalAmount : 0));
+                : (paymentStatus === 'PARTIAL' ? (parseFloat(invoice.amount_paid || 0) + parseFloat(amountPaid || 0)) : (paymentStatus === 'PAID' ? totalAmount : 0));
 
             updatedFields.balance_due = paymentStatus === 'PAID'
                 ? 0
                 : totalAmount - updatedFields.amount_paid;
+
+            updatedFields.remaining_amount = updatedFields.balance_due;
 
             updatedFields.paid_at = paymentStatus === 'PAID'
                 ? (paidAt ? new Date(paidAt).toISOString() : (invoice.paid_at || new Date().toISOString()))
