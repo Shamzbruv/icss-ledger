@@ -156,6 +156,11 @@ const checkAuth = async (req, res, next) => {
         return next();
     }
 
+    // The link hub is public to QR-code visitors; editing remains authenticated.
+    if (currentPath === '/api/link-hub' && req.method === 'GET') {
+        return next();
+    }
+
     // --- JWT verification (primary path) ---
     const authHeader = req.headers['authorization'] || '';
     let token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -208,6 +213,55 @@ const reviewsRouter = require('./src/routes/reviews');
 // MOUNT ROUTES
 router.use('/api/leads', leadsRouter);
 router.use('/api/reviews', reviewsRouter);
+
+const DEFAULT_LINK_HUB = {
+    profile: {
+        name: 'iCreate Solutions & Services',
+        tagline: 'Smart digital solutions for growing businesses.',
+        logoUrl: '/assets/icss-logo.png'
+    },
+    links: [
+        { id: 'website', title: 'Visit Our Website', subtitle: 'Explore our services and recent work', url: 'https://icreatesolutionsandservices.com', icon: 'globe', enabled: true },
+        { id: 'whatsapp', title: 'Chat With Us on WhatsApp', subtitle: 'Tell us what you would like to create', url: 'https://wa.me/18765857469?text=Hi%20iCreate%20Solutions%20%26%20Services!%20I%20scanned%20your%20QR%20code%20and%20would%20like%20to%20learn%20more.', icon: 'whatsapp', enabled: true },
+        { id: 'instagram', title: 'Follow Us on Instagram', subtitle: 'See our latest projects and updates', url: 'https://www.instagram.com/icreate_solutions/', icon: 'instagram', enabled: true }
+    ],
+    offer: {
+        enabled: false,
+        eyebrow: 'QR EXCLUSIVE',
+        title: 'A special offer, just for you',
+        description: 'Mention this offer when you contact us to claim your discount.',
+        code: 'SCAN10',
+        buttonText: 'Claim on WhatsApp',
+        buttonUrl: 'https://wa.me/18765857469?text=Hi!%20I%20would%20like%20to%20claim%20the%20SCAN10%20QR%20offer.'
+    }
+};
+
+router.get('/api/link-hub', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('link_hub_settings').select('content').eq('id', 1).maybeSingle();
+        if (error && error.code !== 'PGRST116' && error.code !== '42P01') throw error;
+        res.set('Cache-Control', 'no-store');
+        res.json(data?.content || DEFAULT_LINK_HUB);
+    } catch (err) {
+        console.warn('[LINK HUB] Using defaults:', err.message);
+        res.json(DEFAULT_LINK_HUB);
+    }
+});
+
+router.put('/api/link-hub', async (req, res) => {
+    try {
+        const content = req.body;
+        if (!content || !content.profile || !Array.isArray(content.links) || !content.offer) {
+            return res.status(400).json({ error: 'Invalid link hub settings.' });
+        }
+        if (content.links.length > 30) return res.status(400).json({ error: 'A maximum of 30 links is allowed.' });
+        const { data, error } = await supabase.from('link_hub_settings').upsert({ id: 1, content, updated_at: new Date().toISOString() }).select('content').single();
+        if (error) throw error;
+        res.json(data.content);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // --- INVOICES API ---
 router.get('/', (req, res) => {
@@ -2961,6 +3015,14 @@ router.get('/leads', (req, res) => {
 
 router.get('/reviews-admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'reviews-admin.html'));
+});
+
+router.get('/link-hub-admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'link-hub-admin.html'));
+});
+
+router.get('/links', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'links.html'));
 });
 // Mount the router under the base path
 app.use(BASE_PATH, router);
