@@ -1,162 +1,112 @@
 const https = require('https');
 const http = require('http');
-const { URL } = require('url');
+const { getPinnedRequest } = require('./targetSafety');
 
-/**
- * Checks Time to First Byte (TTFB) and Total Download Time
- * @param {string} urlStr 
- * @returns {Promise<Object>}
- */
-async function performanceLightCheck(urlStr) {
-    return new Promise((resolve) => {
-        const start = Date.now();
-        let ttfb = 0;
-
-        try {
-            const url = new URL(urlStr);
-            const client = url.protocol === 'https:' ? https : http;
-
-            const req = client.get(urlStr, (res) => {
-                ttfb = Date.now() - start;
-
-                let dataLen = 0;
-                res.on('data', (chunk) => { dataLen += chunk.length; });
-
-                res.on('end', () => {
-                    const totalDuration = Date.now() - start;
-                    const status = totalDuration < 800 ? 'pass' : (totalDuration < 2000 ? 'warn' : 'fail');
-
-                    resolve({
-                        status: status,
-                        details: `TTFB: ${ttfb}ms, Total: ${totalDuration}ms`,
-                        evidence: { ttfb, totalDuration, sizeBytes: dataLen }
-                    });
-                });
-            });
-
-            req.on('error', (err) => {
-                resolve({
-                    status: 'fail',
-                    details: `Connection failed: ${err.message}`,
-                    evidence: { error: err.message }
-                });
-            });
-
-            req.setTimeout(10000, () => {
-                req.destroy();
-                resolve({ status: 'fail', details: 'Check timed out', evidence: { timeout: true } });
-            });
-
-        } catch (err) {
-            resolve({ status: 'fail', details: `Invalid URL`, evidence: { error: err.message } });
-        }
-    });
+function failure(prefix, error, startedAt = null) {
+    return {
+        status: 'fail',
+        details: `${prefix}: ${error.message}`,
+        evidence: { error: error.message, ...(startedAt ? { durationMs: Date.now() - startedAt } : {}) }
+    };
 }
 
-/**
- * Checks if an API endpoint returns 200 OK and valid JSON
- * @param {string} urlStr 
- * @returns {Promise<Object>}
- */
-async function apiHealthCheck(urlStr) {
-    return new Promise((resolve) => {
-        const start = Date.now();
-        try {
-            const url = new URL(urlStr);
-            const client = url.protocol === 'https:' ? https : http;
-
-            const req = client.get(urlStr, { headers: { 'Accept': 'application/json' } }, (res) => {
-                let data = '';
-                res.on('data', c => data += c);
+async function performanceLightCheck(urlStr) {
+    const startedAt = Date.now();
+    try {
+        const { url, options } = await getPinnedRequest(urlStr);
+        const client = url.protocol === 'https:' ? https : http;
+        return await new Promise(resolve => {
+            let settled = false;
+            const finish = result => {
+                if (!settled) {
+                    settled = true;
+                    resolve(result);
+                }
+            };
+            const req = client.request(options, res => {
+                const ttfb = Date.now() - startedAt;
+                let dataLength = 0;
+                res.on('data', chunk => {
+                    dataLength += chunk.length;
+                    if (dataLength > 2 * 1024 * 1024) req.destroy();
+                });
                 res.on('end', () => {
-                    const duration = Date.now() - start;
-                    let isValidJson = false;
-                    try {
-                        JSON.parse(data);
-                        isValidJson = true;
-                    } catch (e) { }
+                    const totalDuration = Date.now() - startedAt;
+                    const status = totalDuration < 800 ? 'pass' : (totalDuration < 2000 ? 'warn' : 'fail');
+                    finish({ status, details: `TTFB: ${ttfb}ms, Total: ${totalDuration}ms`, evidence: { ttfb, totalDuration, sizeBytes: dataLength } });
+                });
+            });
+            req.on('error', error => finish(failure('Connection failed', error, startedAt)));
+            req.setTimeout(10000, () => {
+                req.destroy();
+                finish({ status: 'fail', details: 'Performance check timed out', evidence: { timeout: true } });
+            });
+            req.end();
+        });
+    } catch (error) {
+        return failure('URL rejected', error, startedAt);
+    }
+}
 
-                    if (res.statusCode >= 200 && res.statusCode < 300) {
-                        if (isValidJson) {
-                            resolve({
-                                status: 'pass',
-                                details: `API is healthy (200 OK, JSON)`,
-                                evidence: { statusCode: res.statusCode, durationMs: duration, isJson: true }
-                            });
-                        } else {
-                            resolve({
-                                status: 'warn',
-                                details: `API returned 200 but not valid JSON`,
-                                evidence: { statusCode: res.statusCode, isJson: false, partialBody: data.substring(0, 50) }
-                            });
-                        }
+async function apiHealthCheck(urlStr) {
+    const startedAt = Date.now();
+    try {
+        const { url, options } = await getPinnedRequest(urlStr, { headers: { Accept: 'application/json' } });
+        const client = url.protocol === 'https:' ? https : http;
+        return await new Promise(resolve => {
+            const req = client.request(options, res => {
+                let data = '';
+                res.on('data', chunk => {
+                    if (data.length < 65536) data += chunk;
+                });
+                res.on('end', () => {
+                    const durationMs = Date.now() - startedAt;
+                    let isJson = false;
+                    try { JSON.parse(data); isJson = true; } catch (_) { /* handled below */ }
+                    if (res.statusCode >= 200 && res.statusCode < 300 && isJson) {
+                        resolve({ status: 'pass', details: 'API is healthy (successful JSON response)', evidence: { statusCode: res.statusCode, durationMs, isJson } });
+                    } else if (res.statusCode >= 200 && res.statusCode < 300) {
+                        resolve({ status: 'warn', details: 'API responded successfully but did not return JSON', evidence: { statusCode: res.statusCode, durationMs, isJson } });
                     } else {
-                        resolve({
-                            status: 'fail',
-                            details: `API returned error: ${res.statusCode}`,
-                            evidence: { statusCode: res.statusCode, durationMs: duration }
-                        });
+                        resolve({ status: 'fail', details: `API returned error status ${res.statusCode}`, evidence: { statusCode: res.statusCode, durationMs } });
                     }
                 });
             });
-
-            req.on('error', (err) => resolve({ status: 'fail', details: err.message, evidence: {} }));
+            req.on('error', error => resolve(failure('API connection failed', error, startedAt)));
             req.setTimeout(5000, () => {
                 req.destroy();
-                resolve({ status: 'fail', details: 'Timeout', evidence: {} });
+                resolve({ status: 'fail', details: 'API check timed out', evidence: { timeout: true } });
             });
-
-        } catch (err) {
-            resolve({ status: 'fail', details: `Invalid URL: ${err.message}`, evidence: {} });
-        }
-    });
+            req.end();
+        });
+    } catch (error) {
+        return failure('URL rejected', error, startedAt);
+    }
 }
 
-/**
- * Simple Webhook availability check (Accesses endpoint, expects 405 Method Not Allowed or 200, but ensuring it's reachable)
- * @param {string} urlStr 
- */
 async function webhookHealthCheck(urlStr) {
-    return new Promise((resolve) => {
-        try {
-            const url = new URL(urlStr);
-            const client = url.protocol === 'https:' ? https : http;
-
-            // Webhooks usually listen for POST. If we GET, we might get 404 or 405, which actually means it's ALIVE (server responded).
-            // Status fail means timeout or connection refused.
-            const req = client.request(urlStr, { method: 'POST' }, (res) => {
+    try {
+        const { url, options } = await getPinnedRequest(urlStr, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Content-Length': '15' }
+        });
+        const client = url.protocol === 'https:' ? https : http;
+        return await new Promise(resolve => {
+            const req = client.request(options, res => {
                 res.resume();
-                resolve({
-                    status: 'pass',
-                    details: `Webhook endpoint reachable (Status: ${res.statusCode})`,
-                    evidence: { statusCode: res.statusCode }
-                });
+                resolve({ status: 'pass', details: `Webhook endpoint is reachable (Status: ${res.statusCode})`, evidence: { statusCode: res.statusCode } });
             });
-
-            req.on('error', (err) => {
-                resolve({
-                    status: 'fail',
-                    details: `Webhook endpoint unreachable: ${err.message}`,
-                    evidence: { error: err.message }
-                });
-            });
-
+            req.on('error', error => resolve(failure('Webhook endpoint unreachable', error)));
             req.setTimeout(5000, () => {
                 req.destroy();
-                resolve({ status: 'fail', details: 'Webhook check timed out', evidence: {} });
+                resolve({ status: 'fail', details: 'Webhook check timed out', evidence: { timeout: true } });
             });
-
             req.write(JSON.stringify({ test: 'ping' }));
             req.end();
-
-        } catch (err) {
-            resolve({ status: 'fail', details: `Invalid URL`, evidence: {} });
-        }
-    });
+        });
+    } catch (error) {
+        return failure('URL rejected', error);
+    }
 }
 
-module.exports = {
-    performanceLightCheck,
-    apiHealthCheck,
-    webhookHealthCheck
-};
+module.exports = { performanceLightCheck, apiHealthCheck, webhookHealthCheck };

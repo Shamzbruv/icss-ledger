@@ -156,6 +156,12 @@ const checkAuth = async (req, res, next) => {
         return next();
     }
 
+    // Public only after PayPal approval; the handler verifies the subscription
+    // and subscriber email directly with PayPal before changing any records.
+    if (currentPath === '/api/subscription-onboarding' && req.method === 'POST') {
+        return next();
+    }
+
     // The link hub is public to QR-code visitors; editing remains authenticated.
     if (currentPath === '/api/link-hub' && req.method === 'GET') {
         return next();
@@ -328,6 +334,7 @@ router.post('/api/invoices/preview-state', (req, res) => {
 
     try {
         const { invoice, client } = req.body;
+        if (!invoice || !client) return res.status(400).json({ error: 'Missing invoice or client data' });
         // Compute state
         const state = computeInvoiceState(invoice, client);
 
@@ -857,18 +864,111 @@ router.post('/api/invoices/create', async (req, res) => {
 });
 
 // PayPal Webhook/IPN Handler
-const { verifyPayPalWebhookSignature } = require('./src/services/paypalService');
+const { verifyPayPalWebhookSignature, getPayPalSubscription } = require('./src/services/paypalService');
+const { ensureSubscriptionContext, sendWelcomeOnce, processBirthdayGreetings } = require('./src/services/customerRelationsService');
+const { getPlanByPayPalId } = require('./src/services/subscriptionCatalog');
+const { normalizePublicDomain, parsePublicHttpUrl } = require('./src/services/checks/targetSafety');
+
+const onboardingAttempts = new Map();
+function cleanOnboardingText(value, maxLength) {
+    return String(value || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+router.post('/api/subscription-onboarding', async (req, res) => {
+    try {
+        const key = req.ip || 'unknown';
+        const recent = (onboardingAttempts.get(key) || []).filter(time => Date.now() - time < 15 * 60 * 1000);
+        if (recent.length >= 8) return res.status(429).json({ error: 'Too many attempts. Please wait and try again.' });
+        recent.push(Date.now());
+        onboardingAttempts.set(key, recent);
+
+        const payload = req.body || {};
+        const subscriptionId = String(payload.subscriptionId || '').trim();
+        const submittedEmail = String(payload.email || '').trim().toLowerCase();
+        if (!/^I-[A-Z0-9]+$/i.test(subscriptionId)) return res.status(400).json({ error: 'A valid PayPal subscription ID is required.' });
+        if (!submittedEmail || !/^\S+@\S+\.\S+$/.test(submittedEmail)) return res.status(400).json({ error: 'A valid PayPal email is required.' });
+        const fullName = cleanOnboardingText(payload.fullName, 120);
+        if (!fullName) return res.status(400).json({ error: 'Your name is required.' });
+
+        const birthdayMonth = Number(payload.birthdayMonth);
+        const birthdayDay = Number(payload.birthdayDay);
+        const birthdayProbe = new Date(Date.UTC(2000, birthdayMonth - 1, birthdayDay));
+        if (birthdayMonth < 1 || birthdayMonth > 12 || birthdayDay < 1 || birthdayDay > 31
+            || birthdayProbe.getUTCMonth() !== birthdayMonth - 1 || birthdayProbe.getUTCDate() !== birthdayDay) {
+            return res.status(400).json({ error: 'Please choose a valid birthday month and day.' });
+        }
+        const subscription = await getPayPalSubscription(subscriptionId);
+        const paypalEmail = String(subscription.subscriber?.email_address || '').trim().toLowerCase();
+        if (!paypalEmail || paypalEmail !== submittedEmail) {
+            return res.status(403).json({ error: 'That email does not match the PayPal subscription.' });
+        }
+        if (String(subscription.status || '').toUpperCase() !== 'ACTIVE') {
+            return res.status(409).json({ error: 'This PayPal subscription is not active.' });
+        }
+
+        const catalogPlan = getPlanByPayPalId(subscription.plan_id);
+        if (!catalogPlan) return res.status(409).json({ error: 'This PayPal plan is not connected to Client Care yet.' });
+        const isWebsitePlan = ['HOST_PRO', 'HOST_DOM', 'MAINT', 'REFRESH'].includes(catalogPlan?.code);
+        let websiteUrl = cleanOnboardingText(payload.websiteUrl, 500);
+        let domainName = cleanOnboardingText(payload.domainName, 253);
+        if (isWebsitePlan && (!websiteUrl || !domainName)) {
+            return res.status(400).json({ error: 'Your website URL and public domain are required for weekly health reporting.' });
+        }
+        try {
+            if (websiteUrl) websiteUrl = parsePublicHttpUrl(websiteUrl).toString();
+            if (domainName) domainName = normalizePublicDomain(domainName);
+        } catch (validationError) {
+            return res.status(400).json({ error: validationError.message });
+        }
+
+        const ccEmails = Array.isArray(payload.ccEmails)
+            ? payload.ccEmails
+            : String(payload.ccEmails || '').split(',');
+        const sanitizedCc = [...new Set(ccEmails.map(value => String(value).trim().toLowerCase()).filter(value => /^\S+@\S+\.\S+$/.test(value)))].slice(0, 5);
+        const requestedReportEmail = String(payload.reportEmail || '').trim().toLowerCase();
+        const context = await ensureSubscriptionContext(subscription, {
+            fullName,
+            businessName: cleanOnboardingText(payload.businessName, 160),
+            phone: cleanOnboardingText(payload.phone, 50),
+            address: cleanOnboardingText(payload.address, 240),
+            websiteUrl,
+            domainName,
+            reportEmail: /^\S+@\S+\.\S+$/.test(requestedReportEmail) ? requestedReportEmail : submittedEmail,
+            ccEmails: sanitizedCc,
+            birthdayMonth,
+            birthdayDay,
+            reportFrequency: isWebsitePlan ? 'weekly' : (payload.reportFrequency === 'monthly' ? 'monthly' : 'weekly'),
+            sendDayOfWeek: Math.min(6, Math.max(0, Number.isInteger(Number(payload.sendDayOfWeek)) ? Number(payload.sendDayOfWeek) : 1)),
+            sendDayOfMonth: Math.min(28, Math.max(1, Number(payload.sendDayOfMonth) || 1)),
+            sendTime: /^([01]\d|2[0-3]):[0-5]\d$/.test(payload.sendTime) ? payload.sendTime : '09:00',
+            timezone: ['America/Jamaica', 'America/New_York', 'Europe/London', 'UTC'].includes(payload.timezone) ? payload.timezone : 'America/Jamaica',
+            planName: cleanOnboardingText(payload.planName, 120),
+            completed: true
+        });
+        await sendWelcomeOnce(context);
+        res.json({
+            success: true,
+            clientName: context.client.name,
+            planName: context.plan.name,
+            nextReportAt: context.service.next_run_at
+        });
+    } catch (err) {
+        console.error('[ONBOARDING] Failed:', err.message);
+        res.status(500).json({ error: 'We could not save your details right now. Please try again or contact support.' });
+    }
+});
 
 router.post('/api/paypal/webhook', async (req, res) => {
     let webhookRow = null;
     try {
         const body = req.body;
+        const resource = body.resource || {};
         const eventType = body.event_type || 'UNKNOWN';
         console.log(`[PAYPAL] Received webhook: ${eventType} | Event ID: ${body.id}`);
 
         // --- STEP 0: Insert raw event to DB immediately for full observability ---
         // This happens BEFORE signature check so we always have a record of what arrived.
-        const { data: earlyInsert } = await supabase
+        const { data: insertedEvent } = await supabase
             .from('paypal_webhook_events')
             .upsert({
                 paypal_event_id: body.id,
@@ -879,7 +979,13 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 status: 'received'
             }, { onConflict: 'paypal_event_id', ignoreDuplicates: true })
             .select('id, status')
-            .single();
+            .maybeSingle();
+        let earlyInsert = insertedEvent;
+        if (!earlyInsert && body.id) {
+            const { data: existingEvent } = await supabase.from('paypal_webhook_events')
+                .select('id, status').eq('paypal_event_id', body.id).maybeSingle();
+            earlyInsert = existingEvent || null;
+        }
         if (earlyInsert) webhookRow = earlyInsert;
 
         // --- STEP 1: Verify PayPal Signature ---
@@ -888,6 +994,12 @@ router.post('/api/paypal/webhook', async (req, res) => {
             isValid = await verifyPayPalWebhookSignature(req.headers, req.body);
         } catch (verifyErr) {
             console.error('[PAYPAL] Signature Verification Error:', verifyErr.message);
+            if (webhookRow) {
+                await supabase.from('paypal_webhook_events')
+                    .update({ status: 'failed', last_error: `Signature verification unavailable: ${verifyErr.message}` })
+                    .eq('id', webhookRow.id);
+            }
+            return res.status(503).send('PayPal verification temporarily unavailable; retry requested');
         }
 
         if (!isValid) {
@@ -908,16 +1020,51 @@ router.post('/api/paypal/webhook', async (req, res) => {
         }
 
         // Support standard captures, legacy recurring sales, and modern subscription payments
-        const successEvents = new Set(['PAYMENT.CAPTURE.COMPLETED', 'PAYMENT.SALE.COMPLETED', 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED']);
+        const successEvents = new Set(['PAYMENT.CAPTURE.COMPLETED', 'PAYMENT.SALE.COMPLETED']);
         const failureEvents = new Set(['PAYMENT.CAPTURE.DECLINED', 'PAYMENT.CAPTURE.DENIED', 'PAYMENT.SALE.REVERSED', 'BILLING.SUBSCRIPTION.PAYMENT.FAILED']);
         const terminalEvents = new Set(['BILLING.SUBSCRIPTION.SUSPENDED', 'BILLING.SUBSCRIPTION.CANCELLED', 'BILLING.SUBSCRIPTION.EXPIRED']);
         // ✅ NEW: Handle brand new subscriptions created directly through PayPal
-        const activationEvents = new Set(['BILLING.SUBSCRIPTION.ACTIVATED', 'BILLING.SUBSCRIPTION.CREATED']);
+        const activationEvents = new Set(['BILLING.SUBSCRIPTION.ACTIVATED']);
 
+        // CREATED is an acknowledgement only. Provisioning waits until PayPal
+        // confirms ACTIVATED so abandoned approvals never enter Client Care.
+        if (body.event_type === 'BILLING.SUBSCRIPTION.CREATED') {
+            if (webhookRow) {
+                await supabase.from('paypal_webhook_events').update({
+                    status: 'processed', processed_at: new Date().toISOString()
+                }).eq('id', webhookRow.id);
+            }
+            return res.status(200).send('OK');
+        }
+
+        // PayPal may send CREATED and ACTIVATED separately. This reconciler is
+        // idempotent and sends the welcome message once, on activation.
+        if (activationEvents.has(body.event_type)) {
+            try {
+                const context = await ensureSubscriptionContext(resource);
+                await sendWelcomeOnce(context);
+                if (webhookRow) {
+                    await supabase.from('paypal_webhook_events').update({
+                        status: 'processed',
+                        processed_at: new Date().toISOString(),
+                        custom_id: context.service.id
+                    }).eq('id', webhookRow.id);
+                }
+                return res.status(200).send('OK');
+            } catch (activationErr) {
+                console.error('[PAYPAL][ACTIVATION] Reconciliation failed:', activationErr.message);
+                if (webhookRow) {
+                    await supabase.from('paypal_webhook_events').update({ status: 'failed', last_error: activationErr.message }).eq('id', webhookRow.id);
+                }
+                return res.status(500).send('Activation processing failed; retry requested');
+            }
+        }
+
+        /* Legacy activation implementation (superseded by the idempotent reconciler above).
         // --- HANDLE NEW SUBSCRIPTION ACTIVATIONS ---
         // This fires when a brand-new client signs up through PayPal directly,
         // before any payment event is received. We auto-create the client + service + welcome email.
-        if (activationEvents.has(body.event_type)) {
+        if (false && activationEvents.has(body.event_type)) {
             console.log(`[PAYPAL] New subscription activation: ${body.event_type}`);
             try {
                 const subscriber = resource.subscriber || {};
@@ -1048,10 +1195,21 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 return res.status(200).send('Received - activation error logged');
             }
         }
+        */
 
-
-        const resource = body.resource || {};
         let customId = resource.custom_id || resource.custom;
+
+        // Exact subscription identity must win over payer-email matching because
+        // one customer can legitimately hold more than one subscription.
+        if (!customId) {
+            const exactPayPalSubscriptionId = resource.billing_agreement_id
+                || (/^I-[A-Z0-9]+$/i.test(String(resource.id || '')) ? resource.id : null);
+            if (exactPayPalSubscriptionId) {
+                const { data: exactService } = await supabase.from('client_services')
+                    .select('id').contains('service_meta_json', { paypal_subscription_id: exactPayPalSubscriptionId }).limit(1).maybeSingle();
+                if (exactService) customId = exactService.id;
+            }
+        }
 
         // --- STEP 2: Multi-strategy client correlation ---
         if (!customId) {
@@ -1072,13 +1230,13 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     }
                 }
                 if (client) {
-                    const { data: svc } = await supabase.from('client_services')
+                    const { data: matchingServices } = await supabase.from('client_services')
                         .select('id').eq('client_id', client.id).eq('status', 'active')
-                        .order('created_at', { ascending: false }).limit(1).single();
-                    if (svc) {
-                        customId = svc.id;
+                        .order('created_at', { ascending: false }).limit(2);
+                    if (matchingServices?.length === 1) {
+                        customId = matchingServices[0].id;
                         console.log(`[PAYPAL] Email fallback matched service: ${customId}`);
-                    } else {
+                    } else if (!matchingServices?.length) {
                         const { data: inv } = await supabase.from('invoices')
                             .select('id').eq('client_id', client.id).eq('status', 'pending')
                             .order('created_at', { ascending: false }).limit(1).single();
@@ -1086,6 +1244,8 @@ router.post('/api/paypal/webhook', async (req, res) => {
                             customId = inv.id;
                             console.log(`[PAYPAL] Email fallback matched invoice: ${customId}`);
                         }
+                    } else {
+                        console.warn(`[PAYPAL] Email fallback is ambiguous for ${payerEmail}; exact subscription ID required.`);
                     }
                 }
             }
@@ -1096,10 +1256,17 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 if (paypalSubId) {
                     console.warn(`[PAYPAL] Trying PayPal subscription ID fallback: ${paypalSubId}`);
                     const { data: svcByPP } = await supabase.from('client_services')
-                        .select('id').eq('paypal_subscription_id', paypalSubId).single();
+                        .select('id').contains('service_meta_json', { paypal_subscription_id: paypalSubId }).limit(1).maybeSingle();
                     if (svcByPP) {
                         customId = svcByPP.id;
                         console.log(`[PAYPAL] Subscription ID fallback matched service: ${customId}`);
+                    } else if (/^I-[A-Z0-9]+$/i.test(paypalSubId)) {
+                        // Payment can occasionally arrive before the activation webhook.
+                        const subscription = await getPayPalSubscription(paypalSubId);
+                        const context = await ensureSubscriptionContext(subscription);
+                        customId = context.service.id;
+                        await sendWelcomeOnce(context);
+                        console.log(`[PAYPAL] Reconciled subscription from PayPal API: ${customId}`);
                     }
                 }
             }
@@ -1113,7 +1280,11 @@ router.post('/api/paypal/webhook', async (req, res) => {
                         .eq('id', webhookRow.id);
                 }
                 // Return 200 so PayPal stops retrying — this needs manual fix of custom_id on subscription
-                return res.status(200).send('Received - client correlation failed, manual review required');
+                const retriableEvent = successEvents.has(body.event_type)
+                    || failureEvents.has(body.event_type)
+                    || terminalEvents.has(body.event_type);
+                return res.status(retriableEvent ? 500 : 200)
+                    .send(retriableEvent ? 'Client correlation failed; retry requested' : 'Received - no client action required');
             }
 
             // Update the DB record with the resolved customId
@@ -1132,9 +1303,59 @@ router.post('/api/paypal/webhook', async (req, res) => {
             if (customId) {
                 let targetInvoice = null;
                 let clientServiceId = null;
+                const paymentReferenceId = resource.id || body.id;
+                const settledAmount = Number(resource.amount?.value || resource.amount?.total || 0);
+                if (!paymentReferenceId || settledAmount <= 0) throw new Error('PayPal payment is missing its transaction ID or settled amount');
+                let paymentClaim = null;
+                let ownsPaymentClaim = false;
+
+                // Claim the PayPal transaction before generating an invoice. The
+                // unique reference index serializes overlapping webhook deliveries.
+                const claimTime = new Date().toISOString();
+                const { data: insertedPaymentClaim, error: claimError } = await supabase.from('payments').insert({
+                    invoice_id: null,
+                    amount: settledAmount,
+                    method: 'PayPal',
+                    reference_id: paymentReferenceId,
+                    payment_date: claimTime
+                }).select('id, invoice_id, payment_date, created_at').maybeSingle();
+                if (!claimError && insertedPaymentClaim) {
+                    paymentClaim = insertedPaymentClaim;
+                    ownsPaymentClaim = true;
+                } else if (String(claimError?.code) === '23505') {
+                    const { data: existingClaim, error: existingClaimError } = await supabase.from('payments')
+                        .select('id, invoice_id, payment_date, created_at').eq('reference_id', paymentReferenceId).limit(1).maybeSingle();
+                    if (existingClaimError || !existingClaim) throw existingClaimError || claimError;
+                    paymentClaim = existingClaim;
+                    if (!existingClaim.invoice_id) {
+                        const claimedAt = new Date(existingClaim.payment_date || existingClaim.created_at || 0).getTime();
+                        if (Date.now() - claimedAt < 2 * 60 * 1000) {
+                            return res.status(503).send('Payment is already being processed; retry requested');
+                        }
+                        const { data: reclaimed } = await supabase.from('payments')
+                            .update({ payment_date: claimTime, amount: settledAmount })
+                            .eq('id', existingClaim.id).eq('payment_date', existingClaim.payment_date)
+                            .select('id, invoice_id, payment_date, created_at').maybeSingle();
+                        if (!reclaimed) return res.status(503).send('Payment claim is busy; retry requested');
+                        paymentClaim = reclaimed;
+                        ownsPaymentClaim = true;
+                    }
+                } else {
+                    throw claimError || new Error('Could not claim PayPal payment');
+                }
+
+                const existingPayment = paymentClaim;
+                if (existingPayment?.invoice_id) {
+                    const { data: alreadyPaidInvoice } = await supabase.from('invoices')
+                        .select('*').eq('id', existingPayment.invoice_id).maybeSingle();
+                    if (alreadyPaidInvoice) {
+                        targetInvoice = alreadyPaidInvoice;
+                        clientServiceId = alreadyPaidInvoice.client_service_id;
+                    }
+                }
 
                 // 1. Try to fetch as an exact Invoice ID first
-                const { data: exactInvoice } = await supabase
+                const { data: exactInvoice } = targetInvoice ? { data: null } : await supabase
                     .from('invoices')
                     .select('*')
                     .eq('id', customId)
@@ -1175,17 +1396,17 @@ router.post('/api/paypal/webhook', async (req, res) => {
                         // Bug 3 fix: suppress the premature UNPAID email — sendPaymentReceipt
                         // (called right after this block) will send the confirmed PAID receipt.
                         const { syncServiceActivation } = require('./src/services/subscriptionBillingService');
-                        await syncServiceActivation(clientServiceId, { sendEmail: false, force: true });
-                        
-                        // Fetch the newly created invoice to attach payment to
-                        const { data: newlyCreated } = await supabase
-                            .from('invoices')
-                            .select('*')
+                        const { count: priorPaidCount } = await supabase.from('invoices')
+                            .select('id', { count: 'exact', head: true })
                             .eq('client_service_id', clientServiceId)
-                            .order('created_at', { ascending: false })
-                            .limit(1)
-                            .single();
-                            
+                            .eq('payment_status', 'PAID');
+                        const newlyCreated = await syncServiceActivation(clientServiceId, {
+                            sendEmail: false,
+                            force: true,
+                            isRenewal: Number(priorPaidCount || 0) > 0,
+                            totalAmountOverride: Number(resource.amount?.value || resource.amount?.total || 0) || null
+                        });
+                        if (!newlyCreated) throw new Error(`Could not create an invoice for active service ${clientServiceId}`);
                         targetInvoice = newlyCreated;
                     }
                 }
@@ -1200,18 +1421,17 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 const actualInvoiceId = targetInvoice.id;
 
                 // 2. Update Invoice Status to Paid
-                const paymentReferenceId = resource.id || body.id;
-                const paymentAmount = Number(resource.amount ? resource.amount.value || resource.amount.total : targetInvoice.total_amount) || Number(targetInvoice.total_amount || 0);
+                const paymentAmount = settledAmount;
                 const paidAt = new Date().toISOString();
                 const { error } = await supabase
                     .from('invoices')
                     .update({
                         status: 'paid',
+                        total_amount: paymentAmount,
                         remaining_amount: 0,
                         payment_status: 'PAID',
                         balance_due: 0,
                         amount_paid: paymentAmount,
-                        amount_paid_this_payment: paymentAmount,
                         paid_at: paidAt
                     })
                     .eq('id', actualInvoiceId);
@@ -1222,19 +1442,15 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 }
 
                 // 3. Record Payment
-                const { error: paymentError } = await supabase.from('payments').insert({
-                    invoice_id: actualInvoiceId,
-                    amount: paymentAmount,
-                    method: 'PayPal',
-                    reference_id: paymentReferenceId,
-                    payment_date: paidAt
-                });
-
-                if (paymentError) {
-                    if (String(paymentError.code) === '23505') {
-                        console.log(`[PAYPAL] Payment ${paymentReferenceId} already recorded. Skipping duplicate insert.`);
-                    } else {
-                        console.error('Error inserting payment:', paymentError);
+                if (ownsPaymentClaim) {
+                    const { error: paymentError } = await supabase.from('payments').update({
+                        invoice_id: actualInvoiceId,
+                        amount: paymentAmount,
+                        method: 'PayPal',
+                        payment_date: paidAt
+                    }).eq('id', paymentClaim.id);
+                    if (paymentError) {
+                        console.error('Error finalizing payment claim:', paymentError);
                         throw paymentError;
                     }
                 }
@@ -1243,7 +1459,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 // before any secondary integrations (accounting outbox) that may be slow.
                 const emailSuccess = await sendPaymentReceipt(actualInvoiceId);
                 if (!emailSuccess) {
-                    console.error(`[PAYPAL] Receipt email failed for invoice ${actualInvoiceId}. Webhook will still be marked processed to avoid duplicate payment retries.`);
+                    throw new Error(`Receipt email failed for invoice ${actualInvoiceId}`);
                 }
 
                 // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event for payment
@@ -1918,6 +2134,7 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
             const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
             processSubscriptionReminders(7); // Check 7 days in advance
             autoAdvanceRenewalDates(); // Auto-advance past dates
+            processBirthdayGreetings().catch(err => console.error('Birthday greeting job failed:', err));
         } catch (err) {
             console.error('Failed to trigger subscription reminders or advancement:', err);
         }
@@ -2009,21 +2226,26 @@ router.put('/api/client-services/:id/renewal', async (req, res) => {
 router.put('/api/client-services/:id/schedule', async (req, res) => {
     try {
         const { id } = req.params;
-        const { frequency, send_day_of_week, send_day_of_month, plan_id, serviceMeta } = req.body;
+        const { frequency, send_day_of_week, send_day_of_month, send_time, timezone, plan_id, serviceMeta } = req.body;
 
         // Fetch existing first to recalculate next run
         const { data: service, error: fetchErr } = await supabase
             .from('client_services')
-            .select('*')
+            .select('*, service_plans(name)')
             .eq('id', id)
             .single();
 
         if (fetchErr) throw fetchErr;
 
         // Update fields locally
-        service.frequency = frequency;
+        const websitePlanNames = new Set(['Hosting Only', 'Hosting + Domain Management', 'Professional Hosting', 'Hosting + Domain', 'Web Maintenance', 'Content Refresh', 'Website Content Refresh']);
+        const isWebsitePlan = ['HOST_PRO', 'HOST_DOM', 'MAINT', 'REFRESH'].includes(service.service_meta_json?.plan_code)
+            || websitePlanNames.has(service.service_plans?.name);
+        service.frequency = isWebsitePlan ? 'weekly' : frequency;
         service.send_day_of_week = send_day_of_week !== null && send_day_of_week !== '' ? parseInt(send_day_of_week) : null;
         service.send_day_of_month = send_day_of_month !== null && send_day_of_month !== '' ? parseInt(send_day_of_month) : null;
+        service.send_time = /^([01]\d|2[0-3]):[0-5]\d$/.test(send_time || '') ? send_time : (service.send_time || '09:00');
+        service.timezone = ['America/Jamaica', 'America/New_York', 'Europe/London', 'UTC'].includes(timezone) ? timezone : (service.timezone || 'America/Jamaica');
         if (plan_id !== undefined) service.plan_id = plan_id;
         
         // Reset the pattern field if we are explicitly taking over
@@ -2037,6 +2259,8 @@ router.put('/api/client-services/:id/schedule', async (req, res) => {
             frequency: service.frequency,
             send_day_of_week: service.send_day_of_week,
             send_day_of_month: service.send_day_of_month,
+            send_time: service.send_time,
+            timezone: service.timezone,
             send_week_of_month: null, // Clear out pattern if present
             next_run_at 
         };
@@ -2245,30 +2469,6 @@ router.post('/api/invoices/resend-email-only', async (req, res) => {
         }
     } catch (err) {
         console.error('RESEND EMAIL ONLY ERROR:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Preview State Endpoint (Live Pre-flight Check)
-router.post('/api/invoices/preview-state', (req, res) => {
-    try {
-        const {
-            invoice, // Partial invoice object from frontend
-            client   // Client object
-        } = req.body;
-
-        if (!invoice || !client) {
-            return res.status(400).json({ error: 'Missing invoice or client data' });
-        }
-
-        // 1. Compute State using the Single Source of Truth
-        const state = computeInvoiceState(invoice, client);
-
-        // 2. Return Computed State
-        res.json(state);
-
-    } catch (err) {
-        console.error('PREVIEW ERROR:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -3042,6 +3242,11 @@ app.listen(PORT, '0.0.0.0', () => {
         runDueClientCarePulses().catch(err => console.error('Scheduler Error (Pulse):', err));
     }, 15 * 60 * 1000);
 
+    // Check hourly so birthday delivery uses each client's local calendar date.
+    setInterval(() => {
+        processBirthdayGreetings().catch(err => console.error('Scheduler Error (Birthday Greetings):', err));
+    }, 60 * 60 * 1000);
+
     // Run Monthly Summary Check every 12 hours (it only acts on the 1st)
     setInterval(() => {
         runMonthlySummaryChecks().catch(err => console.error('Scheduler Error (Summary):', err));
@@ -3055,6 +3260,9 @@ app.listen(PORT, '0.0.0.0', () => {
                 .catch(err => console.error('Scheduler Error (Subscription Reminders):', err));
             autoAdvanceRenewalDates()
                 .catch(err => console.error('Scheduler Error (Subscription Auto-Advance):', err));
+            const { processRecurringBilling } = require('./src/services/subscriptionBillingService');
+            processRecurringBilling()
+                .catch(err => console.error('Scheduler Error (Recurring Billing):', err));
         } catch (err) {
             console.error('Failed to trigger daily subscription routines:', err);
         }
@@ -3069,6 +3277,11 @@ app.listen(PORT, '0.0.0.0', () => {
             .catch(err => console.error('Initial Run Error (Subscription Reminders):', err));
         autoAdvanceRenewalDates()
             .catch(err => console.error('Initial Run Error (Subscription Auto-Advance):', err));
+        const { processRecurringBilling } = require('./src/services/subscriptionBillingService');
+        processRecurringBilling()
+            .catch(err => console.error('Initial Run Error (Recurring Billing):', err));
+        processBirthdayGreetings()
+            .catch(err => console.error('Initial Run Error (Birthday Greetings):', err));
     } catch (err) {
         console.error('Failed to trigger initial subscription routines:', err);
     }

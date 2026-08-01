@@ -29,9 +29,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      justify-content: flex-start;
+      overflow-x: hidden;
       position: relative;
+      padding: 96px 0 48px;
     }
 
     /* Animated grid background */
@@ -83,7 +84,7 @@
       border: 1px solid rgba(0, 245, 255, 0.25);
       border-radius: 24px;
       padding: 56px 48px;
-      max-width: 520px;
+      max-width: 760px;
       width: 90%;
       text-align: center;
       box-shadow: 0 0 60px rgba(0, 245, 255, 0.08), 0 25px 60px rgba(0, 0, 0, 0.5);
@@ -266,6 +267,22 @@
       color: var(--secondary);
     }
 
+    .onboarding { display:none; text-align:left; margin-top:30px; }
+    .onboarding h2 { font-size:1.35rem; margin-bottom:8px; }
+    .onboarding-copy { color:#94a3b8; font-size:.88rem; line-height:1.6; margin-bottom:22px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .field { display:grid; gap:7px; }
+    .field.full { grid-column:1/-1; }
+    .field label { color:#cbd5e1; font-size:.78rem; font-weight:700; }
+    .field input,.field select { width:100%; padding:12px 13px; border:1px solid rgba(148,163,184,.28); border-radius:10px; background:rgba(2,8,23,.62); color:#fff; font:inherit; outline:none; }
+    .field input:focus,.field select:focus { border-color:var(--secondary); box-shadow:0 0 0 3px rgba(0,245,255,.1); }
+    .field small { color:#64748b; line-height:1.45; }
+    .birthday-fields,.schedule-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    #onboarding-status { display:none; margin:15px 0; padding:12px; border-radius:10px; color:#bdeff0; background:rgba(0,245,255,.08); border:1px solid rgba(0,245,255,.2); font-size:.86rem; }
+    #onboarding-status.error { color:#fecaca; background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); }
+    .privacy-note { color:#64748b; font-size:.72rem; line-height:1.5; margin:14px 0; }
+    @media(max-width:640px){.card{padding:42px 22px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.birthday-fields,.schedule-fields{grid-template-columns:1fr}.logo{position:absolute}}
+
     /* Logo */
     .logo {
       position: fixed;
@@ -356,6 +373,33 @@
 
     <div class="divider"></div>
 
+    <section id="onboarding" class="onboarding">
+      <h2>Complete your client-care setup</h2>
+      <p class="onboarding-copy">Tell us who should receive your website health reports and when. This automatically creates your Client Care schedule. Your birthday year is not requested or stored.</p>
+      <form id="onboarding-form">
+        <div class="form-grid">
+          <div class="field"><label for="full-name">Your name *</label><input id="full-name" autocomplete="name" required></div>
+          <div class="field"><label for="business-name">Business name</label><input id="business-name" autocomplete="organization"></div>
+          <div class="field"><label for="paypal-email">PayPal email *</label><input id="paypal-email" type="email" autocomplete="email" required><small>Used only to verify this subscription securely with PayPal.</small></div>
+          <div class="field"><label for="phone">Phone / WhatsApp</label><input id="phone" type="tel" autocomplete="tel"></div>
+          <div class="field"><label for="website-url">Website URL <span class="website-required">*</span></label><input id="website-url" type="url" placeholder="https://example.com"><small>Required for website plans so automated health checks have a public target.</small></div>
+          <div class="field"><label for="domain-name">Domain name <span class="website-required">*</span></label><input id="domain-name" placeholder="example.com"><small>Use the public domain only; local or private network addresses are not accepted.</small></div>
+          <div class="field full"><label>Birthday (month and day only)</label><div class="birthday-fields"><select id="birthday-month" required aria-label="Birthday month"><option value="">Month</option></select><select id="birthday-day" required aria-label="Birthday day"><option value="">Day</option></select></div></div>
+          <div class="field"><label for="report-email">Primary health-report email *</label><input id="report-email" type="email" required></div>
+          <div class="field"><label for="cc-emails">Additional recipients</label><input id="cc-emails" placeholder="owner@example.com, manager@example.com"><small>Up to five addresses, separated by commas.</small></div>
+          <div class="field"><label for="report-frequency">Included report frequency</label><select id="report-frequency"><option value="weekly">Weekly</option></select><small>Every website plan includes a weekly health and Google Analytics traffic report.</small></div>
+          <div class="field"><label>Delivery day</label><div class="schedule-fields"><select id="report-weekday" aria-label="Weekly delivery day"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><select id="report-monthday" aria-label="Monthly delivery day" style="display:none"></select></div></div>
+          <div class="field"><label for="report-time">Delivery time</label><input id="report-time" type="time" value="09:00"></div>
+          <div class="field"><label for="timezone">Timezone</label><select id="timezone"><option value="America/Jamaica">Jamaica</option><option value="America/New_York">New York</option><option value="Europe/London">London</option><option value="UTC">UTC</option></select></div>
+        </div>
+        <div id="onboarding-status" role="status"></div>
+        <p class="privacy-note">By submitting, you authorize iCreate Solutions &amp; Services to use these details for subscription support, scheduled service reports, invoices, and your annual birthday greeting.</p>
+        <button id="onboarding-submit" class="btn-primary" type="submit"><i class="fas fa-wand-magic-sparkles"></i> Save &amp; Activate Client Care</button>
+      </form>
+    </section>
+
+    <div class="divider"></div>
+
     <!-- Buttons -->
     <a href="index.html" class="btn-primary" id="home-btn">
       <i class="fas fa-home"></i> Back to Main Page
@@ -370,6 +414,11 @@
     const params = new URLSearchParams(window.location.search);
     const subId   = params.get('subscription_id');
     const plan    = params.get('plan');
+    const websitePlanNames = new Set(['Hosting Only', 'Hosting + Domain Management', 'Hosting + Domain', 'Professional Hosting', 'Web Maintenance', 'Content Refresh', 'Website Content Refresh']);
+    const isWebsitePlan = websitePlanNames.has(plan);
+    document.querySelectorAll('.website-required').forEach(marker => marker.style.display = isWebsitePlan ? '' : 'none');
+    document.getElementById('website-url').required = isWebsitePlan;
+    document.getElementById('domain-name').required = isWebsitePlan;
 
     if (plan) {
       const badge = document.getElementById('plan-badge');
@@ -381,7 +430,68 @@
       const box = document.getElementById('sub-id-box');
       document.getElementById('sub-id-display').textContent = subId;
       box.style.display = 'block';
+      document.getElementById('onboarding').style.display = 'block';
     }
+
+    const monthSelect = document.getElementById('birthday-month');
+    const daySelect = document.getElementById('birthday-day');
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    monthNames.forEach((name,index) => monthSelect.add(new Option(name, index + 1)));
+    for (let day = 1; day <= 31; day++) daySelect.add(new Option(String(day), day));
+    const monthDay = document.getElementById('report-monthday');
+    for (let day = 1; day <= 28; day++) monthDay.add(new Option(`Day ${day}`, day));
+    document.getElementById('report-frequency').addEventListener('change', event => {
+      const weekly = event.target.value === 'weekly';
+      document.getElementById('report-weekday').style.display = weekly ? '' : 'none';
+      monthDay.style.display = weekly ? 'none' : '';
+    });
+    document.getElementById('paypal-email').addEventListener('input', event => {
+      const report = document.getElementById('report-email');
+      if (!report.dataset.changed) report.value = event.target.value;
+    });
+    document.getElementById('report-email').addEventListener('input', event => event.target.dataset.changed = '1');
+
+    document.getElementById('onboarding-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const submit = document.getElementById('onboarding-submit');
+      const status = document.getElementById('onboarding-status');
+      submit.disabled = true;
+      submit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving your setup…';
+      status.style.display = 'none';
+      status.classList.remove('error');
+      try {
+        const response = await fetch('/api/subscription-onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscriptionId: subId, planName: plan,
+            fullName: document.getElementById('full-name').value,
+            businessName: document.getElementById('business-name').value,
+            email: document.getElementById('paypal-email').value,
+            phone: document.getElementById('phone').value,
+            websiteUrl: document.getElementById('website-url').value,
+            domainName: document.getElementById('domain-name').value,
+            birthdayMonth: monthSelect.value, birthdayDay: daySelect.value,
+            reportEmail: document.getElementById('report-email').value,
+            ccEmails: document.getElementById('cc-emails').value,
+            reportFrequency: document.getElementById('report-frequency').value,
+            sendDayOfWeek: document.getElementById('report-weekday').value,
+            sendDayOfMonth: monthDay.value || 1,
+            sendTime: document.getElementById('report-time').value,
+            timezone: document.getElementById('timezone').value
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Unable to save your setup.');
+        event.target.innerHTML = '<div style="text-align:center;padding:24px 0"><i class="fas fa-circle-check" style="font-size:2rem;color:var(--secondary);margin-bottom:12px"></i><h3>Client Care is ready</h3><p style="color:#94a3b8;margin-top:8px;line-height:1.6">Your details and report schedule have been saved. Your welcome email and paid invoice will arrive by email.</p></div>';
+      } catch (error) {
+        status.textContent = error.message;
+        status.classList.add('error');
+        status.style.display = 'block';
+        submit.disabled = false;
+        submit.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Save & Activate Client Care';
+      }
+    });
 
     // Launch confetti particles
     function launchConfetti() {

@@ -6,8 +6,8 @@ const SERVICE_NAMES = {
   'WEB': 'Website Development',
   'APP': 'App Development',
   'GD': 'Graphic Designs',
-  'HOST_PRO': 'Professional Hosting',
-  'HOST_DOM': 'Hosting + Domain',
+  'HOST_PRO': 'Hosting Only',
+  'HOST_DOM': 'Hosting + Domain Management',
   'MAINT': 'Web Maintenance',
   'MONITOR': 'App Monitoring',
   'AUTO_BIZ': 'Business Automation',
@@ -19,6 +19,16 @@ const SERVICE_NAMES = {
 
 function getServiceName(code) {
   return SERVICE_NAMES[code] || code || 'Service';
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>'"]/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[character]));
+}
+
+function safeHeader(value) {
+  return String(value || '').replace(/[\r\n]+/g, ' ').trim();
 }
 
 function formatCurrency(amount) {
@@ -247,7 +257,7 @@ Reply to this email if you have questions.
             </ul>
         </div>
 
-        ${(plan.name === 'Hosting + Domain' || plan.name === 'Professional Hosting' || plan.name === 'Basic Hosting') ? `
+        ${(plan.name === 'Hosting + Domain' || plan.name === 'Hosting + Domain Management' || plan.name === 'Professional Hosting' || plan.name === 'Hosting Only' || plan.name === 'Basic Hosting') ? `
         <div class="section" style="margin-top: 30px; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e7;">
             <div style="background: linear-gradient(135deg, #0056b3 0%, #003d82 100%); padding: 15px 20px;">
                 <h3 style="color: white; margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center;">🔒 Pro Maintenance Insights</h3>
@@ -793,6 +803,10 @@ function getSubscriptionRenewalTemplate(service) {
 function getWelcomeSubscriptionTemplate(service) {
   const client = service.clients || { name: 'Valued Client' };
   const plan   = service.service_plans || { name: 'Subscription Service', price: 0 };
+  const clientName = escapeHtml(client.name || 'Valued Client');
+  const planName = escapeHtml(plan.name || 'Subscription Service');
+  const plainClientName = safeHeader(client.name || 'Valued Client');
+  const plainPlanName = safeHeader(plan.name || 'Subscription Service');
 
   const freq = (() => {
     const BILLING_FREQUENCIES = new Set(['monthly', 'yearly']);
@@ -804,7 +818,7 @@ function getWelcomeSubscriptionTemplate(service) {
   const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price || 0);
   const renewalDate = service.next_renewal_date ? formatDate(service.next_renewal_date) : null;
 
-  const subject = `Welcome to iCreate Solutions & Services — ${plan.name} is Active!`;
+  const subject = `Welcome to iCreate Solutions & Services - ${plainPlanName} is Active!`;
 
   const renewalRow = renewalDate ? `
       <tr>
@@ -834,16 +848,16 @@ function getWelcomeSubscriptionTemplate(service) {
               </div>
               <p style="margin:0 0 6px 0; color:rgba(255,255,255,0.8); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Welcome Aboard</p>
               <h1 style="margin:0 0 10px 0; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:-0.5px;">You're All Set!</h1>
-              <p style="margin:0; color:rgba(255,255,255,0.85); font-size:15px; line-height:1.6;">Your subscription to <strong>${plan.name}</strong> is now active.</p>
+              <p style="margin:0; color:rgba(255,255,255,0.85); font-size:15px; line-height:1.6;">Your subscription to <strong>${planName}</strong> is now active.</p>
             </td>
           </tr>
 
           <!-- BODY -->
           <tr>
             <td style="padding: 40px 44px 10px 44px;">
-              <p style="margin:0 0 10px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hello ${client.name},</p>
+              <p style="margin:0 0 10px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hello ${clientName},</p>
               <p style="margin:0 0 28px 0; font-size:15px; color:#555555; line-height:1.7;">
-                Thank you for choosing <strong style="color:#1a1a1a;">iCreate Solutions &amp; Services</strong>. We're thrilled to have you with us. Your <strong style="color:#059669;">${plan.name}</strong> plan is active and we're already working behind the scenes to keep your digital presence in top shape.
+                Thank you for choosing <strong style="color:#1a1a1a;">iCreate Solutions &amp; Services</strong>. We're thrilled to have you with us. Your <strong style="color:#059669;">${planName}</strong> plan is active and we're already working behind the scenes to keep your digital presence in top shape.
               </p>
 
               <!-- SUBSCRIPTION CARD -->
@@ -854,7 +868,7 @@ function getWelcomeSubscriptionTemplate(service) {
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding:8px 0; border-bottom:1px solid #d1fae5; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Plan</td>
-                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${plan.name}</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${planName}</td>
                       </tr>
                       <tr>
                         <td style="padding:8px 0; border-bottom:1px solid #d1fae5; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Billing Cycle</td>
@@ -892,7 +906,7 @@ function getWelcomeSubscriptionTemplate(service) {
           <!-- CTA -->
           <tr>
             <td style="padding: 0 44px 36px 44px; text-align:center;">
-              <a href="mailto:support@icreatesolutionsandservices.com?subject=Question%20about%20my%20${encodeURIComponent(plan.name)}%20subscription"
+              <a href="mailto:support@icreatesolutionsandservices.com?subject=Question%20about%20my%20${encodeURIComponent(plainPlanName)}%20subscription"
                  style="display:inline-block; background:linear-gradient(135deg, #059669 0%, #047857 100%); color:#ffffff; text-decoration:none; padding:16px 36px; border-radius:50px; font-weight:700; font-size:15px; letter-spacing:0.3px; box-shadow:0 8px 24px rgba(5,150,105,0.35);">
                 Contact Support →
               </a>
@@ -915,7 +929,7 @@ function getWelcomeSubscriptionTemplate(service) {
 </body>
 </html>`;
 
-  const textBody = `Hello ${client.name},\n\nWelcome to iCreate Solutions & Services!\n\nYour ${plan.name} subscription is now active.\n\nPlan: ${plan.name}\nBilling Cycle: ${freq}\nAmount: ${price}/${freq.toLowerCase()}${renewalDate ? `\nFirst Renewal: ${renewalDate}` : ''}\n\nYou'll receive your first invoice separately. Your subscription auto-renews, so no action is needed.\n\nQuestions? Reply to this email or contact: support@icreatesolutionsandservices.com\n\nWelcome aboard,\niCreate Solutions & Services`;
+  const textBody = `Hello ${plainClientName},\n\nWelcome to iCreate Solutions & Services!\n\nYour ${plainPlanName} subscription is now active.\n\nPlan: ${plainPlanName}\nBilling Cycle: ${freq}\nAmount: ${price}/${freq.toLowerCase()}${renewalDate ? `\nFirst Renewal: ${renewalDate}` : ''}\n\nYou'll receive your first invoice separately. Your subscription auto-renews, so no action is needed.\n\nQuestions? Reply to this email or contact: support@icreatesolutionsandservices.com\n\nWelcome aboard,\niCreate Solutions & Services`;
 
   return { subject, html, text: textBody };
 }

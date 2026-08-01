@@ -287,6 +287,7 @@ async function loadClients() {
                 clients.forEach(client => {
                     const opt = document.createElement('option');
                     opt.value = client.id;
+                    opt.dataset.clientName = client.name;
                     opt.innerText = `${client.name} (${client.email})`;
                     clientSelect.appendChild(opt);
                 });
@@ -553,6 +554,16 @@ window.viewPDF = async function (id) {
 let previewDebounceTimer;
 let previewAbortController;
 
+window.switchPreview = function (type) {
+    const showEmail = type === 'email';
+    document.getElementById('emailPreviewContainer')?.classList.toggle('d-none', !showEmail);
+    document.getElementById('pdfPreviewContainer')?.classList.toggle('d-none', showEmail);
+    document.querySelectorAll('.preview-tabs .tab-btn').forEach((button, index) => {
+        button.classList.toggle('active', showEmail ? index === 0 : index === 1);
+        button.setAttribute('aria-selected', String(showEmail ? index === 0 : index === 1));
+    });
+};
+
 // Delegated Listener for Form Inputs (Handles dynamic items too)
 const invoiceForm = document.getElementById('invoiceForm');
 if (invoiceForm) {
@@ -603,7 +614,7 @@ async function fetchPreviewState() {
         } else {
             const select = document.getElementById('clientId');
             const opt = select.options[select.selectedIndex];
-            client.name = opt ? opt.text : 'Client';
+            client.name = opt?.dataset.clientName || (select.value ? opt?.text : 'Select a client');
             client.id = select.value;
         }
 
@@ -625,6 +636,7 @@ async function fetchPreviewState() {
             payment_status: document.getElementById('paymentStatus').value,
             deposit_percent: parseFloat(document.getElementById('depositPercent').value) || null,
             amount_paid: parseFloat(document.getElementById('amountPaid').value) || 0,
+            paid_at: document.getElementById('paidAt').value || null,
             is_subscription: document.getElementById('isSubscription').checked,
             is_renewal: document.getElementById('isRenewal').checked,
             plan_name: document.getElementById('planName')?.value || '',
@@ -639,7 +651,10 @@ async function fetchPreviewState() {
             signal: previewAbortController.signal
         });
 
-        if (!res.ok) throw new Error('Preview computation failed');
+        if (!res.ok) {
+            const details = await res.json().catch(() => ({}));
+            throw new Error(details.error || 'Preview computation failed');
+        }
 
         const state = await res.json();
         renderPreview(state);
@@ -655,6 +670,21 @@ async function fetchPreviewState() {
         if (spinner) spinner.style.display = 'none';
         if (timestamp) timestamp.style.opacity = '1';
     }
+}
+
+function formatPreviewDate(value) {
+    const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return '';
+    const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+}
+
+function setPreviewDateLine(container, label, value) {
+    const strong = document.createElement('strong');
+    const span = document.createElement('span');
+    strong.textContent = `${label}: `;
+    span.textContent = formatPreviewDate(value);
+    container.replaceChildren(strong, span);
 }
 
 function renderPreview(state) {
@@ -679,10 +709,10 @@ function renderPreview(state) {
     const prevDueDate = document.getElementById('previewDueDate');
     if (prevDueDateLine) {
         if (state.pdfShowPaidDate) {
-            prevDueDateLine.innerHTML = `<strong>Date Paid:</strong> <span>${new Date(state.paidAt).toLocaleDateString()}</span>`;
+            setPreviewDateLine(prevDueDateLine, 'Date Paid', state.paidAt);
             prevDueDateLine.classList.remove('d-none');
         } else if (state.pdfShowDueDate && state.dueDate) {
-            prevDueDateLine.innerHTML = `<strong>Due Date:</strong> <span>${new Date(state.dueDate).toLocaleDateString()}</span>`;
+            setPreviewDateLine(prevDueDateLine, 'Due Date', state.dueDate);
             prevDueDateLine.classList.remove('d-none');
         } else {
             prevDueDateLine.classList.add('d-none');
@@ -696,15 +726,29 @@ function renderPreview(state) {
     const emailClientEl = document.getElementById('previewClientName');
     if (emailClientEl) emailClientEl.textContent = state.clientName;
 
+    const intro = document.getElementById('previewIntroText');
+    if (intro) {
+        if (state.isSubscription) intro.textContent = state.paymentStatus === 'PAID'
+            ? 'Your subscription payment has been received. Your paid invoice is attached.'
+            : 'Here is a preview of your subscription invoice and renewal details.';
+        else intro.textContent = state.paymentStatus === 'PAID'
+            ? 'Thank you — your payment has been received in full.'
+            : 'Please review the invoice summary below.';
+    }
+
     // Build Summary Table from Backend Rows
     const summaryContainer = document.getElementById('previewSummaryRows');
     if (summaryContainer) {
-        summaryContainer.innerHTML = state.emailSummaryRows.map(row => `
-            <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee;">
-                <span style="color: #666;">${row.label}:</span>
-                <span style="font-weight: 500;">${row.value}</span>
-            </div>
-        `).join('');
+        summaryContainer.replaceChildren(...state.emailSummaryRows.map(row => {
+            const line = document.createElement('div');
+            line.className = 'preview-summary-row';
+            const label = document.createElement('span');
+            const value = document.createElement('span');
+            label.textContent = `${row.label}:`;
+            value.textContent = row.value;
+            line.append(label, value);
+            return line;
+        }));
     }
 
     // 3. Timestamp

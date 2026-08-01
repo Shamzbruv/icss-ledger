@@ -20,13 +20,17 @@ async function syncServiceActivation(serviceId, options = {}) {
             .single();
 
         if (svcError || !service) throw new Error('Service not found');
-        if (service.status !== 'active') return;
+        if (service.status !== 'active') return null;
 
         if (!options.force && service.next_billing_date && new Date(service.next_billing_date) > new Date()) {
-            return;
+            return null;
         }
 
-        await generateSubscriptionInvoice(service, { isRenewal: false, sendEmail: options.sendEmail !== false });
+        const invoice = await generateSubscriptionInvoice(service, {
+            isRenewal: options.isRenewal === true,
+            sendEmail: options.sendEmail !== false,
+            totalAmountOverride: options.totalAmountOverride
+        });
 
         const nextBilling = new Date();
         const syncFreq = service.frequency || service.service_plans?.default_frequency || 'monthly';
@@ -42,8 +46,10 @@ async function syncServiceActivation(serviceId, options = {}) {
             .eq('id', service.id);
 
         console.log(`[BILLING] Activated & billed subscription ${service.id} for ${service.clients.name}`);
+        return invoice;
     } catch (err) {
         console.error('[BILLING] Failed to sync service activation:', err.message);
+        throw err;
     }
 }
 
@@ -118,23 +124,28 @@ async function processRecurringBilling() {
 
         if (error) throw error;
 
-        console.log(`[BILLING] Found ${dueServices?.length || 0} subscriptions due for billing.`);
+        const locallyBilledServices = (dueServices || []).filter(service => !service.service_meta_json?.paypal_subscription_id);
+        console.log(`[BILLING] Found ${locallyBilledServices.length} locally billed subscriptions due. PayPal renewals wait for confirmed payment webhooks.`);
 
-        for (const service of dueServices) {
-            await generateSubscriptionInvoice(service, { isRenewal: true });
+        for (const service of locallyBilledServices) {
+            try {
+                await generateSubscriptionInvoice(service, { isRenewal: true });
 
-            const currentBillingDt = new Date(service.next_billing_date);
-            const freq = service.frequency || service.service_plans?.default_frequency || 'monthly';
-            if (freq === 'yearly') {
-                currentBillingDt.setFullYear(currentBillingDt.getFullYear() + 1);
-            } else {
-                currentBillingDt.setMonth(currentBillingDt.getMonth() + 1);
+                const currentBillingDt = new Date(service.next_billing_date);
+                const freq = service.frequency || service.service_plans?.default_frequency || 'monthly';
+                if (freq === 'yearly') {
+                    currentBillingDt.setFullYear(currentBillingDt.getFullYear() + 1);
+                } else {
+                    currentBillingDt.setMonth(currentBillingDt.getMonth() + 1);
+                }
+
+                await supabase
+                    .from('client_services')
+                    .update({ next_billing_date: currentBillingDt.toISOString().split('T')[0] })
+                    .eq('id', service.id);
+            } catch (serviceError) {
+                console.error(`[BILLING] Renewal for service ${service.id} will be retried: ${serviceError.message}`);
             }
-
-            await supabase
-                .from('client_services')
-                .update({ next_billing_date: currentBillingDt.toISOString().split('T')[0] })
-                .eq('id', service.id);
         }
 
         console.log('[BILLING] Recurring subscription billing completed.');
@@ -143,7 +154,7 @@ async function processRecurringBilling() {
     }
 }
 
-async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmail = true } = {}) {
+async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmail = true, totalAmountOverride = null } = {}) {
     const { data: seqData } = await supabase.rpc('get_next_invoice_sequence');
     const nextSeq = seqData || Math.floor(Math.random() * 1000);
     const invoiceNumber = `INV-ICSS-${String(nextSeq).padStart(3, '0')}`;
@@ -151,7 +162,7 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
 
     const price = Number(service.service_plans?.price || 0);
     const taxAmount = price * 0.15;
-    const totalAmount = price + taxAmount;
+    const totalAmount = Number(totalAmountOverride) > 0 ? Number(totalAmountOverride) : price + taxAmount;
 
     const issueDate = new Date();
     const dueDate = new Date(issueDate);
@@ -174,10 +185,11 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
     }
 
     const planName = service.service_plans?.name || 'Subscription Service';
+    const lineItemAmount = price > 0 ? Math.min(price, totalAmount) : totalAmount;
     const lineItem = {
         description: `${planName} - ${issueDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`,
         quantity: 1,
-        unit_price: price
+        unit_price: lineItemAmount
     };
 
     const { data: invoice, error: invoiceError } = await supabase
@@ -192,7 +204,7 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
             status: 'pending',
             notes: isRenewal ? `Automated renewal billing for ${planName}` : `Subscription activation for ${planName}`,
             total_amount: totalAmount,
-            service_code: 'MAINT',
+            service_code: service.service_meta_json?.plan_code || 'MAINT',
             payment_expected_type: 'FULL',
             payment_expected_percentage: 100,
             remaining_amount: totalAmount,
@@ -210,7 +222,8 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
 
     if (invoiceError) throw invoiceError;
 
-    const refCode = generateReferenceCode(service.clients.name, invoice.invoice_number, 'MAINT', 100);
+    const planCode = service.service_meta_json?.plan_code || 'MAINT';
+    const refCode = generateReferenceCode(service.clients.name, invoice.invoice_number, planCode, 100);
     await supabase.from('invoices').update({ reference_code: refCode }).eq('id', invoice.id);
     invoice.reference_code = refCode;
 
@@ -243,12 +256,18 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
             await sendGeneratedInvoiceEmail(invoice, service, lineItem);
         } catch (emailErr) {
             console.error(`[BILLING] Failed to send invoice email for ${invoice.invoice_number}:`, emailErr.message);
+            // Compensate for the incomplete attempt so the scheduler can safely retry
+            // without leaving a second unpaid invoice for the same renewal.
+            await supabase.from('outbox_events').delete().eq('idempotency_key', `${invoice.id}-1-INVOICE_CREATED`);
+            await supabase.from('invoices').delete().eq('id', invoice.id).eq('payment_status', 'UNPAID');
+            throw emailErr;
         }
     } else {
         console.log(`[BILLING] Skipping premature invoice email for ${invoice.invoice_number} — payment receipt will be sent once payment is confirmed.`);
     }
 
     console.log(`[BILLING] Successfully generated invoice ${invoice.invoice_number} for service ${service.id}`);
+    return invoice;
 }
 
 async function sendGeneratedInvoiceEmail(invoice, service, lineItem) {

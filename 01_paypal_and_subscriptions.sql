@@ -7,8 +7,13 @@ CREATE TABLE IF NOT EXISTS paypal_webhook_events (
     custom_id       TEXT,
     payload_jsonb   JSONB NOT NULL,
     status          TEXT NOT NULL DEFAULT 'received',
-    processed_at    TIMESTAMPTZ
+    processed_at    TIMESTAMPTZ,
+    last_error      TEXT,
+    created_at      TIMESTAMPTZ DEFAULT now()
 );
+
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS last_error TEXT;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
 
 -- 2. Create the payments table if it doesn't exist
 CREATE TABLE IF NOT EXISTS payments (

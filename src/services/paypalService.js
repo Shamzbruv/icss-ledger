@@ -144,6 +144,36 @@ async function verifyPayPalWebhookSignature(headers, body) {
     return verifySingleWebhookId(headers, body, webhookId, token);
 }
 
+async function paypalApiRequest(path) {
+    const token = await getPayPalAccessToken();
+    return new Promise((resolve, reject) => {
+        const req = https.request({
+            hostname: getPayPalApiBase(),
+            path,
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
+        }, res => {
+            let responseBody = '';
+            res.on('data', chunk => responseBody += chunk);
+            res.on('end', () => {
+                let parsed;
+                try { parsed = responseBody ? JSON.parse(responseBody) : {}; }
+                catch { return reject(new Error('PayPal returned an unreadable response')); }
+                if (res.statusCode >= 200 && res.statusCode < 300) return resolve(parsed);
+                reject(new Error(`PayPal request failed (${res.statusCode}): ${parsed.message || responseBody}`));
+            });
+        });
+        req.on('error', reject);
+        req.end();
+    });
+}
+
+async function getPayPalSubscription(subscriptionId) {
+    if (!/^I-[A-Z0-9]+$/i.test(String(subscriptionId || ''))) throw new Error('Invalid PayPal subscription ID');
+    return paypalApiRequest(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
+}
+
 module.exports = {
-    verifyPayPalWebhookSignature
+    verifyPayPalWebhookSignature,
+    getPayPalSubscription
 };

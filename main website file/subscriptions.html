@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<link rel="icon" type="image/png" href="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
 <html lang="en">
 
 <head>
@@ -14,6 +13,7 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
   <title>Subscription Plans | ICREATE SOLUTIONS & SERVICES</title>
   <meta name="description"
     content="Choose from our range of subscription services including hosting, web maintenance, app monitoring, graphic design, and business automation solutions.">
@@ -149,6 +149,17 @@
       transform: translateY(-5px);
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
+
+    .comparison-wrap { overflow-x:auto; border:1px solid #dbe4ee; border-radius:18px; box-shadow:0 16px 40px rgba(15,23,42,.08); }
+    .comparison-table { width:100%; min-width:850px; border-collapse:collapse; background:white; }
+    .comparison-table th,.comparison-table td { padding:15px 16px; border-bottom:1px solid #e5eaf0; text-align:center; font-size:.88rem; }
+    .comparison-table th { background:#0f172a; color:white; font-weight:700; }
+    .comparison-table th:first-child,.comparison-table td:first-child { position:sticky; left:0; z-index:2; text-align:left; min-width:220px; }
+    .comparison-table th:first-child { background:#0f172a; }
+    .comparison-table td:first-child { background:#f8fafc; color:#334155; font-weight:600; }
+    .comparison-table tr:last-child td { border-bottom:0; }
+    .comparison-yes { color:#0891b2; font-weight:800; }
+    .comparison-no { color:#94a3b8; }
 
     .featured-plan {
       border: 2px solid var(--secondary-color);
@@ -561,11 +572,16 @@
           </div>
         </div>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="text-center mb-10 fade-in">
+        <p class="text-sm font-bold tracking-widest text-cyan-600 uppercase mb-2">Website subscriptions</p>
+        <h2 class="text-3xl font-bold primary-text">Hosting &amp; Website Care</h2>
+        <p class="text-gray-600 mt-3">Every website plan includes a weekly health report and Google Analytics traffic analysis.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
           <div class="p-6">
             <div class="flex justify-between items-start mb-4">
-              <h3 class="text-xl font-bold primary-text">Professional Hosting</h3>
+              <h3 class="text-xl font-bold primary-text">Hosting Only</h3>
               <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
                 <i class="fas fa-server text-white"></i>
               </div>
@@ -574,20 +590,18 @@
               <span class="text-3xl font-bold primary-text">$30</span>
               <span class="text-gray-500">/month</span>
             </div>
-            <p class="text-gray-600 mb-6">Reliable hosting solution for your professional website with guaranteed uptime
-              and security.</p>
+            <p class="text-gray-600 mb-6">Managed website hosting for clients who already own and control their domain.</p>
             <ul class="space-y-3 mb-8">
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> High-performance
-                servers</li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> CPanel Access</li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Daily backups</li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> SSL certificate
-                included</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> High-performance hosting, SSL &amp; backups</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Use your existing domain</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> cPanel when supported by your website's technology</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Weekly website health report</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Google Analytics traffic analysis</li>
             </ul>
             <div class="space-y-3">
               <button
                 class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
-                data-plan-id="P-9FL12940T1207713ENECQJ4A" data-plan-name="Professional Hosting"
+                data-plan-id="P-9FL12940T1207713ENECQJ4A" data-plan-name="Hosting Only"
                 data-paypal-container="paypal-button-container-P-9FL12940T1207713ENECQJ4A">
                 Pay with PayPal
               </button>
@@ -600,7 +614,7 @@
           <div class="feature-badge">MOST POPULAR</div>
           <div class="p-6">
             <div class="flex justify-between items-start mb-4">
-              <h3 class="text-xl font-bold primary-text">Hosting + Domain</h3>
+              <h3 class="text-xl font-bold primary-text">Hosting + Domain Management</h3>
               <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
                 <i class="fas fa-globe text-white"></i>
               </div>
@@ -609,20 +623,18 @@
               <span class="text-3xl font-bold primary-text">$38</span>
               <span class="text-gray-500">/month</span>
             </div>
-            <p class="text-gray-600 mb-6">Complete hosting solution with domain management for your online presence.</p>
+            <p class="text-gray-600 mb-6">The hands-off option: hosting and domain administration managed through your developer.</p>
             <ul class="space-y-3 mb-8">
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Domain registration &
-                management</li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Hosting - No CPanel
-              </li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Free SSL Certificate
-              </li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Everything in Hosting Only</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Domain registration, renewals &amp; billing managed by iCreate</li>
               <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> DNS management</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> cPanel when supported by your website's technology</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Weekly health &amp; Google Analytics traffic reports</li>
             </ul>
             <div class="space-y-3">
               <button
                 class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
-                data-plan-id="P-5XH29947G9064044FNECQMQY" data-plan-name="Hosting + Domain"
+                data-plan-id="P-5XH29947G9064044FNECQMQY" data-plan-name="Hosting + Domain Management"
                 data-paypal-container="paypal-button-container-P-5XH29947G9064044FNECQMQY">
                 Pay with PayPal
               </button>
@@ -683,15 +695,13 @@
               <span class="text-3xl font-bold primary-text">$49.99</span>
               <span class="text-gray-500">/month</span>
             </div>
-            <p class="text-gray-600 mb-6">Keep your website running smoothly with regular maintenance and updates.</p>
+            <p class="text-gray-600 mb-6">Proactive technical care for businesses that need their website protected, patched and performing.</p>
             <ul class="space-y-3 mb-8">
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Regular updates &
-                patches</li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Security monitoring
-              </li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Performance
-                optimization</li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Content updates</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Everything in Hosting + Domain Management</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Up to 5 patches or website updates each month</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Cloudflare security monitoring</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Performance optimization</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Weekly health &amp; Google Analytics traffic reports</li>
             </ul>
             <div class="space-y-3">
               <button
@@ -704,6 +714,68 @@
             </div>
           </div>
         </div>
+
+        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xl font-bold primary-text">Content Refresh</h3>
+              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
+                <i class="fas fa-sync-alt text-white"></i>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-3xl font-bold primary-text">$67.99</span>
+              <span class="text-gray-500">/month</span>
+            </div>
+            <p class="text-gray-600 mb-6">Complete ongoing website care for businesses that need content changed whenever the business changes.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Everything in Web Maintenance</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Unlimited edits and updates to your existing website</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Cloudflare security integration &amp; monitoring</li>
+              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Weekly health &amp; Google Analytics traffic reports</li>
+            </ul>
+            <div class="space-y-3">
+              <button
+                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
+                data-plan-id="P-00F6350522773701SNECR4RI" data-plan-name="Content Refresh"
+                data-paypal-container="paypal-button-container-P-00F6350522773701SNECR4RI">
+                Pay with PayPal
+              </button>
+              <div id="paypal-button-container-P-00F6350522773701SNECR4RI" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="mt-16 fade-in" aria-labelledby="comparison-heading">
+        <div class="text-center mb-8">
+          <p class="text-sm font-bold tracking-widest text-cyan-600 uppercase mb-2">Side-by-side</p>
+          <h2 id="comparison-heading" class="text-3xl font-bold primary-text">Compare Website Plans</h2>
+          <p class="text-gray-600 mt-3">Start with hosting, then add the level of management and hands-on care you need.</p>
+        </div>
+        <div class="comparison-wrap">
+          <table class="comparison-table">
+            <thead><tr><th>What's included</th><th>Hosting Only<br><small>$30/mo</small></th><th>Hosting + Domain<br><small>$38/mo</small></th><th>Web Maintenance<br><small>$49.99/mo</small></th><th>Content Refresh<br><small>$67.99/mo</small></th></tr></thead>
+            <tbody>
+              <tr><td>Managed website hosting, SSL &amp; backups</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td></tr>
+              <tr><td>Weekly website health report</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td></tr>
+              <tr><td>Google Analytics traffic analysis</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td></tr>
+              <tr><td>cPanel access</td><td>When stack supports it</td><td>When stack supports it</td><td>When stack supports it</td><td>When stack supports it</td></tr>
+              <tr><td>Domain registration, renewal &amp; billing management</td><td class="comparison-no">Use your own domain</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td></tr>
+              <tr><td>Cloudflare security monitoring</td><td class="comparison-no">—</td><td class="comparison-no">—</td><td class="comparison-yes">Included</td><td class="comparison-yes">Included</td></tr>
+              <tr><td>Patches or website updates</td><td class="comparison-no">—</td><td class="comparison-no">—</td><td>Up to 5 monthly</td><td class="comparison-yes">Unlimited</td></tr>
+              <tr><td>Ongoing content edits</td><td class="comparison-no">—</td><td class="comparison-no">—</td><td>Within 5-update allowance</td><td class="comparison-yes">Unlimited</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-4 text-center">cPanel availability depends on the programming language, framework and hosting architecture used by the website.</p>
+      </section>
+
+      <div class="text-center mt-20 mb-10 fade-in">
+        <p class="text-sm font-bold tracking-widest text-cyan-600 uppercase mb-2">More ways we can help</p>
+        <h2 class="text-3xl font-bold primary-text">Other Subscription Services</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
         <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
           <div class="p-6">
@@ -840,37 +912,6 @@
           </div>
         </div>
 
-        <div class="plan-card bg-white rounded-xl shadow-lg overflow-hidden fade-in">
-          <div class="p-6">
-            <div class="flex justify-between items-start mb-4">
-              <h3 class="text-xl font-bold primary-text">Content Refresh</h3>
-              <div class="w-12 h-12 secondary-bg rounded-full flex items-center justify-center">
-                <i class="fas fa-sync-alt text-white"></i>
-              </div>
-            </div>
-            <div class="mb-6">
-              <span class="text-3xl font-bold primary-text">$67.99</span>
-              <span class="text-gray-500">/month</span>
-            </div>
-            <p class="text-gray-600 mb-6">Keep your website content fresh and engaging with regular updates.</p>
-            <ul class="space-y-3 mb-8">
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Content strategy</li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Blog posts & articles
-              </li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> Image updates</li>
-              <li class="flex items-center"><i class="fas fa-check-circle mr-3 accent-text"></i> SEO optimization</li>
-            </ul>
-            <div class="space-y-3">
-              <button
-                class="w-full py-3 rounded-lg secondary-bg primary-text font-bold hover:bg-cyan-400 transition glow-effect open-terms-btn"
-                data-plan-id="P-00F6350522773701SNECR4RI" data-plan-name="Content Refresh"
-                data-paypal-container="paypal-button-container-P-00F6350522773701SNECR4RI">
-                Pay with PayPal
-              </button>
-              <div id="paypal-button-container-P-00F6350522773701SNECR4RI" class="hidden"></div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Email Add-ons Section -->

@@ -6,8 +6,8 @@ const SERVICE_NAMES = {
     'WEB': 'Website Development',
     'APP': 'App Development',
     'GD': 'Graphic Designs',
-    'HOST_PRO': 'Professional Hosting',
-    'HOST_DOM': 'Hosting + Domain',
+    'HOST_PRO': 'Hosting Only',
+    'HOST_DOM': 'Hosting + Domain Management',
     'MAINT': 'Web Maintenance',
     'MONITOR': 'App Monitoring',
     'AUTO_BIZ': 'Business Automation',
@@ -221,4 +221,3 @@ function validateInvoiceState(state) {
 }
 
 module.exports = { computeInvoiceState, validateInvoiceState, getServiceName, INVOICE_STATUS_THEME_MAP };
-

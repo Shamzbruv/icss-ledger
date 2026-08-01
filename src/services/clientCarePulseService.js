@@ -3,6 +3,8 @@ const { getClientCarePulseEmailContent, getMonthlySummaryEmailContent } = requir
 const { sendInvoiceEmail } = require('./emailService'); // Reusing the transport logic
 const networkChecks = require('./checks/networkChecks');
 const appChecks = require('./checks/appChecks');
+const analyticsChecks = require('./checks/analyticsChecks');
+const { calculateNextRun: calculateScheduledRun } = require('./scheduleTimeService');
 
 // Map check codes to actual functions
 const CHECK_REGISTRY = {
@@ -12,8 +14,24 @@ const CHECK_REGISTRY = {
     'REDIRECT': networkChecks.redirectCheck,
     'PERF_LIGHT': appChecks.performanceLightCheck,
     'API_HEALTH': appChecks.apiHealthCheck,
-    'WEBHOOK': appChecks.webhookHealthCheck
+    'WEBHOOK': appChecks.webhookHealthCheck,
+    'GA_TRAFFIC': analyticsChecks.googleAnalyticsTrafficCheck
 };
+
+const WEBSITE_PLAN_NAMES = new Set(['Hosting Only', 'Hosting + Domain Management', 'Professional Hosting', 'Hosting + Domain', 'Web Maintenance', 'Content Refresh', 'Website Content Refresh']);
+const DEFAULT_WEBSITE_CHECKS = [
+    { code: 'UPTIME', label: 'Website Uptime' },
+    { code: 'SSL', label: 'SSL Certificate' },
+    { code: 'DNS', label: 'Domain & DNS' },
+    { code: 'REDIRECT', label: 'Secure Redirect' },
+    { code: 'PERF_LIGHT', label: 'Website Performance' },
+    { code: 'GA_TRAFFIC', label: 'Google Analytics Traffic Analysis' }
+];
+
+function isWebsiteService(service) {
+    return ['HOST_PRO', 'HOST_DOM', 'MAINT', 'REFRESH'].includes(service.service_meta_json?.plan_code)
+        || WEBSITE_PLAN_NAMES.has(service.service_plans?.name);
+}
 
 /**
  * Main Entry Point: Runs all due checks
@@ -57,11 +75,11 @@ async function runDueClientCarePulses() {
             }
 
             if (isDue) {
-                await processService(service);
-
-                // Recalculate Next Run
-                const newNextRun = calculateNextRun(service);
-                console.log(`Rescheduling Service ${service.id} to ${newNextRun}`);
+                const result = await processService(service);
+                const newNextRun = result?.success
+                    ? calculateNextRun(service)
+                    : new Date(Date.now() + 60 * 60 * 1000);
+                console.log(`${result?.success ? 'Rescheduling' : 'Retrying'} Service ${service.id} at ${newNextRun}`);
 
                 await supabase
                     .from('client_services')
@@ -99,10 +117,8 @@ async function processService(service) {
                 .eq('plan_id', service.plan_id)
                 .single();
 
-            if (templateError || !template) {
-                console.error(`No template found for plan ${service.plan_id}`);
-                return;
-            }
+            if (templateError && templateError.code !== 'PGRST116') console.warn(`Template lookup failed for plan ${service.plan_id}: ${templateError.message}`);
+            if (!template && !isWebsiteService(service)) return { success: false, error: `No checklist template found for plan ${service.plan_id}` };
 
             // 2. Run Checks
             const results = [];
@@ -110,7 +126,12 @@ async function processService(service) {
             let maxScore = 0;
 
             const config = service.service_meta_json || {};
-            const items = Array.isArray(template.items_json) ? template.items_json : [];
+            const items = Array.isArray(template?.items_json) && template.items_json.length
+                ? [...template.items_json]
+                : [...DEFAULT_WEBSITE_CHECKS];
+            if (isWebsiteService(service) && !items.some(item => item.code === 'GA_TRAFFIC')) {
+                items.push({ code: 'GA_TRAFFIC', label: 'Google Analytics Traffic Analysis' });
+            }
 
             for (const item of items) {
                 const checkFn = CHECK_REGISTRY[item.code];
@@ -135,6 +156,9 @@ async function processService(service) {
                     }
                     else if (item.code === 'WEBHOOK') {
                         if (config.webhook_url) targets.push({ url: config.webhook_url, label: null });
+                    }
+                    else if (item.code === 'GA_TRAFFIC') {
+                        targets.push({ url: config.ga_property_id || '', label: item.label || 'Google Analytics Traffic Analysis' });
                     }
 
                     if (targets.length > 0) {
@@ -189,7 +213,7 @@ async function processService(service) {
                     run_status: 'completed',
                     score: finalScore,
                     results_json: results,
-                    emailed_at: new Date()
+                    emailed_at: null
                 })
                 .select()
                 .single();
@@ -212,11 +236,12 @@ async function processService(service) {
             // 5. Send Email
             const emailContent = getClientCarePulseEmailContent(run, service.clients, service.service_plans, results);
 
-            // Extract CC emails if available
+            // Customer onboarding can choose a primary report recipient and CCs.
+            const reportEmail = service.service_meta_json?.report_email || service.clients.email;
             const ccEmails = service.service_meta_json?.cc_emails || null;
 
             await sendInvoiceEmail(
-                service.clients.email,
+                reportEmail,
                 emailContent.subject,
                 emailContent.text,
                 emailContent.html,
@@ -230,7 +255,7 @@ async function processService(service) {
             await supabase.from('client_care_reports').insert({
                 checklist_run_id: run.id,
                 client_service_id: service.id,
-                recipient_email: service.clients.email,
+                recipient_email: reportEmail,
                 email_subject: emailContent.subject,
                 status: 'sent',
                 sent_at: new Date()
@@ -241,15 +266,16 @@ async function processService(service) {
                 .from('client_services')
                 .update({ last_emailed_at: new Date() })
                 .eq('id', service.id);
+            await supabase.from('checklist_runs').update({ emailed_at: new Date() }).eq('id', run.id);
 
-            console.log(`Report sent to ${service.clients.email}`);
+            console.log(`Report sent to ${reportEmail}`);
 
             return {
                 success: true,
                 score: finalScore,
                 status: 'completed',
                 checks_run: results.length,
-                recipient: service.clients.email
+                recipient: reportEmail
             };
 
         } catch (err) {
@@ -396,16 +422,23 @@ async function sendMonthlySummaryEmail(summary) {
 
         if (error || !client) throw new Error('Client not found for summary');
 
+        const { data: reportService } = await supabase.from('client_services')
+            .select('service_meta_json').eq('client_id', client.id).eq('status', 'active')
+            .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        const primaryRecipient = reportService?.service_meta_json?.report_email || client.email;
+        const ccRecipients = reportService?.service_meta_json?.cc_emails || null;
+
         const emailContent = getMonthlySummaryEmailContent(summary, client);
 
         await sendInvoiceEmail(
-            client.email,
+            primaryRecipient,
             emailContent.subject,
             emailContent.text,
             emailContent.html,
             null,
             null,
-            null // BCC defaults to EMAIL_AUDIT_BCC inside emailService
+            null, // BCC defaults to EMAIL_AUDIT_BCC inside emailService
+            ccRecipients
         );
 
         // Update emailed_at
@@ -414,7 +447,7 @@ async function sendMonthlySummaryEmail(summary) {
             .update({ emailed_at: new Date() })
             .eq('id', summary.id);
 
-        console.log(`Monthly Summary sent to ${client.email}`);
+        console.log(`Monthly Summary sent to ${primaryRecipient}`);
         return { success: true };
 
     } catch (err) {
@@ -508,104 +541,19 @@ module.exports = {
  * @returns {Date} - The next run date
  */
 function calculateNextRun(service) {
-    const now = new Date();
-    const tz = service.timezone || 'America/Jamaica';
-
-    // Default to tomorrow 9am if something is wrong, to avoid infinite loops or missed runs
-    let nextDate = new Date();
-    nextDate.setDate(nextDate.getDate() + 1);
-    nextDate.setHours(9, 0, 0, 0);
-
     try {
-        // Parse Send Time (HH:MM:SS)
-        const [targetH, targetM] = (service.send_time || '09:00:00').split(':').map(Number);
-
-        // Helper to get time in target timezone
-        const getZonedNow = () => {
-            // This is a simplified approach. For production resilience with timezones, 
-            // a library like date-fns-tz is recommended. 
-            // Here we assume the server time is UTC or effectively close, 
-            // and we might need to adjust if strict timezone adherence is required.
-            // For this implementation, we will use the server's local time interpreted as the target TZ for simplicity 
-            // unless we add a library. 
-            // IMPROVEMENT: Use a library if installed. 
-            return new Date();
-        };
-
-        const currentZoned = getZonedNow();
-
-        if (service.frequency === 'weekly') {
-            // Find next occurrence of send_day_of_week (0=Sun, 6=Sat)
-            let targetDay = service.send_day_of_week;
-            if (targetDay === undefined || targetDay === null) targetDay = 1; // Default Monday
-
-            let d = new Date(currentZoned);
-            d.setHours(targetH, targetM, 0, 0);
-
-            // If today is the target day, check if time has passed
-            if (d.getDay() === targetDay && d > new Date()) {
-                return d;
-            }
-
-            // Move to next occurrence
-            d.setDate(d.getDate() + (targetDay + 7 - d.getDay()) % 7);
-
-            // If calculated date is in the past (e.g. today earlier), add 7 days
-            if (d <= new Date()) {
-                d.setDate(d.getDate() + 7);
-            }
-            return d;
-        }
-
-        else if (service.frequency === 'monthly') {
-            let d = new Date(currentZoned);
-            d.setHours(targetH, targetM, 0, 0);
-
-            // Option A: Day of Month (e.g. 1st, 15th)
-            if (service.send_day_of_month) {
-                d.setDate(service.send_day_of_month);
-                // If this date in current month is past, move to next month
-                if (d <= new Date()) {
-                    d.setMonth(d.getMonth() + 1);
-                }
-            }
-            // Option B: Pattern (e.g. First Monday)
-            else if (service.send_week_of_month && service.send_day_of_week !== null) {
-                // Find first day of current month
-                d.setDate(1);
-
-                // Find first occurrence of weekday in this month
-                let dayShift = (service.send_day_of_week - d.getDay() + 7) % 7;
-                d.setDate(1 + dayShift); // First occurrence
-
-                // Add weeks (week 1 is +0, week 2 is +7, etc)
-                d.setDate(d.getDate() + (service.send_week_of_month - 1) * 7);
-
-                // Reset time
-                d.setHours(targetH, targetM, 0, 0);
-
-                // If passed, move to next month and recalculate
-                if (d <= new Date()) {
-                    d.setMonth(d.getMonth() + 1);
-                    d.setDate(1);
-                    dayShift = (service.send_day_of_week - d.getDay() + 7) % 7;
-                    d.setDate(1 + dayShift);
-                    d.setDate(d.getDate() + (service.send_week_of_month - 1) * 7);
-                    d.setHours(targetH, targetM, 0, 0);
-                }
-            } else {
-                // Default monthly: 1st of next month
-                d.setDate(1);
-                if (d <= new Date()) d.setMonth(d.getMonth() + 1);
-            }
-            return d;
-        }
-
+        return calculateScheduledRun({
+            frequency: ['daily', 'weekly', 'monthly'].includes(service.frequency) ? service.frequency : 'weekly',
+            sendDayOfWeek: service.send_day_of_week,
+            sendDayOfMonth: service.send_day_of_month,
+            sendTime: service.send_time,
+            timeZone: service.timezone,
+            from: new Date()
+        });
     } catch (e) {
         console.error('Error calculating next run:', e);
+        return new Date(Date.now() + 60 * 60 * 1000);
     }
-
-    return nextDate;
 }
 
 /**

@@ -104,6 +104,9 @@
 
     html {
       background-color: var(--dark) !important;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior-y: none;
     }
     body {
       font-family: 'Inter', sans-serif;
@@ -113,7 +116,12 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior-y: none;
     }
+
+    footer { margin: 0 !important; flex-shrink: 0; background-color: var(--primary) !important; }
 
     h1,
     h2,
@@ -3152,7 +3160,7 @@
       </div>
     </div>
   </section>
-  <footer class="primary-bg text-white py-12 digital-static mt-0 mb-0">
+  <footer class="primary-bg text-white py-12 digital-static mt-auto mb-0">
     <div class="container mx-auto px-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
         <div class="fade-in">
@@ -4297,38 +4305,39 @@
   <script>
     // ---- WELCOME POPUP ----
     (function() {
-      // Check if it's the first visit and not coming from an anchor
-      if (!sessionStorage.getItem('welcomeShown') && !window.location.hash) {
-        var popupTriggered = false;
-        function showWelcome() {
-          if (popupTriggered) return;
-          popupTriggered = true;
-          var popup = document.getElementById('welcome-popup-overlay');
-          if (popup) {
-            popup.classList.add('active');
-            document.body.style.overflow = 'hidden';
-          }
-        }
-        // Trigger after 20 seconds
-        setTimeout(showWelcome, 20000);
-        // Trigger at 45% scroll
-        window.addEventListener('scroll', function onScroll() {
-          var scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-          if (scrollPercent >= 45) {
-            showWelcome();
-            window.removeEventListener('scroll', onScroll);
-          }
-        });
-        // Trigger on exit intent (mouse leaves top of window)
-        document.addEventListener('mouseleave', function onExit(e) {
-          if (e.clientY < 0) {
-            showWelcome();
-            document.removeEventListener('mouseleave', onExit);
-          }
-        });
+      const lastShown = Number(localStorage.getItem('icssWelcomeShownAt') || 0);
+      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+      if (window.location.hash || Date.now() - lastShown < thirtyDays) return;
+      let earliestShowAt = Date.now() + 45000;
+      let popupTriggered = false;
+
+      function anotherPromptIsOpen() {
+        const cookie = document.getElementById('cookie-banner');
+        return (cookie && cookie.style.display !== 'none')
+          || document.querySelector('#quiz-modal-overlay.active, #service-modal:not(.hidden), #consultation-modal:not(.hidden)');
       }
-      // Always set it so it doesn't show again in the same session
-      sessionStorage.setItem('welcomeShown', '1');
+
+      function showWelcomeWhenReady() {
+        if (popupTriggered || Date.now() < earliestShowAt || !localStorage.getItem('cookieConsent') || anotherPromptIsOpen()) return false;
+        const popup = document.getElementById('welcome-popup-overlay');
+        if (!popup) return false;
+        popupTriggered = true;
+        popup.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        localStorage.setItem('icssWelcomeShownAt', String(Date.now()));
+        return true;
+      }
+
+      setTimeout(showWelcomeWhenReady, 45000);
+      window.addEventListener('scroll', function onScroll() {
+        const available = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = available > 0 ? (window.scrollY / available) * 100 : 0;
+        if (scrollPercent >= 65 && showWelcomeWhenReady()) window.removeEventListener('scroll', onScroll);
+      }, { passive: true });
+      window.addEventListener('icss:consent-set', function () {
+        earliestShowAt = Date.now() + 30000;
+        setTimeout(showWelcomeWhenReady, 30000);
+      }, { once: true });
     })();
 
     function closeWelcomePopup() {
@@ -4812,6 +4821,7 @@
     function cookieAccept() {
       localStorage.setItem('cookieConsent', 'accepted');
       document.getElementById('cookie-banner').style.display = 'none';
+      window.dispatchEvent(new Event('icss:consent-set'));
       gtag('event', 'consent_accepted');
     }
 
@@ -4819,6 +4829,7 @@
       localStorage.setItem('cookieConsent', 'declined');
       window['ga-disable-G-63WCDFCGPR'] = true;
       document.getElementById('cookie-banner').style.display = 'none';
+      window.dispatchEvent(new Event('icss:consent-set'));
       gtag('event', 'consent_declined');
     }
   </script>

@@ -1,179 +1,501 @@
 -- ============================================================================
 -- ICSS COMMAND CENTER - FINAL CONSOLIDATED MIGRATION
 -- ============================================================================
--- 
--- DESCRIPTION:
--- This script contains ALL schema changes required for the ICSS Command Center.
--- It combines the Invoice Status upgrades, Client Care Pulse features, and 
--- Multi-Tenant/SaaS columns.
---
--- IT IS IDEMPOTENT: It is safe to run multiple times. It uses "IF NOT EXISTS".
---
--- INSTRUCTIONS:
--- 1. Run this entire script in Supabase SQL Editor.
--- 2. Verify success using the queries at the bottom.
--- ============================================================================
+-- Run this file in the Supabase SQL editor. It is safe to run more than once.
+-- It provisions the subscription, invoicing, PayPal, outbox, and Client Care
+-- schema used by the current server and service modules.
 
 BEGIN;
+SET LOCAL search_path = public;
 
--- 1. BASE TABLES CHECK
--- -------------------
--- Ensure base tables exist (in case this is a fresh run, though unlikely)
+-- ============================================================================
+-- 1. CORE COMPANIES, CLIENTS, AND INVOICES
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS companies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    name TEXT NOT NULL,
+    prefix TEXT DEFAULT 'ICSS'
+);
+
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS prefix TEXT DEFAULT 'ICSS';
 
 CREATE TABLE IF NOT EXISTS clients (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     name TEXT NOT NULL,
     email TEXT NOT NULL,
+    billing_email TEXT,
+    phone TEXT,
     address TEXT,
-    company_id UUID -- Will format later
+    company_id UUID REFERENCES companies(id) ON DELETE SET NULL
 );
+
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS billing_email TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS company_id UUID;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.clients'::regclass
+          AND conname = 'clients_company_id_fkey'
+    ) THEN
+        ALTER TABLE clients
+            ADD CONSTRAINT clients_company_id_fkey
+            FOREIGN KEY (company_id) REFERENCES companies(id)
+            ON DELETE SET NULL NOT VALID;
+    END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS invoices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    invoice_number TEXT NOT NULL, -- Ensure TEXT
-    client_id UUID REFERENCES clients(id) ON DELETE CASCADE
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    invoice_number TEXT,
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
+    issue_date DATE DEFAULT CURRENT_DATE,
+    due_date DATE,
+    status TEXT DEFAULT 'pending',
+    total_amount NUMERIC(10, 2) DEFAULT 0.00,
+    notes TEXT
 );
 
-CREATE TABLE IF NOT EXISTS companies (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    prefix TEXT DEFAULT 'ICSS'
-);
+-- Legacy databases used a SERIAL/integer invoice number. Normalize it before
+-- the sequence RPC and text-prefixed invoice numbers are used.
+DO $$
+DECLARE
+    invoice_number_type TEXT;
+BEGIN
+    SELECT data_type
+      INTO invoice_number_type
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'invoices'
+       AND column_name = 'invoice_number';
 
--- 2. INVOICE COLUMNS (Status, Subscription, SaaS)
--- -----------------------------------------------
+    IF invoice_number_type IS NOT NULL THEN
+        ALTER TABLE invoices ALTER COLUMN invoice_number DROP DEFAULT;
+    END IF;
 
--- 2a. Fix invoice_number type
-DO $$ 
-BEGIN 
-    -- Only alter if it's not already text (though difficult to check type in DO block easily without catalog query)
-    -- We'll assume the explicit cast command is safe enough or has been run. 
-    -- To be 100% safe, we can try-catch or just run it. 
-    -- The standard way is:
-    ALTER TABLE invoices ALTER COLUMN invoice_number TYPE TEXT USING invoice_number::TEXT;
-    ALTER TABLE invoices ALTER COLUMN invoice_number DROP DEFAULT;
-EXCEPTION 
-    WHEN OTHERS THEN NULL; -- Ignore if already done or fails safely
+    IF invoice_number_type IS NOT NULL AND invoice_number_type <> 'text' THEN
+        ALTER TABLE invoices
+            ALTER COLUMN invoice_number TYPE TEXT USING invoice_number::TEXT;
+    END IF;
 END $$;
 
--- 2b. Add All Columns
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_id UUID;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS company_id UUID;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS issue_date DATE DEFAULT CURRENT_DATE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date DATE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS total_amount NUMERIC(10, 2) DEFAULT 0.00;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS service_code TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS reference_code TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_type TEXT DEFAULT 'FULL';
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_expected_type TEXT DEFAULT 'FULL';
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_expected_percentage INTEGER DEFAULT 100;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS remaining_amount NUMERIC(10, 2) DEFAULT 0.00;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_date TIMESTAMP WITH TIME ZONE;
-
--- Subscription Fields
-ALTER TABLE invoices ADD COLUMN IF NOT EXISTS is_subscription BOOLEAN DEFAULT FALSE;
-ALTER TABLE invoices ADD COLUMN IF NOT EXISTS is_renewal BOOLEAN DEFAULT FALSE;
-ALTER TABLE invoices ADD COLUMN IF NOT EXISTS approval_status TEXT; -- Legacy
-ALTER TABLE invoices ADD COLUMN IF NOT EXISTS plan_name TEXT;
-ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_cycle TEXT;
-ALTER TABLE invoices ADD COLUMN IF NOT EXISTS renewal_date DATE;
-
--- Payment Status Fields
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'UNPAID';
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS deposit_percent NUMERIC(5, 2);
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(10, 2) DEFAULT 0.00;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS balance_due NUMERIC(10, 2) DEFAULT 0.00;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP WITH TIME ZONE;
-ALTER TABLE invoices ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS is_subscription BOOLEAN DEFAULT FALSE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS is_renewal BOOLEAN DEFAULT FALSE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS approval_status TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS plan_name TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_cycle TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS renewal_date DATE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS next_invoice_date DATE;
 
--- 2c. Trigger for update timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.invoices'::regclass
+          AND conname = 'invoices_client_id_fkey'
+    ) THEN
+        ALTER TABLE invoices
+            ADD CONSTRAINT invoices_client_id_fkey
+            FOREIGN KEY (client_id) REFERENCES clients(id)
+            ON DELETE CASCADE NOT VALID;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.invoices'::regclass
+          AND conname = 'invoices_company_id_fkey'
+    ) THEN
+        ALTER TABLE invoices
+            ADD CONSTRAINT invoices_company_id_fkey
+            FOREIGN KEY (company_id) REFERENCES companies(id)
+            ON DELETE SET NULL NOT VALID;
+    END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$;
 
 DROP TRIGGER IF EXISTS update_invoices_updated_at ON invoices;
 CREATE TRIGGER update_invoices_updated_at
     BEFORE UPDATE ON invoices
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION public.update_updated_at_column();
 
+-- Atomic invoice sequencing used by subscriptionBillingService.js.
+CREATE SEQUENCE IF NOT EXISTS public.invoice_number_seq AS BIGINT START WITH 1 INCREMENT BY 1;
 
--- 3. CLIENT COLUMNS
--- -----------------
-ALTER TABLE clients ADD COLUMN IF NOT EXISTS company_id UUID;
+DO $$
+DECLARE
+    maximum_invoice_suffix BIGINT := 0;
+    current_sequence_value BIGINT := 1;
+    sequence_was_called BOOLEAN := FALSE;
+BEGIN
+    SELECT COALESCE(MAX(SUBSTRING(invoice_number FROM '([0-9]+)$')::BIGINT), 0)
+      INTO maximum_invoice_suffix
+      FROM invoices
+     WHERE invoice_number ~ '[0-9]+$';
 
+    SELECT last_value, is_called
+      INTO current_sequence_value, sequence_was_called
+      FROM public.invoice_number_seq;
 
--- 4. CLIENT CARE PULSE & SERVICES
--- -------------------------------
+    IF maximum_invoice_suffix > current_sequence_value
+       OR (
+           maximum_invoice_suffix = current_sequence_value
+           AND maximum_invoice_suffix > 0
+           AND NOT sequence_was_called
+       ) THEN
+        PERFORM setval('public.invoice_number_seq'::regclass, maximum_invoice_suffix, TRUE);
+    END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.get_next_invoice_sequence()
+RETURNS BIGINT
+LANGUAGE SQL
+VOLATILE
+SET search_path = public
+AS $$
+    SELECT nextval('public.invoice_number_seq'::regclass);
+$$;
+
+-- ============================================================================
+-- 2. SUBSCRIPTIONS, PAYMENTS, PAYPAL, AND ACCOUNTING OUTBOX
+-- ============================================================================
 
 CREATE TABLE IF NOT EXISTS service_plans (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     name TEXT NOT NULL,
     description TEXT,
     price NUMERIC(10, 2),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- Billing cadence. The four website plans bill monthly.
+    default_frequency TEXT DEFAULT 'monthly',
+    -- Client Care report cadence is separate from billing cadence.
+    default_care_frequency TEXT DEFAULT 'weekly',
+    features_json JSONB DEFAULT '[]'::JSONB
 );
+
+ALTER TABLE service_plans ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE service_plans ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE service_plans ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE service_plans ADD COLUMN IF NOT EXISTS price NUMERIC(10, 2);
+ALTER TABLE service_plans ADD COLUMN IF NOT EXISTS default_frequency TEXT DEFAULT 'monthly';
+ALTER TABLE service_plans ADD COLUMN IF NOT EXISTS default_care_frequency TEXT DEFAULT 'weekly';
+ALTER TABLE service_plans ADD COLUMN IF NOT EXISTS features_json JSONB DEFAULT '[]'::JSONB;
+
+DO $$
+DECLARE
+    features_type TEXT;
+BEGIN
+    SELECT data_type
+      INTO features_type
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'service_plans'
+       AND column_name = 'features_json';
+
+    IF features_type = 'json' THEN
+        ALTER TABLE service_plans
+            ALTER COLUMN features_json TYPE JSONB USING features_json::JSONB;
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_service_plans_name ON service_plans(name);
 
 CREATE TABLE IF NOT EXISTS client_services (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
     plan_id UUID REFERENCES service_plans(id) ON DELETE SET NULL,
     status TEXT DEFAULT 'active',
-    frequency TEXT DEFAULT 'monthly',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    -- Scheduling
+    -- Report/check cadence, not the PayPal billing cadence.
+    frequency TEXT DEFAULT 'weekly',
+    start_date DATE DEFAULT CURRENT_DATE,
+    end_date DATE,
     send_time TIME DEFAULT '09:00:00',
     timezone TEXT DEFAULT 'America/Jamaica',
-    send_day_of_week INT, -- 0-6
-    send_day_of_month INT, -- 1-31
-    send_week_of_month INT, -- 1-4
+    send_day_of_week INTEGER,
+    send_day_of_month INTEGER,
+    send_week_of_month INTEGER,
     next_run_at TIMESTAMP WITH TIME ZONE,
+    next_renewal_date DATE,
+    next_billing_date DATE,
+    last_emailed_at TIMESTAMP WITH TIME ZONE,
+    last_renewal_reminder_sent_date DATE,
     service_meta_json JSONB DEFAULT '{}'::JSONB
 );
 
--- Ensure columns exist if table already existed without them
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS client_id UUID;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS plan_id UUID;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS frequency TEXT DEFAULT 'weekly';
+ALTER TABLE client_services ALTER COLUMN frequency SET DEFAULT 'weekly';
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS start_date DATE DEFAULT CURRENT_DATE;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS end_date DATE;
 ALTER TABLE client_services ADD COLUMN IF NOT EXISTS send_time TIME DEFAULT '09:00:00';
 ALTER TABLE client_services ADD COLUMN IF NOT EXISTS timezone TEXT DEFAULT 'America/Jamaica';
-ALTER TABLE client_services ADD COLUMN IF NOT EXISTS send_day_of_week INT;
-ALTER TABLE client_services ADD COLUMN IF NOT EXISTS send_day_of_month INT;
-ALTER TABLE client_services ADD COLUMN IF NOT EXISTS send_week_of_month INT;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS send_day_of_week INTEGER;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS send_day_of_month INTEGER;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS send_week_of_month INTEGER;
 ALTER TABLE client_services ADD COLUMN IF NOT EXISTS next_run_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS next_renewal_date DATE;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS next_billing_date DATE;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS last_emailed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS last_renewal_reminder_sent_date DATE;
+ALTER TABLE client_services ADD COLUMN IF NOT EXISTS service_meta_json JSONB DEFAULT '{}'::JSONB;
 
+DO $$
+DECLARE
+    metadata_type TEXT;
+BEGIN
+    SELECT data_type
+      INTO metadata_type
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'client_services'
+       AND column_name = 'service_meta_json';
 
--- 5. MONTHLY SUMMARIES & HISTORY
--- ------------------------------
+    IF metadata_type = 'json' THEN
+        ALTER TABLE client_services
+            ALTER COLUMN service_meta_json TYPE JSONB USING service_meta_json::JSONB;
+    END IF;
+END $$;
 
-CREATE TABLE IF NOT EXISTS monthly_pulse_summaries (
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.client_services'::regclass
+          AND conname = 'client_services_client_id_fkey'
+    ) THEN
+        ALTER TABLE client_services
+            ADD CONSTRAINT client_services_client_id_fkey
+            FOREIGN KEY (client_id) REFERENCES clients(id)
+            ON DELETE CASCADE NOT VALID;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.client_services'::regclass
+          AND conname = 'client_services_plan_id_fkey'
+    ) THEN
+        ALTER TABLE client_services
+            ADD CONSTRAINT client_services_plan_id_fkey
+            FOREIGN KEY (plan_id) REFERENCES service_plans(id)
+            ON DELETE SET NULL NOT VALID;
+    END IF;
+END $$;
+
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_service_id UUID;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.invoices'::regclass
+          AND conname = 'invoices_client_service_id_fkey'
+    ) THEN
+        ALTER TABLE invoices
+            ADD CONSTRAINT invoices_client_service_id_fkey
+            FOREIGN KEY (client_service_id) REFERENCES client_services(id)
+            ON DELETE SET NULL NOT VALID;
+    END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS invoice_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-    month TEXT NOT NULL, -- 'YYYY-MM'
-    total_reports_sent INT DEFAULT 0,
-    pass_count INT DEFAULT 0,
-    warn_count INT DEFAULT 0,
-    fail_count INT DEFAULT 0,
-    overall_status TEXT, 
-    top_issues_json JSONB DEFAULT '[]'::JSONB,
-    recommendations_text TEXT,
-    emailed_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(client_id, month)
+    invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    quantity NUMERIC(10, 2) DEFAULT 1,
+    unit_price NUMERIC(10, 2) DEFAULT 0.00
 );
-CREATE INDEX IF NOT EXISTS idx_monthly_summaries_client_month ON monthly_pulse_summaries(client_id, month);
 
+ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS invoice_id UUID;
+ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS quantity NUMERIC(10, 2) DEFAULT 1;
+ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS unit_price NUMERIC(10, 2) DEFAULT 0.00;
+
+CREATE TABLE IF NOT EXISTS payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
+    company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
+    amount NUMERIC(10, 2) NOT NULL,
+    method TEXT,
+    reference_id TEXT,
+    payment_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS invoice_id UUID;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS company_id UUID;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS amount NUMERIC(10, 2);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS method TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS reference_id TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_date TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+CREATE TABLE IF NOT EXISTS paypal_webhook_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    paypal_event_id TEXT NOT NULL UNIQUE,
+    event_type TEXT NOT NULL,
+    resource_id TEXT,
+    custom_id TEXT,
+    payload_jsonb JSONB NOT NULL,
+    status TEXT NOT NULL DEFAULT 'received',
+    processed_at TIMESTAMP WITH TIME ZONE,
+    last_error TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS paypal_event_id TEXT;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS event_type TEXT;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS resource_id TEXT;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS custom_id TEXT;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS payload_jsonb JSONB;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'received';
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS last_error TEXT;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+CREATE TABLE IF NOT EXISTS outbox_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    occurred_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    company_id UUID NOT NULL,
+    aggregate_type TEXT NOT NULL,
+    aggregate_id UUID NOT NULL,
+    event_version INTEGER NOT NULL,
+    event_type TEXT NOT NULL,
+    idempotency_key TEXT NOT NULL,
+    payload_jsonb JSONB NOT NULL,
+    publish_status TEXT NOT NULL DEFAULT 'pending',
+    attempt_count INTEGER NOT NULL DEFAULT 0,
+    last_attempt_at TIMESTAMP WITH TIME ZONE
+);
+
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS occurred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS company_id UUID;
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS aggregate_type TEXT;
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS aggregate_id UUID;
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS event_version INTEGER;
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS event_type TEXT;
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS payload_jsonb JSONB;
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS publish_status TEXT DEFAULT 'pending';
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS attempt_count INTEGER DEFAULT 0;
+ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP WITH TIME ZONE;
+
+-- ============================================================================
+-- 3. CLIENT CARE CHECKLISTS, REPORTS, AND MONTHLY SUMMARIES
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS checklist_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plan_id UUID REFERENCES service_plans(id) ON DELETE CASCADE,
+    name TEXT,
+    items_json JSONB DEFAULT '[]'::JSONB
+);
+
+ALTER TABLE checklist_templates ADD COLUMN IF NOT EXISTS plan_id UUID;
+ALTER TABLE checklist_templates ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE checklist_templates ADD COLUMN IF NOT EXISTS items_json JSONB DEFAULT '[]'::JSONB;
+
+-- An older checklist migration used title NOT NULL instead of name. Retain the
+-- legacy column but remove its insert blocker.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'checklist_templates'
+          AND column_name = 'title'
+    ) THEN
+        ALTER TABLE checklist_templates ALTER COLUMN title DROP NOT NULL;
+    END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS checklist_runs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    client_service_id UUID REFERENCES client_services(id) ON DELETE CASCADE
+    client_service_id UUID REFERENCES client_services(id) ON DELETE CASCADE,
+    period_start TIMESTAMP WITH TIME ZONE,
+    period_end TIMESTAMP WITH TIME ZONE,
+    run_status TEXT DEFAULT 'completed',
+    score INTEGER DEFAULT 0,
+    results_json JSONB DEFAULT '[]'::JSONB,
+    emailed_at TIMESTAMP WITH TIME ZONE
 );
+
+ALTER TABLE checklist_runs ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE checklist_runs ADD COLUMN IF NOT EXISTS client_service_id UUID;
+ALTER TABLE checklist_runs ADD COLUMN IF NOT EXISTS period_start TIMESTAMP WITH TIME ZONE;
+ALTER TABLE checklist_runs ADD COLUMN IF NOT EXISTS period_end TIMESTAMP WITH TIME ZONE;
+ALTER TABLE checklist_runs ADD COLUMN IF NOT EXISTS run_status TEXT DEFAULT 'completed';
+ALTER TABLE checklist_runs ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0;
+ALTER TABLE checklist_runs ADD COLUMN IF NOT EXISTS results_json JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE checklist_runs ADD COLUMN IF NOT EXISTS emailed_at TIMESTAMP WITH TIME ZONE;
 
 CREATE TABLE IF NOT EXISTS checklist_run_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     checklist_run_id UUID REFERENCES checklist_runs(id) ON DELETE CASCADE,
+    item_code TEXT,
+    label TEXT,
     status TEXT,
-    notes TEXT
+    details TEXT,
+    notes TEXT,
+    evidence_json JSONB DEFAULT '{}'::JSONB
 );
+
+ALTER TABLE checklist_run_items ADD COLUMN IF NOT EXISTS checklist_run_id UUID;
+ALTER TABLE checklist_run_items ADD COLUMN IF NOT EXISTS item_code TEXT;
+ALTER TABLE checklist_run_items ADD COLUMN IF NOT EXISTS label TEXT;
+ALTER TABLE checklist_run_items ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE checklist_run_items ADD COLUMN IF NOT EXISTS details TEXT;
+ALTER TABLE checklist_run_items ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE checklist_run_items ADD COLUMN IF NOT EXISTS evidence_json JSONB DEFAULT '{}'::JSONB;
 
 CREATE TABLE IF NOT EXISTS client_care_reports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -185,54 +507,323 @@ CREATE TABLE IF NOT EXISTS client_care_reports (
     status TEXT DEFAULT 'sent',
     metadata_json JSONB DEFAULT '{}'::JSONB
 );
+
+ALTER TABLE client_care_reports ADD COLUMN IF NOT EXISTS checklist_run_id UUID;
+ALTER TABLE client_care_reports ADD COLUMN IF NOT EXISTS client_service_id UUID;
+ALTER TABLE client_care_reports ADD COLUMN IF NOT EXISTS recipient_email TEXT;
+ALTER TABLE client_care_reports ADD COLUMN IF NOT EXISTS email_subject TEXT;
+ALTER TABLE client_care_reports ADD COLUMN IF NOT EXISTS sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE client_care_reports ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'sent';
+ALTER TABLE client_care_reports ADD COLUMN IF NOT EXISTS metadata_json JSONB DEFAULT '{}'::JSONB;
+
+CREATE TABLE IF NOT EXISTS monthly_pulse_summaries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    month TEXT NOT NULL,
+    total_reports_sent INTEGER DEFAULT 0,
+    pass_count INTEGER DEFAULT 0,
+    warn_count INTEGER DEFAULT 0,
+    fail_count INTEGER DEFAULT 0,
+    overall_status TEXT,
+    top_issues_json JSONB DEFAULT '[]'::JSONB,
+    recommendations_text TEXT,
+    emailed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (client_id, month)
+);
+
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS client_id UUID;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS month TEXT;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS total_reports_sent INTEGER DEFAULT 0;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS pass_count INTEGER DEFAULT 0;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS warn_count INTEGER DEFAULT 0;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS fail_count INTEGER DEFAULT 0;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS overall_status TEXT;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS top_issues_json JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS recommendations_text TEXT;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS emailed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE monthly_pulse_summaries ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+-- Durable welcome/birthday email claims prevent duplicate sends when webhook
+-- retries or overlapping schedulers process the same client event.
+CREATE TABLE IF NOT EXISTS client_relationship_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    client_service_id UUID REFERENCES client_services(id) ON DELETE SET NULL,
+    message_type TEXT NOT NULL,
+    occurrence_key TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'processing',
+    sent_at TIMESTAMP WITH TIME ZONE,
+    last_error TEXT
+);
+
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS client_id UUID;
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS client_service_id UUID;
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS message_type TEXT;
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS occurrence_key TEXT;
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'processing';
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS sent_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE client_relationship_messages ADD COLUMN IF NOT EXISTS last_error TEXT;
+
+-- ============================================================================
+-- 4. CANONICAL WEBSITE PLANS AND DEFAULT HEALTH CHECKLISTS
+-- ============================================================================
+
+-- default_frequency remains monthly because it is the billing cadence.
+-- default_care_frequency records the separate weekly report/check cadence.
+WITH canonical_plans AS (
+    SELECT *
+    FROM jsonb_to_recordset($plans$
+    [
+      {
+        "name": "Hosting Only",
+        "description": "Managed hosting for clients who already own their domain.",
+        "price": 30.00,
+        "default_frequency": "monthly",
+        "default_care_frequency": "weekly",
+        "features_json": ["Managed website hosting", "cPanel when supported by the website stack", "Weekly website health report", "Google Analytics traffic analysis", "SSL and backups"]
+      },
+      {
+        "name": "Hosting + Domain Management",
+        "description": "Managed hosting plus domain registration, renewal, and billing handled by the developer.",
+        "price": 38.00,
+        "default_frequency": "monthly",
+        "default_care_frequency": "weekly",
+        "features_json": ["Managed website hosting", "Domain registration, renewals and billing managed by iCreate", "cPanel when supported by the website stack", "Weekly website health report", "Google Analytics traffic analysis", "SSL and backups"]
+      },
+      {
+        "name": "Web Maintenance",
+        "description": "Managed hosting and domain care with up to five website patches or updates each month.",
+        "price": 49.99,
+        "default_frequency": "monthly",
+        "default_care_frequency": "weekly",
+        "features_json": ["Everything in Hosting + Domain Management", "Up to five website patches or updates monthly", "Cloudflare security monitoring", "Performance monitoring", "Weekly website health report", "Google Analytics traffic analysis"]
+      },
+      {
+        "name": "Content Refresh",
+        "description": "Full website care with unlimited edits and content updates.",
+        "price": 67.99,
+        "default_frequency": "monthly",
+        "default_care_frequency": "weekly",
+        "features_json": ["Everything in Web Maintenance", "Unlimited edits and content updates to the existing website", "Cloudflare security integration and monitoring", "Weekly website health report", "Google Analytics traffic analysis"]
+      }
+    ]
+    $plans$::JSONB) AS plan_data(
+        name TEXT,
+        description TEXT,
+        price NUMERIC,
+        default_frequency TEXT,
+        default_care_frequency TEXT,
+        features_json JSONB
+    )
+)
+INSERT INTO service_plans (
+    name,
+    description,
+    price,
+    default_frequency,
+    default_care_frequency,
+    features_json
+)
+SELECT
+    canonical_plans.name,
+    canonical_plans.description,
+    canonical_plans.price,
+    canonical_plans.default_frequency,
+    canonical_plans.default_care_frequency,
+    canonical_plans.features_json
+FROM canonical_plans
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM service_plans
+    WHERE service_plans.name = canonical_plans.name
+);
+
+WITH canonical_plans AS (
+    SELECT *
+    FROM jsonb_to_recordset($plans$
+    [
+      {"name":"Hosting Only","description":"Managed hosting for clients who already own their domain.","price":30.00,"default_frequency":"monthly","default_care_frequency":"weekly","features_json":["Managed website hosting","cPanel when supported by the website stack","Weekly website health report","Google Analytics traffic analysis","SSL and backups"]},
+      {"name":"Hosting + Domain Management","description":"Managed hosting plus domain registration, renewal, and billing handled by the developer.","price":38.00,"default_frequency":"monthly","default_care_frequency":"weekly","features_json":["Managed website hosting","Domain registration, renewals and billing managed by iCreate","cPanel when supported by the website stack","Weekly website health report","Google Analytics traffic analysis","SSL and backups"]},
+      {"name":"Web Maintenance","description":"Managed hosting and domain care with up to five website patches or updates each month.","price":49.99,"default_frequency":"monthly","default_care_frequency":"weekly","features_json":["Everything in Hosting + Domain Management","Up to five website patches or updates monthly","Cloudflare security monitoring","Performance monitoring","Weekly website health report","Google Analytics traffic analysis"]},
+      {"name":"Content Refresh","description":"Full website care with unlimited edits and content updates.","price":67.99,"default_frequency":"monthly","default_care_frequency":"weekly","features_json":["Everything in Web Maintenance","Unlimited edits and content updates to the existing website","Cloudflare security integration and monitoring","Weekly website health report","Google Analytics traffic analysis"]}
+    ]
+    $plans$::JSONB) AS plan_data(
+        name TEXT,
+        description TEXT,
+        price NUMERIC,
+        default_frequency TEXT,
+        default_care_frequency TEXT,
+        features_json JSONB
+    )
+)
+UPDATE service_plans
+SET description = canonical_plans.description,
+    price = canonical_plans.price,
+    default_frequency = canonical_plans.default_frequency,
+    default_care_frequency = canonical_plans.default_care_frequency,
+    features_json = canonical_plans.features_json
+FROM canonical_plans
+WHERE service_plans.name = canonical_plans.name;
+
+-- Seed only when a plan has no template, preserving any customized checklist.
+-- These codes map to real automated checks in clientCarePulseService.js.
+INSERT INTO checklist_templates (plan_id, name, items_json)
+SELECT
+    service_plans.id,
+    'Weekly Website Health',
+    $checks$
+    [
+      {"code":"UPTIME","label":"Website availability"},
+      {"code":"SSL","label":"SSL certificate"},
+      {"code":"DNS","label":"DNS health"},
+      {"code":"REDIRECT","label":"HTTPS redirect"},
+      {"code":"PERF_LIGHT","label":"Website performance"},
+      {"code":"GA_TRAFFIC","label":"Google Analytics Traffic Analysis"}
+    ]
+    $checks$::JSONB
+FROM service_plans
+WHERE service_plans.name IN (
+    'Hosting Only',
+    'Hosting + Domain Management',
+    'Web Maintenance',
+    'Content Refresh'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM checklist_templates
+    WHERE checklist_templates.plan_id = service_plans.id
+);
+
+-- Ensure the application always has a company for invoice/outbox ownership.
+INSERT INTO companies (name, prefix)
+SELECT 'iCreate Solutions', 'ICSS'
+WHERE NOT EXISTS (SELECT 1 FROM companies);
+
+-- ============================================================================
+-- 5. INDEXES AND LIMITED EXISTING RLS POLICIES
+-- ============================================================================
+
+CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
+CREATE INDEX IF NOT EXISTS idx_clients_billing_email ON clients(billing_email);
+CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_company ON invoices(company_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_client_service ON invoices(client_service_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_renewal ON invoices(renewal_date);
+CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON invoice_items(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_reference_id
+    ON payments(reference_id)
+    WHERE reference_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_paypal_webhook_events_event_id
+    ON paypal_webhook_events(paypal_event_id);
+
+CREATE INDEX IF NOT EXISTS idx_client_services_status ON client_services(status);
+CREATE INDEX IF NOT EXISTS idx_client_services_next_run ON client_services(next_run_at);
+CREATE INDEX IF NOT EXISTS idx_client_services_next_billing ON client_services(next_billing_date);
+CREATE INDEX IF NOT EXISTS idx_client_services_meta_gin
+    ON client_services USING GIN (service_meta_json);
+
+-- Multiple rows may omit the ID (or contain a blank ID), but a real PayPal
+-- subscription ID can belong to only one client service.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_client_services_paypal_subscription_id_unique
+    ON client_services (
+        (NULLIF(BTRIM(service_meta_json ->> 'paypal_subscription_id'), ''))
+    )
+    WHERE NULLIF(BTRIM(service_meta_json ->> 'paypal_subscription_id'), '') IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_checklist_templates_plan_unique
+    ON checklist_templates(plan_id)
+    WHERE plan_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_checklist_runs_service ON checklist_runs(client_service_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_run_items_run ON checklist_run_items(checklist_run_id);
 CREATE INDEX IF NOT EXISTS idx_client_care_reports_sent_at ON client_care_reports(sent_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_care_reports_service ON client_care_reports(client_service_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_monthly_summaries_client_month_unique
+    ON monthly_pulse_summaries(client_id, month);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_client_relationship_messages_occurrence_unique
+    ON client_relationship_messages(client_id, message_type, occurrence_key);
+CREATE INDEX IF NOT EXISTS idx_client_relationship_messages_status
+    ON client_relationship_messages(status, updated_at);
+CREATE INDEX IF NOT EXISTS idx_outbox_pending
+    ON outbox_events(publish_status, occurred_at)
+    WHERE publish_status = 'pending';
 
-
--- 6. SECURITY POLICIES (RLS)
--- --------------------------
 ALTER TABLE monthly_pulse_summaries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_care_reports ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Enable all access for all users' AND tablename = 'monthly_pulse_summaries') THEN
-        CREATE POLICY "Enable all access for all users" ON monthly_pulse_summaries FOR ALL USING (true) WITH CHECK (true);
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'monthly_pulse_summaries'
+          AND policyname = 'Enable all access for all users'
+    ) THEN
+        CREATE POLICY "Enable all access for all users"
+            ON monthly_pulse_summaries
+            FOR ALL USING (TRUE) WITH CHECK (TRUE);
     END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Enable all access for all users' AND tablename = 'client_care_reports') THEN
-        CREATE POLICY "Enable all access for all users" ON client_care_reports FOR ALL USING (true) WITH CHECK (true);
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'client_care_reports'
+          AND policyname = 'Enable all access for all users'
+    ) THEN
+        CREATE POLICY "Enable all access for all users"
+            ON client_care_reports
+            FOR ALL USING (TRUE) WITH CHECK (TRUE);
     END IF;
 END $$;
 
 COMMIT;
 
--- 7. DEFAULT DATA (Optional but helpful)
--- --------------------------------------
-INSERT INTO companies (name, prefix) 
-SELECT 'iCreate Solutions', 'ICSS'
-WHERE NOT EXISTS (SELECT 1 FROM companies);
-
-
 -- ============================================================================
--- ✅ VERIFICATION QUERIES
+-- VERIFICATION QUERIES
 -- ============================================================================
--- Run these steps after the migration to confirm success.
 
--- Query 1: Check Invoices Columns
--- Expect: payment_status, is_subscription, company_id, service_code all present
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'invoices' 
-AND column_name IN ('payment_status', 'is_subscription', 'company_id', 'service_code', 'reference_code');
-
--- Query 2: Check Tables Exist
--- Expect: invoices, clients, client_services, monthly_pulse_summaries
-SELECT table_name 
-FROM information_schema.tables 
+SELECT table_name
+FROM information_schema.tables
 WHERE table_schema = 'public'
-AND table_name IN ('invoices', 'client_services', 'monthly_pulse_summaries');
+  AND table_name IN (
+      'clients',
+      'invoices',
+      'invoice_items',
+      'payments',
+      'paypal_webhook_events',
+      'service_plans',
+      'client_services',
+      'checklist_templates',
+      'checklist_runs',
+      'checklist_run_items',
+      'client_care_reports',
+      'client_relationship_messages',
+      'outbox_events'
+  )
+ORDER BY table_name;
 
--- Query 3: Check Row Count (Should be non-zero for companies)
-SELECT count(*) as company_count FROM companies;
+SELECT name, price, default_frequency, default_care_frequency
+FROM service_plans
+WHERE name IN (
+    'Hosting Only',
+    'Hosting + Domain Management',
+    'Web Maintenance',
+    'Content Refresh'
+)
+ORDER BY price;
 
+SELECT service_plans.name, checklist_templates.name AS checklist_name
+FROM service_plans
+LEFT JOIN checklist_templates ON checklist_templates.plan_id = service_plans.id
+WHERE service_plans.name IN (
+    'Hosting Only',
+    'Hosting + Domain Management',
+    'Web Maintenance',
+    'Content Refresh'
+)
+ORDER BY service_plans.price;

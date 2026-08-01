@@ -1024,3 +1024,22 @@ html { background-color: var(--bg-body, #101014); }
 
 /* Disable elastic scroll bounce */
 html, body { overscroll-behavior-y: none; }
+
+/* Invoice live preview */
+.preview-tabs { gap: 16px; padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); }
+.preview-tabs .tab-btn { appearance: none; padding: 9px 15px; border: 1px solid var(--border-color); border-radius: 8px; background: transparent; color: var(--text-muted); font-weight: 700; cursor: pointer; }
+.preview-tabs .tab-btn.active { color: #081423; background: var(--secondary-color); border-color: var(--secondary-color); }
+.preview-content { min-height: 250px; }
+.email-mockup { overflow: hidden; border: 1px solid var(--border-color); border-radius: 12px; background: #fff; color: #172033; box-shadow: 0 14px 40px rgba(0,0,0,.22); }
+.email-header { padding: 16px 20px; background: #edf3f7; border-bottom: 1px solid #dbe4ea; color: #334155; }
+.email-body { padding: 24px; line-height: 1.6; }
+.email-summary-box { margin: 20px 0; padding: 18px; border-radius: 10px; background: #f4f8fa; border-left: 4px solid var(--secondary-color); }
+.email-summary-box h3 { margin: 0 0 10px; color: #0f2840; }
+.preview-summary-row { display:flex; justify-content:space-between; gap:20px; padding:8px 0; border-bottom:1px solid #dfe7ec; }
+.preview-summary-row:last-child { border-bottom:0; }
+.preview-summary-row span:first-child { color:#64748b; }
+.preview-summary-row span:last-child { font-weight:700; text-align:right; }
+.pdf-mockup { position:relative; min-height:360px; overflow:hidden; padding:45px; border-radius:10px; background:#fff; color:#172033; box-shadow:0 14px 40px rgba(0,0,0,.25); }
+.pdf-content { position:relative; z-index:2; display:grid; gap:14px; max-width:320px; }
+.watermark-overlay { position:absolute; z-index:1; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-24deg); padding:10px 24px; border:5px solid currentColor; border-radius:8px; font-size:clamp(2.2rem,8vw,4.5rem); font-weight:800; letter-spacing:.08em; opacity:.16; white-space:nowrap; }
+@media(max-width:650px){.preview-tabs{align-items:flex-start!important;flex-direction:column}.preview-tabs>div:first-child{display:flex;gap:7px}.preview-tabs .tab-btn{font-size:.75rem;padding:8px}.email-body{padding:16px}.preview-summary-row{font-size:.82rem}.pdf-mockup{padding:28px 20px}}

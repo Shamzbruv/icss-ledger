@@ -6,7 +6,9 @@ const CRM = {
     init() {
         this.captureUTM();
         this.injectModals();
-        this.initExitIntent();
+        // The homepage has its own coordinated welcome prompt. Running both
+        // systems caused one modal to appear immediately behind the other.
+        if (!document.getElementById('welcome-popup-overlay')) this.initExitIntent();
         this.initFormTiming();
     },
 

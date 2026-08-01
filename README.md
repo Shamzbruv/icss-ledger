@@ -4,7 +4,7 @@ A free, full-stack billing system integrated with Supabase, PDF generation, Emai
 
 ## Prerequisites
 
-- Node.js (v14+)
+- Node.js (v18+)
 - Supabase Account (Free)
 - Gmail Account (with App Password)
 - PayPal Developer Account (for Webhooks)
@@ -17,13 +17,15 @@ A free, full-stack billing system integrated with Supabase, PDF generation, Emai
    ```
 
 2. **Database Setup**
-   - Log in to Supabase.
-   - Go to the SQL Editor.
-   - Copy and paste the contents of `schema.sql` and run it to create the tables.
+   - Log in to Supabase and open the SQL Editor.
+   - Run `SUPABASE_FINAL_MIGRATION.sql`. It is idempotent and includes the invoice, PayPal webhook, Client Care, relationship-email, plan, and checklist schema used by the current server.
+   - Railway deploys application code only; it does not execute Supabase SQL automatically.
 
 3. **Environment Configuration**
    - Rename `.env.example` to `.env`.
-   - Fill in your `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `EMAIL_USER`, `EMAIL_APP_PASSWORD`, etc.
+   - Configure `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `RESEND_API_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, and `PAYPAL_MODE`.
+   - For automated GA4 traffic analysis, set `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_JSON` (or its base64 form in `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_BASE64`). In Client Care, save each site's numeric GA4 Property ID and grant the service-account email Viewer access to that property.
+   - Set `CRON_SECRET` for protected scheduled-job requests in production.
 
 4.  **Run the Server**
     You need **two terminal windows** open during development:

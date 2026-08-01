@@ -173,13 +173,13 @@
                             <div class="mb-3">
                                 <label>Frequency</label>
                                 <select id="frequencySelect" onchange="toggleScheduleFields()">
-                                    <option value="monthly" selected>Monthly</option>
-                                    <option value="weekly">Weekly</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                    <option value="monthly">Monthly</option>
                                 </select>
                             </div>
 
                             <!-- Weekly Fields -->
-                            <div id="weeklyFields" class="mb-3 d-none">
+                            <div id="weeklyFields" class="mb-3">
                                 <label>Day of Week</label>
                                 <select id="sendDayOfWeek" class="form-control">
                                     <option value="1">Monday</option>
@@ -193,7 +193,7 @@
                             </div>
 
                             <!-- Monthly Fields -->
-                            <div id="monthlyFields" class="mb-3">
+                            <div id="monthlyFields" class="mb-3 d-none">
                                 <label>Monthly Rule</label>
                                 <select id="monthlyRuleType" class="form-control mb-2" onchange="toggleMonthlyRule()">
                                     <option value="dayOfMonth">Specific Day (e.g. 1st)</option>
@@ -419,6 +419,19 @@
 
     <!-- Scripts -->
     <script>
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[character]));
+        }
+
+        function formatDateOnly(value) {
+            const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!match) return 'Not Set';
+            return new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
+                .format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))));
+        }
+
         // Inline script now has access to window.CONFIG
         // ... (rest of script)
         // Load Data on Start
@@ -554,7 +567,7 @@
                 const select = document.getElementById('clientSelect');
                 const summarySelect = document.getElementById('summaryClientSelect');
 
-                const opts = clients.map(c => `<option value="${c.id}">${c.name} (${c.email})</option>`).join('');
+                const opts = clients.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)} (${escapeHtml(c.email)})</option>`).join('');
 
                 select.innerHTML = '<option value="">Select Client</option>' + opts;
                 summarySelect.innerHTML = '<option value="">Select Client to Generate</option>' + opts;
@@ -569,7 +582,7 @@
                 const select = document.getElementById('planSelect');
                 const editSelect = document.getElementById('editPlanSelect');
                 const optionsHtml = '<option value="">Select Plan</option>' +
-                    plans.map(p => `<option value="${p.id}">${p.name} ($${p.price})</option>`).join('');
+                    plans.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} ($${escapeHtml(p.price)})</option>`).join('');
                 select.innerHTML = optionsHtml;
                 if (editSelect) editSelect.innerHTML = optionsHtml;
             } catch (e) { console.error(e); }
@@ -604,25 +617,25 @@
                     <tr>
                         <td>
                             <div class="cell-content">
-                                <strong>${s.clients?.name || 'Unknown'}</strong><br>
-                                <small>${s.clients?.email || ''}</small>
+                                <strong>${escapeHtml(s.clients?.name || 'Unknown')}</strong><br>
+                                <small>${escapeHtml(s.clients?.email || '')}</small>
                             </div>
                         </td>
-                        <td><div class="cell-content">${s.service_plans?.name || 'Unknown Plan'}</div></td>
+                        <td><div class="cell-content">${escapeHtml(s.service_plans?.name || 'Unknown Plan')}</div></td>
                         <td>
                             <div class="cell-content">
-                                <span class="badge bg-secondary">${s.frequency}</span>
+                                <span class="badge bg-secondary">${escapeHtml(s.frequency)}</span>
                                 <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">
-                                    ${s.timezone || 'America/Jamaica'}
+                                    ${escapeHtml(s.timezone || 'America/Jamaica')}
                                 </div>
                             </div>
                         </td>
                         <td>${nextRun}</td>
-                        <td>${s.next_renewal_date ? new Date(s.next_renewal_date).toLocaleDateString() : 'Not Set'}</td>
+                        <td>${s.next_renewal_date ? formatDateOnly(s.next_renewal_date) : 'Not Set'}</td>
                         <td>${s.last_emailed_at ? new Date(s.last_emailed_at).toLocaleDateString() : 'Never'}</td>
                         <td>
                             <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
-                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month}, '${encodeURIComponent(JSON.stringify(s.service_meta_json || {}))}')">Edit Service</button>
+                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month}, '${s.send_time || '09:00'}', '${s.timezone || 'America/Jamaica'}', '${encodeURIComponent(JSON.stringify(s.service_meta_json || {})).replace(/'/g, '%27')}')">Edit Service</button>
                             <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
                             <button class="btn btn-sm btn-warning" onclick="sendPaymentNudge('${s.id}')" title="Send payment reminder to client" style="margin-left: 5px;">💳 Payment Nudge</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
@@ -802,8 +815,8 @@
                 tbody.innerHTML = reports.map(r => `
                 <tr>
                     <td><div class="cell-content">${new Date(r.sent_at).toLocaleString()}</div></td>
-                    <td><div class="cell-content">${r.client_services?.clients?.name || 'Unknown'}</div></td>
-                    <td><div class="cell-content">${r.email_subject || 'Client Care Pulse Report'}</div></td>
+                    <td><div class="cell-content">${escapeHtml(r.client_services?.clients?.name || 'Unknown')}</div></td>
+                    <td><div class="cell-content">${escapeHtml(r.email_subject || 'Client Care Pulse Report')}</div></td>
                     <td><div class="cell-content"><span class="badge bg-primary">${r.checklist_runs?.score || 0}%</span></div></td>
                     <td><div class="cell-content"><span class="badge ${r.status === 'sent' ? 'bg-success' : 'bg-danger'}">${r.status}</span></div></td>
                 </tr>
@@ -865,7 +878,7 @@
                 tbody.innerHTML = data.map(s => `
                     <tr>
                         <td>${s.month}</td>
-                        <td><strong>${s.clients?.name || 'Unknown'}</strong></td> 
+                        <td><strong>${escapeHtml(s.clients?.name || 'Unknown')}</strong></td>
                         <td>${s.total_reports_sent}</td>
                         <td>✅${s.pass_count} ⚠️${s.warn_count} ❌${s.fail_count}</td>
                         <td>${s.overall_status}</td>
@@ -1108,10 +1121,12 @@
         applyTableLabels();
 
         // EDIT SCHEDULE LOGIC
-        window.openEditScheduleModal = function(serviceId, planId, frequency, dayOfWeek, dayOfMonth, metaStr) {
+        window.openEditScheduleModal = function(serviceId, planId, frequency, dayOfWeek, dayOfMonth, sendTime, timezone, metaStr) {
             document.getElementById('editScheduleServiceId').value = serviceId;
             document.getElementById('editPlanSelect').value = planId || '';
             document.getElementById('editFrequencySelect').value = frequency || 'monthly';
+            document.getElementById('editSendTime').value = String(sendTime || '09:00').slice(0, 5);
+            document.getElementById('editTimezone').value = timezone || 'America/Jamaica';
             if (dayOfWeek !== null && dayOfWeek !== undefined && dayOfWeek !== 'null') {
                 document.getElementById('editSendDayOfWeek').value = dayOfWeek;
             } else {
@@ -1129,6 +1144,12 @@
             
             document.getElementById('editWebsiteUrl').value = meta.website_url || '';
             document.getElementById('editDomainName').value = meta.domain || '';
+            document.getElementById('editReportEmail').value = meta.report_email || '';
+            document.getElementById('editContactName').value = meta.contact_name || '';
+            document.getElementById('editContactPhone').value = meta.contact_phone || '';
+            document.getElementById('editBirthdayMonth').value = meta.birthday_month || '';
+            document.getElementById('editBirthdayDay').value = meta.birthday_day || '';
+            document.getElementById('editGaPropertyId').value = meta.ga_property_id || '';
             
             const apiContainer = document.getElementById('editApiUrlsContainer');
             apiContainer.innerHTML = '';
@@ -1187,6 +1208,8 @@
             const serviceId = document.getElementById('editScheduleServiceId').value;
             const plan_id = document.getElementById('editPlanSelect').value;
             const frequency = document.getElementById('editFrequencySelect').value;
+            const send_time = document.getElementById('editSendTime').value;
+            const timezone = document.getElementById('editTimezone').value;
             let send_day_of_week = null;
             let send_day_of_month = null;
 
@@ -1198,6 +1221,12 @@
 
             const website_url = document.getElementById('editWebsiteUrl').value;
             const domain = document.getElementById('editDomainName').value;
+            const report_email = document.getElementById('editReportEmail').value;
+            const contact_name = document.getElementById('editContactName').value;
+            const contact_phone = document.getElementById('editContactPhone').value;
+            const birthday_month = Number(document.getElementById('editBirthdayMonth').value) || null;
+            const birthday_day = Number(document.getElementById('editBirthdayDay').value) || null;
+            const ga_property_id = document.getElementById('editGaPropertyId').value.trim().replace(/^properties\//i, '');
             
             const apiInputs = document.querySelectorAll('input[name="editApiUrl[]"]');
             const api_urls = Array.from(apiInputs).map(i => i.value).filter(v => v.trim() !== '');
@@ -1205,14 +1234,14 @@
             const ccInputs = document.querySelectorAll('input[name="editCcEmail[]"]');
             const cc_emails = Array.from(ccInputs).map(i => i.value).filter(v => v.trim() !== '');
 
-            const serviceMeta = { website_url, domain, api_urls, cc_emails };
+            const serviceMeta = { website_url, domain, report_email, contact_name, contact_phone, birthday_month, birthday_day, ga_property_id, api_urls, cc_emails };
 
             try {
                 showLoading('Updating Schedule...');
                 const res = await apiFetch(`/api/client-services/${serviceId}/schedule`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ frequency, send_day_of_week, send_day_of_month, plan_id, serviceMeta })
+                    body: JSON.stringify({ frequency, send_day_of_week, send_day_of_month, send_time, timezone, plan_id, serviceMeta })
                 });
                 
                 hideLoading();
@@ -1306,10 +1335,22 @@
                     <label>Day of Month (1-28)</label>
                     <input type="number" id="editSendDayOfMonth" class="form-control" min="1" max="28" value="1">
                 </div>
+                <div class="d-flex gap-2 mb-3">
+                    <div style="flex:1"><label>Delivery Time</label><input type="time" id="editSendTime" class="form-control" value="09:00"></div>
+                    <div style="flex:1"><label>Timezone</label><select id="editTimezone" class="form-control"><option value="America/Jamaica">Jamaica</option><option value="America/New_York">New York</option><option value="Europe/London">London</option><option value="UTC">UTC</option></select></div>
+                </div>
                 <p class="text-muted small">The system will recalculate the next run date automatically based on these settings.</p>
 
                 <hr>
                 <h5 class="mb-2">Configuration</h5>
+                <div class="d-flex gap-2 mb-2">
+                    <div style="flex:1"><label>Client Contact Name</label><input type="text" id="editContactName" class="form-control" maxlength="120"></div>
+                    <div style="flex:1"><label>Phone / WhatsApp</label><input type="tel" id="editContactPhone" class="form-control" maxlength="50"></div>
+                </div>
+                <div class="d-flex gap-2 mb-2">
+                    <div style="flex:1"><label>Birthday Month</label><input type="number" id="editBirthdayMonth" class="form-control" min="1" max="12" placeholder="MM"></div>
+                    <div style="flex:1"><label>Birthday Day</label><input type="number" id="editBirthdayDay" class="form-control" min="1" max="31" placeholder="DD"></div>
+                </div>
                 <div class="mb-2">
                     <label>Website URL</label>
                     <input type="url" id="editWebsiteUrl" class="form-control" placeholder="https://example.com">
@@ -1317,6 +1358,15 @@
                 <div class="mb-2">
                     <label>Domain Name</label>
                     <input type="text" id="editDomainName" class="form-control" placeholder="example.com">
+                </div>
+                <div class="mb-2">
+                    <label>Primary Report Recipient</label>
+                    <input type="email" id="editReportEmail" class="form-control" placeholder="client@example.com">
+                </div>
+                <div class="mb-2">
+                    <label>Google Analytics 4 Property ID</label>
+                    <input type="text" id="editGaPropertyId" class="form-control" inputmode="numeric" pattern="(?:properties/)?[0-9]+" placeholder="123456789">
+                    <small class="text-muted">The GA4 property must grant Viewer access to the configured service-account email.</small>
                 </div>
                 <div class="mb-2">
                     <label>API URLs (Optional)</label>
