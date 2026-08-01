@@ -1531,108 +1531,68 @@
       <a class="text-white text-2xl" href="#services">
         <i class="fas fa-chevron-down"></i>
       </a>
+  <!-- ===== SOLUTION FINDER CTA SECTION ===== -->
+  <section id="solution-finder" class="py-24 bg-[#0B0F19] relative overflow-hidden">
+    <!-- Abstract background shapes -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+      <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-cyan-500/20 rounded-full blur-[100px]"></div>
+      <div class="absolute bottom-[-10%] right-[-10%] w-[30rem] h-[30rem] bg-blue-600/20 rounded-full blur-[120px]"></div>
     </div>
-  </section>
-
-
-  <!-- ===== FREE AUDIT CTA SECTION ===== -->
-  <section id="audit-cta" class="py-20">
-    <div class="container mx-auto px-6">
-      <div class="audit-split">
-
-        <!-- LEFT: Value Copy -->
-        <div class="fade-in">
-          <div class="audit-badge">🔍 Free Website Review</div>
-          <h3 class="text-2xl md:text-3xl font-bold primary-text mb-4">
-            See What I'd Improve on <span class="secondary-text">Your Website</span> — Free
-          </h3>
-          <p class="text-gray-600 mb-1" style="font-size:0.95rem;">
-            You'll receive <strong>3 specific, actionable improvements</strong> you can act on right away:
-          </p>
-          <ul class="audit-what-list">
-            <li>
-              <span class="audit-checkmark"><i class="fas fa-check"></i></span>
-              <span><strong>Speed & performance</strong> issues holding you back</span>
-            </li>
-            <li>
-              <span class="audit-checkmark"><i class="fas fa-check"></i></span>
-              <span><strong>Conversion gaps</strong> — what's stopping visitors from contacting you</span>
-            </li>
-            <li class="flex items-start">
-              <i class="fas fa-check-circle secondary-text mt-1 mr-3 flex-shrink-0"></i>
-              <span><strong>Quick design or SEO wins</strong> you can fix today</span>
-            </li>
-          </ul>
-
-          <!-- Sample Preview Card -->
-          <div class="audit-preview-box">
-            <div class="audit-preview-title"><i class="fas fa-file-alt mr-2"></i> SAMPLE AUDIT PREVIEW</div>
-            <ul class="audit-preview-list">
-              <li>Your homepage takes <strong style="color:#00F5FF;">4.2s</strong> to load on mobile. Compress images &
-                enable lazy loading to cut that in half.</li>
-              <li>Your main CTA button is <strong style="color:#00F5FF;">below the fold</strong> on iPhone screens — moving it up could lift clicks by ~30%.</li>
-              <li>You're missing a <strong style="color:#00F5FF;">meta description</strong> on 3 pages — quick SEO fix with big visibility impact.</li>
-            </ul>
-          </div>
-
-          <div class="audit-trust-note">
-            <i class="fab fa-whatsapp text-green-500 mr-2 text-lg"></i>
-            <span>Delivered via WhatsApp within 24 hours. Just actionable insights — no pressure, no sales pitch.</span>
-          </div>
+    
+    <div class="container mx-auto px-6 relative z-10">
+      <div class="text-center max-w-3xl mx-auto mb-12 fade-in">
+        <div class="inline-block px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-semibold mb-6">
+          <i class="fas fa-lightbulb mr-2"></i> Project Estimator
         </div>
+        <h2 class="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
+          Find Your Perfect <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Digital Solution</span>
+        </h2>
+        <p class="text-gray-400 text-lg">
+          Tell us what you're looking for, and we'll guide you to the right solution with an instant, no-obligation quote. What do you need help with?
+        </p>
+      </div>
 
-        <!-- RIGHT: Form -->
-        <div class="fade-in" style="animation-delay:0.15s;">
-          <div class="audit-form-card">
-            <h3 class="text-xl font-bold primary-text mb-1">Claim Your Free Website Review</h3>
-            <p style="font-size:0.83rem;color:#6b7280;margin-bottom:20px;">Takes 30 seconds. No credit card. 100% free.</p>
-            <form id="audit-form" onsubmit="submitAuditForm(event)" novalidate>
-  <!-- Spam Protection -->
-  <input type="text" name="website_url_hp" style="display:none" tabindex="-1">
-  <input type="hidden" name="form_start_time" class="form_start_time" value="">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto fade-in" style="animation-delay: 0.2s;">
+        <!-- Card 1 -->
+        <button onclick="startQuizFromPage('Website Design')" class="group relative bg-[#1E293B]/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 text-left hover:border-cyan-500/50 hover:bg-[#1E293B] hover:-translate-y-2 transition-all duration-300">
+          <div class="w-14 h-14 rounded-xl bg-cyan-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🌐</div>
+          <h3 class="text-xl font-bold text-white mb-2">Website Design</h3>
+          <p class="text-gray-400 text-sm">Professional, fast, and high-converting websites tailored to your brand.</p>
+          <div class="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-cyan-400"><i class="fas fa-arrow-right"></i></div>
+        </button>
 
-              <div class="audit-form-field">
-                <label for="audit-name">Your Name *</label>
-                <input id="audit-name" type="text" placeholder="e.g. Sarah Clarke" required autocomplete="name">
-              </div>
-              <div class="audit-form-field">
-                <label for="audit-email">Email Address *</label>
-                <input id="audit-email" type="email" placeholder="you@example.com" required autocomplete="email">
-              </div>
-              <div class="audit-form-field">
-                <label for="audit-url">Your Website URL *</label>
-                <input id="audit-url" type="url" placeholder="https://yoursite.com" required>
-              </div>
-              <div class="audit-form-field">
-                <label for="audit-business">Business Name <span style="color:#9ca3af;font-weight:400">(optional)</span></label>
-                <input id="audit-business" type="text" placeholder="e.g. Clarke's Bakery" autocomplete="organization">
-              </div>
-              <div class="audit-form-field">
-                <label for="audit-goal">Main Goal *</label>
-                <select id="audit-goal" required>
-                  <option value="" disabled selected>What's most important to you?</option>
-                  <option value="Get more leads">Get more leads &amp; inquiries</option>
-                  <option value="Look more professional">Look more professional online</option>
-                  <option value="Improve search rankings">Improve search rankings</option>
-                  <option value="Not sure">Not sure — help me figure it out</option>
-                </select>
-              </div>
+        <!-- Card 2 -->
+        <button onclick="startQuizFromPage('Mobile App')" class="group relative bg-[#1E293B]/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 text-left hover:border-blue-500/50 hover:bg-[#1E293B] hover:-translate-y-2 transition-all duration-300">
+          <div class="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📱</div>
+          <h3 class="text-xl font-bold text-white mb-2">Mobile App</h3>
+          <p class="text-gray-400 text-sm">Custom iOS and Android applications to engage your users on the go.</p>
+          <div class="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-400"><i class="fas fa-arrow-right"></i></div>
+        </button>
 
-              <div class="relative w-full z-10">
-                <button type="submit" id="audit-submit-btn"
-                  class="w-full secondary-bg primary-text px-6 py-4 rounded-xl font-bold text-lg hover:bg-cyan-400 transition glow-effect flex items-center justify-center relative overflow-hidden group">
-                  <span class="relative z-10 flex items-center">
-                    Get My Free Audit <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-                  </span>
-                </button>
-              </div>
-              <p class="audit-microcopy">🔒 Your info is safe. No spam, ever.</p>
-            </form>
-            <p class="audit-alt-link">
-              Want a price instead? <a onclick="openQuizModal('Audit Alt Link')">Get an instant quote →</a>
-            </p>
-          </div>
-        </div>
+        <!-- Card 3 -->
+        <button onclick="startQuizFromPage('Business Automation')" class="group relative bg-[#1E293B]/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 text-left hover:border-purple-500/50 hover:bg-[#1E293B] hover:-translate-y-2 transition-all duration-300">
+          <div class="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">⚙️</div>
+          <h3 class="text-xl font-bold text-white mb-2">Automation</h3>
+          <p class="text-gray-400 text-sm">Streamline your workflows and save hours with smart integrations.</p>
+          <div class="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-purple-400"><i class="fas fa-arrow-right"></i></div>
+        </button>
+
+        <!-- Card 4 -->
+        <button onclick="startQuizFromPage('Not sure yet')" class="group relative bg-[#1E293B]/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 text-left hover:border-emerald-500/50 hover:bg-[#1E293B] hover:-translate-y-2 transition-all duration-300">
+          <div class="w-14 h-14 rounded-xl bg-emerald-500/10 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">🤷</div>
+          <h3 class="text-xl font-bold text-white mb-2">Not Sure Yet</h3>
+          <p class="text-gray-400 text-sm">Need guidance? Let's discuss your goals and figure out the best approach.</p>
+          <div class="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-emerald-400"><i class="fas fa-arrow-right"></i></div>
+        </button>
+      </div>
+      
+      <div class="text-center mt-12 fade-in" style="animation-delay: 0.4s;">
+        <p class="text-gray-500 text-sm flex items-center justify-center">
+          <i class="fas fa-bolt text-yellow-500 mr-2"></i> Takes less than 60 seconds
+        </p>
+      </div>
+    </div>
+  </section>  </div>
 
       </div>
     </div>
@@ -4401,6 +4361,18 @@
     // ---- QUIZ MODAL ----
     var quizSelectedService = '';
     var quizOpenedFrom = '';
+
+    function startQuizFromPage(serviceValue) {
+      openQuizModal('In-Page Solution Finder');
+      var cards = document.querySelectorAll('#quiz-step-1 .quiz-service-card');
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i].getAttribute('data-value') === serviceValue) {
+          selectService(cards[i]);
+          break;
+        }
+      }
+      quizNext(1);
+    }
 
     function openQuizModal(source) {
       quizOpenedFrom = source || 'unknown';

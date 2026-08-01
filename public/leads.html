@@ -157,6 +157,7 @@
                     <p><strong>Service/Package:</strong> <span id="modalLeadService"></span></p>
                     <p><strong>Budget:</strong> <span id="modalLeadBudget"></span></p>
                     <p><strong>Timeline:</strong> <span id="modalLeadTimeline"></span></p>
+                    <p><strong>Features:</strong> <span id="modalLeadFeatures"></span></p>
                     <p><strong>Message:</strong><br><span id="modalLeadMessage" style="white-space: pre-wrap;"></span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -363,6 +364,7 @@
             document.getElementById('modalLeadService').textContent = lead.service_needed || lead.package_name || 'N/A';
             document.getElementById('modalLeadBudget').textContent = lead.budget || 'N/A';
             document.getElementById('modalLeadTimeline').textContent = lead.timeline || 'N/A';
+            document.getElementById('modalLeadFeatures').textContent = (lead.selected_features && lead.selected_features.length > 0) ? lead.selected_features.join(', ') : 'None';
             document.getElementById('modalLeadMessage').textContent = lead.message || lead.description || lead.goal || 'No message provided.';
             document.getElementById('modalStatusSelect').value = lead.status || 'New';
             document.getElementById('modalPrioritySelect').value = lead.priority || 'Warm';

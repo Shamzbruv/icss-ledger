@@ -109,22 +109,64 @@ router.post('/', async (req, res) => {
         try {
             const adminEmail = process.env.ADMIN_EMAIL || 'Shamzbiz1@gmail.com';
             if (adminEmail) {
-                const subject = `New Lead: ${payload.lead_type} - ${payload.name}`;
-                const textBody = `
-New lead received from ${payload.source}:
-Name: ${payload.name}
-Email: ${payload.email}
-Phone: ${payload.phone}
-Business: ${payload.business_name}
-Service: ${payload.service_needed || payload.package_name}
-Budget: ${payload.budget}
-Timeline: ${payload.timeline}
-Message: ${msg}
+                const subject = `🚨 URGENT: New Lead - ${payload.lead_type} (${priority})`;
+                const featuresStr = payload.selected_features && payload.selected_features.length > 0 
+                    ? payload.selected_features.join(', ') 
+                    : 'None selected';
+                    
+                const htmlBody = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #ff4757; border-radius: 10px; overflow: hidden; background-color: #fff;">
+                    <div style="background-color: #ff4757; color: #ffffff; padding: 20px; text-align: center;">
+                        <h2 style="margin: 0; font-size: 24px;">🚨 URGENT: NEW LEAD</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 16px; opacity: 0.9;">Action Required Immediately</p>
+                    </div>
+                    <div style="padding: 25px; background-color: #f8f9fa;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Priority:</strong> <span style="background: #ff4757; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold;">${priority}</span></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Source:</strong> ${payload.source || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Name:</strong> ${payload.name}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Email:</strong> <a href="mailto:${payload.email}">${payload.email || 'N/A'}</a></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Phone:</strong> ${payload.phone || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Business:</strong> ${payload.business_name || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Service Needed:</strong> ${payload.service_needed || payload.package_name || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Budget:</strong> ${payload.budget || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Timeline:</strong> ${payload.timeline || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Features Requested:</strong> ${featuresStr}</td>
+                            </tr>
+                        </table>
+                        <div style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-left: 4px solid #ff4757; border-radius: 4px;">
+                            <h3 style="margin-top: 0; color: #333;">Message:</h3>
+                            <p style="margin: 0; color: #555; white-space: pre-wrap;">${msg || 'No additional message provided.'}</p>
+                        </div>
+                        <div style="text-align: center; margin-top: 30px;">
+                            <a href="https://icreatesolutionsandservices.com/leads.html" style="background-color: #2ed573; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block;">View in Admin Dashboard</a>
+                        </div>
+                    </div>
+                </div>
                 `;
                 // Using existing email service - assuming it handles standard emails or we can mock standard params
                 // Call the generic sendEmail helper
                 // We'll pass null for attachment
-                const emailSent = await sendEmail(adminEmail, subject, `<pre>${textBody}</pre>`);
+                const emailSent = await sendEmail(adminEmail, subject, htmlBody);
                 if (!emailSent) {
                     console.error('Lead notification email returned false');
                 } else {
