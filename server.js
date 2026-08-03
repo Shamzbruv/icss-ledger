@@ -964,7 +964,7 @@ app.get('/api/admin/recover-onboarding', async (req, res) => {
         const targetEmail = req.query.email?.toLowerCase();
         if (!targetEmail) return res.status(400).send('Missing email');
         
-        const { data: events, error } = await supabase.from('paypal_webhook_events').select('*').order('created_at', { ascending: false }).limit(100);
+        const { data: events, error } = await supabase.from('paypal_webhook_events').select('*').limit(500);
         if (error) throw error;
         
         let foundSub = null;
