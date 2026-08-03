@@ -969,7 +969,7 @@ app.get('/api/admin/recover-onboarding', async (req, res) => {
         
         let foundSub = null;
         let foundPlan = null;
-        for (const e of events) {
+        for (const e of events || []) {
             const sub = e.payload_jsonb?.resource;
             if (sub?.subscriber?.email_address?.toLowerCase() === targetEmail) {
                 foundSub = sub.id;
@@ -1000,7 +1000,7 @@ app.get('/api/admin/recover-onboarding', async (req, res) => {
         
         res.send(`Recovery email ${sent ? 'sent successfully' : 'failed to send'} to ${targetEmail}.<br><br>The recovery link was: <a href="${recoveryLink}">${recoveryLink}</a>`);
     } catch (err) {
-        res.status(500).send(err.stack);
+        res.status(500).send(err.stack || err.message || JSON.stringify(err));
     }
 });
 
