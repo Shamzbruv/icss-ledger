@@ -1000,7 +1000,13 @@ app.get('/api/admin/recover-onboarding', async (req, res) => {
         
         res.send(`Recovery email ${sent ? 'sent successfully' : 'failed to send'} to ${targetEmail}.<br><br>The recovery link was: <a href="${recoveryLink}">${recoveryLink}</a>`);
     } catch (err) {
-        res.status(500).send(err.stack || err.message || JSON.stringify(err));
+        res.status(500).json({
+            name: err.name,
+            message: err.message,
+            stack: err.stack,
+            stringified: JSON.stringify(err),
+            toString: String(err)
+        });
     }
 });
 
