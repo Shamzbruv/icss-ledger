@@ -958,6 +958,52 @@ router.post('/api/subscription-onboarding', async (req, res) => {
     }
 });
 
+// Temporary endpoint to send onboarding recovery email
+app.get('/api/admin/recover-onboarding', async (req, res) => {
+    try {
+        const targetEmail = req.query.email?.toLowerCase();
+        if (!targetEmail) return res.status(400).send('Missing email');
+        
+        const { data: events, error } = await supabase.from('paypal_webhook_events').select('*').order('created_at', { ascending: false }).limit(100);
+        if (error) throw error;
+        
+        let foundSub = null;
+        let foundPlan = null;
+        for (const e of events) {
+            const sub = e.payload_jsonb?.resource;
+            if (sub?.subscriber?.email_address?.toLowerCase() === targetEmail) {
+                foundSub = sub.id;
+                foundPlan = sub.plan_id;
+                break;
+            }
+        }
+        if (!foundSub) return res.send('Could not find subscription for this email in recent webhooks.');
+        
+        const { getPlanByPayPalId } = require('./src/services/subscriptionCatalog');
+        const catalogPlan = getPlanByPayPalId(foundPlan);
+        const planParam = catalogPlan ? encodeURIComponent(catalogPlan.name) : 'Client_Care';
+        
+        const recoveryLink = `https://icreatesolutionsandservices.com/thank-you.html?subscription_id=${encodeURIComponent(foundSub)}&plan=${planParam}`;
+        
+        const { sendEmail } = require('./src/services/emailService');
+        const html = `<div style="font-family:sans-serif; max-width:600px; margin:0 auto; padding: 20px; color: #333;">
+            <h2 style="color: #10b981;">Finish Setting Up Your Client Care</h2>
+            <p>Hi there,</p>
+            <p>It looks like you encountered an error while setting up your Client Care subscription preferences. We've resolved the issue on our end, and you can now seamlessly continue where you left off.</p>
+            <p>Please click the button below to finish setting up your account (your payment was already successful, this is just to save your delivery preferences):</p>
+            <p style="margin: 30px 0;"><a href="${recoveryLink}" style="display:inline-block; padding:12px 24px; background:#10b981; color:#fff; text-decoration:none; border-radius:4px; font-weight:bold;">Continue Setup</a></p>
+            <p>If you have any questions or need assistance, simply reply to this email.</p>
+            <p>Best regards,<br>The iCreate Solutions Team</p>
+        </div>`;
+        
+        const sent = await sendEmail(targetEmail, 'Finish Setting Up Your iCreate Client Care', html);
+        
+        res.send(`Recovery email ${sent ? 'sent successfully' : 'failed to send'} to ${targetEmail}.<br><br>The recovery link was: <a href="${recoveryLink}">${recoveryLink}</a>`);
+    } catch (err) {
+        res.status(500).send(err.stack);
+    }
+});
+
 router.post('/api/paypal/webhook', async (req, res) => {
     let webhookRow = null;
     try {
