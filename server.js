@@ -953,7 +953,7 @@ router.post('/api/subscription-onboarding', async (req, res) => {
             nextReportAt: context.service.next_run_at
         });
     } catch (err) {
-        console.error('[ONBOARDING] Failed:', err.message);
+        console.error('[ONBOARDING] Failed:', err.stack);
         res.status(500).json({ error: 'We could not save your details right now. Please try again or contact support.' });
     }
 });

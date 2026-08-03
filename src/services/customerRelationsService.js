@@ -76,7 +76,7 @@ async function ensureSubscriptionContext(subscription, onboarding = {}) {
     });
     if (!catalogPlan) throw new Error(`The PayPal plan ${subscription.plan_id || ''} is not mapped to a service plan`);
 
-    let { data: client, error: clientLookupError } = await supabase.from('clients').select('*').ilike('email', subscriber.email).maybeSingle();
+    let { data: client, error: clientLookupError } = await supabase.from('clients').select('*').ilike('email', subscriber.email).limit(1).maybeSingle();
     if (clientLookupError) throw clientLookupError;
     const { data: defaultCompany } = await supabase.from('companies').select('id').limit(1).maybeSingle();
     const clientValues = {
