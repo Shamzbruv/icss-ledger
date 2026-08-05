@@ -18,12 +18,13 @@ A free, full-stack billing system integrated with Supabase, PDF generation, Emai
 
 2. **Database Setup**
    - Log in to Supabase and open the SQL Editor.
-   - Run `SUPABASE_FINAL_MIGRATION.sql`. It is idempotent and includes the invoice, PayPal webhook, Client Care, relationship-email, plan, and checklist schema used by the current server.
+   - Run `SUPABASE_FINAL_MIGRATION.sql`. It is idempotent and includes the invoice, PayPal webhook, Client Care, relationship-email, Link Hub, plan, and checklist schema used by the current server.
    - Railway deploys application code only; it does not execute Supabase SQL automatically.
+   - Historical PayPal-event recovery stays safely paused until the migration's unique payment-reference check is installed; Railway rechecks it automatically every hour.
 
 3. **Environment Configuration**
    - Rename `.env.example` to `.env`.
-   - Configure `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `RESEND_API_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, and `PAYPAL_MODE`.
+   - Configure `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `RESEND_API_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, and `PAYPAL_MODE`. Railway must have the service-role key in `SUPABASE_SERVICE_KEY`; the backend intentionally refuses to use the public anon key in production.
    - For automated GA4 traffic analysis, set `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_JSON` (or its base64 form in `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_BASE64`). In Client Care, save each site's numeric GA4 Property ID and grant the service-account email Viewer access to that property.
    - Set `CRON_SECRET` for protected scheduled-job requests in production.
 

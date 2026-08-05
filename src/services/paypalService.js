@@ -1,4 +1,11 @@
 const https = require('https');
+const PAYPAL_REQUEST_TIMEOUT_MS = 15000;
+
+function applyRequestTimeout(req, operation) {
+    req.setTimeout(PAYPAL_REQUEST_TIMEOUT_MS, () => {
+        req.destroy(new Error(`PayPal ${operation} timed out after ${PAYPAL_REQUEST_TIMEOUT_MS}ms`));
+    });
+}
 
 function getPayPalApiBase() {
     const mode = process.env.PAYPAL_MODE || 'live';
@@ -53,6 +60,7 @@ async function getPayPalAccessToken() {
         });
 
         req.on('error', (e) => reject(e));
+        applyRequestTimeout(req, 'access token request');
         req.write(data);
         req.end();
     });
@@ -109,6 +117,7 @@ async function verifySingleWebhookId(headers, body, webhookId, token) {
         });
 
         req.on('error', (e) => reject(e));
+        applyRequestTimeout(req, 'webhook verification request');
         req.write(requestBody);
         req.end();
     });
@@ -144,14 +153,22 @@ async function verifyPayPalWebhookSignature(headers, body) {
     return verifySingleWebhookId(headers, body, webhookId, token);
 }
 
-async function paypalApiRequest(path) {
+async function paypalApiRequest(path, { method = 'GET', body = null } = {}) {
     const token = await getPayPalAccessToken();
+    const requestBody = body === null ? null : JSON.stringify(body);
     return new Promise((resolve, reject) => {
         const req = https.request({
             hostname: getPayPalApiBase(),
             path,
-            method: 'GET',
-            headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
+            method,
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...(requestBody ? {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(requestBody)
+                } : {})
+            }
         }, res => {
             let responseBody = '';
             res.on('data', chunk => responseBody += chunk);
@@ -164,6 +181,8 @@ async function paypalApiRequest(path) {
             });
         });
         req.on('error', reject);
+        applyRequestTimeout(req, 'API request');
+        if (requestBody) req.write(requestBody);
         req.end();
     });
 }
@@ -173,7 +192,19 @@ async function getPayPalSubscription(subscriptionId) {
     return paypalApiRequest(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
 }
 
+async function resendPayPalWebhookEvent(eventId) {
+    const normalizedEventId = String(eventId || '').trim();
+    const webhookId = String(process.env.PAYPAL_WEBHOOK_ID || '').trim();
+    if (!/^[A-Z0-9-]{1,80}$/i.test(normalizedEventId)) throw new Error('Invalid PayPal webhook event ID');
+    if (!webhookId) throw new Error('PAYPAL_WEBHOOK_ID is missing from environment variables');
+    return paypalApiRequest(
+        `/v1/notifications/webhooks-events/${encodeURIComponent(normalizedEventId)}/resend`,
+        { method: 'POST', body: { webhook_ids: [webhookId] } }
+    );
+}
+
 module.exports = {
     verifyPayPalWebhookSignature,
-    getPayPalSubscription
+    getPayPalSubscription,
+    resendPayPalWebhookEvent
 };

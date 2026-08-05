@@ -1,17 +1,32 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Auto-set dates
+function formatDateInputValue(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function addMonthsClamped(date, months) {
+    const target = new Date(date.getFullYear(), date.getMonth() + months, 1);
+    const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    target.setDate(Math.min(date.getDate(), lastDay));
+    return target;
+}
+
+function setDefaultInvoiceDates() {
     const today = new Date();
-    const nextMonth = new Date();
-    nextMonth.setDate(today.getDate() + 30);
+    const dueDate = new Date(today);
+    dueDate.setDate(today.getDate() + 30);
 
     const dueDateInput = document.getElementById('dueDate');
-    if (dueDateInput) {
-        dueDateInput.value = nextMonth.toISOString().split('T')[0];
-    }
+    if (dueDateInput) dueDateInput.value = formatDateInputValue(dueDate);
+
     const renewalDateInput = document.getElementById('renewalDate');
-    if (renewalDateInput) {
-        renewalDateInput.value = nextMonth.toISOString().split('T')[0];
-    }
+    if (renewalDateInput) renewalDateInput.value = formatDateInputValue(addMonthsClamped(today, 1));
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Auto-set dates
+    setDefaultInvoiceDates();
 
     // 2. Fetch Clients
     await loadClients();
@@ -54,9 +69,7 @@ window.toggleSubscription = function () {
         // Auto-set renewal date to Today + 1 Month (matching backend logic)
         if (renewalDateInput) {
             const now = new Date();
-            const nextMonth = new Date(now);
-            nextMonth.setMonth(now.getMonth() + 1);
-            renewalDateInput.value = nextMonth.toISOString().split('T')[0];
+            renewalDateInput.value = formatDateInputValue(addMonthsClamped(now, 1));
         }
 
     } else {
@@ -107,7 +120,7 @@ window.togglePaymentStatus = function () {
     } else if (status === 'PAID') {
         paidFields.classList.remove('d-none');
         // Auto-set Date Paid to today
-        document.getElementById('paidAt').value = new Date().toISOString().split('T')[0];
+        document.getElementById('paidAt').value = formatDateInputValue(new Date());
         // Hide Due Date if Paid
         if (dueDateContainer) dueDateContainer.classList.add('d-none');
     }
@@ -129,6 +142,7 @@ window.addItem = function () {
         <button type="button" class="remove-btn" onclick="removeItem(this)">✕</button>
     `;
     document.getElementById('itemsContainer').appendChild(div);
+    schedulePreviewRefresh();
 };
 
 window.removeItem = function (btn) {
@@ -136,6 +150,7 @@ window.removeItem = function (btn) {
     // Check if it's the only one
     if (document.querySelectorAll('.item-row').length > 1) {
         row.remove();
+        schedulePreviewRefresh();
     } else {
         if (typeof showAlert === 'function') showAlert("You need at least one item.", 'info');
         else alert("You need at least one item.");
@@ -414,11 +429,14 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
             messageDiv.innerText = 'Success! Invoice created and email sent.';
             messageDiv.style.color = 'var(--success-color)';
             document.getElementById('invoiceForm').reset();
+            setDefaultInvoiceDates();
 
             // Reset UI state
             toggleClientMode();
             toggleSubscription();
             togglePercentage();
+            togglePaymentStatus();
+            schedulePreviewRefresh();
 
             // Refresh
             await loadInvoices();
@@ -554,6 +572,11 @@ window.viewPDF = async function (id) {
 let previewDebounceTimer;
 let previewAbortController;
 
+function schedulePreviewRefresh() {
+    clearTimeout(previewDebounceTimer);
+    previewDebounceTimer = setTimeout(fetchPreviewState, 250);
+}
+
 window.switchPreview = function (type) {
     const showEmail = type === 'email';
     document.getElementById('emailPreviewContainer')?.classList.toggle('d-none', !showEmail);
@@ -574,8 +597,7 @@ if (invoiceForm) {
 function handlePreviewTrigger(e) {
     // triggers on any input/select/textarea change
     if (e.target.matches('input, select, textarea')) {
-        clearTimeout(previewDebounceTimer);
-        previewDebounceTimer = setTimeout(fetchPreviewState, 500);
+        schedulePreviewRefresh();
     }
 }
 

@@ -201,10 +201,10 @@
             <div class="card mt-4">
                 <h2 class="card-title">Preview</h2>
                 <div class="preview-tabs" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <button type="button" class="tab-btn active" onclick="switchPreview('email')">Email
+                    <div role="tablist" aria-label="Invoice preview type">
+                        <button type="button" class="tab-btn active" role="tab" aria-selected="true" aria-controls="emailPreviewContainer" onclick="switchPreview('email')">Email
                             Preview</button>
-                        <button type="button" class="tab-btn" onclick="switchPreview('pdf')">PDF Watermark
+                        <button type="button" class="tab-btn" role="tab" aria-selected="false" aria-controls="pdfPreviewContainer" onclick="switchPreview('pdf')">PDF Watermark
                             Check</button>
                     </div>
                     <div style="font-size: 0.8rem; color: #666; display: flex; align-items: center; gap: 10px;">
@@ -212,9 +212,10 @@
                         <small id="emailPreviewTimestamp" style="opacity: 0.5; transition: opacity 0.5s;"></small>
                     </div>
                 </div>
+                <div id="previewErrorBox" class="alert alert-danger mt-2 d-none" role="alert"></div>
 
                 <!-- Email Preview -->
-                <div id="emailPreviewContainer" class="preview-content">
+                <div id="emailPreviewContainer" class="preview-content" role="tabpanel">
                     <div class="email-mockup">
                         <div class="email-header">
                             <strong>Subject:</strong> <span id="previewSubject">...</span>
@@ -236,7 +237,7 @@
                 </div>
 
                 <!-- PDF Layout Preview (Conceptual) -->
-                <div id="pdfPreviewContainer" class="preview-content d-none">
+                <div id="pdfPreviewContainer" class="preview-content d-none" role="tabpanel">
                     <div class="pdf-mockup">
                         <div id="pdfWatermarkPreview" class="watermark-overlay">UNPAID</div>
                         <div class="pdf-content">

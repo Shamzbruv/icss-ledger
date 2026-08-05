@@ -278,10 +278,11 @@
     .field input:focus,.field select:focus { border-color:var(--secondary); box-shadow:0 0 0 3px rgba(0,245,255,.1); }
     .field small { color:#64748b; line-height:1.45; }
     .birthday-fields,.schedule-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    #onboarding-status { display:none; margin:15px 0; padding:12px; border-radius:10px; color:#bdeff0; background:rgba(0,245,255,.08); border:1px solid rgba(0,245,255,.2); font-size:.86rem; }
+    #onboarding-status { display:none; margin:15px 0; padding:12px; border-radius:10px; color:#bdeff0; background:rgba(0,245,255,.08); border:1px solid rgba(0,245,255,.2); font-size:.86rem; line-height:1.5; }
     #onboarding-status.error { color:#fecaca; background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); }
+    #onboarding-status.warning { color:#fde68a; background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.3); }
     .privacy-note { color:#64748b; font-size:.72rem; line-height:1.5; margin:14px 0; }
-    @media(max-width:640px){.card{padding:42px 22px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.birthday-fields,.schedule-fields{grid-template-columns:1fr}.logo{position:absolute}}
+    @media(max-width:640px){.card{padding:42px 22px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.birthday-fields{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}.schedule-fields{grid-template-columns:1fr}.logo{position:absolute}}
 
     /* Logo */
     .logo {
@@ -378,21 +379,21 @@
       <p class="onboarding-copy">Tell us who should receive your website health reports and when. This automatically creates your Client Care schedule. Your birthday year is not requested or stored.</p>
       <form id="onboarding-form">
         <div class="form-grid">
-          <div class="field"><label for="full-name">Your name *</label><input id="full-name" autocomplete="name" required></div>
-          <div class="field"><label for="business-name">Business name</label><input id="business-name" autocomplete="organization"></div>
-          <div class="field"><label for="paypal-email">PayPal email *</label><input id="paypal-email" type="email" autocomplete="email" required><small>Used only to verify this subscription securely with PayPal.</small></div>
-          <div class="field"><label for="phone">Phone / WhatsApp</label><input id="phone" type="tel" autocomplete="tel"></div>
-          <div class="field"><label for="website-url">Website URL <span class="website-required">*</span></label><input id="website-url" type="url" placeholder="https://example.com"><small>Required for website plans so automated health checks have a public target.</small></div>
-          <div class="field"><label for="domain-name">Domain name <span class="website-required">*</span></label><input id="domain-name" placeholder="example.com"><small>Use the public domain only; local or private network addresses are not accepted.</small></div>
+          <div class="field"><label for="full-name">Your name *</label><input id="full-name" autocomplete="name" maxlength="120" required></div>
+          <div class="field"><label for="business-name">Business name</label><input id="business-name" autocomplete="organization" maxlength="160"></div>
+          <div class="field"><label for="paypal-email">PayPal email *</label><input id="paypal-email" type="email" autocomplete="email" maxlength="254" inputmode="email" required><small>Enter the email used for this exact PayPal subscription.</small></div>
+          <div class="field"><label for="phone">Phone / WhatsApp</label><input id="phone" type="tel" autocomplete="tel" maxlength="50"></div>
+          <div class="field"><label for="website-url">Website URL <span class="website-required">*</span></label><input id="website-url" type="url" autocomplete="url" maxlength="500" placeholder="https://example.com"><small>Required for website plans so automated health checks have a public target.</small></div>
+          <div class="field"><label for="domain-name">Domain name <span class="website-required">*</span></label><input id="domain-name" maxlength="253" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="example.com"><small>Use the public domain only; local or private network addresses are not accepted.</small></div>
           <div class="field full"><label>Birthday (month and day only)</label><div class="birthday-fields"><select id="birthday-month" required aria-label="Birthday month"><option value="">Month</option></select><select id="birthday-day" required aria-label="Birthday day"><option value="">Day</option></select></div></div>
-          <div class="field"><label for="report-email">Primary health-report email *</label><input id="report-email" type="email" required></div>
-          <div class="field"><label for="cc-emails">Additional recipients</label><input id="cc-emails" placeholder="owner@example.com, manager@example.com"><small>Up to five addresses, separated by commas.</small></div>
-          <div class="field"><label for="report-frequency">Included report frequency</label><select id="report-frequency"><option value="weekly">Weekly</option></select><small>Every website plan includes a weekly health and Google Analytics traffic report.</small></div>
+          <div class="field"><label for="report-email">Primary health-report email *</label><input id="report-email" type="email" maxlength="254" inputmode="email" required></div>
+          <div class="field"><label for="cc-emails">Additional recipients</label><input id="cc-emails" maxlength="1274" inputmode="email" placeholder="owner@example.com, manager@example.com"><small>Up to five addresses, separated by commas.</small></div>
+          <div class="field"><label for="report-frequency">Included report frequency</label><select id="report-frequency" aria-readonly="true"><option value="weekly">Weekly</option></select><small>Every website plan includes a weekly health and Google Analytics traffic report.</small></div>
           <div class="field"><label>Delivery day</label><div class="schedule-fields"><select id="report-weekday" aria-label="Weekly delivery day"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><select id="report-monthday" aria-label="Monthly delivery day" style="display:none"></select></div></div>
           <div class="field"><label for="report-time">Delivery time</label><input id="report-time" type="time" value="09:00"></div>
           <div class="field"><label for="timezone">Timezone</label><select id="timezone"><option value="America/Jamaica">Jamaica</option><option value="America/New_York">New York</option><option value="Europe/London">London</option><option value="UTC">UTC</option></select></div>
         </div>
-        <div id="onboarding-status" role="status"></div>
+        <div id="onboarding-status" role="status" aria-live="polite" tabindex="-1"></div>
         <p class="privacy-note">By submitting, you authorize iCreate Solutions &amp; Services to use these details for subscription support, scheduled service reports, invoices, and your annual birthday greeting.</p>
         <button id="onboarding-submit" class="btn-primary" type="submit"><i class="fas fa-wand-magic-sparkles"></i> Save &amp; Activate Client Care</button>
       </form>
@@ -458,36 +459,68 @@
       submit.disabled = true;
       submit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving your setup…';
       status.style.display = 'none';
-      status.classList.remove('error');
+      status.classList.remove('error', 'warning');
       try {
-        const response = await fetch('/api/subscription-onboarding', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subscriptionId: subId, planName: plan,
-            fullName: document.getElementById('full-name').value,
-            businessName: document.getElementById('business-name').value,
-            email: document.getElementById('paypal-email').value,
-            phone: document.getElementById('phone').value,
-            websiteUrl: document.getElementById('website-url').value,
-            domainName: document.getElementById('domain-name').value,
-            birthdayMonth: monthSelect.value, birthdayDay: daySelect.value,
-            reportEmail: document.getElementById('report-email').value,
-            ccEmails: document.getElementById('cc-emails').value,
-            reportFrequency: document.getElementById('report-frequency').value,
-            sendDayOfWeek: document.getElementById('report-weekday').value,
-            sendDayOfMonth: monthDay.value || 1,
-            sendTime: document.getElementById('report-time').value,
-            timezone: document.getElementById('timezone').value
-          })
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Unable to save your setup.');
-        event.target.innerHTML = '<div style="text-align:center;padding:24px 0"><i class="fas fa-circle-check" style="font-size:2rem;color:var(--secondary);margin-bottom:12px"></i><h3>Client Care is ready</h3><p style="color:#94a3b8;margin-top:8px;line-height:1.6">Your details and report schedule have been saved. Your welcome email and paid invoice will arrive by email.</p></div>';
+        const abortController = new AbortController();
+        // PayPal verification obtains an access token and then fetches the
+        // subscription, so allow both bounded server-side requests to finish.
+        const timeout = setTimeout(() => abortController.abort(), 40000);
+        let response;
+        try {
+          response = await fetch('/api/subscription-onboarding', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: abortController.signal,
+            body: JSON.stringify({
+              subscriptionId: subId, planName: plan,
+              fullName: document.getElementById('full-name').value,
+              businessName: document.getElementById('business-name').value,
+              email: document.getElementById('paypal-email').value,
+              phone: document.getElementById('phone').value,
+              websiteUrl: document.getElementById('website-url').value,
+              domainName: document.getElementById('domain-name').value,
+              birthdayMonth: monthSelect.value, birthdayDay: daySelect.value,
+              reportEmail: document.getElementById('report-email').value,
+              ccEmails: document.getElementById('cc-emails').value,
+              reportFrequency: document.getElementById('report-frequency').value,
+              sendDayOfWeek: document.getElementById('report-weekday').value,
+              sendDayOfMonth: monthDay.value || 1,
+              sendTime: document.getElementById('report-time').value,
+              timezone: document.getElementById('timezone').value
+            })
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+        const responseText = await response.text();
+        let result = {};
+        try { result = responseText ? JSON.parse(responseText) : {}; } catch (_) { result = {}; }
+        if (!response.ok) {
+          const requestId = result.requestId || response.headers.get('x-request-id');
+          const reference = requestId ? ` Reference: ${requestId}.` : '';
+          const defaultMessages = {
+            429: 'There have been several attempts. Please wait 15 minutes, then try again.',
+            503: 'Client Care is temporarily unavailable. Your PayPal subscription is safe; please try again shortly.',
+            504: 'PayPal verification took too long. Please try again.'
+          };
+          throw new Error((result.error || defaultMessages[response.status] || 'Unable to save your setup right now.') + reference);
+        }
+        const emailPending = Boolean(result.welcomeEmailPending);
+        const deliveryNote = emailPending
+          ? 'Your report schedule is active. Email delivery is temporarily delayed, so the system will try your welcome email again automatically.'
+          : 'Your details and report schedule are saved. Your welcome email and paid invoice will arrive by email.';
+        const resultTitle = emailPending ? 'Client Care is saved' : 'Client Care is ready';
+        const resultIcon = emailPending ? 'fa-clock' : 'fa-circle-check';
+        const resultColor = emailPending ? '#fbbf24' : 'var(--secondary)';
+        event.target.innerHTML = `<div style="text-align:center;padding:24px 0"><i class="fas ${resultIcon}" style="font-size:2rem;color:${resultColor};margin-bottom:12px"></i><h3>${resultTitle}</h3><p style="color:#94a3b8;margin-top:8px;line-height:1.6">${deliveryNote}</p></div>`;
       } catch (error) {
-        status.textContent = error.message;
+        status.textContent = error.name === 'AbortError'
+          ? 'The request took too long. Your PayPal subscription is safe. It is safe to submit this form again; it will update the same Client Care record.'
+          : `${error.message} It is safe to submit again; a retry will update the same Client Care record.`;
         status.classList.add('error');
         status.style.display = 'block';
+        status.focus({ preventScroll: true });
+        status.scrollIntoView({ behavior: 'smooth', block: 'center' });
         submit.disabled = false;
         submit.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Save & Activate Client Care';
       }

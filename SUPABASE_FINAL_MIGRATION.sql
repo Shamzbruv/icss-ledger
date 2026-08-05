@@ -288,6 +288,18 @@ ALTER TABLE client_services ADD COLUMN IF NOT EXISTS last_emailed_at TIMESTAMP W
 ALTER TABLE client_services ADD COLUMN IF NOT EXISTS last_renewal_reminder_sent_date DATE;
 ALTER TABLE client_services ADD COLUMN IF NOT EXISTS service_meta_json JSONB DEFAULT '{}'::JSONB;
 
+-- Bring legacy active subscriptions into renewal tracking. `frequency` is the
+-- report cadence for website plans, so only an explicit yearly value changes
+-- the default monthly billing assumption.
+UPDATE client_services
+SET next_renewal_date = CASE
+    WHEN LOWER(COALESCE(frequency, 'monthly')) = 'yearly'
+        THEN COALESCE(start_date, CURRENT_DATE) + INTERVAL '1 year'
+    ELSE COALESCE(start_date, CURRENT_DATE) + INTERVAL '1 month'
+END
+WHERE status = 'active'
+  AND next_renewal_date IS NULL;
+
 DO $$
 DECLARE
     metadata_type TEXT;
@@ -367,7 +379,11 @@ CREATE TABLE IF NOT EXISTS payments (
     amount NUMERIC(10, 2) NOT NULL,
     method TEXT,
     reference_id TEXT,
-    payment_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    payment_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    receipt_email_status TEXT,
+    receipt_email_claimed_at TIMESTAMP WITH TIME ZONE,
+    receipt_email_sent_at TIMESTAMP WITH TIME ZONE,
+    receipt_email_last_error TEXT
 );
 
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
@@ -377,6 +393,10 @@ ALTER TABLE payments ADD COLUMN IF NOT EXISTS amount NUMERIC(10, 2);
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS method TEXT;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS reference_id TEXT;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_date TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS receipt_email_status TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS receipt_email_claimed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS receipt_email_sent_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS receipt_email_last_error TEXT;
 
 CREATE TABLE IF NOT EXISTS paypal_webhook_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -388,6 +408,8 @@ CREATE TABLE IF NOT EXISTS paypal_webhook_events (
     status TEXT NOT NULL DEFAULT 'received',
     processed_at TIMESTAMP WITH TIME ZONE,
     last_error TEXT,
+    recovery_attempt_count INTEGER NOT NULL DEFAULT 0,
+    recovery_last_requested_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -399,6 +421,11 @@ ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS payload_jsonb JSONB;
 ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'received';
 ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS last_error TEXT;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS recovery_attempt_count INTEGER DEFAULT 0;
+ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS recovery_last_requested_at TIMESTAMP WITH TIME ZONE;
+UPDATE paypal_webhook_events SET recovery_attempt_count = 0 WHERE recovery_attempt_count IS NULL;
+ALTER TABLE paypal_webhook_events ALTER COLUMN recovery_attempt_count SET DEFAULT 0;
+ALTER TABLE paypal_webhook_events ALTER COLUMN recovery_attempt_count SET NOT NULL;
 ALTER TABLE paypal_webhook_events ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
 CREATE TABLE IF NOT EXISTS outbox_events (
@@ -427,6 +454,56 @@ ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS payload_jsonb JSONB;
 ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS publish_status TEXT DEFAULT 'pending';
 ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS attempt_count INTEGER DEFAULT 0;
 ALTER TABLE outbox_events ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP WITH TIME ZONE;
+
+-- Accounting projector idempotency gate. Without this table, every queued
+-- invoice/payment event fails before journal projection.
+CREATE TABLE IF NOT EXISTS consumed_events (
+    company_id UUID NOT NULL,
+    idempotency_key TEXT NOT NULL,
+    event_id UUID NOT NULL,
+    processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (company_id, idempotency_key)
+);
+ALTER TABLE consumed_events ADD COLUMN IF NOT EXISTS company_id UUID;
+ALTER TABLE consumed_events ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
+ALTER TABLE consumed_events ADD COLUMN IF NOT EXISTS event_id UUID;
+ALTER TABLE consumed_events ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+DROP INDEX IF EXISTS idx_consumed_events_company_idempotency;
+CREATE UNIQUE INDEX idx_consumed_events_company_idempotency
+    ON consumed_events(company_id, idempotency_key);
+
+-- Public Link Hub content is read through GET /api/link-hub and edited only
+-- through the authenticated admin endpoint. Keeping the source row private
+-- prevents visitors from bypassing the server-side content contract.
+CREATE TABLE IF NOT EXISTS link_hub_settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    content JSONB NOT NULL DEFAULT '{}'::JSONB,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE link_hub_settings ADD COLUMN IF NOT EXISTS id INTEGER;
+ALTER TABLE link_hub_settings ADD COLUMN IF NOT EXISTS content JSONB DEFAULT '{}'::JSONB;
+ALTER TABLE link_hub_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+DO $$
+DECLARE
+    content_type TEXT;
+BEGIN
+    SELECT data_type
+      INTO content_type
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'link_hub_settings'
+       AND column_name = 'content';
+
+    IF content_type = 'json' THEN
+        ALTER TABLE link_hub_settings
+            ALTER COLUMN content TYPE JSONB USING content::JSONB;
+    END IF;
+END $$;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_link_hub_settings_singleton
+    ON link_hub_settings(id);
 
 -- ============================================================================
 -- 3. CLIENT CARE CHECKLISTS, REPORTS, AND MONTHLY SUMMARIES
@@ -705,7 +782,7 @@ SELECT 'iCreate Solutions', 'ICSS'
 WHERE NOT EXISTS (SELECT 1 FROM companies);
 
 -- ============================================================================
--- 5. INDEXES AND LIMITED EXISTING RLS POLICIES
+-- 5. INDEXES AND PRIVATE BACKEND-ONLY TABLE ACCESS
 -- ============================================================================
 
 CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
@@ -716,9 +793,86 @@ CREATE INDEX IF NOT EXISTS idx_invoices_client_service ON invoices(client_servic
 CREATE INDEX IF NOT EXISTS idx_invoices_renewal ON invoices(renewal_date);
 CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON invoice_items(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_reference_id
+-- An older install created this name as a non-unique index. Recreate it so
+-- concurrent PayPal deliveries cannot record the same transaction twice.
+DROP INDEX IF EXISTS idx_payments_reference_id;
+CREATE UNIQUE INDEX idx_payments_reference_id
     ON payments(reference_id)
     WHERE reference_id IS NOT NULL;
+
+-- The application calls this service-role-only readiness check before asking
+-- PayPal to redeliver failed events. Recovery stays disabled until the unique
+-- transaction claim is genuinely installed and valid.
+CREATE OR REPLACE FUNCTION public.has_safe_paypal_processing_schema()
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+          FROM pg_catalog.pg_index AS index_meta
+          JOIN pg_catalog.pg_class AS index_class ON index_class.oid = index_meta.indexrelid
+          JOIN pg_catalog.pg_class AS table_class ON table_class.oid = index_meta.indrelid
+          JOIN pg_catalog.pg_namespace AS table_namespace ON table_namespace.oid = table_class.relnamespace
+         WHERE table_namespace.nspname = 'public'
+           AND table_class.relname = 'payments'
+           AND index_class.relname = 'idx_payments_reference_id'
+           AND index_meta.indisunique
+           AND index_meta.indisvalid
+    ) AND (
+        SELECT COUNT(*) = 4
+          FROM pg_catalog.pg_attribute AS attribute_meta
+          JOIN pg_catalog.pg_class AS payment_table ON payment_table.oid = attribute_meta.attrelid
+          JOIN pg_catalog.pg_namespace AS payment_namespace ON payment_namespace.oid = payment_table.relnamespace
+         WHERE payment_namespace.nspname = 'public'
+           AND payment_table.relname = 'payments'
+           AND attribute_meta.attname IN (
+               'receipt_email_status',
+               'receipt_email_claimed_at',
+               'receipt_email_sent_at',
+               'receipt_email_last_error'
+           )
+           AND NOT attribute_meta.attisdropped
+    ) AND EXISTS (
+        SELECT 1
+          FROM pg_catalog.pg_index AS service_index_meta
+          JOIN pg_catalog.pg_class AS service_index ON service_index.oid = service_index_meta.indexrelid
+          JOIN pg_catalog.pg_class AS service_table ON service_table.oid = service_index_meta.indrelid
+          JOIN pg_catalog.pg_namespace AS service_namespace ON service_namespace.oid = service_table.relnamespace
+         WHERE service_namespace.nspname = 'public'
+           AND service_table.relname = 'client_services'
+           AND service_index.relname = 'idx_client_services_paypal_subscription_id_unique'
+           AND service_index_meta.indisunique
+           AND service_index_meta.indisvalid
+    ) AND EXISTS (
+        SELECT 1
+          FROM pg_catalog.pg_index AS message_index_meta
+          JOIN pg_catalog.pg_class AS message_index ON message_index.oid = message_index_meta.indexrelid
+          JOIN pg_catalog.pg_class AS message_table ON message_table.oid = message_index_meta.indrelid
+          JOIN pg_catalog.pg_namespace AS message_namespace ON message_namespace.oid = message_table.relnamespace
+         WHERE message_namespace.nspname = 'public'
+           AND message_table.relname = 'client_relationship_messages'
+           AND message_index.relname = 'idx_client_relationship_messages_occurrence_unique'
+           AND message_index_meta.indisunique
+           AND message_index_meta.indisvalid
+    ) AND EXISTS (
+        SELECT 1
+          FROM pg_catalog.pg_index AS consumed_index_meta
+          JOIN pg_catalog.pg_class AS consumed_index ON consumed_index.oid = consumed_index_meta.indexrelid
+          JOIN pg_catalog.pg_class AS consumed_table ON consumed_table.oid = consumed_index_meta.indrelid
+          JOIN pg_catalog.pg_namespace AS consumed_namespace ON consumed_namespace.oid = consumed_table.relnamespace
+         WHERE consumed_namespace.nspname = 'public'
+           AND consumed_table.relname = 'consumed_events'
+           AND consumed_index.relname = 'idx_consumed_events_company_idempotency'
+           AND consumed_index_meta.indisunique
+           AND consumed_index_meta.indisvalid
+    );
+$$;
+REVOKE ALL ON FUNCTION public.has_safe_paypal_processing_schema() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.has_safe_paypal_processing_schema() TO service_role;
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_paypal_webhook_events_event_id
     ON paypal_webhook_events(paypal_event_id);
 
@@ -730,7 +884,8 @@ CREATE INDEX IF NOT EXISTS idx_client_services_meta_gin
 
 -- Multiple rows may omit the ID (or contain a blank ID), but a real PayPal
 -- subscription ID can belong to only one client service.
-CREATE UNIQUE INDEX IF NOT EXISTS idx_client_services_paypal_subscription_id_unique
+DROP INDEX IF EXISTS idx_client_services_paypal_subscription_id_unique;
+CREATE UNIQUE INDEX idx_client_services_paypal_subscription_id_unique
     ON client_services (
         (NULLIF(BTRIM(service_meta_json ->> 'paypal_subscription_id'), ''))
     )
@@ -745,7 +900,8 @@ CREATE INDEX IF NOT EXISTS idx_client_care_reports_sent_at ON client_care_report
 CREATE INDEX IF NOT EXISTS idx_client_care_reports_service ON client_care_reports(client_service_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_monthly_summaries_client_month_unique
     ON monthly_pulse_summaries(client_id, month);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_client_relationship_messages_occurrence_unique
+DROP INDEX IF EXISTS idx_client_relationship_messages_occurrence_unique;
+CREATE UNIQUE INDEX idx_client_relationship_messages_occurrence_unique
     ON client_relationship_messages(client_id, message_type, occurrence_key);
 CREATE INDEX IF NOT EXISTS idx_client_relationship_messages_status
     ON client_relationship_messages(status, updated_at);
@@ -753,33 +909,38 @@ CREATE INDEX IF NOT EXISTS idx_outbox_pending
     ON outbox_events(publish_status, occurred_at)
     WHERE publish_status = 'pending';
 
-ALTER TABLE monthly_pulse_summaries ENABLE ROW LEVEL SECURITY;
+-- These records contain customer, billing, and operational data. The Express
+-- backend uses the service role and remains unaffected; the public anon key
+-- must never be able to query the tables directly.
+ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE paypal_webhook_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE service_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checklist_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checklist_runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checklist_run_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_care_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE monthly_pulse_summaries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_relationship_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE consumed_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE link_hub_settings ENABLE ROW LEVEL SECURITY;
 
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies
-        WHERE schemaname = 'public'
-          AND tablename = 'monthly_pulse_summaries'
-          AND policyname = 'Enable all access for all users'
-    ) THEN
-        CREATE POLICY "Enable all access for all users"
-            ON monthly_pulse_summaries
-            FOR ALL USING (TRUE) WITH CHECK (TRUE);
-    END IF;
+DROP POLICY IF EXISTS "Enable all access" ON clients;
+DROP POLICY IF EXISTS "Enable all access" ON invoices;
+DROP POLICY IF EXISTS "Enable all access for all users" ON monthly_pulse_summaries;
+DROP POLICY IF EXISTS "Enable all access for all users" ON client_care_reports;
 
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies
-        WHERE schemaname = 'public'
-          AND tablename = 'client_care_reports'
-          AND policyname = 'Enable all access for all users'
-    ) THEN
-        CREATE POLICY "Enable all access for all users"
-            ON client_care_reports
-            FOR ALL USING (TRUE) WITH CHECK (TRUE);
-    END IF;
-END $$;
+REVOKE ALL ON TABLE companies, clients, invoices, invoice_items, payments,
+    paypal_webhook_events, service_plans, client_services, checklist_templates,
+    checklist_runs, checklist_run_items, client_care_reports,
+    monthly_pulse_summaries, client_relationship_messages, outbox_events,
+    consumed_events, link_hub_settings
+FROM anon;
 
 COMMIT;
 
@@ -803,7 +964,9 @@ WHERE table_schema = 'public'
       'checklist_run_items',
       'client_care_reports',
       'client_relationship_messages',
-      'outbox_events'
+      'outbox_events',
+      'consumed_events',
+      'link_hub_settings'
   )
 ORDER BY table_name;
 

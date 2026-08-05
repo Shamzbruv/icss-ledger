@@ -76,13 +76,32 @@ async function ensureSubscriptionContext(subscription, onboarding = {}) {
     });
     if (!catalogPlan) throw new Error(`The PayPal plan ${subscription.plan_id || ''} is not mapped to a service plan`);
 
-    let { data: client, error: clientLookupError } = await supabase.from('clients').select('*').ilike('email', subscriber.email).limit(1).maybeSingle();
-    if (clientLookupError) throw clientLookupError;
+    // Prefer the service already bound to this exact PayPal subscription. This
+    // keeps a returning customer tied to the right client even if legacy data
+    // contains more than one record with the same email address.
+    const subscriptionId = subscription.id;
+    let { data: service, error: serviceLookupError } = await supabase.from('client_services')
+        .select('*').contains('service_meta_json', { paypal_subscription_id: subscriptionId }).limit(1).maybeSingle();
+    if (serviceLookupError) throw serviceLookupError;
+
+    let client = null;
+    if (service?.client_id) {
+        const { data: serviceClient, error: serviceClientError } = await supabase.from('clients')
+            .select('*').eq('id', service.client_id).maybeSingle();
+        if (serviceClientError) throw serviceClientError;
+        client = serviceClient;
+    }
+    if (!client) {
+        const { data: emailClient, error: clientLookupError } = await supabase.from('clients')
+            .select('*').ilike('email', subscriber.email).limit(1).maybeSingle();
+        if (clientLookupError) throw clientLookupError;
+        client = emailClient;
+    }
+
     const { data: defaultCompany } = await supabase.from('companies').select('id').limit(1).maybeSingle();
     const clientValues = {
         name: String(onboarding.businessName || onboarding.fullName || client?.name || subscriber.fullName || subscriber.email).trim(),
         email: subscriber.email,
-        phone: String(onboarding.phone || client?.phone || subscriber.phone || '').trim() || null,
         address: String(onboarding.address || client?.address || '').trim() || null,
         company_id: client?.company_id || defaultCompany?.id || null
     };
@@ -98,15 +117,16 @@ async function ensureSubscriptionContext(subscription, onboarding = {}) {
 
     const plan = await ensureServicePlan(catalogPlan);
     await ensureChecklistTemplate(plan, catalogPlan);
-    const subscriptionId = subscription.id;
-    let { data: service, error: serviceLookupError } = await supabase.from('client_services')
-        .select('*').contains('service_meta_json', { paypal_subscription_id: subscriptionId }).limit(1).maybeSingle();
-    if (serviceLookupError) throw serviceLookupError;
     if (!service) {
-        const { data: compatibleServices } = await supabase.from('client_services').select('*')
+        const { data: compatibleServices, error: compatibleServicesError } = await supabase.from('client_services').select('*')
             .eq('client_id', client.id).eq('plan_id', plan.id).eq('status', 'active')
-            .order('created_at', { ascending: false }).limit(5);
-        service = (compatibleServices || []).find(candidate => !candidate.service_meta_json?.paypal_subscription_id) || null;
+            .limit(5);
+        if (compatibleServicesError) throw compatibleServicesError;
+        const unboundServices = (compatibleServices || []).filter(candidate => !candidate.service_meta_json?.paypal_subscription_id);
+        // Reuse only an unambiguous legacy service. If several candidates
+        // exist, creating a new bound service is safer than modifying the
+        // wrong subscription.
+        service = unboundServices.length === 1 ? unboundServices[0] : null;
     }
 
     const oldMeta = service?.service_meta_json || {};
@@ -199,6 +219,45 @@ async function sendWelcomeOnce(context) {
     return true;
 }
 
+async function processPendingWelcomeEmails(options = {}) {
+    const requestedBatchSize = Number(options.batchSize);
+    const batchSize = Number.isInteger(requestedBatchSize)
+        ? Math.min(100, Math.max(1, requestedBatchSize))
+        : 25;
+    const { data: services, error } = await supabase.from('client_services')
+        .select('*, clients(id, name, email), service_plans(id, name, price, default_frequency)')
+        .eq('status', 'active')
+        .not('service_meta_json->>paypal_subscription_id', 'is', null)
+        .is('service_meta_json->>welcome_email_sent_at', null)
+        .limit(batchSize);
+    if (error) throw error;
+
+    const result = { attempted: 0, sent: 0, skipped: 0, failed: 0 };
+    for (const service of services || []) {
+        const client = service.clients;
+        if (!client?.id || !client.email) {
+            result.skipped++;
+            console.warn(`[WELCOME RETRY] Service ${service.id} has no deliverable client email`);
+            continue;
+        }
+
+        result.attempted++;
+        try {
+            const sent = await sendWelcomeOnce({
+                client,
+                service,
+                plan: service.service_plans || null
+            });
+            if (sent) result.sent++;
+            else result.skipped++;
+        } catch (error) {
+            result.failed++;
+            console.error(`[WELCOME RETRY] Service ${service.id} failed:`, error.message);
+        }
+    }
+    return result;
+}
+
 async function claimRelationshipMessage(clientId, serviceId, messageType, occurrenceKey) {
     const payload = {
         client_id: clientId,
@@ -281,4 +340,10 @@ function escapeHtml(value) {
     return String(value || '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 }
 
-module.exports = { ensureSubscriptionContext, sendWelcomeOnce, processBirthdayGreetings, subscriberDetails };
+module.exports = {
+    ensureSubscriptionContext,
+    sendWelcomeOnce,
+    processPendingWelcomeEmails,
+    processBirthdayGreetings,
+    subscriberDetails
+};

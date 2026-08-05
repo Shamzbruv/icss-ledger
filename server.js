@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const { randomUUID } = require('crypto');
 const supabase = require('./src/db');
 const { verifySupabaseJwt } = require('./src/services/authService');
 
@@ -64,6 +65,7 @@ let isSchemaValid = false;
 let schemaErrors = [];
 
 const checkSchema = async () => {
+    schemaErrors = [];
     // We check for a few critical columns to ensure migration ran
     // Check Invoices: payment_status, company_id
     // Check Services: next_run_at
@@ -97,17 +99,19 @@ const checkSchema = async () => {
         schemaErrors.push(err.message);
         isSchemaValid = false;
     }
+    return isSchemaValid;
 };
 
 // Run check on startup
-checkSchema();
+const schemaCheckPromise = checkSchema();
 
 // ─── Startup Security Warnings ───────────────────────────────────────────────
-const _isLocalEnv = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
-if (!_isLocalEnv && !process.env.CRON_SECRET) {
+const _isHostedEnvironment = process.env.NODE_ENV === 'production'
+    || Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID || process.env.RAILWAY_SERVICE_ID);
+if (_isHostedEnvironment && !process.env.CRON_SECRET) {
     console.warn('[SECURITY] CRON_SECRET is not set. The /api/jobs/run-due-pulses route will be BLOCKED in production until it is configured.');
 }
-if (!_isLocalEnv && !process.env.SESSION_SECRET) {
+if (_isHostedEnvironment && !process.env.SESSION_SECRET) {
     console.warn('[SECURITY] SESSION_SECRET is not set. Using insecure default — set this env var before deploying.');
 }
 if (!process.env.EMAIL_AUDIT_BCC) {
@@ -141,8 +145,9 @@ const checkAuth = async (req, res, next) => {
 
     // PayPal webhook must stay open; its own handler verifies the signature
     // Jobs/Cron endpoints are protected by CRON_SECRET inside their specific handlers
-    const openApiPaths = ['/api/paypal/webhook', '/api/jobs/'];
-    if (openApiPaths.some(p => currentPath.startsWith(p))) {
+    const isPublicWebhook = currentPath === '/api/paypal/webhook';
+    const isProtectedCronRoute = currentPath === '/api/jobs/run-due-pulses';
+    if (isPublicWebhook || isProtectedCronRoute) {
         return next();
     }
     
@@ -864,8 +869,13 @@ router.post('/api/invoices/create', async (req, res) => {
 });
 
 // PayPal Webhook/IPN Handler
-const { verifyPayPalWebhookSignature, getPayPalSubscription } = require('./src/services/paypalService');
-const { ensureSubscriptionContext, sendWelcomeOnce, processBirthdayGreetings } = require('./src/services/customerRelationsService');
+const { verifyPayPalWebhookSignature, getPayPalSubscription, resendPayPalWebhookEvent } = require('./src/services/paypalService');
+const {
+    ensureSubscriptionContext,
+    sendWelcomeOnce,
+    processPendingWelcomeEmails,
+    processBirthdayGreetings
+} = require('./src/services/customerRelationsService');
 const { getPlanByPayPalId } = require('./src/services/subscriptionCatalog');
 const { normalizePublicDomain, parsePublicHttpUrl } = require('./src/services/checks/targetSafety');
 
@@ -874,11 +884,136 @@ function cleanOnboardingText(value, maxLength) {
     return String(value || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, maxLength);
 }
 
+async function getPayPalProcessingReadiness() {
+    const { data, error } = await supabase.rpc('has_safe_paypal_processing_schema');
+    return { ready: !error && data === true, error };
+}
+
+async function claimPaymentReceipt(paymentId) {
+    const { data: payment, error } = await supabase.from('payments')
+        .select('id, receipt_email_status, receipt_email_claimed_at')
+        .eq('id', paymentId)
+        .maybeSingle();
+    if (error || !payment) throw error || new Error('Payment receipt claim row was not found');
+    if (payment.receipt_email_status === 'sent') return { claimed: false, sent: true };
+
+    const claimedAt = payment.receipt_email_claimed_at ? new Date(payment.receipt_email_claimed_at).getTime() : 0;
+    const processingIsFresh = payment.receipt_email_status === 'processing'
+        && Number.isFinite(claimedAt)
+        && Date.now() - claimedAt < 15 * 60 * 1000;
+    if (processingIsFresh) return { claimed: false, busy: true };
+
+    const now = new Date().toISOString();
+    let claimQuery = supabase.from('payments').update({
+        receipt_email_status: 'processing',
+        receipt_email_claimed_at: now,
+        receipt_email_last_error: null
+    }).eq('id', payment.id);
+    if (payment.receipt_email_status === null) {
+        claimQuery = claimQuery.is('receipt_email_status', null);
+    } else {
+        claimQuery = claimQuery.eq('receipt_email_status', payment.receipt_email_status);
+        if (payment.receipt_email_status === 'processing') {
+            claimQuery = claimQuery.eq('receipt_email_claimed_at', payment.receipt_email_claimed_at);
+        }
+    }
+    const { data: claimed, error: claimError } = await claimQuery.select('id').maybeSingle();
+    if (claimError) throw claimError;
+    return claimed ? { claimed: true, token: now } : { claimed: false, busy: true };
+}
+
+async function finishPaymentReceiptClaim(paymentId, claimToken, success, errorMessage = null) {
+    const { data: finished, error } = await supabase.from('payments').update({
+        receipt_email_status: success ? 'sent' : 'failed',
+        receipt_email_sent_at: success ? new Date().toISOString() : null,
+        receipt_email_last_error: success ? null : cleanOnboardingText(errorMessage, 500)
+    })
+        .eq('id', paymentId)
+        .eq('receipt_email_status', 'processing')
+        .eq('receipt_email_claimed_at', claimToken)
+        .select('id')
+        .maybeSingle();
+    if (error) throw error;
+    if (!finished) throw new Error('Payment receipt claim was superseded before it could be completed');
+}
+
+async function requestFailedPayPalRedeliveries(limit = 10) {
+    if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET || !process.env.PAYPAL_WEBHOOK_ID) {
+        console.warn('[PAYPAL] Failed-event recovery skipped because PayPal credentials or webhook ID are missing.');
+        return { requested: 0 };
+    }
+    const readiness = await getPayPalProcessingReadiness();
+    if (!readiness.ready) {
+        console.warn('[PAYPAL] Failed-event recovery is waiting for SUPABASE_FINAL_MIGRATION.sql (safe payment and receipt claims are not verified).');
+        return { requested: 0, migrationRequired: true };
+    }
+    const requestLimit = Math.max(1, Math.min(25, Number(limit) || 10));
+    const cooldownMs = 6 * 60 * 60 * 1000;
+    const cooldownCutoff = new Date(Date.now() - cooldownMs).toISOString();
+    const { data: failedEvents, error } = await supabase.from('paypal_webhook_events')
+        .select('paypal_event_id, event_type, last_error, recovery_attempt_count, recovery_last_requested_at')
+        .eq('status', 'failed')
+        .in('event_type', [
+            'BILLING.SUBSCRIPTION.ACTIVATED',
+            'PAYMENT.SALE.COMPLETED',
+            'PAYMENT.CAPTURE.COMPLETED'
+        ])
+        .lt('recovery_attempt_count', 5)
+        .or(`recovery_last_requested_at.is.null,recovery_last_requested_at.lt.${cooldownCutoff}`)
+        .or('last_error.is.null,last_error.not.ilike.%signature verification%')
+        .order('recovery_last_requested_at', { ascending: true, nullsFirst: true })
+        .order('created_at', { ascending: true })
+        .limit(requestLimit);
+    if (error) throw error;
+
+    let attempted = 0;
+    let requested = 0;
+    for (const event of failedEvents || []) {
+        if (attempted >= requestLimit) break;
+        // Rows rejected during signature verification were never trusted and
+        // must not enter the recovery path.
+        if (/signature verification/i.test(String(event.last_error || ''))) continue;
+        const priorAttempts = Number(event.recovery_attempt_count || 0);
+        const lastRequestedAt = event.recovery_last_requested_at
+            ? new Date(event.recovery_last_requested_at).getTime()
+            : 0;
+        if (priorAttempts >= 5 || (lastRequestedAt && Date.now() - lastRequestedAt < cooldownMs)) continue;
+
+        const requestedAt = new Date().toISOString();
+        let recoveryClaim = supabase.from('paypal_webhook_events').update({
+            recovery_attempt_count: priorAttempts + 1,
+            recovery_last_requested_at: requestedAt
+        })
+            .eq('paypal_event_id', event.paypal_event_id)
+            .eq('status', 'failed');
+        recoveryClaim = event.recovery_attempt_count === null
+            ? recoveryClaim.is('recovery_attempt_count', null)
+            : recoveryClaim.eq('recovery_attempt_count', event.recovery_attempt_count);
+        const { data: claimedRecovery, error: recoveryClaimError } = await recoveryClaim
+            .select('paypal_event_id')
+            .maybeSingle();
+        if (recoveryClaimError) throw recoveryClaimError;
+        if (!claimedRecovery) continue;
+        attempted++;
+
+        try {
+            await resendPayPalWebhookEvent(event.paypal_event_id);
+            requested++;
+            console.log(`[PAYPAL] Requested redelivery for failed event ${event.paypal_event_id}`);
+        } catch (redeliveryError) {
+            console.warn(`[PAYPAL] Redelivery request failed for ${event.paypal_event_id}: ${redeliveryError.message}`);
+        }
+    }
+    return { attempted, requested };
+}
+
 router.post('/api/subscription-onboarding', async (req, res) => {
+    const requestId = randomUUID();
+    res.set('X-Request-ID', requestId);
     try {
         const key = req.ip || 'unknown';
         const recent = (onboardingAttempts.get(key) || []).filter(time => Date.now() - time < 15 * 60 * 1000);
-        if (recent.length >= 8) return res.status(429).json({ error: 'Too many attempts. Please wait and try again.' });
+        if (recent.length >= 8) return res.status(429).json({ error: 'Too many attempts. Please wait and try again.', requestId });
         recent.push(Date.now());
         onboardingAttempts.set(key, recent);
 
@@ -897,7 +1032,19 @@ router.post('/api/subscription-onboarding', async (req, res) => {
             || birthdayProbe.getUTCMonth() !== birthdayMonth - 1 || birthdayProbe.getUTCDate() !== birthdayDay) {
             return res.status(400).json({ error: 'Please choose a valid birthday month and day.' });
         }
-        const subscription = await getPayPalSubscription(subscriptionId);
+        let subscription;
+        try {
+            subscription = await getPayPalSubscription(subscriptionId);
+        } catch (paypalError) {
+            const timedOut = /timed out/i.test(String(paypalError.message || ''));
+            console.error(`[ONBOARDING][${requestId}] PayPal verification failed:`, paypalError.message);
+            return res.status(timedOut ? 504 : 502).json({
+                error: timedOut
+                    ? 'PayPal verification took too long. Your subscription is safe; please try again.'
+                    : 'We could not verify this PayPal subscription right now. Please wait a moment and try again.',
+                requestId
+            });
+        }
         const paypalEmail = String(subscription.subscriber?.email_address || '').trim().toLowerCase();
         if (!paypalEmail || paypalEmail !== submittedEmail) {
             return res.status(403).json({ error: 'That email does not match the PayPal subscription.' });
@@ -945,123 +1092,88 @@ router.post('/api/subscription-onboarding', async (req, res) => {
             planName: cleanOnboardingText(payload.planName, 120),
             completed: true
         });
-        await sendWelcomeOnce(context);
+        let welcomeEmailStatus = 'already-sent';
+        try {
+            welcomeEmailStatus = await sendWelcomeOnce(context) ? 'sent' : 'already-sent';
+        } catch (welcomeError) {
+            // The Client Care details are already durable at this point. Do not
+            // tell the customer that saving failed merely because Resend was
+            // temporarily unavailable; a PayPal webhook retry can send the
+            // still-unmarked welcome message later through the retry scheduler.
+            welcomeEmailStatus = 'pending';
+            console.error(`[ONBOARDING][${requestId}] Details saved, but welcome email is pending:`, welcomeError.message);
+        }
         res.json({
             success: true,
             clientName: context.client.name,
             planName: context.plan.name,
-            nextReportAt: context.service.next_run_at
+            nextReportAt: context.service.next_run_at,
+            welcomeEmailStatus,
+            welcomeEmailPending: welcomeEmailStatus === 'pending',
+            requestId
         });
     } catch (err) {
-        console.error('[ONBOARDING] Failed:', err.stack);
-        res.status(500).json({ error: 'We could not save your details right now. Please try again or contact support.' });
-    }
-});
-
-// Temporary endpoint to send onboarding recovery email
-app.get('/api/admin/recover-onboarding', async (req, res) => {
-    try {
-        const targetEmail = req.query.email?.toLowerCase();
-        if (!targetEmail) return res.status(400).send('Missing email');
-        
-        const { data: events, error } = await supabase.from('paypal_webhook_events').select('*').limit(500);
-        if (error) throw error;
-        
-        let foundSub = null;
-        let foundPlan = null;
-        for (const e of events || []) {
-            const sub = e.payload_jsonb?.resource;
-            if (sub?.subscriber?.email_address?.toLowerCase() === targetEmail) {
-                foundSub = sub.id;
-                foundPlan = sub.plan_id;
-                break;
-            }
-        }
-        if (!foundSub) return res.send('Could not find subscription for this email in recent webhooks.');
-        
-        const { getPlanByPayPalId } = require('./src/services/subscriptionCatalog');
-        const catalogPlan = getPlanByPayPalId(foundPlan);
-        const planParam = catalogPlan ? encodeURIComponent(catalogPlan.name) : 'Client_Care';
-        
-        const recoveryLink = `https://icreatesolutionsandservices.com/thank-you.html?subscription_id=${encodeURIComponent(foundSub)}&plan=${planParam}`;
-        
-        const { sendEmail } = require('./src/services/emailService');
-        const html = `<div style="font-family:sans-serif; max-width:600px; margin:0 auto; padding: 20px; color: #333;">
-            <h2 style="color: #10b981;">Finish Setting Up Your Client Care</h2>
-            <p>Hi there,</p>
-            <p>It looks like you encountered an error while setting up your Client Care subscription preferences. We've resolved the issue on our end, and you can now seamlessly continue where you left off.</p>
-            <p>Please click the button below to finish setting up your account (your payment was already successful, this is just to save your delivery preferences):</p>
-            <p style="margin: 30px 0;"><a href="${recoveryLink}" style="display:inline-block; padding:12px 24px; background:#10b981; color:#fff; text-decoration:none; border-radius:4px; font-weight:bold;">Continue Setup</a></p>
-            <p>If you have any questions or need assistance, simply reply to this email.</p>
-            <p>Best regards,<br>The iCreate Solutions Team</p>
-        </div>`;
-        
-        const sent = await sendEmail(targetEmail, 'Finish Setting Up Your iCreate Client Care', html);
-        
-        res.send(`Recovery email ${sent ? 'sent successfully' : 'failed to send'} to ${targetEmail}.<br><br>The recovery link was: <a href="${recoveryLink}">${recoveryLink}</a>`);
-    } catch (err) {
-        const safeErr = err ? (err.message || String(err)) : 'Unknown error';
-        res.status(500).send('Error occurred: ' + safeErr);
+        console.error(`[ONBOARDING][${requestId}] Failed:`, err.stack || err);
+        res.status(503).json({
+            error: 'Your subscription was verified, but Client Care could not save your details right now. Please try again.',
+            requestId
+        });
     }
 });
 
 router.post('/api/paypal/webhook', async (req, res) => {
     let webhookRow = null;
     try {
-        const body = req.body;
+        const body = req.body || {};
         const resource = body.resource || {};
         const eventType = body.event_type || 'UNKNOWN';
-        console.log(`[PAYPAL] Received webhook: ${eventType} | Event ID: ${body.id}`);
+        const safeEventId = cleanOnboardingText(body.id, 120) || 'missing';
+        console.log(`[PAYPAL] Received webhook: ${cleanOnboardingText(eventType, 120)} | Event ID: ${safeEventId}`);
 
-        // --- STEP 0: Insert raw event to DB immediately for full observability ---
-        // This happens BEFORE signature check so we always have a record of what arrived.
-        const { data: insertedEvent } = await supabase
-            .from('paypal_webhook_events')
-            .upsert({
-                paypal_event_id: body.id,
-                event_type: eventType,
-                resource_id: body.resource?.id || null,
-                custom_id: body.resource?.custom_id || body.resource?.custom || null,
-                payload_jsonb: body,
-                status: 'received'
-            }, { onConflict: 'paypal_event_id', ignoreDuplicates: true })
-            .select('id, status')
-            .maybeSingle();
-        let earlyInsert = insertedEvent;
-        if (!earlyInsert && body.id) {
-            const { data: existingEvent } = await supabase.from('paypal_webhook_events')
-                .select('id, status').eq('paypal_event_id', body.id).maybeSingle();
-            earlyInsert = existingEvent || null;
-        }
-        if (earlyInsert) webhookRow = earlyInsert;
-
-        // --- STEP 1: Verify PayPal Signature ---
+        // Verify before any service-role database write. Rejected public
+        // requests must not create rows or alter a previously trusted event.
         let isValid = false;
         try {
             isValid = await verifyPayPalWebhookSignature(req.headers, req.body);
         } catch (verifyErr) {
             console.error('[PAYPAL] Signature Verification Error:', verifyErr.message);
-            if (webhookRow) {
-                await supabase.from('paypal_webhook_events')
-                    .update({ status: 'failed', last_error: `Signature verification unavailable: ${verifyErr.message}` })
-                    .eq('id', webhookRow.id);
-            }
             return res.status(503).send('PayPal verification temporarily unavailable; retry requested');
         }
 
         if (!isValid) {
-            console.warn(`[PAYPAL] Signature verification FAILED for event ${body.id}. Check PAYPAL_WEBHOOK_ID env var.`);
-            if (webhookRow) {
-                await supabase.from('paypal_webhook_events')
-                    .update({ status: 'failed', last_error: 'Signature verification failed' })
-                    .eq('id', webhookRow.id);
-            }
-            // Return 200 to stop PayPal retrying — the event IS recorded in DB for manual review
-            return res.status(200).send('Received (verification failed - check logs)');
+            console.warn(`[PAYPAL] Signature verification FAILED for event ${safeEventId}. Check PAYPAL_WEBHOOK_ID env var.`);
+            return res.status(401).send('Webhook signature verification failed');
         }
 
+        if (!body.id || !body.event_type) return res.status(400).send('PayPal event ID and type are required');
+
+        // Store only a PayPal-verified payload. The unique event ID is the first
+        // idempotency boundary; a duplicate delivery reuses the trusted row.
+        const { data: insertedEvent, error: insertEventError } = await supabase
+            .from('paypal_webhook_events')
+            .upsert({
+                paypal_event_id: body.id,
+                event_type: eventType,
+                resource_id: resource.id || null,
+                custom_id: resource.custom_id || resource.custom || null,
+                payload_jsonb: body,
+                status: 'received'
+            }, { onConflict: 'paypal_event_id', ignoreDuplicates: true })
+            .select('id, status')
+            .maybeSingle();
+        if (insertEventError) throw insertEventError;
+        let earlyInsert = insertedEvent;
+        if (!earlyInsert) {
+            const { data: existingEvent, error: existingEventError } = await supabase.from('paypal_webhook_events')
+                .select('id, status').eq('paypal_event_id', body.id).maybeSingle();
+            if (existingEventError) throw existingEventError;
+            earlyInsert = existingEvent || null;
+        }
+        if (!earlyInsert) throw new Error('Verified PayPal event could not be persisted');
+        webhookRow = earlyInsert;
+
         // If event was already fully processed (idempotency), skip
-        if (earlyInsert && earlyInsert.status === 'processed') {
+        if (earlyInsert.status === 'processed') {
             console.log(`[PAYPAL] Event ${body.id} already processed. Skipping.`);
             return res.status(200).send('Already processed');
         }
@@ -1072,6 +1184,22 @@ router.post('/api/paypal/webhook', async (req, res) => {
         const terminalEvents = new Set(['BILLING.SUBSCRIPTION.SUSPENDED', 'BILLING.SUBSCRIPTION.CANCELLED', 'BILLING.SUBSCRIPTION.EXPIRED']);
         // ✅ NEW: Handle brand new subscriptions created directly through PayPal
         const activationEvents = new Set(['BILLING.SUBSCRIPTION.ACTIVATED']);
+
+        // Subscription activation, payment writes, and receipt delivery rely on
+        // database-level unique and atomic claims. Until the migration is
+        // present, ask PayPal to retry instead of risking duplicate records or
+        // emails.
+        if (successEvents.has(body.event_type) || activationEvents.has(body.event_type)) {
+            const readiness = await getPayPalProcessingReadiness();
+            if (!readiness.ready) {
+                const migrationError = 'SUPABASE_FINAL_MIGRATION.sql is required before payment processing';
+                await supabase.from('paypal_webhook_events')
+                    .update({ status: 'failed', last_error: migrationError })
+                    .eq('id', webhookRow.id)
+                    .neq('status', 'processed');
+                return res.status(503).send('Payment processing is being upgraded; retry requested');
+            }
+        }
 
         // CREATED is an acknowledgement only. Provisioning waits until PayPal
         // confirms ACTIVATED so abandoned approvals never enter Client Care.
@@ -1101,7 +1229,10 @@ router.post('/api/paypal/webhook', async (req, res) => {
             } catch (activationErr) {
                 console.error('[PAYPAL][ACTIVATION] Reconciliation failed:', activationErr.message);
                 if (webhookRow) {
-                    await supabase.from('paypal_webhook_events').update({ status: 'failed', last_error: activationErr.message }).eq('id', webhookRow.id);
+                    await supabase.from('paypal_webhook_events')
+                        .update({ status: 'failed', last_error: activationErr.message })
+                        .eq('id', webhookRow.id)
+                        .neq('status', 'processed');
                 }
                 return res.status(500).send('Activation processing failed; retry requested');
             }
@@ -1244,23 +1375,70 @@ router.post('/api/paypal/webhook', async (req, res) => {
         }
         */
 
-        let customId = resource.custom_id || resource.custom;
+        const explicitCustomId = resource.custom_id || resource.custom;
+        let customId = explicitCustomId;
+        const paypalSubscriptionId = resource.billing_agreement_id
+            || (/^I-[A-Z0-9]+$/i.test(String(resource.id || '')) ? resource.id : null);
+        let paypalSubscriptionSnapshot = null;
+        let paypalNextBillingDate = null;
+        const isActionableEvent = successEvents.has(body.event_type)
+            || failureEvents.has(body.event_type)
+            || terminalEvents.has(body.event_type);
 
-        // Exact subscription identity must win over payer-email matching because
-        // one customer can legitimately hold more than one subscription.
-        if (!customId) {
-            const exactPayPalSubscriptionId = resource.billing_agreement_id
-                || (/^I-[A-Z0-9]+$/i.test(String(resource.id || '')) ? resource.id : null);
-            if (exactPayPalSubscriptionId) {
-                const { data: exactService } = await supabase.from('client_services')
-                    .select('id').contains('service_meta_json', { paypal_subscription_id: exactPayPalSubscriptionId }).limit(1).maybeSingle();
-                if (exactService) customId = exactService.id;
+        // --- STEP 2: Multi-strategy client correlation ---
+        // A PayPal subscription ID is authoritative. Never let payer-email
+        // fallback attach a new subscription payment to an older service owned
+        // by the same customer.
+        if (!customId && paypalSubscriptionId) {
+            const { data: exactService, error: exactServiceError } = await supabase.from('client_services')
+                .select('*, clients(*), service_plans(*)')
+                .contains('service_meta_json', { paypal_subscription_id: paypalSubscriptionId })
+                .limit(1)
+                .maybeSingle();
+            if (exactServiceError) throw exactServiceError;
+            if (exactService) {
+                customId = exactService.id;
+                if (successEvents.has(body.event_type)) {
+                    try {
+                        await sendWelcomeOnce({
+                            client: exactService.clients,
+                            service: exactService,
+                            plan: exactService.service_plans,
+                            catalogPlan: getPlanByPayPalId(exactService.service_meta_json?.paypal_plan_id)
+                        });
+                    } catch (welcomeError) {
+                        // A welcome-email outage must not prevent a confirmed
+                        // PayPal payment from being recorded and receipted. The
+                        // pending-welcome scheduler will retry it independently.
+                        console.warn(`[PAYPAL] Welcome email deferred for service ${exactService.id}: ${welcomeError.message}`);
+                    }
+                }
             }
         }
 
-        // --- STEP 2: Multi-strategy client correlation ---
+        // If a payment arrives before ACTIVATED, fetch the authoritative
+        // subscription from PayPal and provision it before attempting any
+        // payer-email fallback. Failed/cancelled events may reconcile records,
+        // but must never trigger a welcome email.
+        if (!customId && paypalSubscriptionId && isActionableEvent) {
+            console.warn(`[PAYPAL] Reconciling subscription from PayPal API: ${paypalSubscriptionId}`);
+            const subscription = await getPayPalSubscription(paypalSubscriptionId);
+            paypalSubscriptionSnapshot = subscription;
+            const context = await ensureSubscriptionContext(subscription);
+            customId = context.service.id;
+            if (successEvents.has(body.event_type)) {
+                try {
+                    await sendWelcomeOnce(context);
+                } catch (welcomeError) {
+                    console.warn(`[PAYPAL] Welcome email deferred for service ${context.service.id}: ${welcomeError.message}`);
+                }
+            }
+            console.log(`[PAYPAL] Reconciled subscription from PayPal API: ${customId}`);
+        }
+
         if (!customId) {
-            // Strategy A: Match by payer email
+            // Last-resort strategy: match by payer email only when the event
+            // carries no usable subscription identity.
             const payerEmail = resource.subscriber?.email_address
                 || resource.payer?.email_address
                 || resource.payer_info?.email;
@@ -1268,9 +1446,9 @@ router.post('/api/paypal/webhook', async (req, res) => {
 
             if (payerEmail) {
                 // Check both primary email AND billing_email (e.g. spouse paying on behalf)
-                let { data: client } = await supabase.from('clients').select('id').eq('email', payerEmail).single();
+                let { data: client } = await supabase.from('clients').select('id').ilike('email', payerEmail).limit(1).maybeSingle();
                 if (!client) {
-                    const { data: billingClient } = await supabase.from('clients').select('id').eq('billing_email', payerEmail).single();
+                    const { data: billingClient } = await supabase.from('clients').select('id').ilike('billing_email', payerEmail).limit(1).maybeSingle();
                     if (billingClient) {
                         client = billingClient;
                         console.log(`[PAYPAL] Matched via billing_email for payer: ${payerEmail}`);
@@ -1279,7 +1457,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 if (client) {
                     const { data: matchingServices } = await supabase.from('client_services')
                         .select('id').eq('client_id', client.id).eq('status', 'active')
-                        .order('created_at', { ascending: false }).limit(2);
+                        .limit(2);
                     if (matchingServices?.length === 1) {
                         customId = matchingServices[0].id;
                         console.log(`[PAYPAL] Email fallback matched service: ${customId}`);
@@ -1294,37 +1472,33 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     } else {
                         console.warn(`[PAYPAL] Email fallback is ambiguous for ${payerEmail}; exact subscription ID required.`);
                     }
-                }
             }
+        }
 
-            // Strategy B: Match by PayPal billing agreement / subscription ID
-            if (!customId) {
-                const paypalSubId = resource.billing_agreement_id || resource.id;
-                if (paypalSubId) {
-                    console.warn(`[PAYPAL] Trying PayPal subscription ID fallback: ${paypalSubId}`);
-                    const { data: svcByPP } = await supabase.from('client_services')
-                        .select('id').contains('service_meta_json', { paypal_subscription_id: paypalSubId }).limit(1).maybeSingle();
-                    if (svcByPP) {
-                        customId = svcByPP.id;
-                        console.log(`[PAYPAL] Subscription ID fallback matched service: ${customId}`);
-                    } else if (/^I-[A-Z0-9]+$/i.test(paypalSubId)) {
-                        // Payment can occasionally arrive before the activation webhook.
-                        const subscription = await getPayPalSubscription(paypalSubId);
-                        const context = await ensureSubscriptionContext(subscription);
-                        customId = context.service.id;
-                        await sendWelcomeOnce(context);
-                        console.log(`[PAYPAL] Reconciled subscription from PayPal API: ${customId}`);
-                    }
-                }
+        // Refresh PayPal's authoritative next-billing date for invoice receipts
+        // and Client Care renewal tracking. This enrichment is non-fatal once
+        // the subscription has already been correlated locally.
+        if (successEvents.has(body.event_type) && paypalSubscriptionId && !paypalSubscriptionSnapshot) {
+            try {
+                paypalSubscriptionSnapshot = await getPayPalSubscription(paypalSubscriptionId);
+            } catch (subscriptionRefreshError) {
+                console.warn(`[PAYPAL] Could not refresh ${paypalSubscriptionId} before invoicing: ${subscriptionRefreshError.message}`);
             }
+        }
+        const nextBillingRaw = paypalSubscriptionSnapshot?.billing_info?.next_billing_time;
+        if (nextBillingRaw) {
+            const nextBillingDate = new Date(nextBillingRaw);
+            if (!Number.isNaN(nextBillingDate.getTime())) paypalNextBillingDate = nextBillingDate.toISOString().split('T')[0];
+        }
 
-            if (!customId) {
+        if (!customId) {
                 const warnMsg = `[PAYPAL] Could not correlate event ${body.id} (${eventType}) to any client. Payer email: ${resource.subscriber?.email_address || resource.payer?.email_address || 'unknown'}. Marking for manual review.`;
                 console.error(warnMsg);
                 if (webhookRow) {
                     await supabase.from('paypal_webhook_events')
                         .update({ status: 'failed', last_error: warnMsg })
-                        .eq('id', webhookRow.id);
+                        .eq('id', webhookRow.id)
+                        .neq('status', 'processed');
                 }
                 // Return 200 so PayPal stops retrying — this needs manual fix of custom_id on subscription
                 const retriableEvent = successEvents.has(body.event_type)
@@ -1352,7 +1526,36 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 let clientServiceId = null;
                 const paymentReferenceId = resource.id || body.id;
                 const settledAmount = Number(resource.amount?.value || resource.amount?.total || 0);
+                const settledCurrency = String(resource.amount?.currency_code || resource.amount?.currency || '').trim().toUpperCase();
                 if (!paymentReferenceId || settledAmount <= 0) throw new Error('PayPal payment is missing its transaction ID or settled amount');
+                if (settledCurrency && settledCurrency !== 'USD') {
+                    throw new Error(`Unsupported PayPal payment currency: ${settledCurrency}`);
+                }
+
+                // PayPal occasionally delivers the same transaction under a
+                // second event ID. A previously processed resource already had
+                // its receipt sent, so acknowledge the duplicate without
+                // emailing the customer again.
+                const { data: processedTransaction, error: processedTransactionError } = await supabase
+                    .from('paypal_webhook_events')
+                    .select('id')
+                    .eq('resource_id', paymentReferenceId)
+                    .eq('status', 'processed')
+                    .neq('paypal_event_id', body.id)
+                    .limit(1)
+                    .maybeSingle();
+                if (processedTransactionError) {
+                    console.warn(`[PAYPAL] Cross-event duplicate check unavailable: ${processedTransactionError.message}`);
+                } else if (processedTransaction) {
+                    if (webhookRow) {
+                        await supabase.from('paypal_webhook_events').update({
+                            status: 'processed',
+                            processed_at: new Date().toISOString(),
+                            custom_id: customId
+                        }).eq('id', webhookRow.id);
+                    }
+                    return res.status(200).send('Already processed');
+                }
                 let paymentClaim = null;
                 let ownsPaymentClaim = false;
 
@@ -1377,13 +1580,13 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     if (!existingClaim.invoice_id) {
                         const claimedAt = new Date(existingClaim.payment_date || existingClaim.created_at || 0).getTime();
                         if (Date.now() - claimedAt < 2 * 60 * 1000) {
-                            return res.status(503).send('Payment is already being processed; retry requested');
+                            throw new Error('Payment is already being processed; retry requested');
                         }
                         const { data: reclaimed } = await supabase.from('payments')
                             .update({ payment_date: claimTime, amount: settledAmount })
                             .eq('id', existingClaim.id).eq('payment_date', existingClaim.payment_date)
                             .select('id, invoice_id, payment_date, created_at').maybeSingle();
-                        if (!reclaimed) return res.status(503).send('Payment claim is busy; retry requested');
+                        if (!reclaimed) throw new Error('Payment claim is busy; retry requested');
                         paymentClaim = reclaimed;
                         ownsPaymentClaim = true;
                     }
@@ -1424,8 +1627,24 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     }
                 }
 
-                // If this is a subscription, PayPal can charge *before* our cron job generates the invoice.
-                if (!targetInvoice && body.event_type !== 'PAYMENT.CAPTURE.COMPLETED' && clientServiceId) {
+                if (clientServiceId && paypalNextBillingDate) {
+                    const { error: renewalTrackingError } = await supabase.from('client_services')
+                        .update({ next_renewal_date: paypalNextBillingDate })
+                        .eq('id', clientServiceId);
+                    if (renewalTrackingError) {
+                        console.warn(`[PAYPAL] Could not update next renewal for service ${clientServiceId}: ${renewalTrackingError.message}`);
+                    }
+                }
+
+                // If this is a subscription, PayPal can charge *before* our cron
+                // job generates the invoice. Captures are eligible only when
+                // PayPal supplied an authoritative service/subscription ID;
+                // payer-email fallback alone must not turn a one-time checkout
+                // into a recurring subscription invoice.
+                const captureHasSubscriptionIdentity = body.event_type !== 'PAYMENT.CAPTURE.COMPLETED'
+                    || Boolean(paypalSubscriptionId)
+                    || String(explicitCustomId || '') === String(clientServiceId || '');
+                if (!targetInvoice && clientServiceId && captureHasSubscriptionIdentity) {
                     // Look for the most recent pending invoice for this service
                     const { data: latestUnpaid } = await supabase
                         .from('invoices')
@@ -1451,7 +1670,8 @@ router.post('/api/paypal/webhook', async (req, res) => {
                             sendEmail: false,
                             force: true,
                             isRenewal: Number(priorPaidCount || 0) > 0,
-                            totalAmountOverride: Number(resource.amount?.value || resource.amount?.total || 0) || null
+                            totalAmountOverride: Number(resource.amount?.value || resource.amount?.total || 0) || null,
+                            renewalDateOverride: paypalNextBillingDate
                         });
                         if (!newlyCreated) throw new Error(`Could not create an invoice for active service ${clientServiceId}`);
                         targetInvoice = newlyCreated;
@@ -1459,8 +1679,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 }
 
                 if (!targetInvoice) {
-                    console.error('No invoice or subscription could be resolved for customId:', customId);
-                    return res.status(404).send('Invoice not found');
+                    throw new Error(`No invoice or subscription could be resolved for customId ${customId}`);
                 }
 
                 // Map targetInvoice to local variables so legacy code below doesn't break
@@ -1469,26 +1688,19 @@ router.post('/api/paypal/webhook', async (req, res) => {
 
                 // 2. Update Invoice Status to Paid
                 const paymentAmount = settledAmount;
-                const paidAt = new Date().toISOString();
-                const { error } = await supabase
-                    .from('invoices')
-                    .update({
-                        status: 'paid',
-                        total_amount: paymentAmount,
-                        remaining_amount: 0,
-                        payment_status: 'PAID',
-                        balance_due: 0,
-                        amount_paid: paymentAmount,
-                        paid_at: paidAt
-                    })
-                    .eq('id', actualInvoiceId);
+                const paypalPaidAtRaw = resource.create_time || resource.update_time;
+                const paypalPaidAtDate = paypalPaidAtRaw ? new Date(paypalPaidAtRaw) : null;
+                const paypalPaidAt = paypalPaidAtDate && !Number.isNaN(paypalPaidAtDate.getTime())
+                    ? paypalPaidAtDate.toISOString()
+                    : null;
+                const paidAt = invoice.paid_at
+                    || paypalPaidAt
+                    || existingPayment?.payment_date
+                    || new Date().toISOString();
 
-                if (error) {
-                    console.error('Error updating invoice:', error);
-                    throw error;
-                }
-
-                // 3. Record Payment
+                // Link the unique payment claim to its invoice before changing
+                // invoice state. If the process stops between these writes, a
+                // retry resumes the same invoice instead of creating another.
                 if (ownsPaymentClaim) {
                     const { error: paymentError } = await supabase.from('payments').update({
                         invoice_id: actualInvoiceId,
@@ -1502,11 +1714,42 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     }
                 }
 
-                // Bug 1 fix: Send the receipt email immediately after payment is recorded,
-                // before any secondary integrations (accounting outbox) that may be slow.
-                const emailSuccess = await sendPaymentReceipt(actualInvoiceId);
-                if (!emailSuccess) {
-                    throw new Error(`Receipt email failed for invoice ${actualInvoiceId}`);
+                const { error } = await supabase
+                    .from('invoices')
+                    .update({
+                        status: 'paid',
+                        total_amount: paymentAmount,
+                        remaining_amount: 0,
+                        payment_status: 'PAID',
+                        balance_due: 0,
+                        amount_paid: paymentAmount,
+                        paid_at: paidAt,
+                        payment_date: paidAt,
+                        ...(paypalNextBillingDate ? { renewal_date: paypalNextBillingDate } : {})
+                    })
+                    .eq('id', actualInvoiceId);
+
+                if (error) {
+                    console.error('Error updating invoice:', error);
+                    throw error;
+                }
+
+                // Claim receipt delivery on the unique payment row before
+                // sending. Overlapping webhook event IDs for the same PayPal
+                // transaction can now share the invoice without double-emailing.
+                const receiptClaim = await claimPaymentReceipt(paymentClaim.id);
+                if (receiptClaim.busy) {
+                    throw new Error('Receipt delivery is already in progress; retry requested');
+                }
+                if (receiptClaim.claimed) {
+                    const emailSuccess = await sendPaymentReceipt(actualInvoiceId);
+                    if (!emailSuccess) {
+                        await finishPaymentReceiptClaim(paymentClaim.id, receiptClaim.token, false, `Receipt email failed for invoice ${actualInvoiceId}`);
+                        throw new Error(`Receipt email failed for invoice ${actualInvoiceId}`);
+                    }
+                    await finishPaymentReceiptClaim(paymentClaim.id, receiptClaim.token, true);
+                } else if (receiptClaim.sent) {
+                    console.log(`[PAYPAL] Receipt already sent for transaction ${paymentReferenceId}; skipping duplicate email.`);
                 }
 
                 // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event for payment
@@ -1531,7 +1774,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                             aggregate_id: fullInvoice.id,
                             event_version: Date.now(), // High resolution timestamp as version for updates
                             event_type: 'PAYMENT_APPLIED',
-                            idempotency_key: `${actualInvoiceId}-${body.id}-PAYMENT_APPLIED`,
+                            idempotency_key: `${actualInvoiceId}-${paymentReferenceId}-PAYMENT_APPLIED`,
                             payload_jsonb: eventPayload,
                             publish_status: 'pending'
                         });
@@ -1545,20 +1788,16 @@ router.post('/api/paypal/webhook', async (req, res) => {
                     if (invoice.client_service_id) {
                         console.log(`[BILLING] Skipping legacy invoice clone. Subscription is managed by client_services (ID: ${invoice.client_service_id}).`);
                     } else {
-                        // Calculate next renewal date
-                        let nextDate = new Date();
-                        let nextDueDate = new Date(); // Next invoice due date
-
-                    // If renewal_date exists on the invoice, base it off that, otherwise base off today
+                    // If renewal_date exists on the invoice, base it off that,
+                    // otherwise base it off today. Clamp month-end/leap-day
+                    // renewals through the shared UTC-safe billing helper.
                     const baseDate = invoice.renewal_date ? new Date(invoice.renewal_date) : new Date();
-
-                    if (invoice.billing_cycle.toLowerCase() === 'monthly') {
-                        nextDate.setMonth(baseDate.getMonth() + 1);
-                        nextDueDate.setMonth(baseDate.getMonth() + 1);
-                    } else if (invoice.billing_cycle.toLowerCase() === 'yearly') {
-                        nextDate.setFullYear(baseDate.getFullYear() + 1);
-                        nextDueDate.setFullYear(baseDate.getFullYear() + 1);
-                    }
+                    const legacyFrequency = String(invoice.billing_cycle || '').toLowerCase() === 'yearly'
+                        ? 'yearly'
+                        : 'monthly';
+                    const { addBillingPeriod } = require('./src/services/subscriptionBillingService');
+                    const nextDate = addBillingPeriod(baseDate, legacyFrequency);
+                    const nextDueDate = new Date(nextDate);
 
                     // Create NEXT Invoice (Automation)
                     // We clone the current invoice details but with new dates and status 'pending'
@@ -1632,20 +1871,31 @@ router.post('/api/paypal/webhook', async (req, res) => {
             if (customId) {
                 // Find target invoice
                 let targetInvoice = null;
-                const { data: exactInvoice } = await supabase.from('invoices').select('*').eq('id', customId).single();
+                const { data: exactInvoice, error: exactInvoiceError } = await supabase.from('invoices')
+                    .select('*').eq('id', customId).maybeSingle();
+                if (exactInvoiceError) throw exactInvoiceError;
                 if (exactInvoice) {
                     targetInvoice = exactInvoice;
                 } else {
-                    const { data: service } = await supabase.from('client_services').select('*').eq('id', customId).single();
+                    const { data: service, error: serviceError } = await supabase.from('client_services')
+                        .select('*').eq('id', customId).maybeSingle();
+                    if (serviceError) throw serviceError;
                     if (service) {
-                        const { data: latestUnpaid } = await supabase.from('invoices').select('*').eq('client_service_id', service.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).single();
+                        const { data: latestUnpaid, error: latestUnpaidError } = await supabase.from('invoices')
+                            .select('*').eq('client_service_id', service.id).eq('status', 'pending')
+                            .order('created_at', { ascending: false }).limit(1).maybeSingle();
+                        if (latestUnpaidError) throw latestUnpaidError;
                         if (latestUnpaid) targetInvoice = latestUnpaid;
                     }
                 }
 
                 if (targetInvoice) {
-                    await supabase.from('invoices').update({ payment_status: 'FAILED' }).eq('id', targetInvoice.id);
-                    const { data: client } = await supabase.from('clients').select('*').eq('id', targetInvoice.client_id).single();
+                    const { error: failureUpdateError } = await supabase.from('invoices')
+                        .update({ payment_status: 'FAILED' }).eq('id', targetInvoice.id);
+                    if (failureUpdateError) throw failureUpdateError;
+                    const { data: client, error: clientError } = await supabase.from('clients')
+                        .select('*').eq('id', targetInvoice.client_id).maybeSingle();
+                    if (clientError) throw clientError;
                     if (client) {
                         targetInvoice.clients = client;
                         const { getPaymentDeclinedTemplate } = require('./src/services/emailTemplates');
@@ -1668,26 +1918,35 @@ router.post('/api/paypal/webhook', async (req, res) => {
             if (customId) {
                 // Find service to deactivate
                 let serviceId = null;
-                const { data: exactService } = await supabase.from('client_services').select('id').eq('id', customId).single();
+                const { data: exactService, error: exactServiceError } = await supabase.from('client_services')
+                    .select('id').eq('id', customId).maybeSingle();
+                if (exactServiceError) throw exactServiceError;
                 if (exactService) {
                     serviceId = exactService.id;
                 } else {
-                    const { data: invoice } = await supabase.from('invoices').select('client_service_id').eq('id', customId).single();
+                    const { data: invoice, error: invoiceError } = await supabase.from('invoices')
+                        .select('client_service_id').eq('id', customId).maybeSingle();
+                    if (invoiceError) throw invoiceError;
                     if (invoice) serviceId = invoice.client_service_id;
                 }
                 if (serviceId) {
-                    await supabase.from('client_services').update({ status: 'inactive' }).eq('id', serviceId);
+                    const { error: deactivateError } = await supabase.from('client_services')
+                        .update({ status: 'inactive' }).eq('id', serviceId);
+                    if (deactivateError) throw deactivateError;
                     console.log(`[PAYPAL] Marked subscription ${serviceId} inactive due to terminal event ${body.event_type}.`);
+                } else {
+                    throw new Error(`Terminal PayPal event could not resolve service ${customId}`);
                 }
             }
         }
 
         // Phase 2: Mark as fully processed
         if (webhookRow) {
-            await supabase
+            const { error: processedUpdateError } = await supabase
                 .from('paypal_webhook_events')
                 .update({ status: 'processed', processed_at: new Date().toISOString() })
                 .eq('id', webhookRow.id);
+            if (processedUpdateError) throw processedUpdateError;
         }
 
         res.status(200).send('OK');
@@ -1695,7 +1954,10 @@ router.post('/api/paypal/webhook', async (req, res) => {
         console.error('PayPal Webhook Error:', err);
         const errMessage = err && err.message ? err.message : String(err);
         if (webhookRow) {
-            await supabase.from('paypal_webhook_events').update({ status: 'failed', last_error: errMessage }).eq('id', webhookRow.id);
+            await supabase.from('paypal_webhook_events')
+                .update({ status: 'failed', last_error: errMessage })
+                .eq('id', webhookRow.id)
+                .neq('status', 'processed');
         }
         res.status(500).send('Error');
     }
@@ -1950,221 +2212,13 @@ router.delete('/api/client-services/delete/:id', async (req, res) => {
 
 // ... (existing code)
 
-// Trigger Batch Run (Protected by secret in production, open for now)
-// ONE-TIME FIX: Correct Gary Mitchell's invoice amount to $78.19 and resend
-let garyAmountFixUsed = false;
-router.post('/api/jobs/fix-gary-amount', async (req, res) => {
-    if (garyAmountFixUsed) return res.status(410).json({ error: 'Already used.' });
-    const secret = req.headers['x-cron-secret'];
-    if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    garyAmountFixUsed = true;
-    const log = [];
-    try {
-        const { sendPaymentReceipt } = require('./src/services/automationService');
-        const GARY_CLIENT_ID = '6288f214-1c81-40bd-9d4a-933b5e8e2ce4';
-        const CORRECT_AMOUNT = 78.19;
-        const PLAN_NAME = 'Website Content Refresh';
-        const PAYPAL_TXN = '66772221EJ100624K';
-        const PAID_AT = new Date('2026-05-26T17:23:05.000Z').toISOString();
-
-        // Find Gary's most recent invoice
-        const { data: inv } = await supabase.from('invoices')
-            .select('id, invoice_number, total_amount')
-            .eq('client_id', GARY_CLIENT_ID)
-            .order('created_at', { ascending: false })
-            .limit(1).single();
-
-        if (!inv) throw new Error('No invoice found for Gary Mitchell');
-        log.push(`Found invoice: ${inv.invoice_number} (currently $${inv.total_amount})`);
-
-        // Correct the invoice amount, plan name, and ensure PAID status
-        const { error: updateErr } = await supabase.from('invoices').update({
-            total_amount: CORRECT_AMOUNT,
-            amount_paid: CORRECT_AMOUNT,
-            remaining_amount: 0,
-            balance_due: 0,
-            status: 'paid',
-            payment_status: 'PAID',
-            plan_name: PLAN_NAME,
-            notes: 'Website Content Refresh - May 2026',
-            paid_at: PAID_AT
-        }).eq('id', inv.id);
-        if (updateErr) throw new Error('Invoice update failed: ' + updateErr.message);
-        log.push(`Updated invoice to $${CORRECT_AMOUNT} for ${PLAN_NAME}`);
-
-        // Correct the invoice item
-        const { data: items } = await supabase.from('invoice_items').select('id').eq('invoice_id', inv.id);
-        if (items && items.length > 0) {
-            await supabase.from('invoice_items').update({
-                description: 'Website Content Refresh - May 2026',
-                quantity: 1,
-                unit_price: CORRECT_AMOUNT
-            }).eq('id', items[0].id);
-            log.push('Updated invoice line item');
-        } else {
-            await supabase.from('invoice_items').insert({
-                invoice_id: inv.id,
-                description: 'Website Content Refresh - May 2026',
-                quantity: 1,
-                unit_price: CORRECT_AMOUNT
-            });
-            log.push('Inserted invoice line item');
-        }
-
-        // Correct the payment record
-        const { data: existingPay } = await supabase.from('payments').select('id').eq('invoice_id', inv.id).single();
-        if (existingPay) {
-            await supabase.from('payments').update({ amount: CORRECT_AMOUNT, reference_id: PAYPAL_TXN }).eq('id', existingPay.id);
-        } else {
-            await supabase.from('payments').insert({
-                invoice_id: inv.id, amount: CORRECT_AMOUNT, method: 'PayPal',
-                reference_id: PAYPAL_TXN, payment_date: PAID_AT
-            });
-        }
-        log.push('Payment record corrected');
-
-        // Resend the receipt with the corrected invoice
-        const emailOk = await sendPaymentReceipt(inv.id);
-        log.push('Corrected receipt email: ' + (emailOk ? 'SENT' : 'FAILED'));
-
-        res.json({ success: true, log });
-    } catch (err) {
-        res.status(500).json({ error: err.message, log });
-    }
-});
-
-// ONE-TIME FIX: Send Gary Mitchell welcome email + invoice
-let garyFixUsed = false;
-router.post('/api/jobs/fix-gary', async (req, res) => {
-    if (garyFixUsed) return res.status(410).json({ error: 'This endpoint has already been used and is now disabled.' });
-    const secret = req.headers['x-cron-secret'];
-    if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    garyFixUsed = true;
-    const log = [];
-    try {
-        const emailService = require('./src/services/emailService');
-        const { syncServiceActivation } = require('./src/services/subscriptionBillingService');
-        const { sendPaymentReceipt } = require('./src/services/automationService');
-
-        const GARY_CLIENT_ID = '6288f214-1c81-40bd-9d4a-933b5e8e2ce4';
-        const GARY_EMAIL = 'gtdiagularm@gmail.com';
-        const GARY_NAME = 'Gary Mitchell';
-
-        // 1. Find or create client_service
-        let { data: existingSvc } = await supabase.from('client_services')
-            .select('*, clients(id, name, email), service_plans(id, name, price, default_frequency)')
-            .eq('client_id', GARY_CLIENT_ID).eq('status', 'active').single();
-
-        if (!existingSvc) {
-            // Find best plan match by price ($78.19)
-            const { data: allPlans } = await supabase.from('service_plans').select('*');
-            let plan = allPlans ? allPlans.find(p => Math.abs(Number(p.price) - 78.19) < 1) : null;
-            if (!plan && allPlans && allPlans.length > 0) plan = allPlans[0];
-
-            const nextRenewal = new Date('2026-06-26');
-            const { data: newSvc, error: svcErr } = await supabase.from('client_services').insert({
-                client_id: GARY_CLIENT_ID,
-                plan_id: plan ? plan.id : null,
-                status: 'active',
-                frequency: 'monthly',
-                send_time: '09:00:00',
-                timezone: 'America/Jamaica',
-                service_meta_json: { paypal_subscription_id: 'I-87DC00RR1RYP' },
-                next_renewal_date: nextRenewal.toISOString().split('T')[0]
-            }).select('*, clients(id, name, email), service_plans(id, name, price, default_frequency)').single();
-
-            if (svcErr) throw new Error('Failed to create client_service: ' + svcErr.message);
-            existingSvc = newSvc;
-            log.push('Created client_service: ' + existingSvc.id);
-        } else {
-            log.push('Found existing client_service: ' + existingSvc.id);
-        }
-
-        // 2. Send welcome email
-        try {
-            const { subject, html } = getWelcomeSubscriptionTemplate(existingSvc);
-            await emailService.sendEmail(GARY_EMAIL, subject, html, 'iCreate Solutions <support@icreatesolutionsandservices.com>');
-            log.push('Welcome email sent to ' + GARY_EMAIL);
-        } catch (we) {
-            log.push('Welcome email FAILED: ' + we.message);
-        }
-
-        // 3. Generate first invoice and send receipt
-        try {
-            // Check if invoice already exists
-            const { data: existingInv } = await supabase.from('invoices')
-                .select('id').eq('client_id', GARY_CLIENT_ID).order('created_at', { ascending: false }).limit(1).single();
-
-            if (existingInv) {
-                // Mark paid and send receipt
-                await supabase.from('invoices').update({
-                    status: 'paid', payment_status: 'PAID', amount_paid: 78.19,
-                    remaining_amount: 0, balance_due: 0,
-                    paid_at: new Date('2026-05-26T17:23:05.000Z').toISOString()
-                }).eq('id', existingInv.id);
-
-                await supabase.from('payments').insert({
-                    invoice_id: existingInv.id,
-                    amount: 78.19,
-                    method: 'PayPal',
-                    reference_id: '66772221EJ100624K',
-                    payment_date: new Date('2026-05-26T17:23:05.000Z').toISOString()
-                });
-
-                const emailOk = await sendPaymentReceipt(existingInv.id);
-                log.push('Receipt email for existing invoice: ' + (emailOk ? 'sent' : 'FAILED'));
-            } else {
-                // Generate fresh invoice
-                await syncServiceActivation(existingSvc.id, { sendEmail: false, force: true });
-
-                // Fetch newly created invoice
-                const { data: newInv } = await supabase.from('invoices')
-                    .select('id').eq('client_id', GARY_CLIENT_ID).order('created_at', { ascending: false }).limit(1).single();
-
-                if (newInv) {
-                    // Mark it paid
-                    await supabase.from('invoices').update({
-                        status: 'paid', payment_status: 'PAID', amount_paid: 78.19,
-                        remaining_amount: 0, balance_due: 0,
-                        paid_at: new Date('2026-05-26T17:23:05.000Z').toISOString()
-                    }).eq('id', newInv.id);
-
-                    await supabase.from('payments').insert({
-                        invoice_id: newInv.id,
-                        amount: 78.19,
-                        method: 'PayPal',
-                        reference_id: '66772221EJ100624K',
-                        payment_date: new Date('2026-05-26T17:23:05.000Z').toISOString()
-                    });
-
-                    const emailOk = await sendPaymentReceipt(newInv.id);
-                    log.push('Invoice generated & receipt email: ' + (emailOk ? 'sent' : 'FAILED'));
-                } else {
-                    log.push('Invoice generation failed — no invoice found after sync.');
-                }
-            }
-        } catch (ie) {
-            log.push('Invoice/receipt FAILED: ' + ie.message);
-        }
-
-        res.json({ success: true, log });
-    } catch (err) {
-        res.status(500).json({ error: err.message, log });
-    }
-});
-
 router.post('/api/jobs/run-due-pulses', async (req, res) => {
 
     try {
         // Production: Require CRON_SECRET unconditionally in non-local envs.
         // If the secret is missing in production, block the route entirely.
         const secret = req.headers['x-cron-secret'];
-        const isLocal = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
-        if (!isLocal && (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET)) {
+        if (_isHostedEnvironment && (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET)) {
             return res.status(401).json({ error: 'Unauthorized: CRON_SECRET required in production' });
         }
 
@@ -2182,6 +2236,7 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
             processSubscriptionReminders(7); // Check 7 days in advance
             autoAdvanceRenewalDates(); // Auto-advance past dates
             processBirthdayGreetings().catch(err => console.error('Birthday greeting job failed:', err));
+            processPendingWelcomeEmails().catch(err => console.error('Pending welcome email job failed:', err));
         } catch (err) {
             console.error('Failed to trigger subscription reminders or advancement:', err);
         }
@@ -3278,10 +3333,14 @@ app.use(BASE_PATH, router);
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
 
-    // Start the Event Projector Outbox Polling
-    if (isSchemaValid) {
-        startPolling(5000); // Poll every 5 seconds
-    }
+    // Start the Event Projector Outbox Polling only after the async schema check
+    // finishes. Checking isSchemaValid synchronously here races startup and can
+    // leave the projector disabled for the entire process lifetime.
+    schemaCheckPromise
+        .then(valid => {
+            if (valid) startPolling(5000); // Poll every 5 seconds
+        })
+        .catch(err => console.error('Outbox startup check failed:', err));
 
     // Automation Scheduler
     // Run Check logic every 15 minutes
@@ -3292,6 +3351,9 @@ app.listen(PORT, '0.0.0.0', () => {
     // Check hourly so birthday delivery uses each client's local calendar date.
     setInterval(() => {
         processBirthdayGreetings().catch(err => console.error('Scheduler Error (Birthday Greetings):', err));
+        processPendingWelcomeEmails().catch(err => console.error('Scheduler Error (Pending Welcome Emails):', err));
+        requestFailedPayPalRedeliveries()
+            .catch(err => console.error('Scheduler Error (PayPal Redelivery):', err));
     }, 60 * 60 * 1000);
 
     // Run Monthly Summary Check every 12 hours (it only acts on the 1st)
@@ -3318,6 +3380,14 @@ app.listen(PORT, '0.0.0.0', () => {
     // Initial runs
     runDueClientCarePulses();
     runMonthlySummaryChecks();
+    // Ask PayPal to redeliver a small batch of previously verified payment
+    // events that failed during local processing (for example, a temporary
+    // schema or email outage). PayPal signs the new delivery normally, so it
+    // travels through the exact same verification and idempotency controls.
+    setTimeout(() => {
+        requestFailedPayPalRedeliveries()
+            .catch(err => console.error('Initial Run Error (PayPal Redelivery):', err));
+    }, 10000);
     try {
         const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
         processSubscriptionReminders(7)
@@ -3329,6 +3399,8 @@ app.listen(PORT, '0.0.0.0', () => {
             .catch(err => console.error('Initial Run Error (Recurring Billing):', err));
         processBirthdayGreetings()
             .catch(err => console.error('Initial Run Error (Birthday Greetings):', err));
+        processPendingWelcomeEmails()
+            .catch(err => console.error('Initial Run Error (Pending Welcome Emails):', err));
     } catch (err) {
         console.error('Failed to trigger initial subscription routines:', err);
     }

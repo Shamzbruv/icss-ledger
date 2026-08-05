@@ -3,6 +3,7 @@ const { generateReferenceCode } = require('./referenceService');
 const { generateInvoicePDF } = require('./pdfService');
 const { sendInvoiceEmail } = require('./emailService');
 const { getInvoiceEmailContent } = require('./emailTemplates');
+const { randomInt } = require('crypto');
 
 /**
  * Syncs a newly created Client Service to Accounting by generating its first invoice.
@@ -29,15 +30,14 @@ async function syncServiceActivation(serviceId, options = {}) {
         const invoice = await generateSubscriptionInvoice(service, {
             isRenewal: options.isRenewal === true,
             sendEmail: options.sendEmail !== false,
-            totalAmountOverride: options.totalAmountOverride
+            totalAmountOverride: options.totalAmountOverride,
+            renewalDateOverride: options.renewalDateOverride
         });
 
-        const nextBilling = new Date();
+        let nextBilling = invoice?.renewal_date ? new Date(invoice.renewal_date) : null;
         const syncFreq = service.frequency || service.service_plans?.default_frequency || 'monthly';
-        if (syncFreq === 'yearly') {
-            nextBilling.setFullYear(nextBilling.getFullYear() + 1);
-        } else {
-            nextBilling.setMonth(nextBilling.getMonth() + 1);
+        if (!nextBilling || Number.isNaN(nextBilling.getTime())) {
+            nextBilling = addBillingPeriod(new Date(), syncFreq === 'yearly' ? 'yearly' : 'monthly');
         }
 
         await supabase
@@ -131,13 +131,11 @@ async function processRecurringBilling() {
             try {
                 await generateSubscriptionInvoice(service, { isRenewal: true });
 
-                const currentBillingDt = new Date(service.next_billing_date);
                 const freq = service.frequency || service.service_plans?.default_frequency || 'monthly';
-                if (freq === 'yearly') {
-                    currentBillingDt.setFullYear(currentBillingDt.getFullYear() + 1);
-                } else {
-                    currentBillingDt.setMonth(currentBillingDt.getMonth() + 1);
-                }
+                const currentBillingDt = addBillingPeriod(
+                    new Date(service.next_billing_date),
+                    freq === 'yearly' ? 'yearly' : 'monthly'
+                );
 
                 await supabase
                     .from('client_services')
@@ -154,11 +152,23 @@ async function processRecurringBilling() {
     }
 }
 
-async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmail = true, totalAmountOverride = null } = {}) {
-    const { data: seqData } = await supabase.rpc('get_next_invoice_sequence');
-    const nextSeq = seqData || Math.floor(Math.random() * 1000);
+async function generateSubscriptionInvoice(service, {
+    isRenewal = true,
+    sendEmail = true,
+    totalAmountOverride = null,
+    renewalDateOverride = null
+} = {}) {
+    const { data: seqData, error: sequenceError } = await supabase.rpc('get_next_invoice_sequence');
+    // Older installations may not have the sequence RPC yet. A timestamp plus
+    // three random digits is vastly safer than the former 0-999 fallback and
+    // remains compatible with the migration's numeric suffix backfill.
+    const nextSeq = sequenceError || !seqData
+        ? `${Date.now()}${String(randomInt(0, 1000)).padStart(3, '0')}`
+        : String(seqData);
+    if (sequenceError) console.warn(`[BILLING] Invoice sequence RPC unavailable; using collision-resistant fallback: ${sequenceError.message}`);
     const invoiceNumber = `INV-ICSS-${String(nextSeq).padStart(3, '0')}`;
     const targetCompanyId = await getDefaultCompanyId();
+    if (!targetCompanyId) throw new Error('No company is configured for subscription invoicing');
 
     const price = Number(service.service_plans?.price || 0);
     const taxAmount = price * 0.15;
@@ -177,12 +187,13 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
         || service.frequency
         || 'monthly';
     const freq = BILLING_FREQUENCIES.has(rawFreq) ? rawFreq : 'monthly';
-    const renewalDate = new Date(issueDate);
-    if (freq === 'yearly') {
-        renewalDate.setFullYear(renewalDate.getFullYear() + 1);
-    } else {
-        renewalDate.setMonth(renewalDate.getMonth() + 1);
-    }
+    const requestedRenewal = renewalDateOverride || service.next_renewal_date;
+    const requestedRenewalDate = requestedRenewal ? new Date(requestedRenewal) : null;
+    const renewalDate = requestedRenewalDate
+        && !Number.isNaN(requestedRenewalDate.getTime())
+        && requestedRenewalDate.getTime() > issueDate.getTime()
+        ? requestedRenewalDate
+        : addBillingPeriod(issueDate, freq);
 
     const planName = service.service_plans?.name || 'Subscription Service';
     const lineItemAmount = price > 0 ? Math.min(price, totalAmount) : totalAmount;
@@ -224,15 +235,23 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
 
     const planCode = service.service_meta_json?.plan_code || 'MAINT';
     const refCode = generateReferenceCode(service.clients.name, invoice.invoice_number, planCode, 100);
-    await supabase.from('invoices').update({ reference_code: refCode }).eq('id', invoice.id);
+    const { error: referenceError } = await supabase.from('invoices').update({ reference_code: refCode }).eq('id', invoice.id);
+    if (referenceError) {
+        await supabase.from('invoices').delete().eq('id', invoice.id);
+        throw referenceError;
+    }
     invoice.reference_code = refCode;
 
-    await supabase.from('invoice_items').insert({
+    const { error: itemError } = await supabase.from('invoice_items').insert({
         invoice_id: invoice.id,
         description: lineItem.description,
         quantity: lineItem.quantity,
         unit_price: lineItem.unit_price
     });
+    if (itemError) {
+        await supabase.from('invoices').delete().eq('id', invoice.id);
+        throw itemError;
+    }
 
     const eventPayload = {
         ...invoice,
@@ -240,7 +259,7 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
         payment_method: 'bank'
     };
 
-    await supabase.from('outbox_events').insert({
+    const { error: outboxError } = await supabase.from('outbox_events').insert({
         company_id: targetCompanyId,
         aggregate_type: 'invoice',
         aggregate_id: invoice.id,
@@ -250,6 +269,7 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
         payload_jsonb: eventPayload,
         publish_status: 'pending'
     });
+    if (outboxError) console.warn(`[BILLING] Accounting outbox event could not be queued for ${invoice.invoice_number}: ${outboxError.message}`);
 
     if (sendEmail) {
         try {
@@ -272,8 +292,7 @@ async function generateSubscriptionInvoice(service, { isRenewal = true, sendEmai
 
 async function sendGeneratedInvoiceEmail(invoice, service, lineItem) {
     if (!service.clients?.email) {
-        console.warn(`[BILLING] Skipping invoice email for ${invoice.invoice_number}; client email is missing.`);
-        return;
+        throw new Error(`Client email is missing for invoice ${invoice.invoice_number}`);
     }
 
     const emailContent = getInvoiceEmailContent(invoice, service.clients);
@@ -297,9 +316,29 @@ async function getDefaultCompanyId() {
     return data ? data.id : null;
 }
 
+function addBillingPeriod(sourceDate, frequency) {
+    const source = new Date(sourceDate);
+    const sourceYear = source.getUTCFullYear();
+    const sourceMonth = source.getUTCMonth();
+    const sourceDay = source.getUTCDate();
+    const targetYear = frequency === 'yearly' ? sourceYear + 1 : sourceYear + Math.floor((sourceMonth + 1) / 12);
+    const targetMonth = frequency === 'yearly' ? sourceMonth : (sourceMonth + 1) % 12;
+    const lastTargetDay = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+    return new Date(Date.UTC(
+        targetYear,
+        targetMonth,
+        Math.min(sourceDay, lastTargetDay),
+        source.getUTCHours(),
+        source.getUTCMinutes(),
+        source.getUTCSeconds(),
+        source.getUTCMilliseconds()
+    ));
+}
+
 module.exports = {
     syncServiceActivation,
     cancelServiceBilling,
     processRecurringBilling,
-    generateSubscriptionInvoice
+    generateSubscriptionInvoice,
+    addBillingPeriod
 };

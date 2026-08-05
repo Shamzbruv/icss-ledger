@@ -41,7 +41,7 @@ async function sendPaymentReceipt(invoiceId) {
         }
 
         // 3. Fetch Invoice Items
-        const { data: items, error: itemsError } = await supabase
+        let { data: items, error: itemsError } = await supabase
             .from('invoice_items')
             .select('*')
             .eq('invoice_id', invoiceId);
@@ -50,6 +50,26 @@ async function sendPaymentReceipt(invoiceId) {
             console.error('Automation Error: Items not found', itemsError);
             throw new Error('Invoice items not found');
         }
+
+        // Repair older subscription invoices that were created before invoice
+        // item insert errors were checked. Sending a blank receipt is worse than
+        // retrying, so persist one accurate fallback line before rendering.
+        if ((!items || items.length === 0) && invoice.is_subscription) {
+            const { data: recoveredItems, error: recoveryError } = await supabase
+                .from('invoice_items')
+                .insert({
+                    invoice_id: invoiceId,
+                    description: `${invoice.plan_name || 'Subscription Service'} - subscription payment`,
+                    quantity: 1,
+                    unit_price: Number(invoice.total_amount || 0)
+                })
+                .select('*');
+            if (recoveryError || !recoveredItems?.length) {
+                throw new Error(`Invoice items could not be repaired: ${recoveryError?.message || 'no row returned'}`);
+            }
+            items = recoveredItems;
+        }
+        if (!items || items.length === 0) throw new Error('Invoice has no line items');
 
         // 3.5 Generate State and Validate (Fail Fast)
         const state = computeInvoiceState(invoice, client);

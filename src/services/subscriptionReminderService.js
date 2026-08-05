@@ -1,6 +1,7 @@
 const supabase = require('../db');
 const { getSubscriptionRenewalTemplate } = require('./emailTemplates');
 const { sendEmail } = require('./emailService');
+const { addBillingPeriod } = require('./subscriptionBillingService');
 
 /**
  * Checks for subscriptions that are renewing in `daysNotice` days (default 7)
@@ -94,7 +95,7 @@ async function autoAdvanceRenewalDates() {
         // Find active services where next_renewal_date <= today
         const { data: services, error } = await supabase
             .from('client_services')
-            .select('*')
+            .select('*, service_plans(default_frequency)')
             .eq('status', 'active')
             .lte('next_renewal_date', todayStr);
 
@@ -104,16 +105,18 @@ async function autoAdvanceRenewalDates() {
 
         for (const service of (services || [])) {
             if (!service.next_renewal_date) continue;
+            // PayPal is authoritative for managed subscriptions. Advancing an
+            // overdue date locally would hide an unconfirmed/failed renewal;
+            // the verified payment webhook updates these dates instead.
+            if (service.service_meta_json?.paypal_subscription_id) continue;
 
             const currentDate = new Date(service.next_renewal_date);
-            // Advance by the correct cadence (monthly or yearly)
-            const cycle = service.frequency || 'monthly';
-            if (cycle === 'yearly') {
-                currentDate.setFullYear(currentDate.getFullYear() + 1);
-            } else {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-            }
-            const newDateStr = currentDate.toISOString().split('T')[0];
+            const cycle = service.service_plans?.default_frequency === 'yearly'
+                || service.frequency === 'yearly'
+                ? 'yearly'
+                : 'monthly';
+            const nextDate = addBillingPeriod(currentDate, cycle);
+            const newDateStr = nextDate.toISOString().split('T')[0];
 
             console.log(`[RENEWALS] Auto-advancing ${service.id} from ${service.next_renewal_date} to ${newDateStr}`);
 

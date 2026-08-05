@@ -15,11 +15,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Get Company ID
-    const { data: company, error } = await supabase.from('companies').select('id, name').limit(1).single();
-    if (error || !company) {
+    // Get the company through the authenticated backend. Customer/accounting
+    // tables are intentionally unavailable to the public Supabase anon key.
+    let company = null;
+    let companyError = null;
+    try {
+        const companyResponse = await apiFetch('/api/companies');
+        const companyPayload = await companyResponse.json();
+        if (!companyResponse.ok) throw new Error(companyPayload.error || 'Company request failed');
+        company = Array.isArray(companyPayload) ? companyPayload[0] : null;
+    } catch (error) {
+        companyError = error;
+    }
+    if (companyError || !company) {
         showToast('Error: Could not find company record for this user.', 'error');
-        console.error('Company fetch error:', error);
+        console.error('Company fetch error:', companyError);
         return;
     }
     currentCompanyId = company.id;
