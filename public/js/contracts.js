@@ -46,11 +46,15 @@ async function loadContracts() {
             filterTable();
             updateStats(allContracts);
         } else {
-            document.getElementById('contractsTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Failed to load contracts.</td></tr>';
+            let serverMessage = '';
+            try { serverMessage = (await res.json()).error || ''; } catch (parseErr) { /* body wasn't JSON */ }
+            console.error(`Failed to load contracts — HTTP ${res.status}: ${serverMessage}`);
+            const detail = serverMessage ? escapeHTML(serverMessage) : `HTTP ${res.status}`;
+            document.getElementById('contractsTableBody').innerHTML = `<tr><td colspan="7" class="text-center">Failed to load contracts — ${detail}</td></tr>`;
         }
     } catch (e) {
         console.error('Failed to load contracts', e);
-        document.getElementById('contractsTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Failed to load contracts.</td></tr>';
+        document.getElementById('contractsTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Failed to load contracts (network error).</td></tr>';
     }
 }
 
