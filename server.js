@@ -1731,6 +1731,9 @@ router.post('/api/paypal/webhook', async (req, res) => {
                         payment_status: 'PAID',
                         balance_due: 0,
                         amount_paid: paymentAmount,
+                        // Distinct from amount_paid (a running total) — postingRulesService.js
+                        // prefers this for the amount attributable to this specific payment.
+                        amount_paid_this_payment: paymentAmount,
                         paid_at: paidAt,
                         payment_date: paidAt,
                         ...(paypalNextBillingDate ? { renewal_date: paypalNextBillingDate } : {})
