@@ -83,7 +83,39 @@ async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <supp
     }
 }
 
+async function sendContractEmail(to, subject, text, html, pdfBuffer = null, filename = null, bcc = null, cc = null) {
+    assertResendConfigured();
+
+    const mailOptions = {
+        from: 'iCreate Solutions <support@icreatesolutionsandservices.com>',
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        text,
+        html,
+        reply_to: process.env.EMAIL_USER || 'support@icreatesolutionsandservices.com'
+    };
+
+    if (pdfBuffer && filename) {
+        mailOptions.attachments = [{
+            filename,
+            content: pdfBuffer
+        }];
+    }
+
+    mailOptions.bcc = getMergedBcc(bcc);
+    if (cc) mailOptions.cc = Array.isArray(cc) ? cc : [cc];
+
+    const { data, error } = await resend.emails.send(mailOptions);
+    if (error) {
+        console.error('Error sending contract email via Resend:', error);
+        throw new Error(error.message || 'Failed to send email via Resend');
+    }
+
+    console.log('Resend Contract Email sent successfully:', data ? data.id : 'No ID returned');
+}
+
 module.exports = {
     sendInvoiceEmail,
-    sendEmail
+    sendEmail,
+    sendContractEmail
 };

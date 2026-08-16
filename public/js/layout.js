@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <a href="/reviews-admin" class="nav-link ${window.location.pathname.includes('reviews') ? 'active' : ''}">Reviews</a>
                 <a href="/link-hub-admin" class="nav-link ${window.location.pathname.includes('link-hub-admin') ? 'active' : ''}">Link Hub</a>
                 <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}">Invoices</a>
+                <a href="/contracts" class="nav-link ${window.location.pathname.includes('contracts') ? 'active' : ''}">Contracts</a>
                 <a href="/client-care-pulse" class="nav-link ${window.location.pathname.includes('client-care') ? 'active' : ''}">Client Care</a>
                 <a href="/accounting" class="nav-link ${window.location.pathname.includes('accounting') ? 'active' : ''}">Accounting</a>
                 <button id="logoutBtn" class="btn btn-outline-light btn-sm" style="margin-left: 10px; text-transform: none; font-weight: 500;">Logout</button>

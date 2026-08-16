@@ -172,6 +172,12 @@ const checkAuth = async (req, res, next) => {
         return next();
     }
 
+    // Contract signing is public — the client reaches it via a unique, unguessable token
+    // link and never has an admin session. Everything else under /api/contracts stays protected.
+    if (currentPath.startsWith('/api/contracts/public/')) {
+        return next();
+    }
+
     // --- JWT verification (primary path) ---
     const authHeader = req.headers['authorization'] || '';
     let token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -220,10 +226,12 @@ const { computeInvoiceState, validateInvoiceState } = require('./src/services/in
 
 const leadsRouter = require('./src/routes/leads');
 const reviewsRouter = require('./src/routes/reviews');
+const contractsRouter = require('./src/routes/contracts');
 
 // MOUNT ROUTES
 router.use('/api/leads', leadsRouter);
 router.use('/api/reviews', reviewsRouter);
+router.use('/api/contracts', contractsRouter);
 
 const DEFAULT_LINK_HUB = {
     profile: {
@@ -3317,6 +3325,15 @@ router.get('/leads', (req, res) => {
 
 router.get('/reviews-admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'reviews-admin.html'));
+});
+
+router.get('/contracts', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'contracts.html'));
+});
+
+// Public — reached by clients via their unique emailed link, no login required.
+router.get('/sign-contract', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'sign-contract.html'));
 });
 
 router.get('/link-hub-admin', (req, res) => {

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Your Service Agreement | I Create Solutions &amp; Services</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+    <style>
+        :root {
+            --navy: #0B2447;
+            --navy-dark: #071a33;
+            --orange: #FF8C00;
+            --ink: #1a1a1a;
+            --muted: #6b7280;
+            --border: #e3e7ee;
+            --bg: #f2f4f8;
+            --card: #ffffff;
+            --green: #1a7f37;
+            --red: #c0392b;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', -apple-system, Helvetica, Arial, sans-serif; }
+        .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px 60px 16px; }
+
+        .topbar { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%); padding: 28px 20px; margin-bottom: -1px; }
+        .topbar-inner { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+        .topbar img { height: 40px; width: auto; border-radius: 6px; }
+        .topbar-text h1 { margin: 0; color: #fff; font-size: 1.1rem; font-weight: 700; }
+        .topbar-text p { margin: 2px 0 0 0; color: rgba(255,255,255,0.75); font-size: 0.82rem; }
+
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-top: 24px; box-shadow: 0 8px 30px rgba(11,36,71,0.06); }
+        .center-card { text-align: center; padding: 50px 30px; }
+        .center-card .icon { font-size: 3rem; margin-bottom: 10px; }
+        .center-card h2 { margin: 0 0 10px 0; color: var(--navy); }
+        .center-card p { color: var(--muted); line-height: 1.6; }
+
+        .hidden { display: none !important; }
+
+        /* Contract text (rendered from server-provided HTML) */
+        .contract-scroll { max-height: 460px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 20px 22px; background: #fbfbfd; }
+        .contract-title { font-size: 1.25rem; color: var(--navy); text-align: center; margin: 0 0 16px 0; }
+        .contract-eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; color: var(--orange); text-transform: uppercase; margin: 22px 0 4px 0; }
+        .contract-h2 { font-size: 1.05rem; color: var(--navy); margin: 4px 0 12px 0; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .contract-h3 { font-size: 0.92rem; color: var(--navy); margin: 16px 0 6px 0; }
+        .contract-p { font-size: 0.85rem; line-height: 1.65; color: #333; margin: 0 0 10px 0; }
+        .contract-ul, .contract-ol { margin: 0 0 12px 0; padding-left: 22px; }
+        .contract-ul li, .contract-ol li { font-size: 0.85rem; line-height: 1.6; color: #333; margin-bottom: 4px; }
+        .contract-field { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px dashed #eee; }
+        .contract-field-long { flex-direction: column; gap: 2px; }
+        .contract-field-label { font-weight: 700; color: var(--navy); min-width: 160px; }
+        .contract-field-value { color: #333; white-space: pre-wrap; }
+
+        .toggle-scroll { text-align: center; margin-top: 14px; }
+        .toggle-scroll button { background: none; border: none; color: var(--navy); font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+        .section-label { font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin: 0 0 14px 0; }
+
+        .ack-item { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+        .ack-item:last-child { border-bottom: none; }
+        .ack-item input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0; accent-color: var(--navy); cursor: pointer; }
+        .ack-item label { font-size: 0.86rem; line-height: 1.55; color: #333; cursor: pointer; }
+        .ack-item label strong { display: block; color: var(--navy); margin-bottom: 3px; }
+        .ack-item ul { margin: 8px 0 0 0; padding-left: 18px; }
+        .ack-item ul li { font-size: 0.78rem; color: var(--muted); margin-bottom: 3px; }
+
+        .field-group { margin-bottom: 20px; }
+        .field-group label.field-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+        .field-group input[type="text"] {
+            width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; color: var(--ink);
+        }
+        .field-group input[type="text"]:focus { outline: none; border-color: var(--navy); }
+        .readonly-date { padding: 12px 14px; background: #f5f6f8; border-radius: 8px; color: var(--muted); font-size: 0.9rem; border: 1.5px solid var(--border); }
+
+        .sig-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .sig-tab { flex: 1; padding: 10px; border: 1.5px solid var(--border); background: #fff; border-radius: 8px; text-align: center; font-size: 0.82rem; font-weight: 600; color: var(--muted); cursor: pointer; }
+        .sig-tab.active { border-color: var(--navy); color: var(--navy); background: #f0f3fa; }
+
+        .sig-pad-wrap { border: 1.5px dashed var(--border); border-radius: 10px; background: #fcfcfd; position: relative; }
+        #sigCanvas { display: block; width: 100%; height: 180px; touch-action: none; cursor: crosshair; border-radius: 10px; }
+        .sig-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #bbb; font-size: 0.85rem; pointer-events: none; }
+        .sig-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+        .sig-actions button { background: none; border: none; color: var(--muted); font-size: 0.8rem; text-decoration: underline; cursor: pointer; }
+
+        .sig-typed-wrap { display: none; }
+        .sig-typed-wrap input {
+            width: 100%; padding: 16px; border: 1.5px dashed var(--border); border-radius: 10px;
+            font-family: 'Dancing Script', cursive; font-size: 2.1rem; color: var(--navy); text-align: center;
+        }
+        .sig-typed-wrap input:focus { outline: none; border-color: var(--navy); }
+
+        .submit-btn {
+            width: 100%; padding: 16px; margin-top: 10px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%); color: #fff;
+            font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 8px 24px rgba(11,36,71,0.25);
+        }
+        .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+        .submit-hint { text-align: center; font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
+        .error-text { color: var(--red); font-size: 0.82rem; margin-top: 10px; text-align: center; }
+
+        .company-signed-note { display: flex; align-items: center; gap: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; }
+        .company-signed-note img { height: 32px; }
+        .company-signed-note div { font-size: 0.82rem; color: var(--green); font-weight: 600; }
+        .company-signed-note small { display: block; color: var(--muted); font-weight: 400; margin-top: 2px; }
+
+        .download-btn {
+            display: inline-block; margin-top: 18px; padding: 13px 28px; background: var(--navy); color: #fff;
+            text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 0.9rem;
+        }
+
+        footer.page-footer { text-align: center; color: var(--muted); font-size: 0.75rem; padding: 30px 20px 0 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="topbar-inner">
+            <img src="assets/icss-logo.png" alt="I Create Solutions & Services">
+            <div class="topbar-text">
+                <h1>I Create Solutions &amp; Services</h1>
+                <p>Project Service Agreement — Electronic Signature</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="wrap">
+
+        <div id="loadingState" class="card center-card">
+            <div class="icon">⏳</div>
+            <h2>Loading your agreement…</h2>
+            <p>Just a moment.</p>
+        </div>
+
+        <div id="errorState" class="card center-card hidden">
+            <div class="icon">⚠️</div>
+            <h2>Link Unavailable</h2>
+            <p id="errorMessage">This agreement link is invalid or has expired. Please contact us for a new link.</p>
+        </div>
+
+        <div id="alreadySignedState" class="card center-card hidden">
+            <div class="icon">✅</div>
+            <h2>Already Signed</h2>
+            <p id="alreadySignedMessage">This agreement has already been signed.</p>
+            <a href="#" id="alreadySignedDownload" class="download-btn">Download Your Copy (PDF)</a>
+        </div>
+
+        <div id="successState" class="card center-card hidden">
+            <div class="icon">🎉</div>
+            <h2>Agreement Signed!</h2>
+            <p id="successMessage">Thank you — a copy has been emailed to you.</p>
+            <a href="#" id="successDownload" class="download-btn">Download Your Copy (PDF)</a>
+        </div>
+
+        <div id="signState" class="hidden">
+
+            <div class="card">
+                <div class="company-signed-note">
+                    <img src="assets/signature.png" alt="Company signature">
+                    <div>Countersigned by I Create Solutions &amp; Services<small id="companySignedLine"></small></div>
+                </div>
+
+                <div class="section-label">Agreement Text</div>
+                <div class="contract-scroll" id="contractContent"></div>
+                <div class="toggle-scroll"><button type="button" onclick="expandContract()">Expand full agreement ↓</button></div>
+            </div>
+
+            <div class="card">
+                <div class="section-label">Acknowledgements — Please Confirm</div>
+                <div id="ackSection"></div>
+            </div>
+
+            <div class="card">
+                <div class="section-label">Your Signature</div>
+
+                <div class="field-group">
+                    <label class="field-label" for="legalNameInput">Full Legal Name *</label>
+                    <input type="text" id="legalNameInput" placeholder="Type your full legal name">
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Signature *</label>
+                    <div class="sig-tabs">
+                        <div class="sig-tab active" id="tabDraw" onclick="setSigMode('drawn')">✍️ Draw Signature</div>
+                        <div class="sig-tab" id="tabType" onclick="setSigMode('typed')">⌨️ Type Signature</div>
+                    </div>
+
+                    <div id="sigDrawWrap" class="sig-pad-wrap">
+                        <canvas id="sigCanvas"></canvas>
+                        <div class="sig-placeholder" id="sigPlaceholder">Draw your signature here — finger, stylus, or mouse</div>
+                    </div>
+                    <div class="sig-actions"><button type="button" onclick="clearSignature()">Clear</button></div>
+
+                    <div id="sigTypeWrap" class="sig-typed-wrap">
+                        <input type="text" id="typedSigInput" placeholder="Your Name">
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Date of Agreement</label>
+                    <div class="readonly-date" id="todayDate"></div>
+                </div>
+
+                <div class="ack-item">
+                    <input type="checkbox" id="ack_signature_confirmation">
+                    <label for="ack_signature_confirmation" id="ack_signature_confirmation_label"></label>
+                </div>
+
+                <button class="submit-btn" id="submitBtn" disabled onclick="submitSignature()">Sign &amp; Submit Agreement</button>
+                <p class="submit-hint">By submitting, you agree to conduct this transaction electronically.</p>
+                <p class="error-text hidden" id="submitError"></p>
+            </div>
+        </div>
+
+        <footer class="page-footer">
+            I Create Solutions &amp; Services &nbsp;•&nbsp; icreatesolutionsandservices.com &nbsp;•&nbsp; Governed by the laws of Jamaica
+        </footer>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/sign-contract.js"></script>
+</body>
+</html>
