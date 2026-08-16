@@ -2,7 +2,7 @@
  * iCreate Solutions & Services - Smart Email Template System
  */
 
-const { formatMoney } = require('./contractTemplate');
+const { formatMoney, COMPANY_EMAIL, COMPANY_PHONE } = require('./contractTemplate');
 
 const SERVICE_NAMES = {
   'WEB': 'Website Development',
@@ -941,12 +941,13 @@ function getWelcomeSubscriptionTemplate(service) {
  * @param {Object} contract - contracts row
  * @param {string} signUrl - full public link to the sign page
  */
-function getContractSigningRequestTemplate(contract, signUrl) {
+function getContractSigningRequestTemplate(contract, signUrl, companySignatureUrl = null) {
   const clientName = escapeHtml(contract.client_name || 'there');
   const projectLabel = escapeHtml(contract.project_type || contract.project_description || 'your project');
   const cost = formatMoney(contract.project_cost, contract.currency);
   const depositAmount = formatMoney((Number(contract.project_cost) || 0) * (Number(contract.deposit_percent) || 0) / 100, contract.currency);
   const refLine = contract.agreement_reference ? `Ref: ${escapeHtml(contract.agreement_reference)}` : '';
+  const contactHref = `mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(`Question about my agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`)}`;
 
   const subject = `Your Project Service Agreement is Ready to Sign${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`;
 
@@ -1006,9 +1007,36 @@ function getContractSigningRequestTemplate(contract, signUrl) {
                 </tr>
               </table>
 
-              <p style="margin:0 0 8px 0; font-size:13px; color:#777; line-height:1.6;">
-                It only takes a few minutes — you can sign right on your phone or computer using your finger, a stylus, or your mouse. No printing or scanning required.
-              </p>
+              ${companySignatureUrl ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;">
+                <tr>
+                  <td style="padding:14px 18px; background:#fafbfc; border:1px solid #edf0f5; border-radius:10px;">
+                    <table cellpadding="0" cellspacing="0"><tr>
+                      <td style="padding-right:14px;"><img src="${companySignatureUrl}" alt="Authorized signature" style="height:30px; width:auto; display:block;"></td>
+                      <td style="border-left:1px solid #e3e7f0; padding-left:14px;">
+                        <p style="margin:0; font-size:12px; color:#1a1a1a; font-weight:600;">Already countersigned by ${escapeHtml(contract.company_signer_name || 'I Create Solutions & Services')}</p>
+                        <p style="margin:2px 0 0 0; font-size:11px; color:#999;">Your signature below is the final step.</p>
+                      </td>
+                    </tr></table>
+                  </td>
+                </tr>
+              </table>` : ''}
+
+              <p style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#1a1a1a; text-transform:uppercase; letter-spacing:0.5px;">What happens next:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f7fb; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#0B2447; margin-right:12px; vertical-align:middle;">1</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Open the link below and read through the agreement at your own pace</span>
+                </td></tr>
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f7fb; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#0B2447; margin-right:12px; vertical-align:middle;">2</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Sign with your finger, a stylus, or your mouse — no printing or scanning</span>
+                </td></tr>
+                <tr><td style="padding:10px 0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f7fb; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#0B2447; margin-right:12px; vertical-align:middle;">3</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Get your own signed copy by email instantly, and we'll get to work</span>
+                </td></tr>
+              </table>
             </td>
           </tr>
 
@@ -1020,6 +1048,15 @@ function getContractSigningRequestTemplate(contract, signUrl) {
                 Review &amp; Sign Agreement →
               </a>
               <p style="margin:16px 0 0 0; font-size:12px; color:#999; word-break:break-all;">Or copy this link into your browser:<br><a href="${signUrl}" style="color:#0B2447;">${signUrl}</a></p>
+            </td>
+          </tr>
+
+          <!-- CONTACT STRIP -->
+          <tr>
+            <td style="background:#fafafa; border-top:1px solid #edf0f5; padding:18px 44px; text-align:center;">
+              <p style="margin:0; font-size:13px; color:#777;">
+                Questions before you sign? <a href="${contactHref}" style="color:#0B2447; font-weight:600; text-decoration:none;">Email us</a> or call/WhatsApp <a href="tel:+18765857469" style="color:#0B2447; font-weight:600; text-decoration:none;">${COMPANY_PHONE}</a>.
+              </p>
             </td>
           </tr>
 
@@ -1038,7 +1075,7 @@ function getContractSigningRequestTemplate(contract, signUrl) {
 </body>
 </html>`;
 
-  const text = `Hi ${contract.client_name || 'there'},\n\nYour Project Service Agreement for ${contract.project_type || contract.project_description || 'your project'} is ready for your electronic signature.\n\nProject: ${contract.project_type || contract.project_description || 'N/A'}\nEstimated Cost: ${cost}\nDeposit Required (${contract.deposit_percent}%): ${depositAmount}\n${contract.agreement_reference ? `Reference: ${contract.agreement_reference}\n` : ''}\nReview and sign here: ${signUrl}\n\n— iCreate Solutions & Services`;
+  const text = `Hi ${contract.client_name || 'there'},\n\nYour Project Service Agreement for ${contract.project_type || contract.project_description || 'your project'} is ready for your electronic signature.\n\nProject: ${contract.project_type || contract.project_description || 'N/A'}\nEstimated Cost: ${cost}\nDeposit Required (${contract.deposit_percent}%): ${depositAmount}\n${contract.agreement_reference ? `Reference: ${contract.agreement_reference}\n` : ''}\nAlready countersigned by ${contract.company_signer_name || 'I Create Solutions & Services'} — your signature is the final step.\n\nReview and sign here: ${signUrl}\n\nQuestions? Email ${COMPANY_EMAIL} or call/WhatsApp ${COMPANY_PHONE}.\n\n— iCreate Solutions & Services`;
 
   return { subject, html, text };
 }
@@ -1047,11 +1084,32 @@ function getContractSigningRequestTemplate(contract, signUrl) {
  * Signed Confirmation — sent to the client immediately after they sign, with the PDF attached.
  * @param {Object} contract - contracts row (post-signature)
  */
-function getContractSignedConfirmationTemplate(contract) {
+function getContractSignedConfirmationTemplate(contract, companySignatureUrl = null) {
   const clientName = escapeHtml(contract.client_name || 'there');
   const projectLabel = escapeHtml(contract.project_type || contract.project_description || 'your project');
   const signedDate = formatDate(contract.signed_at);
   const refLine = contract.agreement_reference ? escapeHtml(contract.agreement_reference) : 'N/A';
+  const contactHref = `mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(`Question about my agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`)}`;
+
+  const clientSignatureCell = (contract.signature_type === 'drawn' && contract.signature_data)
+    ? `<img src="${contract.signature_data}" alt="Client signature" style="max-height:34px; max-width:150px; width:auto; display:block; margin:0 auto;">`
+    : `<p style="margin:0; font-family:'Brush Script MT','Segoe Script',cursive; font-size:24px; color:#1a1a1a;">${escapeHtml(contract.signature_data || contract.signer_legal_name || clientName)}</p>`;
+
+  const signatureBlock = `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
+                <tr>
+                  <td width="50%" style="padding:18px 16px; background:#fbfbfd; border:1px solid #edf0f5; border-radius:12px 0 0 12px; text-align:center; vertical-align:bottom;">
+                    ${companySignatureUrl ? `<img src="${companySignatureUrl}" alt="Company signature" style="height:34px; width:auto; display:block; margin:0 auto;">` : `<p style="margin:0; font-family:'Brush Script MT','Segoe Script',cursive; font-size:24px; color:#1a1a1a;">${escapeHtml(contract.company_signer_name || 'I Create Solutions & Services')}</p>`}
+                    <p style="margin:10px 0 0 0; padding-top:10px; border-top:1px solid #e3e7f0; font-size:11px; font-weight:600; color:#1a1a1a;">${escapeHtml(contract.company_signer_name || 'I Create Solutions & Services')}</p>
+                    <p style="margin:2px 0 0 0; font-size:10px; color:#999; text-transform:uppercase; letter-spacing:0.5px;">Company</p>
+                  </td>
+                  <td width="50%" style="padding:18px 16px; background:#fbfbfd; border:1px solid #edf0f5; border-left:none; border-radius:0 12px 12px 0; text-align:center; vertical-align:bottom;">
+                    ${clientSignatureCell}
+                    <p style="margin:10px 0 0 0; padding-top:10px; border-top:1px solid #e3e7f0; font-size:11px; font-weight:600; color:#1a1a1a;">${escapeHtml(contract.signer_legal_name || contract.client_name || '')}</p>
+                    <p style="margin:2px 0 0 0; font-size:10px; color:#999; text-transform:uppercase; letter-spacing:0.5px;">Client</p>
+                  </td>
+                </tr>
+              </table>`;
 
   const subject = `✅ Signed: Your Project Service Agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`;
 
@@ -1110,8 +1168,32 @@ function getContractSignedConfirmationTemplate(contract) {
                 </tr>
               </table>
 
-              <p style="margin:0 0 28px 0; font-size:14px; color:#777; line-height:1.7;">
-                Please keep this email and the attached PDF for your records. If you have any questions about your agreement or next steps, just reply to this email — we're here to help.
+              <p style="margin:0 0 12px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#059669; text-align:center;">Signed By Both Parties</p>
+              ${signatureBlock}
+
+              <p style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#1a1a1a; text-transform:uppercase; letter-spacing:0.5px;">What happens next:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f0fdf4; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#059669; margin-right:12px; vertical-align:middle;">1</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Your deposit invoice will follow separately by email</span>
+                </td></tr>
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f0fdf4; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#059669; margin-right:12px; vertical-align:middle;">2</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">We begin work once your deposit is received</span>
+                </td></tr>
+                <tr><td style="padding:10px 0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f0fdf4; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#059669; margin-right:12px; vertical-align:middle;">3</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Keep this email and the attached PDF — it's your official copy</span>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CONTACT STRIP -->
+          <tr>
+            <td style="background:#fafafa; border-top:1px solid #edf0f5; padding:18px 44px; text-align:center;">
+              <p style="margin:0; font-size:13px; color:#777;">
+                Questions about your agreement or next steps? <a href="${contactHref}" style="color:#059669; font-weight:600; text-decoration:none;">Email us</a> or call/WhatsApp <a href="tel:+18765857469" style="color:#059669; font-weight:600; text-decoration:none;">${COMPANY_PHONE}</a>.
               </p>
             </td>
           </tr>
@@ -1131,7 +1213,7 @@ function getContractSignedConfirmationTemplate(contract) {
 </body>
 </html>`;
 
-  const text = `Hi ${contract.client_name || 'there'},\n\nThank you for signing your Project Service Agreement with I Create Solutions & Services for ${contract.project_type || contract.project_description || 'your project'}.\n\nReference: ${refLine}\nSigned By: ${contract.signer_legal_name || contract.client_name || ''}\nDate Signed: ${signedDate}\n\nA signed copy (PDF) is attached to this email for your records.\n\n— iCreate Solutions & Services`;
+  const text = `Hi ${contract.client_name || 'there'},\n\nThank you for signing your Project Service Agreement with I Create Solutions & Services for ${contract.project_type || contract.project_description || 'your project'}.\n\nReference: ${refLine}\nSigned By: ${contract.signer_legal_name || contract.client_name || ''}\nDate Signed: ${signedDate}\n\nA signed copy (PDF) is attached to this email for your records.\n\nWhat happens next:\n1. Your deposit invoice will follow separately by email\n2. We begin work once your deposit is received\n3. Keep this email and the attached PDF — it's your official copy\n\nQuestions? Email ${COMPANY_EMAIL} or call/WhatsApp ${COMPANY_PHONE}.\n\n— iCreate Solutions & Services`;
 
   return { subject, html, text };
 }

@@ -27,6 +27,12 @@ function buildSignUrl(req, token) {
     return `${origin}${APP_BASE_PATH}/sign-contract?token=${token}`;
 }
 
+// Publicly reachable URL for the company signature image, used to show it inline in emails.
+function buildCompanySignatureUrl(req) {
+    const origin = `${req.protocol}://${req.get('host')}`;
+    return `${origin}${APP_BASE_PATH}/assets/signature.png`;
+}
+
 // Attaches the authoritative, deployment-aware sign_url so the admin frontend never has to
 // guess it (it can't reliably account for APP_BASE_PATH on its own).
 function attachSignUrl(req, contract) {
@@ -187,7 +193,7 @@ router.post('/public/:token/sign', async (req, res) => {
         // so we can report a real failure back to the client if delivery fails).
         try {
             const pdfBuffer = await generateContractPDF(signed);
-            const { subject, html, text } = getContractSignedConfirmationTemplate(signed);
+            const { subject, html, text } = getContractSignedConfirmationTemplate(signed, buildCompanySignatureUrl(req));
             const filename = `${signed.agreement_reference || 'Service-Agreement'}.pdf`;
             await sendContractEmail(signed.client_email, subject, text, html, pdfBuffer, filename);
         } catch (emailErr) {
@@ -367,7 +373,7 @@ router.post('/:id/send', async (req, res) => {
         };
 
         const signUrl = buildSignUrl(req, contract.sign_token);
-        const { subject, html, text } = getContractSigningRequestTemplate(contract, signUrl);
+        const { subject, html, text } = getContractSigningRequestTemplate(contract, signUrl, buildCompanySignatureUrl(req));
         await sendContractEmail(contract.client_email, subject, text, html);
 
         const wasFirstSend = !contract.sent_at;
