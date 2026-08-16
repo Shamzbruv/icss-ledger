@@ -413,17 +413,19 @@ router.delete('/:id', async (req, res) => {
         if (fetchError) throw fetchError;
         if (!existing) return res.status(404).json({ error: 'Contract not found.' });
 
-        if (existing.status === 'signed') {
-            return res.status(400).json({ error: 'Signed agreements cannot be deleted — they are a legal record.' });
-        }
+        // ?permanent=true hard-deletes regardless of status — including signed agreements.
+        // Used explicitly (e.g. clearing out test contracts); the default DELETE stays
+        // non-destructive for anything the client may have already seen or signed.
+        const permanent = req.query.permanent === 'true';
 
-        if (existing.status === 'draft') {
+        if (existing.status === 'draft' || permanent) {
             const { error: deleteError } = await supabase.from('contracts').delete().eq('id', req.params.id);
             if (deleteError) throw deleteError;
-            return res.json({ success: true, message: 'Draft deleted.' });
+            return res.json({ success: true, message: 'Contract permanently deleted.' });
         }
 
-        // Sent / viewed — void instead of hard-deleting, so the link stops working but the record remains.
+        // Sent / viewed — void instead of hard-deleting by default, so the link stops working
+        // but the record remains.
         const { error: voidError } = await supabase
             .from('contracts')
             .update({ status: 'void', void_at: new Date().toISOString(), updated_at: new Date().toISOString() })

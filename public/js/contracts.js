@@ -352,7 +352,10 @@ function renderDetailFooter(c) {
     }
     if (c.status === 'sent' || c.status === 'viewed') {
         return `
-            <button class="btn btn-outline-light" style="color:#ff4757; border-color:#ff4757;" onclick="deleteContract('${c.id}', '${c.status}')">Void Agreement</button>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-outline-light" style="color:#ffa502; border-color:#ffa502;" onclick="deleteContract('${c.id}', '${c.status}', false)">Void</button>
+                <button class="btn btn-outline-light" style="color:#ff4757; border-color:#ff4757;" onclick="deleteContract('${c.id}', '${c.status}', true)">Delete Permanently</button>
+            </div>
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-secondary" onclick="viewPdf('${c.id}')">Preview PDF</button>
                 <button class="btn btn-primary" onclick="resendContract('${c.id}')">Resend Email</button>
@@ -361,8 +364,14 @@ function renderDetailFooter(c) {
     }
     if (c.status === 'signed') {
         return `
-            <div></div>
+            <button class="btn btn-outline-light" style="color:#ff4757; border-color:#ff4757;" onclick="deleteContract('${c.id}', 'signed', true)">Delete Permanently</button>
             <button class="btn btn-primary" onclick="viewPdf('${c.id}')">Download Signed PDF</button>
+        `;
+    }
+    if (c.status === 'void') {
+        return `
+            <button class="btn btn-outline-light" style="color:#ff4757; border-color:#ff4757;" onclick="deleteContract('${c.id}', 'void', true)">Delete Permanently</button>
+            <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
         `;
     }
     return `<div></div><button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>`;
@@ -432,17 +441,31 @@ async function resendContract(id) {
     }
 }
 
-async function deleteContract(id, status) {
+async function deleteContract(id, status, permanent = false) {
     const isDraft = status === 'draft';
-    const message = isDraft
-        ? 'Delete this draft contract? This cannot be undone.'
-        : 'Void this agreement? The client\'s signing link will stop working, but the record is kept for your files.';
+    let message, confirmText;
+
+    if (isDraft) {
+        message = 'Delete this draft contract? This cannot be undone.';
+        confirmText = 'Delete';
+    } else if (status === 'signed' && permanent) {
+        message = 'Permanently delete this SIGNED agreement? This is a legal record of the client\'s electronic signature — deleting it removes all proof they signed, including their signature and audit trail. This cannot be undone.';
+        confirmText = 'Delete Permanently';
+    } else if (permanent) {
+        message = 'Permanently delete this contract? This removes it entirely, including the signing link and all its data. This cannot be undone.';
+        confirmText = 'Delete Permanently';
+    } else {
+        message = 'Void this agreement? The client\'s signing link will stop working, but the record is kept for your files.';
+        confirmText = 'Void';
+    }
+
     const confirmed = (typeof showConfirm === 'function')
-        ? await showConfirm(message, 'danger', isDraft ? 'Delete' : 'Void')
+        ? await showConfirm(message, 'danger', confirmText)
         : confirm(message);
     if (!confirmed) return;
     try {
-        const res = await apiFetch(`/api/contracts/${id}`, { method: 'DELETE' });
+        const url = `/api/contracts/${id}${permanent ? '?permanent=true' : ''}`;
+        const res = await apiFetch(url, { method: 'DELETE' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to remove contract');
         closeDetailModal();
