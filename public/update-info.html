@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Your Details | I Create Solutions &amp; Services</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+    <style>
+        :root {
+            --navy: #0B2447;
+            --navy-dark: #071a33;
+            --ink: #1a1a1a;
+            --muted: #6b7280;
+            --border: #e3e7ee;
+            --bg: #f2f4f8;
+            --card: #ffffff;
+            --green: #1a7f37;
+            --red: #c0392b;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', -apple-system, Helvetica, Arial, sans-serif; }
+        .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 60px 16px; }
+
+        .topbar { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%); padding: 28px 20px; margin-bottom: -1px; }
+        .topbar-inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+        .topbar img { height: 40px; width: auto; border-radius: 6px; }
+        .topbar-text h1 { margin: 0; color: #fff; font-size: 1.1rem; font-weight: 700; }
+        .topbar-text p { margin: 2px 0 0 0; color: rgba(255,255,255,0.75); font-size: 0.82rem; }
+
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-top: 24px; box-shadow: 0 8px 30px rgba(11,36,71,0.06); }
+        .center-card { text-align: center; padding: 50px 30px; }
+        .center-card .icon { font-size: 3rem; margin-bottom: 10px; }
+        .center-card h2 { margin: 0 0 10px 0; color: var(--navy); }
+        .center-card p { color: var(--muted); line-height: 1.6; }
+
+        .hidden { display: none !important; }
+
+        .intro-name { margin: 0 0 4px 0; color: var(--ink); font-size: 1.05rem; font-weight: 600; }
+        .intro-sub { margin: 0 0 24px 0; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+
+        .field-item { margin-bottom: 22px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+        .field-item:last-of-type { border-bottom: none; margin-bottom: 8px; padding-bottom: 0; }
+        .field-label { display: block; font-size: 0.9rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+        .field-why { display: block; font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+        .field-item input {
+            width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; color: var(--ink);
+        }
+        .field-item input:focus { outline: none; border-color: var(--navy); }
+        .birthday-row { display: flex; gap: 10px; }
+        .birthday-row input { text-align: center; }
+
+        .submit-btn {
+            width: 100%; padding: 16px; margin-top: 10px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%); color: #fff;
+            font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 8px 24px rgba(11,36,71,0.25);
+        }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+        .error-text { color: var(--red); font-size: 0.85rem; margin-top: 14px; text-align: center; }
+
+        footer.page-footer { text-align: center; color: var(--muted); font-size: 0.75rem; padding: 30px 20px 0 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="topbar-inner">
+            <img src="assets/icss-logo.png" alt="I Create Solutions & Services">
+            <div class="topbar-text">
+                <h1>I Create Solutions &amp; Services</h1>
+                <p>Client Care — Update Your Details</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="wrap">
+
+        <div id="loadingState" class="card center-card">
+            <div class="icon">⏳</div>
+            <h2>Loading…</h2>
+            <p>Just a moment.</p>
+        </div>
+
+        <div id="errorState" class="card center-card hidden">
+            <div class="icon">⚠️</div>
+            <h2>Link Unavailable</h2>
+            <p id="errorMessage">This link is invalid or has expired. Please contact us for a new one.</p>
+        </div>
+
+        <div id="alreadyCompleteState" class="card center-card hidden">
+            <div class="icon">✅</div>
+            <h2>You're All Set!</h2>
+            <p>We already have everything we need on file for you. Thanks!</p>
+        </div>
+
+        <div id="successState" class="card center-card hidden">
+            <div class="icon">🎉</div>
+            <h2>Thanks!</h2>
+            <p id="successMessage">Your details have been updated.</p>
+        </div>
+
+        <div id="formState" class="card hidden">
+            <p class="intro-name" id="introName">Hi there,</p>
+            <p class="intro-sub">To keep your Client Care reporting running smoothly, could you fill in the details below? Only what's still missing is shown here.</p>
+
+            <div id="fieldsContainer"></div>
+
+            <button class="submit-btn" id="submitBtn" onclick="submitDetails()">Save My Details</button>
+            <p class="error-text hidden" id="submitError"></p>
+        </div>
+
+        <footer class="page-footer">
+            I Create Solutions &amp; Services &nbsp;•&nbsp; icreatesolutionsandservices.com
+        </footer>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/update-info.js"></script>
+</body>
+</html>

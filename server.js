@@ -178,6 +178,13 @@ const checkAuth = async (req, res, next) => {
         return next();
     }
 
+    // Same pattern for the "update my info" links sent from Client Care — reached via a
+    // unique, unguessable token, never through an admin session. Sending the request in the
+    // first place stays protected (/api/info-requests/:serviceId/send).
+    if (currentPath.startsWith('/api/info-requests/public/')) {
+        return next();
+    }
+
     // --- JWT verification (primary path) ---
     const authHeader = req.headers['authorization'] || '';
     let token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -227,11 +234,13 @@ const { computeInvoiceState, validateInvoiceState } = require('./src/services/in
 const leadsRouter = require('./src/routes/leads');
 const reviewsRouter = require('./src/routes/reviews');
 const contractsRouter = require('./src/routes/contracts');
+const infoRequestsRouter = require('./src/routes/infoRequests');
 
 // MOUNT ROUTES
 router.use('/api/leads', leadsRouter);
 router.use('/api/reviews', reviewsRouter);
 router.use('/api/contracts', contractsRouter);
+router.use('/api/info-requests', infoRequestsRouter);
 
 const DEFAULT_LINK_HUB = {
     profile: {
@@ -3337,6 +3346,11 @@ router.get('/contracts', (req, res) => {
 // Public — reached by clients via their unique emailed link, no login required.
 router.get('/sign-contract', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'sign-contract.html'));
+});
+
+// Public — reached by clients via their unique "Request Info" emailed link, no login required.
+router.get('/update-info', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'update-info.html'));
 });
 
 router.get('/link-hub-admin', (req, res) => {

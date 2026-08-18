@@ -1218,4 +1218,53 @@ function getContractSignedConfirmationTemplate(contract, companySignatureUrl = n
   return { subject, html, text };
 }
 
-module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate, getContractSigningRequestTemplate, getContractSignedConfirmationTemplate };
+/**
+ * Generates the "Request Missing Info" email — asks a client to fill in
+ * whatever Client Care details are still blank, explaining why each one is
+ * needed, with a link to the public self-service update page.
+ * @param {Object} client - { name, email }
+ * @param {Array} missingFields - [{ label, why }] from clientInfoRequestService
+ * @param {string} updateUrl - the client's unique update-info link
+ * @param {number} expiryDays - how many days the link stays valid
+ */
+function getInfoRequestTemplate(client, missingFields, updateUrl, expiryDays) {
+  const clientName = escapeHtml(client?.name || 'there');
+
+  const itemsHtml = missingFields.map(field => `
+        <li style="margin-bottom: 16px;">
+            <strong style="color:#0056b3;">${escapeHtml(field.label)}</strong><br>
+            <span style="color:#666; font-size: 0.9em;">${escapeHtml(field.why)}</span>
+        </li>`).join('');
+
+  const itemsText = missingFields.map(field => `- ${field.label}\n  ${field.why}`).join('\n');
+
+  const subject = 'A few quick details for your Client Care setup';
+
+  const htmlBody = `
+        <p>Hi <strong>${clientName}</strong>,</p>
+        <p>To keep your Client Care reporting running smoothly (and so we don't miss a couple of nice extras), we're missing a few details on file for you:</p>
+        <ul style="padding-left: 20px; margin: 20px 0; list-style: none;">${itemsHtml}</ul>
+        <div style="text-align:center; margin: 28px 0;">
+            <a href="${updateUrl}" style="display:inline-block; background:#0056b3; color:white; text-decoration:none; padding:12px 28px; border-radius:6px; font-weight:600;">Update My Details</a>
+        </div>
+        <p style="font-size:0.85em; color:#888;">This link is unique to you and doesn't require a password. It stays active for ${expiryDays} days.</p>
+        <p style="font-size:0.85em; color:#888;">If the button above doesn't work, copy and paste this link into your browser:<br><span style="word-break:break-all; color:#0056b3;">${updateUrl}</span></p>
+        <p>Thanks for being a client — reply to this email any time if you have questions.</p>
+    `;
+
+  const text = `Hi ${client?.name || 'there'},
+
+To keep your Client Care reporting running smoothly, we're missing a few details on file for you:
+
+${itemsText}
+
+Update your details here: ${updateUrl}
+(This link is unique to you, no password needed, and stays active for ${expiryDays} days.)
+
+Thanks for being a client — reply to this email any time if you have questions.
+— iCreate Solutions & Services`;
+
+  return { subject, text, html: getBaseHtml(htmlBody) };
+}
+
+module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate, getContractSigningRequestTemplate, getContractSignedConfirmationTemplate, getInfoRequestTemplate };

@@ -459,17 +459,30 @@
             return missing;
         }
 
-        // Builds a mailto: link, pre-addressed to the client and pre-filled
-        // with a polite request naming exactly what's still missing. Opening
-        // it drops the draft into whatever email app/account you actually
-        // want to send from — nothing is sent automatically.
-        function buildRequestInfoMailto(clientEmail, clientName, missing) {
-            const subject = 'A few details needed to finish your Client Care setup';
-            const body = `Hi ${clientName || 'there'},\n\n`
-                + `To keep your Client Care reporting running smoothly (and a couple of nice extras, like a birthday note!), could you send over:\n\n`
-                + missing.map(item => `- ${item}`).join('\n')
-                + `\n\nJust reply to this email with the details and we'll take care of the rest.\n\nThanks!\niCreate Solutions & Services`;
-            return `mailto:${encodeURIComponent(clientEmail || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        // Sends the actual "please update your details" email (src/routes/infoRequests.js) —
+        // it states why each item is needed and links to a public self-service page where the
+        // client fills in exactly what's missing. Mirrors sendPaymentNudge()'s confirm/send/alert flow.
+        async function requestClientInfo(serviceId, missingCount) {
+            const confirmed = typeof showConfirm === 'function'
+                ? await showConfirm(`Email this client asking for the ${missingCount} missing detail${missingCount > 1 ? 's' : ''}? They'll get a link to fill them in themselves.`, 'warning', 'Request Info')
+                : confirm('Email this client asking for their missing details?');
+            if (!confirmed) return;
+
+            const buttons = document.querySelectorAll(`[data-request-info="${serviceId}"]`);
+            buttons.forEach(btn => { btn.disabled = true; btn.textContent = '⏳ Sending...'; });
+
+            try {
+                const res = await apiFetch(`/api/info-requests/${serviceId}/send`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to send the request.');
+                if (typeof showAlert === 'function') showAlert(data.message + ' — link sent by email.', 'success');
+                else alert(data.message);
+            } catch (err) {
+                if (typeof showAlert === 'function') showAlert('Error: ' + err.message, 'error');
+                else alert('Error: ' + err.message);
+            } finally {
+                buttons.forEach(btn => { btn.disabled = false; btn.textContent = `📋 Request Info (${missingCount})`; });
+            }
         }
 
         // Inline script now has access to window.CONFIG
@@ -659,7 +672,7 @@
                     const clientEmail = s.clients?.email || '';
                     const missingInfo = computeMissingInfo(meta, planName);
                     const requestInfoBtn = (missingInfo.length > 0 && clientEmail)
-                        ? `<a class="btn btn-sm btn-warning" href="${buildRequestInfoMailto(clientEmail, clientName, missingInfo)}" style="margin-left: 5px;" title="Opens an email to ${escapeHtml(clientEmail)} requesting: ${escapeHtml(missingInfo.join('; '))}">📋 Request Info (${missingInfo.length})</a>`
+                        ? `<button class="btn btn-sm btn-warning" data-request-info="${s.id}" onclick="requestClientInfo('${s.id}', ${missingInfo.length})" style="margin-left: 5px;" title="Emails ${escapeHtml(clientEmail)} a link to fill in: ${escapeHtml(missingInfo.join('; '))}">📋 Request Info (${missingInfo.length})</button>`
                         : '';
 
                     return `
@@ -1252,32 +1265,66 @@
             }
         };
 
-        // Opens a pre-filled email (via mailto:) asking the client for
-        // whatever Client Care details are still blank. Nothing is sent
-        // automatically — this only drafts the request for you to send.
-        window.requestMissingInfo = function() {
+        // Sends the actual "please update your details" email. Saves whatever's
+        // currently in the form first (silently, no "Schedule updated" toast) so
+        // the email always reflects what's on screen, not a stale saved copy —
+        // otherwise a field you just typed but haven't hit Save on yet would
+        // still show up as "missing" in the email.
+        window.requestMissingInfo = async function() {
             refreshMissingInfoHint();
             const clientEmail = document.getElementById('editClientEmail').value;
-            const clientName = document.getElementById('editClientName').value;
-            const meta = {
-                contact_name: document.getElementById('editContactName').value.trim(),
-                contact_phone: document.getElementById('editContactPhone').value.trim(),
-                birthday_month: document.getElementById('editBirthdayMonth').value,
-                birthday_day: document.getElementById('editBirthdayDay').value,
-                website_url: document.getElementById('editWebsiteUrl').value.trim(),
-                domain: document.getElementById('editDomainName').value.trim(),
-                ga_property_id: document.getElementById('editGaPropertyId').value.trim(),
-                plan_code: null
-            };
-            const planName = document.getElementById('editPlanNameHidden').value;
-            const missing = computeMissingInfo(meta, planName);
-            if (missing.length === 0) return;
             if (!clientEmail) {
                 if (typeof showAlert === 'function') showAlert('This client has no email on file to send the request to.', 'error');
                 else alert('This client has no email on file to send the request to.');
                 return;
             }
-            window.location.href = buildRequestInfoMailto(clientEmail, clientName, missing);
+
+            const serviceId = document.getElementById('editScheduleServiceId').value;
+            const btn = document.getElementById('requestInfoBtn');
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ Sending...';
+
+            try {
+                const frequency = document.getElementById('editFrequencySelect').value;
+                const send_time = document.getElementById('editSendTime').value;
+                const timezone = document.getElementById('editTimezone').value;
+                const send_day_of_week = frequency === 'weekly' ? document.getElementById('editSendDayOfWeek').value : null;
+                const send_day_of_month = frequency === 'monthly' ? (document.getElementById('editSendDayOfMonth').value || 1) : null;
+                const plan_id = document.getElementById('editPlanSelect').value;
+                const serviceMeta = {
+                    website_url: document.getElementById('editWebsiteUrl').value,
+                    domain: document.getElementById('editDomainName').value,
+                    report_email: document.getElementById('editReportEmail').value,
+                    contact_name: document.getElementById('editContactName').value,
+                    contact_phone: document.getElementById('editContactPhone').value,
+                    birthday_month: Number(document.getElementById('editBirthdayMonth').value) || null,
+                    birthday_day: Number(document.getElementById('editBirthdayDay').value) || null,
+                    ga_property_id: document.getElementById('editGaPropertyId').value.trim().replace(/^properties\//i, ''),
+                    api_urls: Array.from(document.querySelectorAll('input[name="editApiUrl[]"]')).map(i => i.value).filter(v => v.trim() !== ''),
+                    cc_emails: Array.from(document.querySelectorAll('input[name="editCcEmail[]"]')).map(i => i.value).filter(v => v.trim() !== '')
+                };
+                const saveRes = await apiFetch(`/api/client-services/${serviceId}/schedule`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frequency, send_day_of_week, send_day_of_month, send_time, timezone, plan_id, serviceMeta })
+                });
+                if (!saveRes.ok) throw new Error((await saveRes.json()).error || 'Could not save your changes before sending.');
+
+                const sendRes = await apiFetch(`/api/info-requests/${serviceId}/send`, { method: 'POST' });
+                const sendData = await sendRes.json();
+                if (!sendRes.ok) throw new Error(sendData.error || 'Failed to send the request.');
+
+                if (typeof showAlert === 'function') showAlert(sendData.message + ' — link sent by email.', 'success');
+                else alert(sendData.message);
+                loadServices();
+            } catch (err) {
+                if (typeof showAlert === 'function') showAlert('Error: ' + err.message, 'error');
+                else alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         };
 
         window.addEditApiUrlField = function(val = '') {
