@@ -432,6 +432,46 @@
                 .format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))));
         }
 
+        // Mirrors the WEBSITE_PLAN_CODES/WEBSITE_PLAN_NAMES sets in
+        // src/services/clientCarePulseService.js, so website-only fields
+        // (URL, domain, GA4 property) aren't flagged as "missing" for plans
+        // that never need them (e.g. a pure care/support plan).
+        const WEBSITE_PLAN_CODES = new Set(['HOST_PRO', 'HOST_DOM', 'MAINT', 'REFRESH']);
+        const WEBSITE_PLAN_NAMES = new Set(['Hosting Only', 'Hosting + Domain Management', 'Professional Hosting', 'Hosting + Domain', 'Web Maintenance', 'Content Refresh', 'Website Content Refresh']);
+
+        function isWebsitePlanMeta(meta, planName) {
+            return WEBSITE_PLAN_CODES.has(meta?.plan_code) || WEBSITE_PLAN_NAMES.has(planName || '');
+        }
+
+        // Figures out which Client Care details are still missing for a service
+        // so we can pre-fill a "request info" email instead of chasing it by memory.
+        function computeMissingInfo(meta, planName) {
+            meta = meta || {};
+            const missing = [];
+            if (!meta.contact_name) missing.push('Their name (main contact)');
+            if (!meta.contact_phone) missing.push('A phone or WhatsApp number');
+            if (!meta.birthday_month || !meta.birthday_day) missing.push('Their birthday (month & day) — so we can send a birthday note');
+            if (isWebsitePlanMeta(meta, planName)) {
+                if (!meta.website_url) missing.push('Their website URL');
+                if (!meta.domain) missing.push('Their domain name');
+                if (!meta.ga_property_id) missing.push('Their Google Analytics 4 Property ID (the numeric ID from GA4 Admin → Property Settings, not the "G-" measurement ID) plus Viewer access for our reporting service account');
+            }
+            return missing;
+        }
+
+        // Builds a mailto: link, pre-addressed to the client and pre-filled
+        // with a polite request naming exactly what's still missing. Opening
+        // it drops the draft into whatever email app/account you actually
+        // want to send from — nothing is sent automatically.
+        function buildRequestInfoMailto(clientEmail, clientName, missing) {
+            const subject = 'A few details needed to finish your Client Care setup';
+            const body = `Hi ${clientName || 'there'},\n\n`
+                + `To keep your Client Care reporting running smoothly (and a couple of nice extras, like a birthday note!), could you send over:\n\n`
+                + missing.map(item => `- ${item}`).join('\n')
+                + `\n\nJust reply to this email with the details and we'll take care of the rest.\n\nThanks!\niCreate Solutions & Services`;
+            return `mailto:${encodeURIComponent(clientEmail || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
         // Inline script now has access to window.CONFIG
         // ... (rest of script)
         // Load Data on Start
@@ -613,15 +653,25 @@
                         } catch (e) { nextRun = 'Invalid Date'; }
                     }
 
+                    const meta = s.service_meta_json || {};
+                    const planName = s.service_plans?.name || '';
+                    const clientName = s.clients?.name || '';
+                    const clientEmail = s.clients?.email || '';
+                    const missingInfo = computeMissingInfo(meta, planName);
+                    const requestInfoBtn = (missingInfo.length > 0 && clientEmail)
+                        ? `<a class="btn btn-sm btn-warning" href="${buildRequestInfoMailto(clientEmail, clientName, missingInfo)}" style="margin-left: 5px;" title="Opens an email to ${escapeHtml(clientEmail)} requesting: ${escapeHtml(missingInfo.join('; '))}">📋 Request Info (${missingInfo.length})</a>`
+                        : '';
+
                     return `
                     <tr>
                         <td>
                             <div class="cell-content">
-                                <strong>${escapeHtml(s.clients?.name || 'Unknown')}</strong><br>
-                                <small>${escapeHtml(s.clients?.email || '')}</small>
+                                <strong>${escapeHtml(clientName || 'Unknown')}</strong><br>
+                                <small>${escapeHtml(clientEmail)}</small>
+                                ${missingInfo.length > 0 ? `<br><small style="color: var(--warning-color);">⚠ Missing ${missingInfo.length} detail${missingInfo.length > 1 ? 's' : ''}</small>` : ''}
                             </div>
                         </td>
-                        <td><div class="cell-content">${escapeHtml(s.service_plans?.name || 'Unknown Plan')}</div></td>
+                        <td><div class="cell-content">${escapeHtml(planName || 'Unknown Plan')}</div></td>
                         <td>
                             <div class="cell-content">
                                 <span class="badge bg-secondary">${escapeHtml(s.frequency)}</span>
@@ -635,9 +685,10 @@
                         <td>${s.last_emailed_at ? new Date(s.last_emailed_at).toLocaleDateString() : 'Never'}</td>
                         <td>
                             <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
-                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month}, '${s.send_time || '09:00'}', '${s.timezone || 'America/Jamaica'}', '${encodeURIComponent(JSON.stringify(s.service_meta_json || {})).replace(/'/g, '%27')}')">Edit Service</button>
+                            <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month}, '${s.send_time || '09:00'}', '${s.timezone || 'America/Jamaica'}', '${encodeURIComponent(JSON.stringify(meta)).replace(/'/g, '%27')}', '${encodeURIComponent(clientName)}', '${encodeURIComponent(clientEmail)}', '${encodeURIComponent(planName)}')">Edit Service</button>
                             <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
                             <button class="btn btn-sm btn-warning" onclick="sendPaymentNudge('${s.id}')" title="Send payment reminder to client" style="margin-left: 5px;">💳 Payment Nudge</button>
+                            ${requestInfoBtn}
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
                         </td>
                     </tr>
@@ -1121,8 +1172,11 @@
         applyTableLabels();
 
         // EDIT SCHEDULE LOGIC
-        window.openEditScheduleModal = function(serviceId, planId, frequency, dayOfWeek, dayOfMonth, sendTime, timezone, metaStr) {
+        window.openEditScheduleModal = function(serviceId, planId, frequency, dayOfWeek, dayOfMonth, sendTime, timezone, metaStr, clientNameStr, clientEmailStr, planNameStr) {
             document.getElementById('editScheduleServiceId').value = serviceId;
+            document.getElementById('editClientName').value = clientNameStr ? decodeURIComponent(clientNameStr) : '';
+            document.getElementById('editClientEmail').value = clientEmailStr ? decodeURIComponent(clientEmailStr) : '';
+            document.getElementById('editPlanNameHidden').value = planNameStr ? decodeURIComponent(planNameStr) : '';
             document.getElementById('editPlanSelect').value = planId || '';
             document.getElementById('editFrequencySelect').value = frequency || 'monthly';
             document.getElementById('editSendTime').value = String(sendTime || '09:00').slice(0, 5);
@@ -1164,7 +1218,66 @@
             }
 
             toggleEditScheduleFields();
+            refreshMissingInfoHint();
             document.getElementById('editScheduleModal').classList.remove('d-none');
+        };
+
+        // Re-reads whatever is currently in the form (including edits the
+        // admin hasn't saved yet) and updates the "missing info" hint plus
+        // the Request Info button's enabled state.
+        window.refreshMissingInfoHint = function() {
+            const meta = {
+                contact_name: document.getElementById('editContactName').value.trim(),
+                contact_phone: document.getElementById('editContactPhone').value.trim(),
+                birthday_month: document.getElementById('editBirthdayMonth').value,
+                birthday_day: document.getElementById('editBirthdayDay').value,
+                website_url: document.getElementById('editWebsiteUrl').value.trim(),
+                domain: document.getElementById('editDomainName').value.trim(),
+                ga_property_id: document.getElementById('editGaPropertyId').value.trim(),
+                plan_code: null
+            };
+            const planName = document.getElementById('editPlanNameHidden').value;
+            const missing = computeMissingInfo(meta, planName);
+            const hint = document.getElementById('missingInfoHint');
+            const btn = document.getElementById('requestInfoBtn');
+            if (missing.length > 0) {
+                hint.innerHTML = `⚠ Still missing: ${missing.map(escapeHtml).join('; ')}`;
+                hint.style.display = '';
+                btn.disabled = false;
+                btn.textContent = `✉️ Request Missing Info (${missing.length})`;
+            } else {
+                hint.style.display = 'none';
+                btn.disabled = true;
+                btn.textContent = '✉️ Request Missing Info';
+            }
+        };
+
+        // Opens a pre-filled email (via mailto:) asking the client for
+        // whatever Client Care details are still blank. Nothing is sent
+        // automatically — this only drafts the request for you to send.
+        window.requestMissingInfo = function() {
+            refreshMissingInfoHint();
+            const clientEmail = document.getElementById('editClientEmail').value;
+            const clientName = document.getElementById('editClientName').value;
+            const meta = {
+                contact_name: document.getElementById('editContactName').value.trim(),
+                contact_phone: document.getElementById('editContactPhone').value.trim(),
+                birthday_month: document.getElementById('editBirthdayMonth').value,
+                birthday_day: document.getElementById('editBirthdayDay').value,
+                website_url: document.getElementById('editWebsiteUrl').value.trim(),
+                domain: document.getElementById('editDomainName').value.trim(),
+                ga_property_id: document.getElementById('editGaPropertyId').value.trim(),
+                plan_code: null
+            };
+            const planName = document.getElementById('editPlanNameHidden').value;
+            const missing = computeMissingInfo(meta, planName);
+            if (missing.length === 0) return;
+            if (!clientEmail) {
+                if (typeof showAlert === 'function') showAlert('This client has no email on file to send the request to.', 'error');
+                else alert('This client has no email on file to send the request to.');
+                return;
+            }
+            window.location.href = buildRequestInfoMailto(clientEmail, clientName, missing);
         };
 
         window.addEditApiUrlField = function(val = '') {
@@ -1304,6 +1417,9 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="editScheduleServiceId">
+                <input type="hidden" id="editClientName">
+                <input type="hidden" id="editClientEmail">
+                <input type="hidden" id="editPlanNameHidden">
                 <div class="mb-3">
                     <label>Plan</label>
                     <select id="editPlanSelect" class="form-control">
@@ -1343,21 +1459,22 @@
 
                 <hr>
                 <h5 class="mb-2">Configuration</h5>
+                <small id="missingInfoHint" class="text-muted d-block mb-2" style="display:none;"></small>
                 <div class="d-flex gap-2 mb-2">
-                    <div style="flex:1"><label>Client Contact Name</label><input type="text" id="editContactName" class="form-control" maxlength="120"></div>
-                    <div style="flex:1"><label>Phone / WhatsApp</label><input type="tel" id="editContactPhone" class="form-control" maxlength="50"></div>
+                    <div style="flex:1"><label>Client Contact Name</label><input type="text" id="editContactName" class="form-control" maxlength="120" oninput="refreshMissingInfoHint()"></div>
+                    <div style="flex:1"><label>Phone / WhatsApp</label><input type="tel" id="editContactPhone" class="form-control" maxlength="50" oninput="refreshMissingInfoHint()"></div>
                 </div>
                 <div class="d-flex gap-2 mb-2">
-                    <div style="flex:1"><label>Birthday Month</label><input type="number" id="editBirthdayMonth" class="form-control" min="1" max="12" placeholder="MM"></div>
-                    <div style="flex:1"><label>Birthday Day</label><input type="number" id="editBirthdayDay" class="form-control" min="1" max="31" placeholder="DD"></div>
+                    <div style="flex:1"><label>Birthday Month</label><input type="number" id="editBirthdayMonth" class="form-control" min="1" max="12" placeholder="MM" oninput="refreshMissingInfoHint()"></div>
+                    <div style="flex:1"><label>Birthday Day</label><input type="number" id="editBirthdayDay" class="form-control" min="1" max="31" placeholder="DD" oninput="refreshMissingInfoHint()"></div>
                 </div>
                 <div class="mb-2">
                     <label>Website URL</label>
-                    <input type="url" id="editWebsiteUrl" class="form-control" placeholder="https://example.com">
+                    <input type="url" id="editWebsiteUrl" class="form-control" placeholder="https://example.com" oninput="refreshMissingInfoHint()">
                 </div>
                 <div class="mb-2">
                     <label>Domain Name</label>
-                    <input type="text" id="editDomainName" class="form-control" placeholder="example.com">
+                    <input type="text" id="editDomainName" class="form-control" placeholder="example.com" oninput="refreshMissingInfoHint()">
                 </div>
                 <div class="mb-2">
                     <label>Primary Report Recipient</label>
@@ -1365,7 +1482,7 @@
                 </div>
                 <div class="mb-2">
                     <label>Google Analytics 4 Property ID</label>
-                    <input type="text" id="editGaPropertyId" class="form-control" inputmode="numeric" pattern="(?:properties/)?[0-9]+" placeholder="123456789">
+                    <input type="text" id="editGaPropertyId" class="form-control" inputmode="numeric" pattern="(?:properties/)?[0-9]+" placeholder="123456789" oninput="refreshMissingInfoHint()">
                     <small class="text-muted">The GA4 property must grant Viewer access to the configured service-account email.</small>
                 </div>
                 <div class="mb-2">
@@ -1379,9 +1496,12 @@
                     <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="addEditCcEmailField()">+ Add Another CC Email</button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeEditScheduleModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="submitScheduleUpdate()">Save Changes</button>
+            <div class="modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <button class="btn btn-warning" id="requestInfoBtn" onclick="requestMissingInfo()" title="Opens a pre-filled email to the client requesting whatever's still missing">✉️ Request Missing Info</button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-secondary" onclick="closeEditScheduleModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitScheduleUpdate()">Save Changes</button>
+                </div>
             </div>
         </div>
     </div>
