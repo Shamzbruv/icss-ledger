@@ -1,5 +1,6 @@
 const supabase = require('../db');
 const { reversalEntry, postJournalEntry, getAccountingSettings } = require('./accountingCoreService');
+const { getNextEventVersion } = require('./outboxEventService');
 
 const roundMoney = (value) => Math.round(Number(value || 0) * 100) / 100;
 
@@ -42,7 +43,14 @@ async function inspectInvoiceLedger(companyId) {
     const issues = [];
     for (const journal of journals || []) {
         if (!invoiceMap.has(journal.source_id)) {
-            issues.push({ type: 'orphan', journalId: journal.id, sourceId: journal.source_id, narration: journal.narration });
+            issues.push({
+                type: 'historical_orphan',
+                repairable: false,
+                journalId: journal.id,
+                sourceId: journal.source_id,
+                narration: journal.narration,
+                detail: 'The source invoice was removed. Review supporting evidence before creating another accounting entry.'
+            });
         }
     }
     for (const [invoiceId, invoiceJournals] of byInvoice.entries()) {
@@ -50,7 +58,7 @@ async function inspectInvoiceLedger(companyId) {
         if (!invoice) continue;
         invoiceJournals.sort((a, b) => new Date(b.created_at || b.journal_date) - new Date(a.created_at || a.journal_date));
         invoiceJournals.slice(1).forEach(journal => issues.push({
-            type: 'duplicate', journalId: journal.id, invoiceId, invoiceNumber: invoice.invoice_number
+            type: 'duplicate', repairable: true, journalId: journal.id, invoiceId, invoiceNumber: invoice.invoice_number
         }));
         const current = invoiceJournals[0];
         const currency = String(invoice.currency || 'JMD').toUpperCase() === 'USD' ? 'USD' : 'JMD';
@@ -58,11 +66,13 @@ async function inspectInvoiceLedger(companyId) {
         const actualJMD = roundMoney(debitByJournal.get(current.id) || 0);
         if (Math.abs(expectedJMD - actualJMD) > 0.01) {
             issues.push({
-                type: 'amount_mismatch', journalId: current.id, invoiceId,
+                type: 'amount_mismatch', repairable: true, journalId: current.id, invoiceId,
                 invoiceNumber: invoice.invoice_number, currency, expectedJMD, actualJMD
             });
         }
     }
+
+    const repairableIssueCount = issues.filter(issue => issue.repairable).length;
 
     return {
         companyId,
@@ -70,6 +80,8 @@ async function inspectInvoiceLedger(companyId) {
         invoiceCount: (invoices || []).length,
         activeInvoiceJournalCount: (journals || []).length,
         issueCount: issues.length,
+        repairableIssueCount,
+        manualReviewIssueCount: issues.length - repairableIssueCount,
         issues
     };
 }
@@ -79,7 +91,7 @@ async function repairInvoiceLedger(companyId) {
     const reversed = new Set();
     const replacements = [];
 
-    for (const issue of audit.issues) {
+    for (const issue of audit.issues.filter(item => item.repairable)) {
         if (!reversed.has(issue.journalId)) {
             await reversalEntry(issue.journalId, `Invoice ledger integrity repair: ${issue.type}`, companyId);
             reversed.add(issue.journalId);
@@ -92,14 +104,15 @@ async function repairInvoiceLedger(companyId) {
         if (error || !invoice) continue;
         const amountJMD = issue.expectedJMD;
         const rate = issue.currency === 'USD' ? audit.fxRate : 1;
+        const eventVersion = await getNextEventVersion(companyId, 'invoice', invoice.id);
         const replacement = await postJournalEntry({
             companyId,
             entryDate: invoice.issue_date || new Date().toISOString().split('T')[0],
             description: `Invoice ${invoice.invoice_number} — ${invoice.clients?.name || 'Client'} [currency corrected]`,
             sourceType: 'INVOICE',
             sourceId: invoice.id,
-            sourceEventVersion: Date.now(),
-            accountingEventId: `invoice-integrity-${invoice.id}-${Date.now()}`,
+            sourceEventVersion: eventVersion,
+            accountingEventId: `invoice-integrity-${invoice.id}-${eventVersion}`,
             reference: invoice.invoice_number,
             lines: [
                 { accountCode: '1100', debitAmount: amountJMD, creditAmount: 0, currency: 'JMD', fxRate: rate, memo: `Invoice ${invoice.invoice_number} (${issue.currency})` },

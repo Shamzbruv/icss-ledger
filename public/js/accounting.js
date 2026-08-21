@@ -215,11 +215,14 @@ async function loadInvoiceLedgerIntegrity() {
         return;
     }
     const hasIssues = audit.issueCount > 0;
+    const hasRepairableIssues = audit.repairableIssueCount > 0;
     card.classList.toggle('integrity-warning', hasIssues);
     card.classList.toggle('integrity-ok', !hasIssues);
     document.getElementById('integrityTitle').textContent = hasIssues ? `${audit.issueCount} invoice ledger issue${audit.issueCount === 1 ? '' : 's'} found` : 'Invoice ledger is balanced and traceable';
-    document.getElementById('integrityDetail').textContent = hasIssues ? 'The audit found orphaned, duplicate, or incorrectly converted postings. Use the repair to create immutable correcting entries.' : `${audit.invoiceCount} invoices and ${audit.activeInvoiceJournalCount} active postings checked.`;
-    document.getElementById('btnRepairInvoiceLedger').classList.toggle('d-none', !hasIssues);
+    document.getElementById('integrityDetail').textContent = hasIssues
+        ? `${audit.repairableIssueCount} safe automatic correction${audit.repairableIssueCount === 1 ? '' : 's'}; ${audit.manualReviewIssueCount} historical item${audit.manualReviewIssueCount === 1 ? '' : 's'} require evidence review.`
+        : `${audit.invoiceCount} invoices and ${audit.activeInvoiceJournalCount} active postings checked.`;
+    document.getElementById('btnRepairInvoiceLedger').classList.toggle('d-none', !hasRepairableIssues);
 }
 
 async function repairInvoiceLedger() {

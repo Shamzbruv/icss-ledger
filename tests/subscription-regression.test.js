@@ -12,6 +12,7 @@ const { getPlanByPayPalId, findCatalogPlan } = require('../src/services/subscrip
 const { computeInvoiceState, validateInvoiceState } = require('../src/services/invoiceStateService');
 const { addBillingPeriod, syncServiceActivation, generateSubscriptionInvoice, processRecurringBilling } = require('../src/services/subscriptionBillingService');
 const { convertInvoiceAmountToJmd } = require('../src/services/postingRulesService');
+const { calculateNextEventVersion, MAX_POSTGRES_INTEGER } = require('../src/services/outboxEventService');
 
 test('website plans map exact PayPal IDs and settled totals', () => {
     const refresh = getPlanByPayPalId('P-00F6350522773701SNECR4RI');
@@ -48,6 +49,14 @@ test('subscription workflows never create invoices', async () => {
     assert.equal(await syncServiceActivation('service-test'), null);
     assert.equal(await generateSubscriptionInvoice({ id: 'service-test' }), null);
     assert.deepEqual(await processRecurringBilling(), { processed: 0, disabled: true });
+});
+
+test('invoice accounting event versions stay monotonic and inside PostgreSQL integer range', () => {
+    assert.equal(calculateNextEventVersion(), 1);
+    assert.equal(calculateNextEventVersion(1, 4, 2), 5);
+    assert.equal(calculateNextEventVersion([7, 3], 6), 8);
+    assert.throws(() => calculateNextEventVersion(MAX_POSTGRES_INTEGER), /version limit/i);
+    assert.throws(() => calculateNextEventVersion(1787336046025), /version limit/i);
 });
 
 test('invoice preview states enforce paid, partial, deposit, and unpaid contracts', () => {

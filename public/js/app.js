@@ -33,6 +33,12 @@ function formatInvoiceMoney(amount, currency = 'JMD') {
     }).format(Number(amount || 0));
 }
 
+function escapeInvoiceHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[character]));
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Auto-set dates
     setDefaultInvoiceDates();
@@ -270,15 +276,16 @@ async function loadInvoices() {
                         if (status === 'DEPOSIT') badgeClass = 'bg-secondary'; // Fallback badge
                         if (status === 'PARTIAL') badgeClass = 'bg-warning';
                         if (status === 'UNPAID') badgeClass = 'bg-danger';
+                        const canDelete = Number(inv.amount_paid || 0) <= 0;
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td data-label="Invoice #"><div class="cell-content">${inv.invoice_number}</div></td>
-                            <td data-label="Client"><div class="cell-content">${clientName}</div></td>
+                            <td data-label="Invoice #"><div class="cell-content">${escapeInvoiceHtml(inv.invoice_number)}</div></td>
+                            <td data-label="Client"><div class="cell-content">${escapeInvoiceHtml(clientName)}</div></td>
                             <td data-label="Date Issued"><div class="cell-content">${new Date(inv.issue_date).toLocaleDateString()}</div></td>
-                            <td data-label="Currency"><div class="cell-content"><span class="currency-pill">${inv.currency || 'JMD'}</span></div></td>
+                            <td data-label="Currency"><div class="cell-content"><span class="currency-pill">${escapeInvoiceHtml(inv.currency || 'JMD')}</span></div></td>
                             <td data-label="Amount"><div class="cell-content">${formatInvoiceMoney(inv.total_amount, inv.currency)}</div></td>
-                            <td data-label="Status"><div class="cell-content"><span class="badge ${badgeClass}">${status}</span></div></td>
+                            <td data-label="Status"><div class="cell-content"><span class="badge ${badgeClass}">${escapeInvoiceHtml(status)}</span></div></td>
                             <td data-label="Actions">
                                 <div class="cell-content d-flex gap-2">
                                     <button class="btn btn-sm btn-outline-light" onclick="viewPDF('${inv.id}')" title="View PDF">View PDF</button>
@@ -286,7 +293,9 @@ async function loadInvoices() {
                                     <button class="btn btn-sm btn-outline-light" onclick="editInvoice('${inv.id}')" title="Edit Invoice">Edit</button>
                                     <button class="btn btn-sm btn-primary" onclick="updateStatusInvoice('${inv.id}', '${status}')">Update</button>
                                     <button class="btn btn-sm btn-danger" onclick="sendPaymentDeclinedAlert('${inv.id}')" title="Payment Declined">Decline Alert</button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteInvoice('${inv.id}', '${inv.invoice_number}')" title="Delete Invoice">Delete</button>
+                                    ${canDelete
+                                        ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteInvoice('${inv.id}', '${inv.invoice_number}')" title="Delete Invoice">Delete</button>`
+                                        : '<button class="btn btn-sm btn-outline-danger" disabled title="Paid invoices must be corrected, not deleted">Delete</button>'}
                                 </div>
                             </td>
                          `;
