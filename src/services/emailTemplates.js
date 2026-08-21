@@ -64,6 +64,19 @@ function getSubscriptionBillingCycle(service = {}, plan = {}) {
   return resolved.charAt(0).toUpperCase() + resolved.slice(1);
 }
 
+function getInvoiceOutstandingBalance(invoice = {}) {
+  const candidates = [invoice.balance_due, invoice.remaining_amount];
+  for (const candidate of candidates) {
+    if (candidate !== null && candidate !== undefined && candidate !== '') {
+      const amount = Number(candidate);
+      if (Number.isFinite(amount)) return Math.max(0, amount);
+    }
+  }
+  const total = Number(invoice.total_amount) || 0;
+  const paid = Number(invoice.amount_paid) || 0;
+  return Math.max(0, total - paid);
+}
+
 function getBaseHtml(bodyContent) {
   return `
     <!DOCTYPE html>
@@ -431,7 +444,7 @@ ${summary.recommendations_text || 'None'}
  */
 function getPaymentDeclinedTemplate(invoice, client) {
   const serviceName = invoice.plan_name || invoice.service_code || 'Service Subscription';
-  const amountDue = formatCurrency(parseFloat(invoice.total_amount) || parseFloat(invoice.balance_due) || 0, invoice.currency);
+  const amountDue = formatCurrency(getInvoiceOutstandingBalance(invoice), invoice.currency);
   const invoiceNumber = invoice.invoice_number || 'Auto-Billing';
   const dueDate = invoice.due_date ? formatDate(invoice.due_date) : 'Immediately';
 
@@ -561,6 +574,59 @@ function getPaymentDeclinedTemplate(invoice, client) {
   const textBody = `Hello ${client.name},\n\nACTION REQUIRED: Payment Declined\n\nWe were unable to process your payment for ${serviceName}.\n\nInvoice Reference: ${invoiceNumber}\nAmount Due: ${amountDue}\nPayment Due: ${dueDate}\n\nTo avoid service interruption, please:\n1. Verify your card details are correct\n2. Confirm sufficient funds are available\n3. Contact us to provide a new payment method\n\nReply to this email or contact: support@icreatesolutionsandservices.com\n\nFailure to resolve within 7 days may result in temporary suspension of services.\n\nThank you,\niCreate Solutions & Services`;
 
   return { subject, text: textBody, html };
+}
+
+/**
+ * Outstanding-balance notice for ordinary invoices. This intentionally avoids
+ * saying that a charge was attempted or declined; only PayPal subscription
+ * failure webhooks may make that claim.
+ */
+function getInvoiceDelinquencyTemplate(invoice, client) {
+  const clientName = escapeHtml(client?.name || 'Valued Client');
+  const invoiceNumber = escapeHtml(invoice.invoice_number || 'Invoice');
+  const serviceName = escapeHtml(getServiceName(invoice.service_code || invoice.plan_name || 'Service'));
+  const dueDate = invoice.due_date ? formatDate(invoice.due_date) : 'Due now';
+  const invoiceAmount = formatCurrency(Number(invoice.total_amount) || 0, invoice.currency);
+  const amountPaid = formatCurrency(Number(invoice.amount_paid) || 0, invoice.currency);
+  const balance = formatCurrency(getInvoiceOutstandingBalance(invoice), invoice.currency);
+  const plainInvoiceNumber = safeHeader(invoice.invoice_number || 'Invoice');
+  const subject = `Outstanding Balance Notice — ${plainInvoiceNumber}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Outstanding Balance Notice</title></head>
+<body style="margin:0;padding:0;background:#f3f5f8;font-family:Inter,Arial,sans-serif;color:#172033;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:36px 16px;background:#f3f5f8;"><tr><td align="center">
+    <table width="620" cellpadding="0" cellspacing="0" style="width:100%;max-width:620px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 18px 50px rgba(15,23,42,.10);">
+      <tr><td style="padding:34px 40px;background:linear-gradient(135deg,#0a1a3a,#173b73);color:#fff;">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:#7dd3fc;">Account notice</p>
+        <h1 style="margin:0;font-size:28px;line-height:1.2;">Outstanding Balance</h1>
+        <p style="margin:10px 0 0;color:#d7e5f7;font-size:14px;">A friendly reminder about an open invoice</p>
+      </td></tr>
+      <tr><td style="padding:36px 40px 12px;">
+        <p style="margin:0 0 14px;font-size:17px;font-weight:700;">Hello ${clientName},</p>
+        <p style="margin:0 0 24px;color:#526071;font-size:15px;line-height:1.7;">Our records show a remaining balance on invoice <strong>${invoiceNumber}</strong> for ${serviceName}. This is an outstanding-balance reminder; it does not mean that a payment attempt was declined.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #dbe4ee;border-radius:14px;background:#f8fafc;">
+          <tr><td style="padding:22px 24px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td style="padding:8px 0;color:#718096;">Invoice</td><td style="padding:8px 0;text-align:right;font-weight:700;">${invoiceNumber}</td></tr>
+              <tr><td style="padding:8px 0;color:#718096;">Due date</td><td style="padding:8px 0;text-align:right;font-weight:700;">${dueDate}</td></tr>
+              <tr><td style="padding:8px 0;color:#718096;">Original amount</td><td style="padding:8px 0;text-align:right;font-weight:700;">${invoiceAmount}</td></tr>
+              <tr><td style="padding:8px 0 14px;color:#718096;border-bottom:1px solid #dbe4ee;">Payments received</td><td style="padding:8px 0 14px;text-align:right;font-weight:700;border-bottom:1px solid #dbe4ee;">${amountPaid}</td></tr>
+              <tr><td style="padding:16px 0 0;color:#0a5b8f;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;">Remaining balance</td><td style="padding:16px 0 0;text-align:right;color:#0a5b8f;font-size:23px;font-weight:800;">${balance}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+        <p style="margin:24px 0;color:#526071;font-size:14px;line-height:1.7;">If you have already arranged payment, please disregard this notice. Otherwise, reply to this email and we will help you settle or discuss the balance.</p>
+      </td></tr>
+      <tr><td style="padding:20px 40px 30px;text-align:center;"><a href="mailto:support@icreatesolutionsandservices.com?subject=Outstanding%20Balance%20-%20${encodeURIComponent(plainInvoiceNumber)}" style="display:inline-block;padding:14px 28px;border-radius:999px;background:#0a5b8f;color:#fff;text-decoration:none;font-weight:700;">Discuss this balance</a></td></tr>
+      <tr><td style="padding:22px 40px;background:#0b1220;color:#a9b6c8;text-align:center;font-size:12px;">iCreate Solutions &amp; Services</td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+
+  const text = `Hello ${safeHeader(client?.name || 'Valued Client')},\n\nOUTSTANDING BALANCE NOTICE\n\nOur records show a remaining balance on invoice ${plainInvoiceNumber}. This is an outstanding-balance reminder; it does not mean that a payment attempt was declined.\n\nOriginal amount: ${invoiceAmount}\nPayments received: ${amountPaid}\nRemaining balance: ${balance}\nDue date: ${dueDate}\n\nIf you have already arranged payment, please disregard this notice. Otherwise, reply to this email for assistance.\n\niCreate Solutions & Services`;
+  return { subject, html, text };
 }
 
 /**
@@ -1281,4 +1347,4 @@ Thanks for being a client — reply to this email any time if you have questions
   return { subject, text, html: getBaseHtml(htmlBody) };
 }
 
-module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate, getSubscriptionBillingCycle, getContractSigningRequestTemplate, getContractSignedConfirmationTemplate, getInfoRequestTemplate };
+module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getInvoiceDelinquencyTemplate, getInvoiceOutstandingBalance, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate, getSubscriptionBillingCycle, getContractSigningRequestTemplate, getContractSignedConfirmationTemplate, getInfoRequestTemplate };

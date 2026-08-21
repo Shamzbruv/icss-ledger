@@ -258,12 +258,12 @@ async function loadInvoices() {
     try {
         const tbody = document.getElementById('invoiceTableBody');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8">Loading...</td></tr>';
             const response = await apiFetch('/api/invoices');
             if (response.ok) {
                 const invoices = await response.json();
                 if (invoices.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7">No recent invoices found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8">No recent invoices found.</td></tr>';
                 } else {
                     tbody.innerHTML = '';
                     invoices.forEach(inv => {
@@ -277,6 +277,12 @@ async function loadInvoices() {
                         if (status === 'PARTIAL') badgeClass = 'bg-warning';
                         if (status === 'UNPAID') badgeClass = 'bg-danger';
                         const canDelete = Number(inv.amount_paid || 0) <= 0;
+                        const balance = inv.balance_due !== null && inv.balance_due !== undefined
+                            ? Number(inv.balance_due)
+                            : (inv.remaining_amount !== null && inv.remaining_amount !== undefined
+                                ? Number(inv.remaining_amount)
+                                : Math.max(0, Number(inv.total_amount || 0) - Number(inv.amount_paid || 0)));
+                        const hasOutstandingBalance = Number.isFinite(balance) && balance > 0 && status !== 'PAID';
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -285,6 +291,7 @@ async function loadInvoices() {
                             <td data-label="Date Issued"><div class="cell-content">${new Date(inv.issue_date).toLocaleDateString()}</div></td>
                             <td data-label="Currency"><div class="cell-content"><span class="currency-pill">${escapeInvoiceHtml(inv.currency || 'JMD')}</span></div></td>
                             <td data-label="Amount"><div class="cell-content">${formatInvoiceMoney(inv.total_amount, inv.currency)}</div></td>
+                            <td data-label="Balance"><div class="cell-content">${formatInvoiceMoney(balance, inv.currency)}</div></td>
                             <td data-label="Status"><div class="cell-content"><span class="badge ${badgeClass}">${escapeInvoiceHtml(status)}</span></div></td>
                             <td data-label="Actions">
                                 <div class="cell-content d-flex gap-2">
@@ -292,7 +299,9 @@ async function loadInvoices() {
                                     <button class="btn btn-sm btn-outline-light" onclick="resendInvoiceEmail('${inv.id}')" title="Resend Email">Resend</button>
                                     <button class="btn btn-sm btn-outline-light" onclick="editInvoice('${inv.id}')" title="Edit Invoice">Edit</button>
                                     <button class="btn btn-sm btn-primary" onclick="updateStatusInvoice('${inv.id}', '${status}')">Update</button>
-                                    <button class="btn btn-sm btn-danger" onclick="sendPaymentDeclinedAlert('${inv.id}')" title="Payment Declined">Decline Alert</button>
+                                    ${hasOutstandingBalance
+                                        ? `<button class="btn btn-sm btn-warning" onclick="sendDelinquencyAlert('${inv.id}')" title="Send an outstanding balance notice">Balance Alert</button>`
+                                        : '<button class="btn btn-sm btn-outline-light" disabled title="No outstanding balance">Paid in Full</button>'}
                                     ${canDelete
                                         ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteInvoice('${inv.id}', '${inv.invoice_number}')" title="Delete Invoice">Delete</button>`
                                         : '<button class="btn btn-sm btn-outline-danger" disabled title="Paid invoices must be corrected, not deleted">Delete</button>'}
@@ -303,7 +312,7 @@ async function loadInvoices() {
                     });
                 }
             } else {
-                tbody.innerHTML = '<tr><td colspan="7">Error loading invoices. Server might be restarting?</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8">Error loading invoices. Server might be restarting?</td></tr>';
             }
         }
     } catch (e) {
@@ -890,29 +899,28 @@ window.resendInvoiceEmail = async function (id) {
     }
 };
 
-window.sendPaymentDeclinedAlert = async function(id) {
+window.sendDelinquencyAlert = async function(id) {
     if (typeof showConfirm === 'function') {
-        const confirmed = await showConfirm('Are you sure you want to send a Payment Declined alert to this client?', 'info', 'Payment Declined');
+        const confirmed = await showConfirm('Send this client a reminder showing their current outstanding balance?', 'info', 'Outstanding Balance');
         if (!confirmed) return;
     } else {
-        if (!confirm('Are you sure you want to send a Payment Declined alert to this client?')) return;
+        if (!confirm('Send this client an outstanding balance reminder?')) return;
     }
 
     try {
         if (typeof showAlert === 'function') {
-            showAlert('Sending decline alert...', 'info');
+            showAlert('Sending balance alert...', 'info');
         }
         
-        const res = await apiFetch('/api/invoices/payment-declined', {
+        const res = await apiFetch('/api/invoices/delinquency-alert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ invoiceId: id })
         });
         
         if (res.ok) {
-            if (typeof showAlert === 'function') await showAlert('Payment Declined email sent to the client!', 'success');
-            else alert('Payment Declined email sent to the client!');
-            loadInvoices(); // Refresh the invoice listing to reflect status if any
+            if (typeof showAlert === 'function') await showAlert('Outstanding balance notice sent to the client!', 'success');
+            else alert('Outstanding balance notice sent to the client!');
         } else {
             const err = await res.json();
             if (typeof showAlert === 'function') showAlert('Error: ' + err.error, 'error');

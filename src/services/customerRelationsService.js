@@ -3,6 +3,7 @@ const { sendEmail } = require('./emailService');
 const { getWelcomeSubscriptionTemplate } = require('./emailTemplates');
 const { findCatalogPlan } = require('./subscriptionCatalog');
 const { calculateNextRunIso, getLocalCalendarParts, normalizeTimeZone } = require('./scheduleTimeService');
+const { getLatestVerifiedPayPalEvent, isRenewalEligibleEvent } = require('./paypalEventGateService');
 
 const WEBSITE_PLAN_CODES = new Set(['HOST_PRO', 'HOST_DOM', 'MAINT', 'REFRESH']);
 const WEBSITE_CHECKLIST = [
@@ -241,6 +242,13 @@ async function processPendingWelcomeEmails(options = {}) {
         if (!client?.id || !client.email) {
             result.skipped++;
             console.warn(`[WELCOME RETRY] Service ${service.id} has no deliverable client email`);
+            continue;
+        }
+
+        const latestPayPalEvent = await getLatestVerifiedPayPalEvent(service);
+        if (!isRenewalEligibleEvent(latestPayPalEvent?.event_type)) {
+            result.skipped++;
+            console.warn(`[WELCOME RETRY] Service ${service.id} skipped: no verified PayPal activation or payment event.`);
             continue;
         }
 

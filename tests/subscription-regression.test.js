@@ -11,8 +11,8 @@ const { calculateNextRunIso } = require('../src/services/scheduleTimeService');
 const { getPlanByPayPalId, findCatalogPlan } = require('../src/services/subscriptionCatalog');
 const { computeInvoiceState, validateInvoiceState } = require('../src/services/invoiceStateService');
 const { addBillingPeriod, syncServiceActivation, generateSubscriptionInvoice, processRecurringBilling, isSubscriptionPaymentContext } = require('../src/services/subscriptionBillingService');
-const { processSubscriptionReminders } = require('../src/services/subscriptionReminderService');
-const { getSubscriptionBillingCycle, getSubscriptionRenewalTemplate } = require('../src/services/emailTemplates');
+const { getSubscriptionBillingCycle, getSubscriptionRenewalTemplate, getInvoiceOutstandingBalance, getInvoiceDelinquencyTemplate } = require('../src/services/emailTemplates');
+const { isRenewalEligibleEvent, isSubscriptionFailureEvent } = require('../src/services/paypalEventGateService');
 const { convertInvoiceAmountToJmd } = require('../src/services/postingRulesService');
 const { calculateNextEventVersion, MAX_POSTGRES_INTEGER } = require('../src/services/outboxEventService');
 
@@ -52,7 +52,15 @@ test('subscription workflows never create invoices', async () => {
     assert.equal(await syncServiceActivation('service-test'), null);
     assert.equal(await generateSubscriptionInvoice({ id: 'service-test' }), null);
     assert.deepEqual(await processRecurringBilling(), { processed: 0, disabled: true });
-    assert.deepEqual(await processSubscriptionReminders(), { success: true, processed: 0, disabled: true });
+});
+
+test('subscription automation requires the correct verified PayPal event', () => {
+    assert.equal(isRenewalEligibleEvent('PAYMENT.SALE.COMPLETED'), true);
+    assert.equal(isRenewalEligibleEvent('BILLING.SUBSCRIPTION.ACTIVATED'), true);
+    assert.equal(isRenewalEligibleEvent('BILLING.SUBSCRIPTION.PAYMENT.FAILED'), false);
+    assert.equal(isRenewalEligibleEvent('BILLING.SUBSCRIPTION.CREATED'), false);
+    assert.equal(isSubscriptionFailureEvent('BILLING.SUBSCRIPTION.PAYMENT.FAILED'), true);
+    assert.equal(isSubscriptionFailureEvent('PAYMENT.SALE.COMPLETED'), false);
 });
 
 test('Client Care cadence never leaks into subscription billing cadence', () => {
@@ -74,6 +82,20 @@ test('verified subscription payments bypass invoice processing', () => {
     assert.equal(isSubscriptionPaymentContext({ invoice: { is_subscription: true } }), true);
     assert.equal(isSubscriptionPaymentContext({ clientServiceId: 'service-1', captureHasSubscriptionIdentity: false }), false);
     assert.equal(isSubscriptionPaymentContext({ invoice: { is_subscription: false } }), false);
+});
+
+test('ordinary invoice alerts report the remaining balance without claiming a decline', () => {
+    const invoice = {
+        invoice_number: 'INV-ICSS-001', service_code: 'WEB', currency: 'JMD',
+        total_amount: 180000, amount_paid: 70000, remaining_amount: 110000, balance_due: 110000,
+        due_date: '2026-05-30'
+    };
+    assert.equal(getInvoiceOutstandingBalance(invoice), 110000);
+    assert.equal(getInvoiceOutstandingBalance({ payment_status: 'PAID', total_amount: 7000, remaining_amount: 7000, balance_due: 0 }), 0);
+    const notice = getInvoiceDelinquencyTemplate(invoice, { name: 'Test Client' });
+    assert.match(notice.subject, /Outstanding Balance Notice/);
+    assert.match(notice.text, /JMD\s*110,000\.00/);
+    assert.doesNotMatch(notice.text, /payment (?:was )?declined|unable to process/i);
 });
 
 test('invoice accounting event versions stay monotonic and inside PostgreSQL integer range', () => {

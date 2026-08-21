@@ -461,7 +461,7 @@
 
         // Sends the actual "please update your details" email (src/routes/infoRequests.js) —
         // it states why each item is needed and links to a public self-service page where the
-        // client fills in exactly what's missing. Mirrors sendPaymentNudge()'s confirm/send/alert flow.
+        // client fills in exactly what's missing. Mirrors the subscription alert confirm/send flow.
         async function requestClientInfo(serviceId, missingCount) {
             const confirmed = typeof showConfirm === 'function'
                 ? await showConfirm(`Email this client asking for the ${missingCount} missing detail${missingCount > 1 ? 's' : ''}? They'll get a link to fill them in themselves.`, 'warning', 'Request Info')
@@ -522,33 +522,33 @@
             }
         }
 
-        async function sendPaymentNudge(serviceId) {
+        async function sendSubscriptionDeclineAlert(serviceId) {
             const confirmed = typeof showConfirm === 'function'
-                ? await showConfirm('Send a payment reminder to this client? You will be BCC\'d on the email.', 'warning', 'Payment Nudge')
-                : confirm('Send a payment reminder to this client? You will be BCC\'d on the email.');
+                ? await showConfirm('Send the PayPal-confirmed subscription decline alert to this client? You will be BCC\'d on the email.', 'warning', 'Subscription Decline')
+                : confirm('Send the PayPal-confirmed subscription decline alert to this client?');
             if (!confirmed) return;
 
             try {
-                const btn = document.querySelector(`button[onclick="sendPaymentNudge('${serviceId}')"]`);
+                const btn = document.querySelector(`button[onclick="sendSubscriptionDeclineAlert('${serviceId}')"]`);
                 if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Sending...'; }
 
-                const res = await apiFetch('/api/client-services/payment-nudge', {
+                const res = await apiFetch('/api/client-services/subscription-decline-alert', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ serviceId })
                 });
 
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Failed to send nudge');
+                if (!res.ok) throw new Error(data.error || 'Failed to send subscription decline alert');
 
-                if (typeof showAlert === 'function') showAlert('Payment reminder sent! You\'ve been BCC\'d.', 'success');
-                else alert('Payment reminder sent!');
+                if (typeof showAlert === 'function') showAlert('Subscription decline alert sent! You\'ve been BCC\'d.', 'success');
+                else alert('Subscription decline alert sent!');
             } catch (err) {
                 if (typeof showAlert === 'function') showAlert('Error: ' + err.message, 'error');
                 else alert('Error: ' + err.message);
             } finally {
-                const btn = document.querySelector(`button[onclick="sendPaymentNudge('${serviceId}')"]`);
-                if (btn) { btn.disabled = false; btn.innerHTML = '💳 Payment Nudge'; }
+                const btn = document.querySelector(`button[onclick="sendSubscriptionDeclineAlert('${serviceId}')"]`);
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Subscription Decline'; }
             }
         }
 
@@ -672,6 +672,8 @@
                     const clientName = s.clients?.name || '';
                     const clientEmail = s.clients?.email || '';
                     const missingInfo = computeMissingInfo(meta, planName);
+                    const paypalFailureEvents = new Set(['BILLING.SUBSCRIPTION.PAYMENT.FAILED', 'PAYMENT.SALE.REVERSED', 'PAYMENT.CAPTURE.DECLINED', 'PAYMENT.CAPTURE.DENIED']);
+                    const hasVerifiedPayPalFailure = paypalFailureEvents.has(s.paypal_last_event_type);
                     const requestInfoBtn = (missingInfo.length > 0 && clientEmail)
                         ? `<button class="btn btn-sm btn-warning" data-request-info="${s.id}" onclick="requestClientInfo('${s.id}', ${missingInfo.length})" style="margin-left: 5px;" title="Emails ${escapeHtml(clientEmail)} a link to fill in: ${escapeHtml(missingInfo.join('; '))}">📋 Request Info (${missingInfo.length})</button>`
                         : '';
@@ -701,7 +703,7 @@
                             <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
                             <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month}, '${s.send_time || '09:00'}', '${s.timezone || 'America/Jamaica'}', '${encodeURIComponent(JSON.stringify(meta)).replace(/'/g, '%27')}', '${encodeURIComponent(clientName)}', '${encodeURIComponent(clientEmail)}', '${encodeURIComponent(planName)}')">Edit Service</button>
                             <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
-                            <button class="btn btn-sm btn-warning" onclick="sendPaymentNudge('${s.id}')" title="Send payment reminder to client" style="margin-left: 5px;">💳 Payment Nudge</button>
+                            <button class="btn btn-sm btn-warning" onclick="sendSubscriptionDeclineAlert('${s.id}')" title="${hasVerifiedPayPalFailure ? 'Send the verified PayPal subscription decline alert' : 'No verified PayPal payment failure is recorded'}" style="margin-left: 5px;" ${hasVerifiedPayPalFailure ? '' : 'disabled'}>Subscription Decline</button>
                             ${requestInfoBtn}
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
                         </td>

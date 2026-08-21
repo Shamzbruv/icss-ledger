@@ -1122,6 +1122,7 @@ const { verifyPayPalWebhookSignature, getPayPalSubscription } = require('./src/s
 const {
     ensureSubscriptionContext,
     sendWelcomeOnce,
+    processPendingWelcomeEmails,
     processBirthdayGreetings
 } = require('./src/services/customerRelationsService');
 const { getPlanByPayPalId } = require('./src/services/subscriptionCatalog');
@@ -2445,11 +2446,13 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
         runDueClientCarePulses(); // Async, don't wait
 
         try {
-            const { autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+            const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+            processSubscriptionReminders(7).catch(err => console.error('Subscription reminder job failed:', err));
             autoAdvanceRenewalDates(); // Auto-advance past dates
             processBirthdayGreetings().catch(err => console.error('Birthday greeting job failed:', err));
+            processPendingWelcomeEmails().catch(err => console.error('Pending welcome email job failed:', err));
         } catch (err) {
-            console.error('Failed to trigger subscription renewal advancement:', err);
+            console.error('Failed to trigger subscription routines:', err);
         }
 
         res.json({ success: true, message: 'Batch run started' });
@@ -2457,8 +2460,8 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-// PAYMENT NUDGE — Send payment reminder for a subscription
-router.post('/api/client-services/payment-nudge', async (req, res) => {
+// Subscription payment-decline alert, backed by a verified PayPal failure.
+router.post(['/api/client-services/subscription-decline-alert', '/api/client-services/payment-nudge'], async (req, res) => {
     try {
         const { serviceId } = req.body;
         if (!serviceId) return res.status(400).json({ error: 'serviceId is required' });
@@ -2473,23 +2476,37 @@ router.post('/api/client-services/payment-nudge', async (req, res) => {
         if (error || !service) return res.status(404).json({ error: 'Subscription not found' });
         if (!service.clients?.email) return res.status(400).json({ error: 'Client has no email address' });
 
-        const { getPaymentNudgeTemplate } = require('./src/services/emailTemplates');
-        const emailContent = getPaymentNudgeTemplate(service, service.clients, service.service_plans);
+        const { getLatestVerifiedPayPalEvent, isSubscriptionFailureEvent } = require('./src/services/paypalEventGateService');
+        const latestPayPalEvent = await getLatestVerifiedPayPalEvent(service);
+        if (!isSubscriptionFailureEvent(latestPayPalEvent?.event_type)) {
+            return res.status(409).json({ error: 'No verified PayPal subscription payment failure is recorded for this client.' });
+        }
+
+        const plan = service.service_plans || {};
+        const { getPaymentDeclinedTemplate } = require('./src/services/emailTemplates');
+        const emailContent = getPaymentDeclinedTemplate({
+            plan_name: plan.name || 'Subscription',
+            balance_due: Number(plan.price) || 0,
+            currency: 'USD',
+            invoice_number: service.service_meta_json?.paypal_subscription_id || latestPayPalEvent.resource_id || 'PayPal Subscription',
+            due_date: service.next_renewal_date
+        }, service.clients);
 
         const emailService = require('./src/services/emailService');
 
-        await emailService.sendEmail(
+        const sent = await emailService.sendEmail(
             service.clients.email,
             emailContent.subject,
             emailContent.html,
             'iCreate Solutions <support@icreatesolutionsandservices.com>',
             null  // BCC defaults to EMAIL_AUDIT_BCC
         );
+        if (!sent) throw new Error('Subscription decline email could not be sent');
 
-        console.log(`💳 Payment nudge sent to ${service.clients.email}`);
-        res.json({ success: true, message: `Payment nudge sent to ${service.clients.name}` });
+        console.log(`[PAYPAL] Verified subscription decline alert sent to ${service.clients.email}`);
+        res.json({ success: true, message: `Subscription decline alert sent to ${service.clients.name}` });
     } catch (err) {
-        console.error('Payment nudge error:', err.message);
+        console.error('Subscription decline alert error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -2507,7 +2524,24 @@ router.get('/api/admin/client-services', async (req, res) => {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        res.json(data);
+        const serviceIds = (data || []).map(service => String(service.id));
+        const latestEventByService = new Map();
+        if (serviceIds.length) {
+            const { data: paypalEvents, error: paypalEventsError } = await supabase
+                .from('paypal_webhook_events')
+                .select('custom_id, event_type, processed_at')
+                .eq('status', 'processed')
+                .in('custom_id', serviceIds)
+                .order('processed_at', { ascending: false, nullsFirst: false });
+            if (paypalEventsError) throw paypalEventsError;
+            for (const event of paypalEvents || []) {
+                if (!latestEventByService.has(event.custom_id)) latestEventByService.set(event.custom_id, event);
+            }
+        }
+        res.json((data || []).map(service => ({
+            ...service,
+            paypal_last_event_type: latestEventByService.get(String(service.id))?.event_type || null
+        })));
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -2619,8 +2653,9 @@ router.post('/api/admin/check-renewals', async (req, res) => {
     }
 });
 
-// Trigger Payment Declined Email
-router.post('/api/invoices/payment-declined', async (req, res) => {
+// Ordinary invoices receive a delinquency notice. Only a verified PayPal
+// failure webhook may generate subscription payment-declined language.
+router.post(['/api/invoices/delinquency-alert', '/api/invoices/payment-declined'], async (req, res) => {
     try {
         const { invoiceId } = req.body;
         if (!invoiceId) return res.status(400).json({ error: 'Invoice ID required' });
@@ -2637,10 +2672,14 @@ router.post('/api/invoices/payment-declined', async (req, res) => {
 
         if (fetchError || !invoice) return res.status(404).json({ error: 'Invoice not found' });
         if (!invoice.clients) return res.status(404).json({ error: 'Client details missing for this invoice' });
+        if (invoice.is_subscription) {
+            return res.status(400).json({ error: 'Subscription decline alerts must come from verified PayPal activity in Client Care.' });
+        }
 
-        // 2. Generate beautiful email content
-        const { getPaymentDeclinedTemplate } = require('./src/services/emailTemplates');
-        const emailContent = getPaymentDeclinedTemplate(invoice, invoice.clients);
+        const { getInvoiceDelinquencyTemplate, getInvoiceOutstandingBalance } = require('./src/services/emailTemplates');
+        const balance = getInvoiceOutstandingBalance(invoice);
+        if (balance <= 0) return res.status(400).json({ error: 'This invoice has no outstanding balance.' });
+        const emailContent = getInvoiceDelinquencyTemplate(invoice, invoice.clients);
 
         // 3. Send Email — correct argument order: (to, subject, html, from, bcc)
         const emailService = require('./src/services/emailService');
@@ -2651,17 +2690,11 @@ router.post('/api/invoices/payment-declined', async (req, res) => {
             'iCreate Solutions <support@icreatesolutionsandservices.com>',
             null  // DEFAULT_BCC applied from EMAIL_AUDIT_BCC inside sendEmail
         );
-        if (!sent) throw new Error('sendEmail returned false for Payment Declined email');
+        if (!sent) throw new Error('sendEmail returned false for delinquency notice');
 
-        // 4. Mark invoice as failed/declined in DB
-        await supabase
-            .from('invoices')
-            .update({ payment_status: 'FAILED' })
-            .eq('id', invoiceId);
-
-        res.json({ success: true, message: 'Payment Declined email sent' });
+        res.json({ success: true, message: 'Outstanding balance notice sent', balance });
     } catch (err) {
-        console.error('Error sending Payment Declined email:', err.message);
+        console.error('Error sending outstanding balance notice:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -3634,6 +3667,7 @@ app.listen(PORT, '0.0.0.0', () => {
     // Check hourly so birthday delivery uses each client's local calendar date.
     setInterval(() => {
         processBirthdayGreetings().catch(err => console.error('Scheduler Error (Birthday Greetings):', err));
+        processPendingWelcomeEmails().catch(err => console.error('Scheduler Error (PayPal-verified Welcome Emails):', err));
     }, 60 * 60 * 1000);
 
     // Run Monthly Summary Check every 12 hours (it only acts on the 1st)
@@ -3641,11 +3675,13 @@ app.listen(PORT, '0.0.0.0', () => {
         runMonthlySummaryChecks().catch(err => console.error('Scheduler Error (Summary):', err));
     }, 12 * 60 * 60 * 1000);
 
-    // Keep non-PayPal legacy renewal dates current. Customer billing emails are
-    // never sent from a timer; PayPal webhooks are authoritative.
+    // Timers may scan for work, but subscription emails remain gated by a
+    // processed PayPal webhook event inside the called services.
     setInterval(() => {
         try {
-            const { autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+            const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+            processSubscriptionReminders(7)
+                .catch(err => console.error('Scheduler Error (Subscription Reminders):', err));
             autoAdvanceRenewalDates()
                 .catch(err => console.error('Scheduler Error (Subscription Auto-Advance):', err));
         } catch (err) {
@@ -3657,11 +3693,15 @@ app.listen(PORT, '0.0.0.0', () => {
     runDueClientCarePulses();
     runMonthlySummaryChecks();
     try {
-        const { autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+        const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
+        processSubscriptionReminders(7)
+            .catch(err => console.error('Initial Run Error (PayPal-verified Subscription Reminders):', err));
         autoAdvanceRenewalDates()
             .catch(err => console.error('Initial Run Error (Subscription Auto-Advance):', err));
         processBirthdayGreetings()
             .catch(err => console.error('Initial Run Error (Birthday Greetings):', err));
+        processPendingWelcomeEmails()
+            .catch(err => console.error('Initial Run Error (PayPal-verified Welcome Emails):', err));
     } catch (err) {
         console.error('Failed to trigger initial subscription routines:', err);
     }
