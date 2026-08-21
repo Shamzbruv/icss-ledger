@@ -25,22 +25,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     <header class="app-header">
         <div class="container header-content">
             <div class="brand-section">
-                <!-- <img src="assets/icss-logo.png" alt="ICSS Logo" class="brand-logo"> -->
-                <h1 class="app-title"><a href="/dashboard" style="color: white; text-decoration: none;">ICSS Command Center</a></h1>
+                <a href="/dashboard" class="brand-link" aria-label="ICSS Command Center dashboard">
+                    <span class="brand-mark">IC</span>
+                    <span class="brand-copy"><strong>ICSS</strong><small>Command Center</small></span>
+                </a>
             </div>
             <button class="menu-toggle" id="menuToggle">
                 <i class="fas fa-bars"></i>
             </button>
             <nav class="main-nav" id="mainNav">
-                <a href="/dashboard" class="nav-link ${window.location.pathname === '/' || window.location.pathname === '/dashboard' ? 'active' : ''}">Dashboard</a>
-                <a href="/leads" class="nav-link ${window.location.pathname.includes('leads') ? 'active' : ''}">Leads</a>
-                <a href="/reviews-admin" class="nav-link ${window.location.pathname.includes('reviews') ? 'active' : ''}">Reviews</a>
-                <a href="/link-hub-admin" class="nav-link ${window.location.pathname.includes('link-hub-admin') ? 'active' : ''}">Link Hub</a>
-                <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}">Invoices</a>
-                <a href="/contracts" class="nav-link ${window.location.pathname.includes('contracts') ? 'active' : ''}">Contracts</a>
-                <a href="/client-care-pulse" class="nav-link ${window.location.pathname.includes('client-care') ? 'active' : ''}">Client Care</a>
-                <a href="/accounting" class="nav-link ${window.location.pathname.includes('accounting') ? 'active' : ''}">Accounting</a>
-                <button id="logoutBtn" class="btn btn-outline-light btn-sm" style="margin-left: 10px; text-transform: none; font-weight: 500;">Logout</button>
+                <a href="/dashboard" class="nav-link ${window.location.pathname === '/' || window.location.pathname === '/dashboard' ? 'active' : ''}"><i class="fas fa-gauge-high"></i><span>Dashboard</span></a>
+                <a href="/leads" class="nav-link ${window.location.pathname.includes('leads') ? 'active' : ''}"><i class="fas fa-user-plus"></i><span>Leads</span></a>
+                <a href="/reviews-admin" class="nav-link ${window.location.pathname.includes('reviews') ? 'active' : ''}"><i class="fas fa-star"></i><span>Reviews</span></a>
+                <a href="/link-hub-admin" class="nav-link ${window.location.pathname.includes('link-hub-admin') ? 'active' : ''}"><i class="fas fa-link"></i><span>Link Hub</span></a>
+                <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}"><i class="fas fa-file-invoice"></i><span>Invoices</span></a>
+                <a href="/contracts" class="nav-link ${window.location.pathname.includes('contracts') ? 'active' : ''}"><i class="fas fa-file-signature"></i><span>Contracts</span></a>
+                <a href="/client-care-pulse" class="nav-link ${window.location.pathname.includes('client-care') ? 'active' : ''}"><i class="fas fa-heart-pulse"></i><span>Client Care</span></a>
+                <a href="/accounting" class="nav-link ${window.location.pathname.includes('accounting') ? 'active' : ''}"><i class="fas fa-chart-line"></i><span>Accounting</span></a>
+                <button id="logoutBtn" class="header-logout" title="Logout" aria-label="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
             </nav>
         </div>
     </header>

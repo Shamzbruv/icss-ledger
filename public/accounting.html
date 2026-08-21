@@ -49,12 +49,12 @@
 
         <!-- TABS NAV -->
         <div class="tabs-nav mt-4" style="border-bottom: 1px solid var(--border-color); display: flex; gap: 15px;">
-            <button class="tab-btn active" data-target="tab-dashboard">Dashboard</button>
-            <button class="tab-btn" data-target="tab-journal">Journal Ledger</button>
-            <button class="tab-btn" data-target="tab-expenses">Expenses</button>
-            <button class="tab-btn" data-target="tab-assets">Fixed Assets</button>
-            <button class="tab-btn" data-target="tab-reports">Reports</button>
-            <button class="tab-btn" data-target="tab-gct">GCT Tracker</button>
+            <button class="tab-btn active" data-target="tab-dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
+            <button class="tab-btn" data-target="tab-journal"><i class="fas fa-book"></i> Journal Ledger</button>
+            <button class="tab-btn" data-target="tab-expenses"><i class="fas fa-receipt"></i> Expenses</button>
+            <button class="tab-btn" data-target="tab-assets"><i class="fas fa-building"></i> Fixed Assets</button>
+            <button class="tab-btn" data-target="tab-reports"><i class="fas fa-chart-column"></i> Reports</button>
+            <button class="tab-btn" data-target="tab-gct"><i class="fas fa-scale-balanced"></i> GCT Tracker</button>
         </div>
 
         <!-- ========================================== -->
@@ -65,15 +65,15 @@
                 style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                 <!-- 1: Active Subscriptions MRR -->
                 <div class="card kpi-card highlight-card">
-                    <div class="kpi-title">PASSIVE INCOME (SUBS)</div>
+                    <div class="kpi-title">SUBSCRIPTION VALUE (EST.)</div>
                     <div class="kpi-value" id="kpi-subs-mrr"><i class="fas fa-spinner fa-spin"></i></div>
-                    <div class="kpi-subtext">Monthly Recurring Value (JMD)</div>
+                    <div class="kpi-subtext">Client Care plans · converted to JMD</div>
                 </div>
                 <!-- 1: Total Revenue MRR -->
                 <div class="card kpi-card">
-                    <div class="kpi-title">TOTAL MRR (30D REV)</div>
+                    <div class="kpi-title">REVENUE · LAST 30 DAYS</div>
                     <div class="kpi-value" id="kpi-mrr">JMD 0.00</div>
-                    <div class="kpi-subtext">Monthly Recurring Revenue</div>
+                    <div class="kpi-subtext">Posted service revenue</div>
                 </div>
                 <!-- 2: Cash Balance -->
                 <div class="card kpi-card">
@@ -95,15 +95,35 @@
                 </div>
                 <!-- 5: Tax Reserve -->
                 <div class="card kpi-card highlight-card">
-                    <div class="kpi-title">TAX RESERVE PROJ.</div>
+                    <div class="kpi-title">TAX RESERVE</div>
                     <div class="kpi-value" id="kpi-tax-reserve">JMD 0.00</div>
-                    <div class="kpi-subtext">Estimated FY Contributions</div>
+                    <div class="kpi-subtext">Estimate from current tax settings</div>
                 </div>
                 <!-- 6: AR Ledger Balance -->
                 <div class="card kpi-card">
                     <div class="kpi-title">ACCOUNTS RECEIVABLE</div>
                     <div class="kpi-value" id="kpi-ar-ledger"><i class="fas fa-spinner fa-spin"></i></div>
                     <div class="kpi-subtext">Ledger Balance (Account 1100)</div>
+                </div>
+            </div>
+
+            <div id="ledgerIntegrityCard" class="integrity-card mt-4">
+                <div class="integrity-icon"><i class="fas fa-shield-halved"></i></div>
+                <div class="integrity-copy">
+                    <strong id="integrityTitle">Checking invoice ledger integrity…</strong>
+                    <span id="integrityDetail">Looking for orphaned, duplicate, or incorrectly converted invoice postings.</span>
+                </div>
+                <button id="btnRepairInvoiceLedger" class="btn btn-warning d-none" onclick="window.accountingJS.repairInvoiceLedger()"><i class="fas fa-wand-magic-sparkles"></i> Repair ledger</button>
+            </div>
+
+            <div class="finance-visual-grid mt-4">
+                <div class="card finance-chart-card">
+                    <div class="chart-heading"><div><span class="chart-kicker">Six-month performance</span><h3>Revenue, expenses & profit</h3></div></div>
+                    <div class="chart-stage chart-stage-lg"><canvas id="performanceChart"></canvas></div>
+                </div>
+                <div class="card finance-chart-card">
+                    <div class="chart-heading"><div><span class="chart-kicker">Invoice volume</span><h3>Currency mix</h3></div></div>
+                    <div class="chart-stage"><canvas id="currencyMixChart"></canvas></div>
                 </div>
             </div>
 
@@ -144,7 +164,7 @@
                                 <th>Plan / Service</th>
                                 <th>Billing Cycle</th>
                                 <th>Next Billing Date</th>
-                                <th class="text-right">Amount (JMD)</th>
+                                <th class="text-right">Plan amount (USD)</th>
                                 <th class="text-center">Status</th>
                             </tr>
                         </thead>
@@ -156,8 +176,20 @@
                     </table>
                 </div>
                 <div class="mt-3 text-muted" style="font-size: 0.85rem;">
-                    <i class="fas fa-info-circle"></i> Subscriptions are managed centrally from the Client Care section.
-                    Invoices are generated automatically on the billing date.
+                    <i class="fas fa-info-circle"></i> Subscriptions are managed in Client Care and no longer generate accounting invoices automatically.
+                </div>
+            </div>
+
+            <div class="card mt-4" id="invoice-register-card">
+                <div class="flex-between mb-3">
+                    <div><span class="chart-kicker">Source documents</span><h3 class="card-title m-0">Invoice register</h3></div>
+                    <a class="btn btn-sm btn-outline-primary" href="/invoices">Manage invoices</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-mobile-cards">
+                        <thead><tr><th>Invoice</th><th>Client</th><th>Due</th><th>Currency</th><th class="text-right">Total</th><th class="text-right">Outstanding</th><th>Status</th></tr></thead>
+                        <tbody id="accountingInvoiceRegister"><tr><td colspan="7" class="text-center py-4">Loading invoices…</td></tr></tbody>
+                    </table>
                 </div>
             </div>
 

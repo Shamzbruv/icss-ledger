@@ -21,8 +21,15 @@ function getServiceName(code) {
     return SERVICE_NAMES[code] || code || 'Service';
 }
 
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+function normalizeCurrency(value) {
+    return String(value || 'JMD').trim().toUpperCase() === 'USD' ? 'USD' : 'JMD';
+}
+
+function formatCurrency(amount, currency = 'JMD') {
+    const normalized = normalizeCurrency(currency);
+    return new Intl.NumberFormat(normalized === 'JMD' ? 'en-JM' : 'en-US', {
+        style: 'currency', currency: normalized, currencyDisplay: 'code'
+    }).format(amount);
 }
 
 function formatDate(dateStr) {
@@ -44,6 +51,7 @@ function formatDate(dateStr) {
 function computeInvoiceState(rawInvoice, client) {
     let status = rawInvoice.payment_status || (rawInvoice.status === 'paid' ? 'PAID' : 'UNPAID');
     const isSubscription = !!rawInvoice.is_subscription;
+    const currency = normalizeCurrency(rawInvoice.currency);
 
     // Core Calculations with Rounding
     const total = Math.round(Number(rawInvoice.total_amount || 0) * 100) / 100;
@@ -78,16 +86,16 @@ function computeInvoiceState(rawInvoice, client) {
         clientName: client.name,
         serviceType: serviceName,
         totalAmount: total,
-        totalAmountFormatted: formatCurrency(total),
-        currency: 'USD',
+        totalAmountFormatted: formatCurrency(total, currency),
+        currency,
         paymentStatus: status,
         isSubscription: isSubscription,
 
         // Amounts
         amountPaid: paid,
-        amountPaidFormatted: formatCurrency(paid),
+        amountPaidFormatted: formatCurrency(paid, currency),
         balanceDue: balance,
-        balanceDueFormatted: formatCurrency(balance),
+        balanceDueFormatted: formatCurrency(balance, currency),
         depositPercent: depositPct,
 
         // Dates
@@ -220,4 +228,4 @@ function validateInvoiceState(state) {
     return true;
 }
 
-module.exports = { computeInvoiceState, validateInvoiceState, getServiceName, INVOICE_STATUS_THEME_MAP };
+module.exports = { computeInvoiceState, validateInvoiceState, getServiceName, normalizeCurrency, formatCurrency, INVOICE_STATUS_THEME_MAP };

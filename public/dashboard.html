@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,75 +10,52 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
 </head>
-
 <body>
-
-    <!-- Layout.js injects Header here -->
-
     <div class="container fade-in">
+        <section class="page-hero command-hero">
+            <div>
+                <span class="page-eyebrow">Live operations</span>
+                <h2>Good to see you.</h2>
+                <p id="dashboardTimestamp">Here is what needs attention across the business.</p>
+            </div>
+            <div class="command-status"><span></span> System overview</div>
+        </section>
 
-        <div class="text-center mb-4">
-            <h2 style="font-weight: 300; font-size: 2rem; margin-bottom: 0.5rem;">Welcome back</h2>
-            <p class="lead" style="max-width: 600px; margin: 0 auto;">Manage invoices, client care, and operations — all
-                in one place.</p>
+        <section class="ops-metric-grid" id="overviewMetrics" aria-label="System activity summary">
+            <a href="/contracts" class="ops-metric"><span class="ops-icon violet"><i class="fas fa-file-signature"></i></span><div><strong id="metricContracts">—</strong><span>Awaiting signature</span></div></a>
+            <a href="/client-care-pulse" class="ops-metric"><span class="ops-icon cyan"><i class="fas fa-heart-pulse"></i></span><div><strong id="metricReports">—</strong><span>Reports due soon</span></div></a>
+            <a href="/reviews-admin" class="ops-metric"><span class="ops-icon amber"><i class="fas fa-star"></i></span><div><strong id="metricReviews">—</strong><span>Reviews pending</span></div></a>
+            <a href="/invoices" class="ops-metric"><span class="ops-icon rose"><i class="fas fa-clock"></i></span><div><strong id="metricInvoices">—</strong><span>Overdue invoices</span></div></a>
+            <a href="/leads" class="ops-metric"><span class="ops-icon green"><i class="fas fa-user-plus"></i></span><div><strong id="metricLeads">—</strong><span>Open leads</span></div></a>
+            <a href="/client-care-pulse" class="ops-metric"><span class="ops-icon blue"><i class="fas fa-paper-plane"></i></span><div><strong id="metricSent">—</strong><span>Reports sent · 30d</span></div></a>
+        </section>
+
+        <div class="command-grid mt-4">
+            <section class="card attention-panel">
+                <div class="panel-heading"><div><span class="page-eyebrow">Priority queue</span><h3>Needs your attention</h3></div><span id="attentionCount" class="count-badge">0 items</span></div>
+                <div id="attentionFeed" class="attention-feed"><div class="dashboard-loading"><i class="fas fa-spinner fa-spin"></i> Building your queue…</div></div>
+            </section>
+
+            <aside class="card quick-panel">
+                <div class="panel-heading"><div><span class="page-eyebrow">Shortcuts</span><h3>Move work forward</h3></div></div>
+                <div class="quick-link-grid">
+                    <a href="/invoices"><i class="fas fa-plus"></i><span><strong>New invoice</strong><small>JMD or USD</small></span></a>
+                    <a href="/contracts"><i class="fas fa-file-signature"></i><span><strong>New contract</strong><small>Prepare for signing</small></span></a>
+                    <a href="/client-care-pulse"><i class="fas fa-play"></i><span><strong>Run client report</strong><small>Client Care Pulse</small></span></a>
+                    <a href="/accounting"><i class="fas fa-chart-line"></i><span><strong>View finances</strong><small>Ledger & analytics</small></span></a>
+                </div>
+            </aside>
         </div>
 
-        <h3 class="mt-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Quick Actions</h3>
-
-        <div class="dashboard-grid">
-            <!-- Card 1: Generate Invoice -->
-            <div class="card card-action" onclick="window.location.href='invoices'">
-                <div>
-                    <div class="card-icon">📄</div>
-                    <h3 class="card-title">Generate Invoice</h3>
-                    <p class="card-text">Create a branded invoice, send it to your client, and track payment status.</p>
-                </div>
-                <button class="btn btn-primary btn-block">Open Invoice Generator</button>
-            </div>
-
-            <!-- Card 2: Client Care Pulse -->
-            <div class="card card-action" onclick="window.location.href='client-care-pulse'">
-                <div>
-                    <div class="card-icon">💓</div>
-                    <h3 class="card-title">Client Care Pulse</h3>
-                    <p class="card-text">Automatically send weekly or monthly system health reports and monitor
-                        services.</p>
-                </div>
-                <button class="btn btn-primary btn-block">Open Client Care Pulse</button>
-            </div>
-
-            <!-- Card 3: Accounting -->
-            <div class="card card-action" onclick="window.location.href='accounting'">
-                <div>
-                    <div class="card-icon">📊</div>
-                    <h3 class="card-title">Accounting</h3>
-                    <p class="card-text">Manage your Chart of Accounts, Journal Entries, P&amp;L statements, and more.
-                    </p>
-                </div>
-                <button class="btn btn-primary btn-block">Open Accounting</button>
-            </div>
-        </div>
-
-        <h3 class="mt-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Recent Activity
-        </h3>
-
-        <div class="card">
-            <div id="recentActivityPlaceholder" class="text-center text-muted" style="padding: 2rem;">
-                <!-- TODO: Fetch actual recent logs -->
-                <p>No recent activity logs available yet.</p>
-            </div>
-            <!-- Example Table Structure for Future Use -->
-        </div>
+        <section class="card mt-4 activity-panel">
+            <div class="panel-heading"><div><span class="page-eyebrow">Across the command center</span><h3>Recent activity</h3></div></div>
+            <div id="recentActivityPlaceholder" class="text-center text-muted dashboard-loading"><p>Loading recent activity…</p></div>
+        </section>
     </div>
 
-    </div>
-
-    <!-- Supabase & Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script type="module" src="js/layout.js"></script>
     <script type="module" src="js/dashboard.js"></script>
-
 </body>
-
 </html>

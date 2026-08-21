@@ -7,6 +7,12 @@
 const supabase = require('../db');
 const { postJournalEntry, reversalEntry, getAccountingSettings } = require('./accountingCoreService');
 
+function convertInvoiceAmountToJmd(amount, currency, fxRate) {
+    const sourceCurrency = String(currency || 'JMD').trim().toUpperCase() === 'USD' ? 'USD' : 'JMD';
+    const conversionRate = sourceCurrency === 'USD' ? Number(fxRate || 1) : 1;
+    return Math.round(Number(amount || 0) * conversionRate * 100) / 100;
+}
+
 // ============================================================================
 // EVENT EMISSION (write to accounting_events table)
 // ============================================================================
@@ -156,16 +162,18 @@ async function projectAccountingEvent(event) {
 
 async function postInvoiceCreated(event, fxRate, gctRegistered, invoiceCurrency) {
     const { payload, company_id, source_id } = event;
-    const amountUSD = Number(payload.total_amount || 0);
-    const amountJMD = Math.round(amountUSD * fxRate * 100) / 100;
+    const sourceCurrency = String(payload.currency || payload.invoice_currency || invoiceCurrency || 'JMD').toUpperCase();
+    const conversionRate = sourceCurrency === 'USD' ? Number(fxRate || 1) : 1;
+    const sourceAmount = Number(payload.total_amount || 0);
+    const amountJMD = convertInvoiceAmountToJmd(sourceAmount, sourceCurrency, fxRate);
 
     const lines = [
         // Dr Accounts Receivable
-        { accountCode: '1100', debitAmount: amountJMD, creditAmount: 0, currency: 'JMD', fxRate, memo: `Invoice ${payload.invoice_number}` },
+        { accountCode: '1100', debitAmount: amountJMD, creditAmount: 0, currency: 'JMD', fxRate: conversionRate, memo: `Invoice ${payload.invoice_number} (${sourceCurrency})` },
     ];
 
     if (gctRegistered && payload.gct_amount > 0) {
-        const gctJMD = Math.round(Number(payload.gct_amount) * fxRate * 100) / 100;
+        const gctJMD = Math.round(Number(payload.gct_amount) * conversionRate * 100) / 100;
         const revenueJMD = amountJMD - gctJMD;
         // Cr Revenue (excluding GCT)
         lines.push({ accountCode: '4000', debitAmount: 0, creditAmount: revenueJMD, currency: 'JMD', fxRate, memo: `Revenue — Invoice ${payload.invoice_number}` });
@@ -197,6 +205,7 @@ async function postInvoiceUpdated(event, fxRate, gctRegistered, invoiceCurrency)
         .eq('company_id', event.company_id)
         .eq('source_id', event.source_id)
         .eq('source_type', 'INVOICE')
+        .like('narration', 'Invoice%')
         .eq('status', 'posted')
         .order('source_event_version', { ascending: false })
         .limit(1)
@@ -213,8 +222,10 @@ async function postInvoiceUpdated(event, fxRate, gctRegistered, invoiceCurrency)
 
 async function postPaymentApplied(event, fxRate, invoiceCurrency) {
     const { payload, company_id, source_id } = event;
-    const amountPaidUSD = Number(payload.amount_paid_this_payment || payload.amount_paid || 0);
-    const amountPaidJMD = Math.round(amountPaidUSD * fxRate * 100) / 100;
+    const sourceCurrency = String(payload.currency || payload.invoice_currency || invoiceCurrency || 'JMD').toUpperCase();
+    const conversionRate = sourceCurrency === 'USD' ? Number(fxRate || 1) : 1;
+    const amountPaid = Number(payload.amount_paid_this_payment || payload.amount_paid || 0);
+    const amountPaidJMD = convertInvoiceAmountToJmd(amountPaid, sourceCurrency, fxRate);
     const paymentMethod = payload.payment_method || 'Bank Account (Primary)';
     const bankAccount = paymentMethod.toLowerCase().includes('cash') ? '1000' : '1010';
 
@@ -300,8 +311,10 @@ async function postInvoiceVoided(event) {
 
 async function postCreditNote(event, fxRate, invoiceCurrency) {
     const { payload, company_id, source_id } = event;
-    const amountUSD = Number(payload.credit_amount || 0);
-    const amountJMD = Math.round(amountUSD * fxRate * 100) / 100;
+    const sourceCurrency = String(payload.currency || payload.invoice_currency || invoiceCurrency || 'JMD').toUpperCase();
+    const conversionRate = sourceCurrency === 'USD' ? Number(fxRate || 1) : 1;
+    const creditAmount = Number(payload.credit_amount || 0);
+    const amountJMD = convertInvoiceAmountToJmd(creditAmount, sourceCurrency, fxRate);
 
     // Dr Revenue (reduce revenue); Cr Accounts Receivable (reduce what client owes)
     return postJournalEntry({
@@ -481,7 +494,8 @@ async function handleInvoiceEvent(companyId, invoice, eventType) {
             paid_at: invoice.paid_at,
             payment_method: invoice.payment_method || 'bank',
             gct_amount: invoice.gct_amount || 0,
-            invoice_currency: 'USD'
+            currency: invoice.currency || 'JMD',
+            invoice_currency: invoice.currency || 'JMD'
         };
 
         const event = await emitAccountingEvent({
@@ -501,6 +515,7 @@ async function handleInvoiceEvent(companyId, invoice, eventType) {
 }
 
 module.exports = {
+    convertInvoiceAmountToJmd,
     emitAccountingEvent,
     getLatestEventVersion,
     projectAccountingEvent,

@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     due_date DATE,
     status TEXT DEFAULT 'pending',
     total_amount NUMERIC(10, 2) DEFAULT 0.00,
+    currency TEXT NOT NULL DEFAULT 'JMD' CHECK (currency IN ('JMD', 'USD')),
     notes TEXT
 );
 
@@ -102,6 +103,7 @@ ALTER TABLE invoices ADD COLUMN IF NOT EXISTS issue_date DATE DEFAULT CURRENT_DA
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date DATE;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS total_amount NUMERIC(10, 2) DEFAULT 0.00;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'JMD';
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS service_code TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS reference_code TEXT;
@@ -122,6 +124,22 @@ ALTER TABLE invoices ADD COLUMN IF NOT EXISTS plan_name TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_cycle TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS renewal_date DATE;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS next_invoice_date DATE;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.invoices'::regclass
+          AND conname = 'invoices_currency_check'
+    ) THEN
+        ALTER TABLE invoices
+            ADD CONSTRAINT invoices_currency_check
+            CHECK (currency IN ('JMD', 'USD'));
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_invoices_company_currency
+    ON invoices(company_id, currency);
 
 DO $$
 BEGIN

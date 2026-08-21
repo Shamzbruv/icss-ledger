@@ -33,8 +33,11 @@ function safeHeader(value) {
   return String(value || '').replace(/[\r\n]+/g, ' ').trim();
 }
 
-function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+function formatCurrency(amount, currency = 'JMD') {
+  const normalized = String(currency || 'JMD').toUpperCase() === 'USD' ? 'USD' : 'JMD';
+  return new Intl.NumberFormat(normalized === 'USD' ? 'en-US' : 'en-JM', {
+    style: 'currency', currency: normalized, currencyDisplay: 'code'
+  }).format(amount);
 }
 
 function formatDate(dateStr) {
@@ -415,7 +418,7 @@ ${summary.recommendations_text || 'None'}
  */
 function getPaymentDeclinedTemplate(invoice, client) {
   const serviceName = invoice.plan_name || invoice.service_code || 'Service Subscription';
-  const amountDue = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(parseFloat(invoice.total_amount) || parseFloat(invoice.balance_due) || 0);
+  const amountDue = formatCurrency(parseFloat(invoice.total_amount) || parseFloat(invoice.balance_due) || 0, invoice.currency);
   const invoiceNumber = invoice.invoice_number || 'Auto-Billing';
   const dueDate = invoice.due_date ? formatDate(invoice.due_date) : 'Immediately';
 
@@ -891,7 +894,7 @@ function getWelcomeSubscriptionTemplate(service) {
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
                 <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
                   <span style="display:inline-block; width:28px; height:28px; background:#f0fdf4; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#059669; margin-right:12px; vertical-align:middle;">1</span>
-                  <span style="font-size:14px; color:#444; vertical-align:middle;">You'll receive your first invoice shortly via a separate email</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Subscription payments are tracked automatically without generating invoices</span>
                 </td></tr>
                 <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
                   <span style="display:inline-block; width:28px; height:28px; background:#f0fdf4; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#059669; margin-right:12px; vertical-align:middle;">2</span>
@@ -931,7 +934,7 @@ function getWelcomeSubscriptionTemplate(service) {
 </body>
 </html>`;
 
-  const textBody = `Hello ${plainClientName},\n\nWelcome to iCreate Solutions & Services!\n\nYour ${plainPlanName} subscription is now active.\n\nPlan: ${plainPlanName}\nBilling Cycle: ${freq}\nAmount: ${price}/${freq.toLowerCase()}${renewalDate ? `\nFirst Renewal: ${renewalDate}` : ''}\n\nYou'll receive your first invoice separately. Your subscription auto-renews, so no action is needed.\n\nQuestions? Reply to this email or contact: support@icreatesolutionsandservices.com\n\nWelcome aboard,\niCreate Solutions & Services`;
+  const textBody = `Hello ${plainClientName},\n\nWelcome to iCreate Solutions & Services!\n\nYour ${plainPlanName} subscription is now active.\n\nPlan: ${plainPlanName}\nBilling Cycle: ${freq}\nAmount: ${price}/${freq.toLowerCase()}${renewalDate ? `\nFirst Renewal: ${renewalDate}` : ''}\n\nYour subscription auto-renews, so no action is needed. Subscription payments are tracked separately and do not generate invoices.\n\nQuestions? Reply to this email or contact: support@icreatesolutionsandservices.com\n\nWelcome aboard,\niCreate Solutions & Services`;
 
   return { subject, html, text: textBody };
 }

@@ -5,7 +5,7 @@
  */
 
 const supabase = require('../db');
-const { getTrialBalance } = require('./accountingCoreService');
+const { getTrialBalance, getAccountingSettings } = require('./accountingCoreService');
 
 // ============================================================================
 // HELPERS
@@ -251,6 +251,8 @@ async function getCashFlowSummary(companyId, start, end) {
 // ============================================================================
 
 async function getARAgingReport(companyId) {
+    const settings = await getAccountingSettings(companyId);
+    const usdToJmd = Number(settings?.fx_rate_usd_to_jmd || 158);
     const { data: invoices, error } = await supabase
         .from('invoices')
         .select('*, clients(name, email)')
@@ -265,7 +267,9 @@ async function getARAgingReport(companyId) {
 
     (invoices || []).forEach(inv => {
         const dueDate = inv.due_date ? new Date(inv.due_date) : null;
-        const balance = Number(inv.balance_due || inv.total_amount || 0);
+        const sourceBalance = Number(inv.balance_due || inv.total_amount || 0);
+        const currency = inv.currency === 'USD' ? 'USD' : 'JMD';
+        const balance = Math.round(sourceBalance * (currency === 'USD' ? usdToJmd : 1) * 100) / 100;
         if (balance <= 0) return;
 
         const daysOverdue = dueDate ? Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)) : 0;
@@ -277,6 +281,8 @@ async function getARAgingReport(companyId) {
             issueDate: inv.issue_date,
             dueDate: inv.due_date,
             balance,
+            sourceBalance,
+            currency,
             daysOverdue: Math.max(0, daysOverdue),
             paymentStatus: inv.payment_status
         };
@@ -312,12 +318,18 @@ async function getRevenueReconciliation(companyId, start, end) {
     // Revenue per invoices (operational)
     const { data: invoices } = await supabase
         .from('invoices')
-        .select('total_amount, invoice_number, issue_date')
+        .select('total_amount, currency, invoice_number, issue_date')
         .eq('company_id', companyId)
+        .neq('payment_status', 'VOID')
         .gte('issue_date', start)
         .lte('issue_date', end);
 
-    const invoiceTotal = (invoices || []).reduce((sum, inv) => sum + Number(inv.total_amount || 0), 0);
+    const settings = await getAccountingSettings(companyId);
+    const usdToJmd = Number(settings?.fx_rate_usd_to_jmd || 158);
+    const invoiceTotal = (invoices || []).reduce((sum, inv) => {
+        const multiplier = inv.currency === 'USD' ? usdToJmd : 1;
+        return sum + Number(inv.total_amount || 0) * multiplier;
+    }, 0);
 
     // Revenue per ledger (accounting)
     const pnl = await getProfitAndLoss(companyId, start, end);
@@ -409,8 +421,8 @@ async function getDashboardWidgets(companyId) {
 
             // Add full ledger AR balance into "Current" — manual entries have no due date
             if (ledgerARBalance > 0) {
-                arAging.totals.current = Math.round((arAging.totals.current + ledgerARBalance) * 100) / 100;
-                arAging.totals.grandTotal = Math.round((arAging.totals.grandTotal + ledgerARBalance) * 100) / 100;
+                arAging.ledgerBalance = Math.round(ledgerARBalance * 100) / 100;
+                arAging.reconciliationDifference = Math.round((ledgerARBalance - arAging.totals.grandTotal) * 100) / 100;
             }
         }
     } catch (e) {
@@ -437,6 +449,8 @@ async function getDashboardWidgets(companyId) {
         mrr: Math.round(mrr * 100) / 100,
         ytdNetProfitMargin: Math.round(netProfitMargin * 10) / 10,
         arAgingTotals: arAging.totals,
+        arLedgerBalance: arAging.ledgerBalance || 0,
+        arReconciliationDifference: arAging.reconciliationDifference || 0,
         expenseBreakdown
     };
 }

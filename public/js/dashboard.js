@@ -1,104 +1,83 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadRecentActivity();
+    const [overviewResult] = await Promise.allSettled([loadOverview(), loadRecentActivity()]);
+    if (overviewResult.status === 'rejected') {
+        console.error(overviewResult.reason);
+        document.getElementById('attentionFeed').innerHTML = '<div class="all-clear"><i class="fas fa-triangle-exclamation"></i><div><strong>Overview unavailable</strong><span>Refresh the page to try again.</span></div></div>';
+    }
 });
+
+const escapeDashboardHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[char]));
+
+function relativeDate(value) {
+    if (!value) return 'No date';
+    const date = new Date(value);
+    const days = Math.round((date - new Date()) / 86400000);
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Tomorrow';
+    if (days === -1) return 'Yesterday';
+    if (days > 1 && days < 7) return `In ${days} days`;
+    if (days < -1 && days > -7) return `${Math.abs(days)} days ago`;
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+async function loadOverview() {
+    const response = await apiFetch('/api/dashboard/overview');
+    const overview = await response.json();
+    if (!response.ok) throw new Error(overview.error || 'Dashboard overview failed');
+    const metrics = overview.metrics || {};
+    const bindings = {
+        metricContracts: metrics.pendingContracts,
+        metricReports: metrics.upcomingReports,
+        metricReviews: metrics.pendingReviews,
+        metricInvoices: metrics.overdueInvoices,
+        metricLeads: metrics.openLeads,
+        metricSent: metrics.reportsSent30d
+    };
+    Object.entries(bindings).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = Number(value || 0).toLocaleString();
+    });
+    document.getElementById('dashboardTimestamp').textContent = `Updated ${new Date(overview.generatedAt).toLocaleString(undefined, { weekday: 'long', hour: 'numeric', minute: '2-digit' })} · Here is what needs attention.`;
+
+    const feed = document.getElementById('attentionFeed');
+    const alerts = overview.alerts || [];
+    document.getElementById('attentionCount').textContent = `${alerts.length} item${alerts.length === 1 ? '' : 's'}`;
+    if (!alerts.length) {
+        feed.innerHTML = '<div class="all-clear"><i class="fas fa-circle-check"></i><div><strong>You are all caught up</strong><span>No urgent signatures, reports, reviews, or overdue invoices.</span></div></div>';
+        return;
+    }
+    const icons = { contract: 'fa-file-signature', report: 'fa-heart-pulse', review: 'fa-star', invoice: 'fa-file-invoice-dollar' };
+    feed.innerHTML = alerts.map(alert => `
+        <a class="attention-item" href="${escapeDashboardHtml(alert.href)}">
+            <span class="attention-type ${escapeDashboardHtml(alert.type)}"><i class="fas ${icons[alert.type] || 'fa-bell'}"></i></span>
+            <span class="attention-copy"><strong>${escapeDashboardHtml(alert.title)}</strong><small>${escapeDashboardHtml(alert.detail)}</small></span>
+            <span class="attention-date">${escapeDashboardHtml(relativeDate(alert.date))}</span>
+            <i class="fas fa-chevron-right attention-arrow"></i>
+        </a>`).join('');
+}
 
 async function loadRecentActivity() {
     const placeholder = document.getElementById('recentActivityPlaceholder');
-    if (!placeholder) return;
-
     try {
-        placeholder.innerHTML = '<p>Loading recent activity...</p>';
-        const res = await apiFetch('/api/dashboard/recent-activity');
-
-        if (!res.ok) {
-            throw new Error(`Failed to fetch: ${res.statusText}`);
-        }
-
-        const activities = await res.json();
-
-        if (activities.length === 0) {
-            placeholder.innerHTML = '<p>No recent activity logs available yet.</p>';
+        const response = await apiFetch('/api/dashboard/recent-activity');
+        const activities = await response.json();
+        if (!response.ok) throw new Error(activities.error || 'Recent activity failed');
+        if (!activities.length) {
+            placeholder.innerHTML = '<div class="all-clear"><i class="fas fa-wave-square"></i><div><strong>No activity yet</strong><span>New invoices, ledger entries, and Client Care events will appear here.</span></div></div>';
             return;
         }
-
-        // Build Table
-        let tableHTML = `
-            <div class="table-responsive" style="margin-bottom: 0; border: none;">
-                <table class="table-mobile-cards" style="margin-top: 0; width: 100%;">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                            <th>Amount / Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        activities.forEach(act => {
-            const dateStr = new Date(act.date).toLocaleDateString();
-
-            // Format Type Badge
-            let typeBadgeClass = 'bg-secondary';
-            let typeDisplay = act.type.toUpperCase();
-            if (act.type === 'invoice') {
-                // Secondary color in style.css is Cyan/Teal
-                typeBadgeClass = '';
-                typeDisplay = `<span style="color: var(--secondary-color); font-weight: 600;">INVOICE</span>`;
-            } else if (act.type === 'accounting') {
-                typeBadgeClass = '';
-                typeDisplay = `<span style="color: var(--accent-color); font-weight: 600;">ACCOUNTING</span>`;
-            } else if (act.type === 'client_care') {
-                typeBadgeClass = '';
-                typeDisplay = `<span style="color: var(--success-color); font-weight: 600;">CLIENT CARE</span>`;
-            } else {
-                typeDisplay = `<span class="badge bg-secondary">${typeDisplay}</span>`;
-            }
-
-            // Format Status/Amount
-            let amountStatus = '';
-            if (act.amount !== null && act.amount !== undefined) {
-                amountStatus = `<strong>$${Number(act.amount).toFixed(2)}</strong>`;
-                if (act.status) {
-                    let statusClass = 'bg-secondary';
-                    if (act.status === 'PAID') statusClass = 'bg-success';
-                    else if (act.status === 'UNPAID') statusClass = 'bg-danger';
-                    else if (act.status === 'PARTIAL') statusClass = 'bg-warning';
-                    amountStatus += `<br><span class="badge ${statusClass}" style="margin-top: 4px; display: inline-block;">${act.status}</span>`;
-                }
-            } else {
-                let statusClass = 'bg-secondary';
-                if (act.status === 'ACTIVE') statusClass = 'bg-success';
-                else if (act.status === 'INACTIVE') statusClass = 'bg-danger';
-                amountStatus = `<span class="badge ${statusClass}">${act.status || 'N/A'}</span>`;
-            }
-
-            tableHTML += `
-                <tr>
-                    <td data-label="Date">${dateStr}</td>
-                    <td data-label="Type">${typeDisplay}</td>
-                    <td data-label="Description">
-                        <strong style="color: #fff;">${act.title}</strong><br>
-                        <small class="text-muted">${act.description}</small>
-                    </td>
-                    <td data-label="Amount / Status">${amountStatus}</td>
-                </tr>
-            `;
-        });
-
-        tableHTML += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-
-        // Apply HTML and remove placeholder padding for edge-to-edge table look inside card
-        placeholder.innerHTML = tableHTML;
-        placeholder.style.padding = '0';
-
-    } catch (err) {
-        console.error('Error loading recent activity:', err);
-        placeholder.innerHTML = '<p class="text-danger">Failed to load recent activity.</p>';
+        const iconMap = { invoice: 'fa-file-invoice', accounting: 'fa-chart-line', client_care: 'fa-heart-pulse' };
+        placeholder.classList.remove('dashboard-loading', 'text-center');
+        placeholder.innerHTML = `<div class="activity-list">${activities.map(activity => `
+            <div class="activity-row">
+                <span class="activity-icon ${escapeDashboardHtml(activity.type)}"><i class="fas ${iconMap[activity.type] || 'fa-wave-square'}"></i></span>
+                <span class="activity-copy"><strong>${escapeDashboardHtml(activity.title)}</strong><small>${escapeDashboardHtml(activity.description)}</small></span>
+                <span class="activity-meta">${activity.amount !== null && activity.amount !== undefined ? `${escapeDashboardHtml(activity.currency || 'JMD')} ${Number(activity.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : escapeDashboardHtml(activity.status || '')}<small>${escapeDashboardHtml(relativeDate(activity.date))}</small></span>
+            </div>`).join('')}</div>`;
+    } catch (error) {
+        console.error(error);
+        placeholder.innerHTML = '<p class="text-danger">Dashboard activity could not be loaded.</p>';
     }
 }

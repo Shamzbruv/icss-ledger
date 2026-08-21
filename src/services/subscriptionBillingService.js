@@ -1,319 +1,50 @@
 const supabase = require('../db');
-const { generateReferenceCode } = require('./referenceService');
-const { generateInvoicePDF } = require('./pdfService');
-const { sendInvoiceEmail } = require('./emailService');
-const { getInvoiceEmailContent } = require('./emailTemplates');
-const { randomInt } = require('crypto');
 
 /**
- * Syncs a newly created Client Service to Accounting by generating its first invoice.
+ * Subscription billing is intentionally separate from invoicing.
+ * Client Care and PayPal continue to track service/renewal state, but none of
+ * these entry points may create an invoice or post subscription revenue.
  */
-async function syncServiceActivation(serviceId, options = {}) {
-    try {
-        const { data: service, error: svcError } = await supabase
-            .from('client_services')
-            .select(`
-                *,
-                clients (id, name, email),
-                service_plans (id, name, price, default_frequency)
-            `)
-            .eq('id', serviceId)
-            .single();
-
-        if (svcError || !service) throw new Error('Service not found');
-        if (service.status !== 'active') return null;
-
-        if (!options.force && service.next_billing_date && new Date(service.next_billing_date) > new Date()) {
-            return null;
-        }
-
-        const invoice = await generateSubscriptionInvoice(service, {
-            isRenewal: options.isRenewal === true,
-            sendEmail: options.sendEmail !== false,
-            totalAmountOverride: options.totalAmountOverride,
-            renewalDateOverride: options.renewalDateOverride
-        });
-
-        let nextBilling = invoice?.renewal_date ? new Date(invoice.renewal_date) : null;
-        const syncFreq = service.frequency || service.service_plans?.default_frequency || 'monthly';
-        if (!nextBilling || Number.isNaN(nextBilling.getTime())) {
-            nextBilling = addBillingPeriod(new Date(), syncFreq === 'yearly' ? 'yearly' : 'monthly');
-        }
-
-        await supabase
-            .from('client_services')
-            .update({ next_billing_date: nextBilling.toISOString().split('T')[0] })
-            .eq('id', service.id);
-
-        console.log(`[BILLING] Activated & billed subscription ${service.id} for ${service.clients.name}`);
-        return invoice;
-    } catch (err) {
-        console.error('[BILLING] Failed to sync service activation:', err.message);
-        throw err;
-    }
+async function syncServiceActivation(serviceId) {
+    console.log(`[BILLING] Subscription invoice generation is disabled for service ${serviceId}.`);
+    return null;
 }
 
-/**
- * Cancels a subscription and voids any unpaid automated invoices.
- */
-async function cancelServiceBilling(serviceId) {
-    try {
-        const { data: unpaidInvoices, error: invError } = await supabase
-            .from('invoices')
-            .select('id, invoice_number')
-            .eq('client_service_id', serviceId)
-            .eq('payment_status', 'UNPAID');
-
-        if (invError) throw invError;
-
-        for (const inv of unpaidInvoices) {
-            await supabase
-                .from('invoices')
-                .update({ payment_status: 'VOID' })
-                .eq('id', inv.id);
-
-            const { data: updatedInv } = await supabase
-                .from('invoices')
-                .select('*, clients(name)')
-                .eq('id', inv.id)
-                .single();
-
-            const defaultComp = await supabase.from('companies').select('id').limit(1).single();
-
-            if (defaultComp.data && updatedInv) {
-                const payload = {
-                    ...updatedInv,
-                    client_name: updatedInv.clients?.name
-                };
-
-                await supabase.from('outbox_events').insert({
-                    company_id: defaultComp.data.id,
-                    aggregate_type: 'invoice',
-                    aggregate_id: inv.id,
-                    event_version: Date.now(),
-                    event_type: 'INVOICE_UPDATED',
-                    idempotency_key: `${inv.id}-${Date.now()}-INVOICE_UPDATED`,
-                    payload_jsonb: payload,
-                    publish_status: 'pending'
-                });
-            }
-            console.log(`[BILLING] Voided unpaid invoice ${inv.invoice_number} due to subscription cancellation.`);
-        }
-    } catch (err) {
-        console.error('[BILLING] Failed to cancel service billing:', err.message);
-    }
-}
-
-/**
- * Runs daily to process recurring billing for all active subscriptions globally.
- */
 async function processRecurringBilling() {
-    console.log('[BILLING] Starting recurring subscription billing check...');
-    try {
-        const today = new Date().toISOString().split('T')[0];
-
-        const { data: dueServices, error } = await supabase
-            .from('client_services')
-            .select(`
-                *,
-                clients (id, name, email),
-                service_plans (id, name, price, default_frequency)
-            `)
-            .eq('status', 'active')
-            .lte('next_billing_date', today);
-
-        if (error) throw error;
-
-        const locallyBilledServices = (dueServices || []).filter(service => !service.service_meta_json?.paypal_subscription_id);
-        console.log(`[BILLING] Found ${locallyBilledServices.length} locally billed subscriptions due. PayPal renewals wait for confirmed payment webhooks.`);
-
-        for (const service of locallyBilledServices) {
-            try {
-                await generateSubscriptionInvoice(service, { isRenewal: true });
-
-                const freq = service.frequency || service.service_plans?.default_frequency || 'monthly';
-                const currentBillingDt = addBillingPeriod(
-                    new Date(service.next_billing_date),
-                    freq === 'yearly' ? 'yearly' : 'monthly'
-                );
-
-                await supabase
-                    .from('client_services')
-                    .update({ next_billing_date: currentBillingDt.toISOString().split('T')[0] })
-                    .eq('id', service.id);
-            } catch (serviceError) {
-                console.error(`[BILLING] Renewal for service ${service.id} will be retried: ${serviceError.message}`);
-            }
-        }
-
-        console.log('[BILLING] Recurring subscription billing completed.');
-    } catch (err) {
-        console.error('[BILLING] Critical error in processing recurring billing:', err.message);
-    }
+    return { processed: 0, disabled: true };
 }
 
-async function generateSubscriptionInvoice(service, {
-    isRenewal = true,
-    sendEmail = true,
-    totalAmountOverride = null,
-    renewalDateOverride = null
-} = {}) {
-    const { data: seqData, error: sequenceError } = await supabase.rpc('get_next_invoice_sequence');
-    // Older installations may not have the sequence RPC yet. A timestamp plus
-    // three random digits is vastly safer than the former 0-999 fallback and
-    // remains compatible with the migration's numeric suffix backfill.
-    const nextSeq = sequenceError || !seqData
-        ? `${Date.now()}${String(randomInt(0, 1000)).padStart(3, '0')}`
-        : String(seqData);
-    if (sequenceError) console.warn(`[BILLING] Invoice sequence RPC unavailable; using collision-resistant fallback: ${sequenceError.message}`);
-    const invoiceNumber = `INV-ICSS-${String(nextSeq).padStart(3, '0')}`;
-    const targetCompanyId = await getDefaultCompanyId();
-    if (!targetCompanyId) throw new Error('No company is configured for subscription invoicing');
-
-    const price = Number(service.service_plans?.price || 0);
-    const taxAmount = price * 0.15;
-    const totalAmount = Number(totalAmountOverride) > 0 ? Number(totalAmountOverride) : price + taxAmount;
-
-    const issueDate = new Date();
-    const dueDate = new Date(issueDate);
-    dueDate.setDate(dueDate.getDate() + 14);
-
-    // Resolve billing frequency — service.frequency may be the Client Care Pulse
-    // *check* frequency (e.g. 'weekly'), which is NOT the billing cycle. We only
-    // trust it for billing if it is a recognised billing period.
-    const BILLING_FREQUENCIES = new Set(['monthly', 'yearly']);
-    const rawFreq = service.service_plans?.default_frequency
-        || service.service_plans?.billing_cycle
-        || service.frequency
-        || 'monthly';
-    const freq = BILLING_FREQUENCIES.has(rawFreq) ? rawFreq : 'monthly';
-    const requestedRenewal = renewalDateOverride || service.next_renewal_date;
-    const requestedRenewalDate = requestedRenewal ? new Date(requestedRenewal) : null;
-    const renewalDate = requestedRenewalDate
-        && !Number.isNaN(requestedRenewalDate.getTime())
-        && requestedRenewalDate.getTime() > issueDate.getTime()
-        ? requestedRenewalDate
-        : addBillingPeriod(issueDate, freq);
-
-    const planName = service.service_plans?.name || 'Subscription Service';
-    const lineItemAmount = price > 0 ? Math.min(price, totalAmount) : totalAmount;
-    const lineItem = {
-        description: `${planName} - ${issueDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`,
-        quantity: 1,
-        unit_price: lineItemAmount
-    };
-
-    const { data: invoice, error: invoiceError } = await supabase
-        .from('invoices')
-        .insert({
-            invoice_number: invoiceNumber,
-            company_id: targetCompanyId,
-            client_id: service.client_id,
-            client_service_id: service.id,
-            issue_date: issueDate.toISOString(),
-            due_date: dueDate.toISOString(),
-            status: 'pending',
-            notes: isRenewal ? `Automated renewal billing for ${planName}` : `Subscription activation for ${planName}`,
-            total_amount: totalAmount,
-            service_code: service.service_meta_json?.plan_code || 'MAINT',
-            payment_expected_type: 'FULL',
-            payment_expected_percentage: 100,
-            remaining_amount: totalAmount,
-            amount_paid: 0,
-            balance_due: totalAmount,
-            is_subscription: true,
-            is_renewal: isRenewal,
-            plan_name: planName,
-            billing_cycle: freq,
-            payment_status: 'UNPAID',
-            renewal_date: renewalDate.toISOString()
-        })
-        .select()
-        .single();
-
-    if (invoiceError) throw invoiceError;
-
-    const planCode = service.service_meta_json?.plan_code || 'MAINT';
-    const refCode = generateReferenceCode(service.clients.name, invoice.invoice_number, planCode, 100);
-    const { error: referenceError } = await supabase.from('invoices').update({ reference_code: refCode }).eq('id', invoice.id);
-    if (referenceError) {
-        await supabase.from('invoices').delete().eq('id', invoice.id);
-        throw referenceError;
-    }
-    invoice.reference_code = refCode;
-
-    const { error: itemError } = await supabase.from('invoice_items').insert({
-        invoice_id: invoice.id,
-        description: lineItem.description,
-        quantity: lineItem.quantity,
-        unit_price: lineItem.unit_price
-    });
-    if (itemError) {
-        await supabase.from('invoices').delete().eq('id', invoice.id);
-        throw itemError;
-    }
-
-    const eventPayload = {
-        ...invoice,
-        client_name: service.clients.name,
-        payment_method: 'bank'
-    };
-
-    const { error: outboxError } = await supabase.from('outbox_events').insert({
-        company_id: targetCompanyId,
-        aggregate_type: 'invoice',
-        aggregate_id: invoice.id,
-        event_version: 1,
-        event_type: 'INVOICE_CREATED',
-        idempotency_key: `${invoice.id}-1-INVOICE_CREATED`,
-        payload_jsonb: eventPayload,
-        publish_status: 'pending'
-    });
-    if (outboxError) console.warn(`[BILLING] Accounting outbox event could not be queued for ${invoice.invoice_number}: ${outboxError.message}`);
-
-    if (sendEmail) {
-        try {
-            await sendGeneratedInvoiceEmail(invoice, service, lineItem);
-        } catch (emailErr) {
-            console.error(`[BILLING] Failed to send invoice email for ${invoice.invoice_number}:`, emailErr.message);
-            // Compensate for the incomplete attempt so the scheduler can safely retry
-            // without leaving a second unpaid invoice for the same renewal.
-            await supabase.from('outbox_events').delete().eq('idempotency_key', `${invoice.id}-1-INVOICE_CREATED`);
-            await supabase.from('invoices').delete().eq('id', invoice.id).eq('payment_status', 'UNPAID');
-            throw emailErr;
-        }
-    } else {
-        console.log(`[BILLING] Skipping premature invoice email for ${invoice.invoice_number} — payment receipt will be sent once payment is confirmed.`);
-    }
-
-    console.log(`[BILLING] Successfully generated invoice ${invoice.invoice_number} for service ${service.id}`);
-    return invoice;
+async function generateSubscriptionInvoice(service) {
+    console.log(`[BILLING] Subscription invoice generation is disabled for service ${service?.id || 'unknown'}.`);
+    return null;
 }
 
-async function sendGeneratedInvoiceEmail(invoice, service, lineItem) {
-    if (!service.clients?.email) {
-        throw new Error(`Client email is missing for invoice ${invoice.invoice_number}`);
+async function cancelServiceBilling(serviceId) {
+    const { data: invoices, error } = await supabase.from('invoices')
+        .select('id, company_id, invoice_number, currency')
+        .eq('client_service_id', serviceId)
+        .eq('payment_status', 'UNPAID');
+    if (error) throw error;
+
+    for (const invoice of invoices || []) {
+        const version = Date.now();
+        const { error: eventError } = await supabase.from('outbox_events').insert({
+            company_id: invoice.company_id,
+            aggregate_type: 'invoice',
+            aggregate_id: invoice.id,
+            event_version: version,
+            event_type: 'INVOICE_VOIDED',
+            idempotency_key: `${invoice.id}-${version}-INVOICE_VOIDED`,
+            payload_jsonb: { ...invoice, currency: invoice.currency || 'JMD' },
+            publish_status: 'pending'
+        });
+        if (eventError) throw eventError;
+        const { error: updateError } = await supabase.from('invoices')
+            .update({ payment_status: 'VOID', status: 'void', balance_due: 0, remaining_amount: 0 })
+            .eq('id', invoice.id);
+        if (updateError) throw updateError;
     }
-
-    const emailContent = getInvoiceEmailContent(invoice, service.clients);
-    const pdfBuffer = await generateInvoicePDF(invoice, service.clients, [lineItem]);
-
-    await sendInvoiceEmail(
-        service.clients.email,
-        emailContent.subject,
-        emailContent.text,
-        emailContent.html,
-        pdfBuffer,
-        invoice.invoice_number,
-        null
-    );
-
-    console.log(`[BILLING] Sent invoice email for ${invoice.invoice_number} to ${service.clients.email}`);
-}
-
-async function getDefaultCompanyId() {
-    const { data } = await supabase.from('companies').select('id').limit(1).single();
-    return data ? data.id : null;
+    return { success: true, voidedInvoices: (invoices || []).length };
 }
 
 function addBillingPeriod(sourceDate, frequency) {
