@@ -11,6 +11,11 @@ const { getTrialBalance, getAccountingSettings } = require('./accountingCoreServ
 // HELPERS
 // ============================================================================
 
+function normalizeAccountType(accountType) {
+    const normalized = String(accountType || '').trim().toLowerCase();
+    return normalized === 'income' ? 'revenue' : normalized;
+}
+
 async function getJournalLinesForPeriod(companyId, periodStart, periodEnd) {
     const { data: entries, error: jeErr } = await supabase
         .from('journals')
@@ -49,7 +54,7 @@ function aggregateByAccount(lines) {
             aggregated[code] = {
                 accountCode: code,
                 accountName: acc.name,
-                accountType: acc.account_type || 'unknown',
+                accountType: normalizeAccountType(acc.account_type) || 'unknown',
                 normalBalance: acc.normal_balance || 'debit',
                 debits: 0, credits: 0
             };
@@ -456,6 +461,7 @@ async function getDashboardWidgets(companyId) {
 }
 
 module.exports = {
+    normalizeAccountType,
     getJournalLinesForPeriod,
     getProfitAndLoss,
     getBalanceSheet,

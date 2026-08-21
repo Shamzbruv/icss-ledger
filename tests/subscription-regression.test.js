@@ -15,6 +15,7 @@ const { getSubscriptionBillingCycle, getSubscriptionRenewalTemplate, getInvoiceO
 const { isRenewalEligibleEvent, isSubscriptionFailureEvent } = require('../src/services/paypalEventGateService');
 const { convertInvoiceAmountToJmd } = require('../src/services/postingRulesService');
 const { calculateNextEventVersion, MAX_POSTGRES_INTEGER } = require('../src/services/outboxEventService');
+const { normalizeAccountType } = require('../src/services/reportingService');
 
 test('website plans map exact PayPal IDs and settled totals', () => {
     const refresh = getPlanByPayPalId('P-00F6350522773701SNECR4RI');
@@ -127,6 +128,12 @@ test('invoice ledger conversion respects the invoice currency', () => {
     assert.equal(convertInvoiceAmountToJmd(462494.51, 'JMD', 158), 462494.51);
     assert.equal(convertInvoiceAmountToJmd(100, 'USD', 158), 15800);
     assert.equal(computeInvoiceState({ invoice_number: 'INV-JMD', total_amount: 100, currency: 'JMD' }, { name: 'Client' }).currency, 'JMD');
+});
+
+test('financial reporting includes legacy income accounts as revenue', () => {
+    assert.equal(normalizeAccountType('income'), 'revenue');
+    assert.equal(normalizeAccountType('revenue'), 'revenue');
+    assert.equal(normalizeAccountType('expense'), 'expense');
 });
 
 test('onboarding keeps phone in Client Care metadata for legacy clients schema', async () => {
