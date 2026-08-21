@@ -10,6 +10,7 @@ const { verifySupabaseJwt } = require('./src/services/authService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SUBSCRIPTION_INVOICING_ENABLED = false;
 
 // BASE PATH LOGIC
 // APP_BASE_PATH is generally not needed for Render root deployments, but kept for flexibility.
@@ -51,7 +52,7 @@ const corsOptions = {
         }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 };
 
@@ -70,7 +71,7 @@ const checkSchema = async () => {
     // Check Invoices: payment_status, company_id
     // Check Services: next_run_at
     try {
-        const { error: invoiceError } = await supabase.from('invoices').select('payment_status, company_id').limit(1);
+        const { error: invoiceError } = await supabase.from('invoices').select('payment_status, company_id, currency').limit(1);
         if (invoiceError && invoiceError.message.includes('does not exist')) {
             throw new Error(`Missing columns in 'invoices': ${invoiceError.message}`);
         }
@@ -457,6 +458,16 @@ router.get('/api/invoices', async (req, res) => {
     res.json(data);
 });
 
+router.get('/api/invoices/:id', async (req, res) => {
+    const { data, error } = await supabase
+        .from('invoices')
+        .select('*, clients(*), invoice_items(*)')
+        .eq('id', req.params.id)
+        .single();
+    if (error || !data) return res.status(404).json({ error: 'Invoice not found' });
+    res.json(data);
+});
+
 // Download PDF endpoint
 router.get('/api/invoices/download/:id', async (req, res) => {
     try {
@@ -501,6 +512,26 @@ router.delete('/api/invoices/:id', async (req, res) => {
         const { id } = req.params;
         if (!id) return res.status(400).json({ error: 'Invoice ID is required' });
 
+        const { data: invoice, error: fetchError } = await supabase
+            .from('invoices').select('*').eq('id', id).single();
+        if (fetchError || !invoice) return res.status(404).json({ error: 'Invoice not found' });
+        if (Number(invoice.amount_paid || 0) > 0) {
+            return res.status(409).json({ error: 'Invoices with payments cannot be deleted. Record a correction instead.' });
+        }
+
+        const eventVersion = Date.now();
+        const { error: eventError } = await supabase.from('outbox_events').insert({
+            company_id: invoice.company_id,
+            aggregate_type: 'invoice',
+            aggregate_id: invoice.id,
+            event_version: eventVersion,
+            event_type: 'INVOICE_VOIDED',
+            idempotency_key: `${invoice.id}-${eventVersion}-INVOICE_VOIDED`,
+            payload_jsonb: { ...invoice, currency: invoice.currency || 'JMD' },
+            publish_status: 'pending'
+        });
+        if (eventError) throw new Error(`Could not queue the ledger reversal: ${eventError.message}`);
+
         const { error } = await supabase
             .from('invoices')
             .delete()
@@ -521,7 +552,7 @@ router.get('/api/dashboard/recent-activity', async (req, res) => {
         // Fetch top 5 invoices
         const { data: invoices } = await supabase
             .from('invoices')
-            .select('id, invoice_number, total_amount, issue_date, payment_status, status, clients(name)')
+            .select('id, invoice_number, total_amount, currency, issue_date, payment_status, status, clients(name)')
             .order('issue_date', { ascending: false })
             .limit(5);
 
@@ -566,6 +597,7 @@ router.get('/api/dashboard/recent-activity', async (req, res) => {
                     title: `Invoice ${inv.invoice_number}`,
                     description: `Client: ${inv.clients ? inv.clients.name : 'Unknown'}`,
                     amount: inv.total_amount,
+                    currency: inv.currency || 'JMD',
                     status: inv.payment_status || (inv.status === 'paid' ? 'PAID' : 'UNPAID'),
                     date: inv.issue_date
                 });
@@ -627,11 +659,24 @@ router.post('/api/invoices/create', async (req, res) => {
             paymentStatus,
             depositPercent,
             amountPaid,
-            paidAt
+            paidAt,
+            currency
         } = req.body;
 
         if (!clientId || !items || items.length === 0) {
             return res.status(400).json({ error: 'Missing client ID or items' });
+        }
+        if (items.some(item => !String(item.description || '').trim()
+            || !Number.isFinite(Number(item.quantity)) || Number(item.quantity) <= 0
+            || !Number.isFinite(Number(item.price)) || Number(item.price) < 0)) {
+            return res.status(400).json({ error: 'Every item needs a description, positive quantity, and valid non-negative price.' });
+        }
+        if (isSubscription) {
+            return res.status(400).json({ error: 'Subscription invoices are disabled. Manage the subscription in Client Care instead.' });
+        }
+        const invoiceCurrency = String(currency || 'JMD').trim().toUpperCase();
+        if (!['JMD', 'USD'].includes(invoiceCurrency)) {
+            return res.status(400).json({ error: 'Currency must be JMD or USD' });
         }
 
         // 0. SaaS: Validate Company
@@ -701,8 +746,9 @@ router.post('/api/invoices/create', async (req, res) => {
         // 2. Calculate Total
         let totalAmount = 0;
         items.forEach(item => {
-            totalAmount += (item.quantity * item.price);
+            totalAmount += (Number(item.quantity) * Number(item.price));
         });
+        totalAmount = Math.round(totalAmount * 100) / 100;
 
         // 2.5 Determine Remaining Amount and Percentage
         const pct = parseInt(paymentPercentage || 100);
@@ -735,7 +781,13 @@ router.post('/api/invoices/create', async (req, res) => {
             });
         }
 
-        const nextSeq = maxSeq + 1;
+        let nextSeq = maxSeq + 1;
+        const { data: sequenceValue, error: sequenceError } = await supabase.rpc('get_next_invoice_sequence');
+        if (!sequenceError && Number.isFinite(Number(sequenceValue))) {
+            nextSeq = Number(sequenceValue);
+        } else if (sequenceError) {
+            console.warn(`Invoice sequence RPC unavailable; using compatibility fallback: ${sequenceError.message}`);
+        }
         // Format: INV-ICSS-001
         const invoiceNumber = `INV-ICSS-${String(nextSeq).padStart(3, '0')}`;
         console.log('Generated Invoice Number:', invoiceNumber);
@@ -750,12 +802,13 @@ router.post('/api/invoices/create', async (req, res) => {
                 due_date: dueDate, // valid date string
                 notes: notes,
                 total_amount: totalAmount,
+                currency: invoiceCurrency,
                 service_code: serviceCode || 'CUST',
                 payment_expected_type: paymentType || 'FULL',
                 payment_expected_percentage: pct,
                 remaining_amount: remaining,
                 // New Fields
-                is_subscription: isSubscription || false,
+                is_subscription: false,
                 is_renewal: isRenewal || false,
                 renewal_date: renewalDate,
                 // New Status Fields
@@ -804,6 +857,7 @@ router.post('/api/invoices/create', async (req, res) => {
 
         if (itemsError) {
             console.error(itemsError);
+            await supabase.from('invoices').delete().eq('id', invoice.id);
             return res.status(500).json({ error: 'Failed to create invoice items' });
         }
 
@@ -832,20 +886,25 @@ router.post('/api/invoices/create', async (req, res) => {
 
         // Reverting to Blocking Wait to catch errors in UI
         console.log('Sending email to:', client.email, '(BCC handled by service)');
-        await sendInvoiceEmail(
-            client.email,
-            emailContent.subject,
-            emailContent.text,
-            emailContent.html,
-            pdfBuffer,
-            invoice.invoice_number, // bare name; sendInvoiceEmail appends .pdf
-            bccEmail
-        );
+        let emailWarning = null;
+        try {
+            await sendInvoiceEmail(
+                client.email,
+                emailContent.subject,
+                emailContent.text,
+                emailContent.html,
+                pdfBuffer,
+                invoice.invoice_number,
+                bccEmail
+            );
+        } catch (emailError) {
+            emailWarning = `Invoice saved, but email delivery failed: ${emailError.message}`;
+            console.error(emailWarning);
+        }
 
         // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event for journal posting
         try {
-            const defaultComp = await supabase.from('companies').select('id').limit(1).single();
-            if (defaultComp.data) {
+            if (targetCompanyId) {
                 // Construct the canonical payload
                 const eventPayload = {
                     ...invoice,
@@ -858,7 +917,7 @@ router.post('/api/invoices/create', async (req, res) => {
                 const { error: outboxError } = await supabase
                     .from('outbox_events')
                     .insert({
-                        company_id: defaultComp.data.id,
+                        company_id: targetCompanyId,
                         aggregate_type: 'invoice',
                         aggregate_id: invoice.id,
                         event_version: 1,
@@ -870,18 +929,165 @@ router.post('/api/invoices/create', async (req, res) => {
 
                 if (outboxError) throw outboxError;
                 console.log(`[OUTBOX] Published INVOICE_CREATED for invoice ${invoice.id}`);
+                if (Number(invoice.amount_paid || 0) > 0) {
+                    const { error: paymentEventError } = await supabase.from('outbox_events').insert({
+                        company_id: targetCompanyId,
+                        aggregate_type: 'invoice',
+                        aggregate_id: invoice.id,
+                        event_version: 2,
+                        event_type: 'PAYMENT_APPLIED',
+                        idempotency_key: `${invoice.id}-2-PAYMENT_APPLIED`,
+                        payload_jsonb: { ...eventPayload, amount_paid_this_payment: invoice.amount_paid },
+                        publish_status: 'pending'
+                    });
+                    if (paymentEventError) throw paymentEventError;
+                }
             }
         } catch (accErr) {
             console.error('Accounting outbox event failed:', accErr.message);
             // In a strict environment, we might fail the whole request. For now, we log it.
         }
 
-        res.json({ success: true, message: 'Invoice created and sent', invoiceId: invoice.id });
+        res.json({ success: true, message: emailWarning || 'Invoice created and sent', invoiceId: invoice.id, emailWarning });
 
     } catch (err) {
         console.error('SERVER ERROR:', err);
         // Return the actual error to the frontend for debugging
         res.status(500).json({ error: 'Server Error: ' + err.message });
+    }
+});
+
+router.get('/api/dashboard/overview', async (req, res) => {
+    try {
+        const now = new Date();
+        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        const results = await Promise.allSettled([
+            supabase.from('contracts').select('id, client_name, status, created_at, sent_at').in('status', ['sent', 'viewed']).order('created_at', { ascending: false }).limit(20),
+            supabase.from('reviews').select('id, name, rating, status, created_at').eq('status', 'pending').order('created_at', { ascending: false }).limit(20),
+            supabase.from('client_services').select('id, next_run_at, frequency, status, clients(name), service_plans(name)').eq('status', 'active').lte('next_run_at', nextWeek).order('next_run_at').limit(20),
+            supabase.from('invoices').select('id, invoice_number, currency, balance_due, due_date, payment_status, clients(name)').neq('payment_status', 'PAID').order('due_date').limit(20),
+            supabase.from('leads').select('id, name, priority, status, created_at, service_needed').in('status', ['New', 'Contacted']).order('created_at', { ascending: false }).limit(20),
+            supabase.from('client_care_reports').select('id, status, created_at').gte('created_at', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        ]);
+        const value = index => results[index].status === 'fulfilled' && !results[index].value.error ? (results[index].value.data || []) : [];
+        const contracts = value(0), reviews = value(1), services = value(2), invoices = value(3), leads = value(4), reports = value(5);
+        const overdue = invoices.filter(invoice => invoice.due_date && new Date(`${invoice.due_date}T23:59:59`) < now);
+        const alerts = [
+            ...contracts.slice(0, 3).map(item => ({ type: 'contract', title: `${item.client_name || 'Client'} contract awaiting signature`, detail: item.status === 'viewed' ? 'Viewed — signature still pending' : 'Sent — not yet signed', date: item.sent_at || item.created_at, href: '/contracts' })),
+            ...services.slice(0, 3).map(item => ({ type: 'report', title: `${item.clients?.name || 'Client'} report is upcoming`, detail: `${item.service_plans?.name || 'Client Care'} · ${item.frequency || 'scheduled'}`, date: item.next_run_at, href: '/client-care-pulse' })),
+            ...reviews.slice(0, 2).map(item => ({ type: 'review', title: `Review from ${item.name} needs approval`, detail: `${item.rating || 0}-star review`, date: item.created_at, href: '/reviews-admin' })),
+            ...overdue.slice(0, 3).map(item => ({ type: 'invoice', title: `${item.invoice_number} is overdue`, detail: `${item.currency || 'JMD'} ${Number(item.balance_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} outstanding`, date: item.due_date, href: '/invoices' }))
+        ].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0)).slice(0, 8);
+
+        res.json({
+            generatedAt: now.toISOString(),
+            metrics: {
+                pendingContracts: contracts.length,
+                upcomingReports: services.length,
+                pendingReviews: reviews.length,
+                overdueInvoices: overdue.length,
+                openLeads: leads.length,
+                reportsSent30d: reports.filter(report => report.status === 'sent').length
+            },
+            alerts
+        });
+    } catch (err) {
+        console.error('Dashboard overview error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.put('/api/invoices/:id', async (req, res) => {
+    try {
+        const { data: existing, error: fetchError } = await supabase
+            .from('invoices')
+            .select('*, clients(name), invoice_items(*)')
+            .eq('id', req.params.id)
+            .single();
+        if (fetchError || !existing) return res.status(404).json({ error: 'Invoice not found' });
+        if (existing.is_subscription) {
+            return res.status(400).json({ error: 'Subscription invoices are read-only and no longer generated.' });
+        }
+
+        const body = req.body || {};
+        const items = Array.isArray(body.items) ? body.items : [];
+        const normalizedItems = items.map(item => ({
+            description: String(item.description || '').trim(),
+            quantity: Number(item.quantity),
+            unit_price: Number(item.price ?? item.unit_price)
+        }));
+        if (!normalizedItems.length || normalizedItems.some(item => !item.description || !Number.isFinite(item.quantity) || item.quantity <= 0 || !Number.isFinite(item.unit_price) || item.unit_price < 0)) {
+            return res.status(400).json({ error: 'Every invoice item needs a description, positive quantity, and valid price.' });
+        }
+
+        const currency = String(body.currency || existing.currency || 'JMD').trim().toUpperCase();
+        if (!['JMD', 'USD'].includes(currency)) return res.status(400).json({ error: 'Currency must be JMD or USD' });
+        const totalAmount = Math.round(normalizedItems.reduce((sum, item) => sum + item.quantity * item.unit_price, 0) * 100) / 100;
+        const paymentStatus = String(body.paymentStatus || existing.payment_status || 'UNPAID').toUpperCase();
+        if (!['UNPAID', 'PARTIAL', 'DEPOSIT', 'PAID'].includes(paymentStatus)) {
+            return res.status(400).json({ error: 'Invalid payment status' });
+        }
+        const depositPercent = paymentStatus === 'DEPOSIT' ? Number(body.depositPercent || existing.deposit_percent || 0) : null;
+        let amountPaid = paymentStatus === 'PAID' ? totalAmount : paymentStatus === 'DEPOSIT'
+            ? totalAmount * depositPercent / 100
+            : paymentStatus === 'PARTIAL' ? Number(body.amountPaid ?? existing.amount_paid ?? 0) : 0;
+        amountPaid = Math.round(Math.max(0, Math.min(totalAmount, amountPaid)) * 100) / 100;
+        const balanceDue = Math.round((totalAmount - amountPaid) * 100) / 100;
+
+        const updatePayload = {
+            client_id: body.clientId || existing.client_id,
+            due_date: paymentStatus === 'PAID' ? null : (body.dueDate || existing.due_date),
+            notes: body.notes ?? existing.notes,
+            service_code: body.serviceCode || existing.service_code || 'CUST',
+            payment_expected_type: body.paymentType || existing.payment_expected_type || 'FULL',
+            payment_expected_percentage: Number(body.paymentPercentage || existing.payment_expected_percentage || 100),
+            currency,
+            total_amount: totalAmount,
+            payment_status: paymentStatus,
+            status: paymentStatus === 'PAID' ? 'paid' : 'pending',
+            deposit_percent: depositPercent,
+            amount_paid: amountPaid,
+            balance_due: balanceDue,
+            remaining_amount: balanceDue,
+            paid_at: paymentStatus === 'PAID' ? (body.paidAt ? new Date(body.paidAt).toISOString() : existing.paid_at || new Date().toISOString()) : null,
+            updated_at: new Date().toISOString()
+        };
+
+        const { error: deleteItemsError } = await supabase.from('invoice_items').delete().eq('invoice_id', existing.id);
+        if (deleteItemsError) throw deleteItemsError;
+        const { error: insertItemsError } = await supabase.from('invoice_items').insert(
+            normalizedItems.map(item => ({ ...item, invoice_id: existing.id }))
+        );
+        if (insertItemsError) {
+            const oldItems = (existing.invoice_items || []).map(({ description, quantity, unit_price }) => ({
+                invoice_id: existing.id, description, quantity, unit_price
+            }));
+            if (oldItems.length) await supabase.from('invoice_items').insert(oldItems);
+            throw insertItemsError;
+        }
+
+        const { data: updated, error: updateError } = await supabase
+            .from('invoices').update(updatePayload).eq('id', existing.id).select().single();
+        if (updateError) throw updateError;
+
+        const { data: client } = await supabase.from('clients').select('name').eq('id', updated.client_id).maybeSingle();
+        const eventVersion = Date.now();
+        const { error: eventError } = await supabase.from('outbox_events').insert({
+            company_id: updated.company_id,
+            aggregate_type: 'invoice',
+            aggregate_id: updated.id,
+            event_version: eventVersion,
+            event_type: 'INVOICE_UPDATED',
+            idempotency_key: `${updated.id}-${eventVersion}-INVOICE_UPDATED`,
+            payload_jsonb: { ...updated, client_name: client?.name || 'Client', currency },
+            publish_status: 'pending'
+        });
+        if (eventError) throw new Error(`Invoice saved, but ledger update could not be queued: ${eventError.message}`);
+
+        res.json({ success: true, invoice: updated, message: 'Invoice and ledger update saved.' });
+    } catch (err) {
+        console.error('INVOICE UPDATE ERROR:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -1259,7 +1465,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
         // --- HANDLE NEW SUBSCRIPTION ACTIVATIONS ---
         // This fires when a brand-new client signs up through PayPal directly,
         // before any payment event is received. We auto-create the client + service + welcome email.
-        if (false && activationEvents.has(body.event_type)) {
+        if (SUBSCRIPTION_INVOICING_ENABLED && activationEvents.has(body.event_type)) {
             console.log(`[PAYPAL] New subscription activation: ${body.event_type}`);
             try {
                 const subscriber = resource.subscriber || {};
@@ -1661,7 +1867,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 const captureHasSubscriptionIdentity = body.event_type !== 'PAYMENT.CAPTURE.COMPLETED'
                     || Boolean(paypalSubscriptionId)
                     || String(explicitCustomId || '') === String(clientServiceId || '');
-                if (!targetInvoice && clientServiceId && captureHasSubscriptionIdentity) {
+                if (SUBSCRIPTION_INVOICING_ENABLED && !targetInvoice && clientServiceId && captureHasSubscriptionIdentity) {
                     // Look for the most recent pending invoice for this service
                     const { data: latestUnpaid } = await supabase
                         .from('invoices')
@@ -1696,6 +1902,23 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 }
 
                 if (!targetInvoice) {
+                    if (clientServiceId && captureHasSubscriptionIdentity) {
+                        if (ownsPaymentClaim) {
+                            const paidAt = resource.create_time || resource.update_time || new Date().toISOString();
+                            const { error: paymentError } = await supabase.from('payments').update({
+                                amount: settledAmount,
+                                method: 'PayPal',
+                                payment_date: paidAt
+                            }).eq('id', paymentClaim.id);
+                            if (paymentError) throw paymentError;
+                        }
+                        if (webhookRow) {
+                            await supabase.from('paypal_webhook_events')
+                                .update({ status: 'processed', processed_at: new Date().toISOString(), custom_id: clientServiceId })
+                                .eq('id', webhookRow.id);
+                        }
+                        return res.status(200).send('OK');
+                    }
                     throw new Error(`No invoice or subscription could be resolved for customId ${customId}`);
                 }
 
@@ -1804,7 +2027,7 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 }
 
                 // 4. Handle Subscription Renewal Logic
-                if (invoice.is_subscription && invoice.billing_cycle) {
+                if (SUBSCRIPTION_INVOICING_ENABLED && invoice.is_subscription && invoice.billing_cycle) {
                     if (invoice.client_service_id) {
                         console.log(`[BILLING] Skipping legacy invoice clone. Subscription is managed by client_services (ID: ${invoice.client_service_id}).`);
                     } else {
@@ -2068,13 +2291,8 @@ router.post('/api/client-services/create', async (req, res) => {
             .update({ next_run_at: nextRun })
             .eq('id', service.id);
 
-        // [BILLING INTEGRATION] Trigger initial invoice generation
-        try {
-            const { syncServiceActivation } = require('./src/services/subscriptionBillingService');
-            await syncServiceActivation(service.id);
-        } catch (syncErr) {
-            console.error('Failed to sync billing on insert:', syncErr);
-        }
+        // Subscriptions are operational records only. Invoices are created manually
+        // when needed, so activating Client Care never touches Accounts Receivable.
 
         // [WELCOME EMAIL] Send onboarding email immediately on subscription activation
         try {
@@ -2243,13 +2461,6 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
         }
 
         runDueClientCarePulses(); // Async, don't wait
-
-        try {
-            const { processRecurringBilling } = require('./src/services/subscriptionBillingService');
-            processRecurringBilling(); // Async, don't wait
-        } catch (syncErr) {
-            console.error('Failed to trigger recurring billing cron:', syncErr);
-        }
 
         try {
             const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
@@ -2500,7 +2711,6 @@ router.post('/api/invoices/resend', async (req, res) => {
         // 2. Determine updated amounts based on new status
         let updatedFields = {
             payment_status: paymentStatus || invoice.payment_status
-            // updated_at column missing in DB
         };
 
         if (paymentStatus) {
@@ -2534,16 +2744,18 @@ router.post('/api/invoices/resend', async (req, res) => {
 
         // ✅ ACCOUNTING INTEGRATION: Emit transactional outbox event
         try {
+            const paidDelta = Number(updatedFields.amount_paid || 0) - Number(invoice.amount_paid || 0);
             const eventPayload = {
                 ...invoice,
                 ...updatedFields,
                 client_name: invoice.clients ? invoice.clients.name : 'Unknown',
-                payment_method: 'bank'
+                payment_method: 'bank',
+                amount_paid_this_payment: Math.abs(paidDelta)
             };
 
             let eventType = 'INVOICE_UPDATED';
-            if (paymentStatus === 'DEPOSIT') eventType = 'DEPOSIT_PRE_SERVICE';
-            else if (paymentStatus === 'PARTIAL' || paymentStatus === 'PAID') eventType = 'PAYMENT_APPLIED';
+            if (paidDelta > 0) eventType = 'PAYMENT_APPLIED';
+            else if (paidDelta < 0) eventType = 'PAYMENT_REVERSED';
 
             await supabase.from('outbox_events').insert({
                 company_id: invoice.company_id,
@@ -2722,6 +2934,60 @@ router.get('/api/accounting/settings', async (req, res) => {
         const settings = await getAccountingSettings(companyId);
         res.json(settings || {});
     } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.get('/api/accounting/dashboard/trends', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const now = new Date();
+        const periods = [];
+        for (let offset = 5; offset >= 0; offset -= 1) {
+            const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1));
+            const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
+            const pnl = await getProfitAndLoss(companyId, start.toISOString().slice(0, 10), end.toISOString().slice(0, 10));
+            periods.push({
+                label: start.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' }),
+                revenue: Number(pnl.summary?.netRevenue || 0),
+                expenses: Number(pnl.summary?.totalExpenses || 0),
+                profit: Number(pnl.summary?.netProfit || 0)
+            });
+        }
+        const { data: invoices, error } = await supabase.from('invoices')
+            .select('currency, total_amount, balance_due, payment_status, invoice_number, due_date, clients(name)')
+            .eq('company_id', companyId)
+            .order('issue_date', { ascending: false })
+            .limit(100);
+        if (error) throw error;
+        const currencyTotals = (invoices || []).reduce((totals, invoice) => {
+            const key = invoice.currency === 'USD' ? 'USD' : 'JMD';
+            totals[key] += Number(invoice.total_amount || 0);
+            return totals;
+        }, { JMD: 0, USD: 0 });
+        const currencyCounts = (invoices || []).reduce((counts, invoice) => {
+            counts[invoice.currency === 'USD' ? 'USD' : 'JMD'] += 1;
+            return counts;
+        }, { JMD: 0, USD: 0 });
+        res.json({ periods, currencyTotals, currencyCounts, invoices: invoices || [] });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.get('/api/accounting/integrity/invoices', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { inspectInvoiceLedger } = require('./src/services/invoiceLedgerIntegrityService');
+        res.json(await inspectInvoiceLedger(companyId));
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/api/accounting/integrity/invoices/repair', async (req, res) => {
+    try {
+        const companyId = await resolveCompanyId(req);
+        const { repairInvoiceLedger } = require('./src/services/invoiceLedgerIntegrityService');
+        res.json(await repairInvoiceLedger(companyId));
+    } catch (err) {
+        console.error('Invoice ledger repair failed:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // PUT /api/accounting/settings
@@ -3403,9 +3669,6 @@ app.listen(PORT, '0.0.0.0', () => {
                 .catch(err => console.error('Scheduler Error (Subscription Reminders):', err));
             autoAdvanceRenewalDates()
                 .catch(err => console.error('Scheduler Error (Subscription Auto-Advance):', err));
-            const { processRecurringBilling } = require('./src/services/subscriptionBillingService');
-            processRecurringBilling()
-                .catch(err => console.error('Scheduler Error (Recurring Billing):', err));
         } catch (err) {
             console.error('Failed to trigger daily subscription routines:', err);
         }
@@ -3428,9 +3691,6 @@ app.listen(PORT, '0.0.0.0', () => {
             .catch(err => console.error('Initial Run Error (Subscription Reminders):', err));
         autoAdvanceRenewalDates()
             .catch(err => console.error('Initial Run Error (Subscription Auto-Advance):', err));
-        const { processRecurringBilling } = require('./src/services/subscriptionBillingService');
-        processRecurringBilling()
-            .catch(err => console.error('Initial Run Error (Recurring Billing):', err));
         processBirthdayGreetings()
             .catch(err => console.error('Initial Run Error (Birthday Greetings):', err));
         processPendingWelcomeEmails()

@@ -10,7 +10,8 @@ process.env.SUPABASE_ANON_KEY ||= 'test-anon-key';
 const { calculateNextRunIso } = require('../src/services/scheduleTimeService');
 const { getPlanByPayPalId, findCatalogPlan } = require('../src/services/subscriptionCatalog');
 const { computeInvoiceState, validateInvoiceState } = require('../src/services/invoiceStateService');
-const { addBillingPeriod } = require('../src/services/subscriptionBillingService');
+const { addBillingPeriod, syncServiceActivation, generateSubscriptionInvoice, processRecurringBilling } = require('../src/services/subscriptionBillingService');
+const { convertInvoiceAmountToJmd } = require('../src/services/postingRulesService');
 
 test('website plans map exact PayPal IDs and settled totals', () => {
     const refresh = getPlanByPayPalId('P-00F6350522773701SNECR4RI');
@@ -43,6 +44,12 @@ test('monthly and yearly renewals clamp safely at month and leap-year boundaries
     );
 });
 
+test('subscription workflows never create invoices', async () => {
+    assert.equal(await syncServiceActivation('service-test'), null);
+    assert.equal(await generateSubscriptionInvoice({ id: 'service-test' }), null);
+    assert.deepEqual(await processRecurringBilling(), { processed: 0, disabled: true });
+});
+
 test('invoice preview states enforce paid, partial, deposit, and unpaid contracts', () => {
     const client = { name: 'Preview Client' };
     const cases = [
@@ -57,6 +64,12 @@ test('invoice preview states enforce paid, partial, deposit, and unpaid contract
         assert.equal(state.balanceDue, invoice.expectedBalance);
         assert.equal(validateInvoiceState(state), true);
     }
+});
+
+test('invoice ledger conversion respects the invoice currency', () => {
+    assert.equal(convertInvoiceAmountToJmd(462494.51, 'JMD', 158), 462494.51);
+    assert.equal(convertInvoiceAmountToJmd(100, 'USD', 158), 15800);
+    assert.equal(computeInvoiceState({ invoice_number: 'INV-JMD', total_amount: 100, currency: 'JMD' }, { name: 'Client' }).currency, 'JMD');
 });
 
 test('onboarding keeps phone in Client Care metadata for legacy clients schema', async () => {

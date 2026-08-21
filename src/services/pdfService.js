@@ -109,6 +109,7 @@ function generateInvoicePDF(invoiceData, clientData, items) {
             // --- 3. INVOICE META (Right Header) ---
             const { computeInvoiceState } = require('./invoiceStateService');
             const state = computeInvoiceState(invoiceData, clientData);
+            const money = (value) => `${state.currency} ${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
             // --- 3. INVOICE META (Right Header) ---
             const metaX = 320;
@@ -219,8 +220,8 @@ function generateInvoicePDF(invoiceData, clientData, items) {
                 // Draw text with description constrained to width 280 to prevent overlap
                 doc.text(item.description, 50, y, { width: 280 })
                     .text(item.quantity, 340, y, { width: 40, align: 'center' })
-                    .text(`$${Number(item.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 400, y, { width: 80, align: 'right' })
-                    .text(`$${Number(totalItem).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 480, y, { width: 80, align: 'right' });
+                    .text(money(item.unit_price), 390, y, { width: 90, align: 'right' })
+                    .text(money(totalItem), 470, y, { width: 90, align: 'right' });
 
                 y += rowHeight + 20; // Move to the next row dynamically based on actual text height
             });
@@ -244,13 +245,13 @@ function generateInvoicePDF(invoiceData, clientData, items) {
                 // Render Subtotal & Tax above Total
                 doc.fillColor('#000').fontSize(10).font('Helvetica-Bold')
                    .text('SUBTOTAL', width - 230, taxY)
-                   .text(`$${Number(itemSum).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, width - 140, taxY, { align: 'right', width: 90 });
+                   .text(money(itemSum), width - 155, taxY, { align: 'right', width: 105 });
                    
                 taxY += 15;
                 const taxAmount = totalAmount - itemSum;
                 doc.font('Helvetica')
                    .text('Tax / Fees', width - 230, taxY)
-                   .text(`$${Number(taxAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, width - 140, taxY, { align: 'right', width: 90 });
+                   .text(money(taxAmount), width - 155, taxY, { align: 'right', width: 105 });
                    
                 displayY = taxY + 15;
             }
@@ -263,7 +264,7 @@ function generateInvoicePDF(invoiceData, clientData, items) {
                 .fontSize(12)
                 .font('Helvetica-Bold')
                 .text('TOTAL', width - 230, displayY + 8)
-                .text(`$${Number(state.totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, width - 140, displayY + 8, { align: 'right', width: 90 });
+                .text(money(state.totalAmount), width - 160, displayY + 8, { align: 'right', width: 110 });
 
             // Ensure summary box respects the new Y coordinate
             y = displayY;

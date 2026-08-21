@@ -392,31 +392,24 @@ async function getJournalEntries(companyId, { periodStart, periodEnd, sourceType
 // ============================================================================
 
 async function getAccountingSettings(companyId) {
-    const { data, error } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('id', companyId)
-        .maybeSingle();
-
-    if (error) throw new Error(error.message);
-    if (data) {
-        // Map companies table fields to the expected settings format
-        return {
-            ...data,
-            company_id: data.id,
-            fx_rate_usd_to_jmd: 158, // default or fetch from an fx table
-            invoice_currency: 'USD'
-        };
-    }
-    return null;
+    const { data, error } = await supabase.from('accounting_settings')
+        .select('*').eq('company_id', companyId).maybeSingle();
+    if (error && error.code !== '42P01') throw new Error(error.message);
+    return data || {
+        company_id: companyId,
+        business_type: 'sole_trader',
+        accounting_basis: 'accrual',
+        reporting_currency: 'JMD',
+        invoice_currency: 'JMD',
+        fx_rate_usd_to_jmd: 158,
+        gct_registered: false
+    };
 }
 
 async function upsertAccountingSettings(companyId, updates) {
-    // In V2, settings are on the companies table
     const { data, error } = await supabase
-        .from('companies')
-        .update(updates)
-        .eq('id', companyId)
+        .from('accounting_settings')
+        .upsert({ ...updates, company_id: companyId, updated_at: new Date().toISOString() }, { onConflict: 'company_id' })
         .select()
         .single();
 

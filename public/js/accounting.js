@@ -3,6 +3,8 @@ const CONFIG = window.CONFIG;
 
 let supabase;
 let chartInstance = null;
+let performanceChartInstance = null;
+let currencyMixChartInstance = null;
 let currentCompanyId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -118,6 +120,7 @@ async function loadDashboard() {
         
         // Load the new Trial Balance Account Watchlist
         await loadTrialBalanceDashboard();
+        await Promise.all([loadFinancialVisuals(), loadInvoiceLedgerIntegrity()]);
 
         // AR KPI card — use the same combined total as the aging chart (invoices + ledger)
         const arEl = document.getElementById('kpi-ar-ledger');
@@ -129,6 +132,113 @@ async function loadDashboard() {
     } catch (err) {
         console.error('Dashboard load error:', err);
         showToast('Failed to load dashboard data', 'error');
+    }
+}
+
+function escapeAccountingHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+}
+
+function formatInvoiceCurrency(amount, currency) {
+    const code = currency === 'USD' ? 'USD' : 'JMD';
+    return new Intl.NumberFormat(code === 'USD' ? 'en-US' : 'en-JM', {
+        style: 'currency', currency: code, currencyDisplay: 'code'
+    }).format(Number(amount || 0));
+}
+
+async function loadFinancialVisuals() {
+    const response = await apiFetch(`/api/accounting/dashboard/trends?company_id=${currentCompanyId}`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Financial trends could not be loaded');
+
+    const performanceCanvas = document.getElementById('performanceChart');
+    if (performanceCanvas) {
+        if (performanceChartInstance) performanceChartInstance.destroy();
+        performanceChartInstance = new Chart(performanceCanvas, {
+            type: 'line',
+            data: {
+                labels: data.periods.map(period => period.label),
+                datasets: [
+                    { label: 'Revenue', data: data.periods.map(period => period.revenue), borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,.12)', fill: true, tension: .38, borderWidth: 2 },
+                    { label: 'Expenses', data: data.periods.map(period => period.expenses), borderColor: '#fb7185', backgroundColor: 'transparent', tension: .38, borderWidth: 2 },
+                    { label: 'Profit', data: data.periods.map(period => period.profit), borderColor: '#a3e635', backgroundColor: 'transparent', tension: .38, borderWidth: 2 }
+                ]
+            },
+            options: financialChartOptions()
+        });
+    }
+
+    const currencyCanvas = document.getElementById('currencyMixChart');
+    if (currencyCanvas) {
+        if (currencyMixChartInstance) currencyMixChartInstance.destroy();
+        currencyMixChartInstance = new Chart(currencyCanvas, {
+            type: 'doughnut',
+            data: { labels: ['JMD invoices', 'USD invoices'], datasets: [{ data: [data.currencyCounts.JMD, data.currencyCounts.USD], backgroundColor: ['#22d3ee', '#8b5cf6'], borderColor: '#1e1e24', borderWidth: 5, hoverOffset: 8 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { position: 'bottom', labels: { color: '#a9b7ca', padding: 18, usePointStyle: true } } } }
+        });
+    }
+
+    const register = document.getElementById('accountingInvoiceRegister');
+    if (register) {
+        register.innerHTML = data.invoices.length ? data.invoices.slice(0, 12).map(invoice => `
+            <tr>
+                <td data-label="Invoice"><strong>${escapeAccountingHtml(invoice.invoice_number)}</strong></td>
+                <td data-label="Client">${escapeAccountingHtml(invoice.clients?.name || 'Unassigned')}</td>
+                <td data-label="Due">${invoice.due_date ? new Date(`${invoice.due_date}T00:00:00`).toLocaleDateString() : '—'}</td>
+                <td data-label="Currency"><span class="currency-pill">${invoice.currency || 'JMD'}</span></td>
+                <td data-label="Total" class="text-right">${formatInvoiceCurrency(invoice.total_amount, invoice.currency)}</td>
+                <td data-label="Outstanding" class="text-right">${formatInvoiceCurrency(invoice.balance_due, invoice.currency)}</td>
+                <td data-label="Status"><span class="badge ${invoice.payment_status === 'PAID' ? 'badge-success' : invoice.payment_status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'}">${escapeAccountingHtml(invoice.payment_status || 'UNPAID')}</span></td>
+            </tr>`).join('') : '<tr><td colspan="7" class="text-center py-4">No invoices yet.</td></tr>';
+    }
+}
+
+function financialChartOptions() {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: { legend: { labels: { color: '#a9b7ca', usePointStyle: true, padding: 18 } }, tooltip: { backgroundColor: '#0b1220', padding: 12, callbacks: { label: context => `${context.dataset.label}: ${new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(context.parsed.y)}` } } },
+        scales: { x: { grid: { display: false }, ticks: { color: '#8090a7' } }, y: { grid: { color: 'rgba(255,255,255,.055)' }, ticks: { color: '#8090a7', callback: value => new Intl.NumberFormat('en', { notation: 'compact' }).format(value) } } }
+    };
+}
+
+async function loadInvoiceLedgerIntegrity() {
+    const response = await apiFetch(`/api/accounting/integrity/invoices?company_id=${currentCompanyId}`);
+    const audit = await response.json();
+    const card = document.getElementById('ledgerIntegrityCard');
+    if (!card) return;
+    if (!response.ok) {
+        card.classList.add('integrity-warning');
+        document.getElementById('integrityTitle').textContent = 'Integrity check unavailable';
+        document.getElementById('integrityDetail').textContent = audit.error || 'The ledger could not be audited.';
+        return;
+    }
+    const hasIssues = audit.issueCount > 0;
+    card.classList.toggle('integrity-warning', hasIssues);
+    card.classList.toggle('integrity-ok', !hasIssues);
+    document.getElementById('integrityTitle').textContent = hasIssues ? `${audit.issueCount} invoice ledger issue${audit.issueCount === 1 ? '' : 's'} found` : 'Invoice ledger is balanced and traceable';
+    document.getElementById('integrityDetail').textContent = hasIssues ? 'The audit found orphaned, duplicate, or incorrectly converted postings. Use the repair to create immutable correcting entries.' : `${audit.invoiceCount} invoices and ${audit.activeInvoiceJournalCount} active postings checked.`;
+    document.getElementById('btnRepairInvoiceLedger').classList.toggle('d-none', !hasIssues);
+}
+
+async function repairInvoiceLedger() {
+    const confirmed = typeof showConfirm === 'function' ? await showConfirm('Create correcting journal entries for every invoice ledger issue found?', 'danger', 'Repair ledger') : confirm('Repair all detected invoice ledger issues?');
+    if (!confirmed) return;
+    const button = document.getElementById('btnRepairInvoiceLedger');
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Repairing…';
+    try {
+        const response = await apiFetch(`/api/accounting/integrity/invoices/repair?company_id=${currentCompanyId}`, { method: 'POST' });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Repair failed');
+        showToast(`Ledger repaired: ${result.reversedJournalCount} posting(s) corrected.`, 'success');
+        await loadDashboard();
+    } catch (error) {
+        showToast(error.message, 'error');
+    } finally {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Repair ledger';
     }
 }
 
@@ -188,7 +298,10 @@ async function loadSubscriptions() {
         const formatJMD = (val) => new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(val);
 
         let totalMRR = 0;
-        const FX_RATE = 158;
+        const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+        const settingsResponse = await apiFetch(`/api/accounting/settings?company_id=${currentCompanyId}`);
+        const settings = settingsResponse.ok ? await settingsResponse.json() : {};
+        const FX_RATE = Number(settings.fx_rate_usd_to_jmd || 158);
 
         tbody.innerHTML = data.map(sub => {
             let priceUSD = parseFloat(sub.service_plans?.price || 0);
@@ -205,7 +318,7 @@ async function loadSubscriptions() {
                 <td data-label="Next Billing">
                     ${sub.next_renewal_date ? new Date(sub.next_renewal_date).toLocaleDateString() : 'N/A'}
                 </td>
-                <td data-label="Amount"><strong>${sub.service_plans?.price ? formatJMD(sub.service_plans.price) : 'N/A'}</strong></td>
+                <td data-label="Amount"><strong>${sub.service_plans?.price ? formatUSD(sub.service_plans.price) : 'N/A'}</strong></td>
                 <td data-label="Status" class="text-center">
                     ${sub.status === 'active'
                     ? '<span class="badge badge-success" style="background: #D1FAE5; color: #065F46;">Active</span>'
@@ -797,6 +910,7 @@ function initJournalForm() {
 // Check GCT registered state to show GCT input in expense form dynamically
 window.accountingJS = {
     loadTrialBalanceDashboard: loadTrialBalanceDashboard,
+    repairInvoiceLedger,
     openJournalModal: () => {
         document.getElementById('modalJournal').classList.remove('d-none');
         document.getElementById('formJournal').reset();

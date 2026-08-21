@@ -23,6 +23,20 @@
 
     <div class="container fade-in">
 
+        <section class="page-hero">
+            <div>
+                <span class="page-eyebrow">Billing workspace</span>
+                <h2>Invoices</h2>
+                <p>Create, edit, send, and track one-off client invoices in JMD or USD.</p>
+            </div>
+            <div class="page-hero-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+        </section>
+
+        <div id="editModeBanner" class="edit-mode-banner d-none">
+            <div><strong>Editing <span id="editingInvoiceNumber"></span></strong><span>Changes will create a correcting ledger entry.</span></div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelInvoiceEdit()">Cancel edit</button>
+        </div>
+
         <form id="invoiceForm">
             <!-- Client Section -->
             <div class="card">
@@ -71,48 +85,18 @@
             <div class="card">
                 <h2 class="card-title">Invoice Details</h2>
 
-                <div class="radio-group mb-4">
-                    <label class="radio-option">
-                        <input type="checkbox" id="isSubscription" onchange="toggleSubscription()">
-                        <span>Subscription / Recurring Invoice</span>
-                    </label>
-                </div>
-
-                <!-- Subscription Fields -->
-                <div id="subscriptionFields" class="form-grid d-none"
-                    style="border-left: 2px solid var(--secondary-color); padding-left: 15px; margin-bottom: 20px;">
-                    <div>
-                        <label>Plan Name</label>
-                        <input type="text" id="planName" placeholder="e.g. Standard Hosting">
-                    </div>
-                    <div>
-                        <label>Billing Cycle</label>
-                        <select id="billingCycle">
-                            <option value="Monthly">Monthly</option>
-                            <option value="Yearly">Yearly</option>
-                            <option value="Quarterly">Quarterly</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Next Renewal Date</label>
-                        <input type="date" id="renewalDate">
-                    </div>
-                    <div class="radio-group" style="grid-column: 1 / -1; margin-top: 10px;">
-                        <label class="radio-option">
-                            <input type="radio" id="isInitial" name="subscriptionType" value="initial" checked>
-                            <span>Initial Subscription</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" id="isRenewal" name="subscriptionType" value="renewal">
-                            <span>Renewal</span>
-                        </label>
-                    </div>
-                </div>
-
                 <div class="form-grid">
                     <div id="dueDateContainer">
                         <label for="dueDate">Due Date</label>
                         <input type="date" id="dueDate" name="dueDate" required>
+                    </div>
+
+                    <div>
+                        <label for="currency">Invoice Currency</label>
+                        <select id="currency" name="currency" required>
+                            <option value="JMD">JMD — Jamaican Dollar</option>
+                            <option value="USD">USD — US Dollar</option>
+                        </select>
                     </div>
 
                     <div>
@@ -254,7 +238,7 @@
 
             <!-- Actions -->
             <div class="text-center mb-4 mt-4">
-                <button type="submit"
+                <button type="submit" id="invoiceSubmitBtn"
                     style="width: 100%; max-width: 300px; padding: 15px; font-size: 1.1rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
                     Create & Send Invoice
                 </button>
@@ -274,6 +258,7 @@
                         <th>Invoice #</th>
                         <th>Client</th>
                         <th>Date</th>
+                        <th>Currency</th>
                         <th>Amount</th>
                         <th>Status</th>
                         <th>Actions</th>

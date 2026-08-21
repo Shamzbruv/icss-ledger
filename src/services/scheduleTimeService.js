@@ -256,7 +256,8 @@ function calculateNextRun({
     sendTime = '09:00',
     timeZone,
     timezone,
-    from = new Date()
+    now,
+    from = now || new Date()
 } = {}) {
     const instant = asDate(from, 'from');
     const normalizedZone = normalizeTimeZone(timeZone || timezone);

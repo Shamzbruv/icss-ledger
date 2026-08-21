@@ -5,7 +5,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "audit:invoice-ledger": "node scripts/repair_invoice_ledger.js",
+    "repair:invoice-ledger": "node scripts/repair_invoice_ledger.js --apply"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

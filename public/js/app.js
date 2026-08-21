@@ -24,6 +24,15 @@ function setDefaultInvoiceDates() {
     if (renewalDateInput) renewalDateInput.value = formatDateInputValue(addMonthsClamped(today, 1));
 }
 
+let editingInvoiceId = null;
+
+function formatInvoiceMoney(amount, currency = 'JMD') {
+    const normalized = String(currency || 'JMD').toUpperCase() === 'USD' ? 'USD' : 'JMD';
+    return new Intl.NumberFormat(normalized === 'USD' ? 'en-US' : 'en-JM', {
+        style: 'currency', currency: normalized, currencyDisplay: 'code'
+    }).format(Number(amount || 0));
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Auto-set dates
     setDefaultInvoiceDates();
@@ -53,7 +62,8 @@ window.toggleClientMode = function () {
 };
 
 window.toggleSubscription = function () {
-    const isSub = document.getElementById('isSubscription').checked;
+    if (!document.getElementById('isSubscription')) return;
+    const isSub = document.getElementById('isSubscription')?.checked || false;
     const fields = document.getElementById('subscriptionFields');
     const dueDateContainer = document.getElementById('dueDateContainer');
     const dueDateInput = document.getElementById('dueDate');
@@ -98,7 +108,7 @@ window.togglePercentage = function () {
 
 window.togglePaymentStatus = function () {
     const status = document.getElementById('paymentStatus').value;
-    const isSub = document.getElementById('isSubscription').checked;
+    const isSub = false;
 
     // Elements
     const depositFields = document.getElementById('depositFields');
@@ -242,12 +252,12 @@ async function loadInvoices() {
     try {
         const tbody = document.getElementById('invoiceTableBody');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
             const response = await apiFetch('/api/invoices');
             if (response.ok) {
                 const invoices = await response.json();
                 if (invoices.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5">No recent invoices found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7">No recent invoices found.</td></tr>';
                 } else {
                     tbody.innerHTML = '';
                     invoices.forEach(inv => {
@@ -266,12 +276,14 @@ async function loadInvoices() {
                             <td data-label="Invoice #"><div class="cell-content">${inv.invoice_number}</div></td>
                             <td data-label="Client"><div class="cell-content">${clientName}</div></td>
                             <td data-label="Date Issued"><div class="cell-content">${new Date(inv.issue_date).toLocaleDateString()}</div></td>
-                            <td data-label="Amount"><div class="cell-content">$${Number(inv.total_amount).toFixed(2)}</div></td>
+                            <td data-label="Currency"><div class="cell-content"><span class="currency-pill">${inv.currency || 'JMD'}</span></div></td>
+                            <td data-label="Amount"><div class="cell-content">${formatInvoiceMoney(inv.total_amount, inv.currency)}</div></td>
                             <td data-label="Status"><div class="cell-content"><span class="badge ${badgeClass}">${status}</span></div></td>
                             <td data-label="Actions">
                                 <div class="cell-content d-flex gap-2">
                                     <button class="btn btn-sm btn-outline-light" onclick="viewPDF('${inv.id}')" title="View PDF">View PDF</button>
                                     <button class="btn btn-sm btn-outline-light" onclick="resendInvoiceEmail('${inv.id}')" title="Resend Email">Resend</button>
+                                    <button class="btn btn-sm btn-outline-light" onclick="editInvoice('${inv.id}')" title="Edit Invoice">Edit</button>
                                     <button class="btn btn-sm btn-primary" onclick="updateStatusInvoice('${inv.id}', '${status}')">Update</button>
                                     <button class="btn btn-sm btn-danger" onclick="sendPaymentDeclinedAlert('${inv.id}')" title="Payment Declined">Decline Alert</button>
                                     <button class="btn btn-sm btn-outline-danger" onclick="deleteInvoice('${inv.id}', '${inv.invoice_number}')" title="Delete Invoice">Delete</button>
@@ -282,7 +294,7 @@ async function loadInvoices() {
                     });
                 }
             } else {
-                tbody.innerHTML = '<tr><td colspan="5">Error loading invoices. Server might be restarting?</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Error loading invoices. Server might be restarting?</td></tr>';
             }
         }
     } catch (e) {
@@ -315,16 +327,79 @@ async function loadClients() {
     }
 }
 
+window.editInvoice = async function (invoiceId) {
+    try {
+        const response = await apiFetch(`/api/invoices/${invoiceId}`);
+        const invoice = await response.json();
+        if (!response.ok) throw new Error(invoice.error || 'Could not load invoice');
+        if (invoice.is_subscription) throw new Error('Subscription invoices are no longer editable or generated.');
+
+        editingInvoiceId = invoice.id;
+        document.getElementById('clientExisting').checked = true;
+        toggleClientMode();
+        document.getElementById('clientId').value = invoice.client_id || '';
+        document.getElementById('dueDate').value = invoice.due_date || '';
+        document.getElementById('currency').value = invoice.currency || 'JMD';
+        document.getElementById('serviceCode').value = invoice.service_code || 'CUST';
+        document.getElementById('paymentType').value = invoice.payment_expected_type || invoice.payment_type || 'FULL';
+        document.getElementById('paymentPercentage').value = invoice.payment_expected_percentage || 100;
+        document.getElementById('paymentStatus').value = invoice.payment_status || 'UNPAID';
+        document.getElementById('depositPercent').value = invoice.deposit_percent || '';
+        document.getElementById('amountPaid').value = invoice.amount_paid || '';
+        document.getElementById('paidAt').value = invoice.paid_at ? String(invoice.paid_at).slice(0, 10) : '';
+        document.getElementById('notes').value = invoice.notes || '';
+
+        const itemsContainer = document.getElementById('itemsContainer');
+        itemsContainer.replaceChildren();
+        (invoice.invoice_items || []).forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'item-row fade-in';
+            row.innerHTML = `
+                <input type="text" placeholder="Description of service or item" class="item-desc" required>
+                <input type="number" placeholder="Qty" class="item-qty" required step="0.01">
+                <input type="number" placeholder="Price" class="item-price" step="0.01" required>
+                <button type="button" class="remove-btn" onclick="removeItem(this)">×</button>`;
+            row.querySelector('.item-desc').value = item.description || '';
+            row.querySelector('.item-qty').value = item.quantity || 1;
+            row.querySelector('.item-price').value = item.unit_price || 0;
+            itemsContainer.appendChild(row);
+        });
+        if (!itemsContainer.children.length) addItem();
+
+        document.getElementById('editingInvoiceNumber').textContent = invoice.invoice_number;
+        document.getElementById('editModeBanner').classList.remove('d-none');
+        document.getElementById('invoiceSubmitBtn').textContent = 'Save Invoice Changes';
+        togglePercentage();
+        togglePaymentStatus();
+        schedulePreviewRefresh();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+};
+
+window.cancelInvoiceEdit = function () {
+    editingInvoiceId = null;
+    document.getElementById('invoiceForm').reset();
+    document.getElementById('editModeBanner').classList.add('d-none');
+    document.getElementById('invoiceSubmitBtn').textContent = 'Create & Send Invoice';
+    setDefaultInvoiceDates();
+    toggleClientMode();
+    togglePercentage();
+    togglePaymentStatus();
+    schedulePreviewRefresh();
+};
+
 document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const messageDiv = document.getElementById('message');
     const submitBtn = e.target.querySelector('button[type="submit"]');
 
     // UX: Loading State
-    messageDiv.innerText = 'Creating invoice and sending email...';
+    messageDiv.innerText = editingInvoiceId ? 'Saving invoice changes...' : 'Creating invoice and sending email...';
     messageDiv.style.color = 'var(--secondary-color)';
     submitBtn.disabled = true;
-    submitBtn.innerText = 'Processing...';
+    submitBtn.innerText = editingInvoiceId ? 'Saving...' : 'Processing...';
 
     // Get Values
     const dueDate = document.getElementById('dueDate').value;
@@ -332,12 +407,9 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
     const serviceCode = document.getElementById('serviceCode').value;
     const paymentType = document.getElementById('paymentType').value;
     const paymentPercentage = document.getElementById('paymentPercentage') ? document.getElementById('paymentPercentage').value : 100;
+    const currency = document.getElementById('currency').value;
 
-    // Subscription Data
-    const isSubscription = document.getElementById('isSubscription').checked;
-    const billingCycle = document.getElementById('billingCycle').value;
-    const planName = document.getElementById('planName')?.value || '';
-    const renewalDate = document.getElementById('renewalDate').value;
+    const isSubscription = false;
 
     // Payment Status Fields
     const paymentStatus = document.getElementById('paymentStatus').value;
@@ -385,7 +457,7 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
         const qty = qtyInput ? parseFloat(qtyInput.value) : 0;
         const price = priceInput ? parseFloat(priceInput.value) : 0;
 
-        if (desc && qty && price) {
+        if (desc && qty > 0 && Number.isFinite(price) && price >= 0) {
             items.push({ description: desc, quantity: qty, price: price });
         }
     });
@@ -394,13 +466,13 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
         messageDiv.innerText = 'Please add at least one item.';
         messageDiv.style.color = 'var(--danger-color)';
         submitBtn.disabled = false;
-        submitBtn.innerText = 'Create & Send Invoice';
+        submitBtn.innerText = editingInvoiceId ? 'Save Invoice Changes' : 'Create & Send Invoice';
         return;
     }
 
     try {
-        const response = await apiFetch('/api/invoices/create', {
-            method: 'POST',
+        const response = await apiFetch(editingInvoiceId ? `/api/invoices/${editingInvoiceId}` : '/api/invoices/create', {
+            method: editingInvoiceId ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 clientId,
@@ -411,11 +483,8 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
                 serviceCode,
                 paymentType,
                 paymentPercentage,
+                currency,
                 isSubscription,
-                isRenewal: isSubscription ? document.getElementById('isRenewal').checked : false,
-                planName,
-                billingCycle,
-                renewalDate,
                 // New Fields
                 paymentStatus,
                 depositPercent: paymentStatus === 'DEPOSIT' ? depositPercent : null,
@@ -426,14 +495,17 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
 
         const data = await response.json();
         if (response.ok) {
-            messageDiv.innerText = 'Success! Invoice created and email sent.';
-            messageDiv.style.color = 'var(--success-color)';
+            const wasEditing = Boolean(editingInvoiceId);
+            messageDiv.innerText = wasEditing ? 'Invoice changes saved and the ledger correction was queued.' : (data.emailWarning || 'Success! Invoice created and email sent.');
+            messageDiv.style.color = data.emailWarning ? 'var(--warning-color)' : 'var(--success-color)';
+            editingInvoiceId = null;
             document.getElementById('invoiceForm').reset();
+            document.getElementById('editModeBanner').classList.add('d-none');
+            document.getElementById('invoiceSubmitBtn').textContent = 'Create & Send Invoice';
             setDefaultInvoiceDates();
 
             // Reset UI state
             toggleClientMode();
-            toggleSubscription();
             togglePercentage();
             togglePaymentStatus();
             schedulePreviewRefresh();
@@ -455,7 +527,7 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
         messageDiv.innerText = 'Error: ' + err.message;
         messageDiv.style.color = 'var(--danger-color)';
         submitBtn.disabled = false;
-        submitBtn.innerText = 'Create & Send Invoice';
+        submitBtn.innerText = editingInvoiceId ? 'Save Invoice Changes' : 'Create & Send Invoice';
     }
 });
 
@@ -652,17 +724,15 @@ async function fetchPreviewState() {
             invoice_number: 'INV-PREVIEW',
             issue_date: new Date().toISOString(),
             due_date: document.getElementById('dueDate').value,
-            renewal_date: document.getElementById('renewalDate').value,
             service_code: document.getElementById('serviceCode').value,
+            currency: document.getElementById('currency').value,
             total_amount: total,
             payment_status: document.getElementById('paymentStatus').value,
             deposit_percent: parseFloat(document.getElementById('depositPercent').value) || null,
             amount_paid: parseFloat(document.getElementById('amountPaid').value) || 0,
             paid_at: document.getElementById('paidAt').value || null,
-            is_subscription: document.getElementById('isSubscription').checked,
-            is_renewal: document.getElementById('isRenewal').checked,
-            plan_name: document.getElementById('planName')?.value || '',
-            billing_cycle: document.getElementById('billingCycle')?.value || ''
+            is_subscription: false,
+            is_renewal: false
         };
 
         // 4. API Call
