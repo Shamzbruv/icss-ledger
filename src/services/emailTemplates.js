@@ -590,42 +590,43 @@ function getInvoiceDelinquencyTemplate(invoice, client) {
   const amountPaid = formatCurrency(Number(invoice.amount_paid) || 0, invoice.currency);
   const balance = formatCurrency(getInvoiceOutstandingBalance(invoice), invoice.currency);
   const plainInvoiceNumber = safeHeader(invoice.invoice_number || 'Invoice');
-  const subject = `Outstanding Balance Notice — ${plainInvoiceNumber}`;
+  const subject = `URGENT: Outstanding Balance Requires Attention — ${plainInvoiceNumber}`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Outstanding Balance Notice</title></head>
 <body style="margin:0;padding:0;background:#f3f5f8;font-family:Inter,Arial,sans-serif;color:#172033;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Immediate attention required: ${balance} remains outstanding on ${invoiceNumber}.</div>
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:36px 16px;background:#f3f5f8;"><tr><td align="center">
     <table width="620" cellpadding="0" cellspacing="0" style="width:100%;max-width:620px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 18px 50px rgba(15,23,42,.10);">
-      <tr><td style="padding:34px 40px;background:linear-gradient(135deg,#0a1a3a,#173b73);color:#fff;">
-        <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:#7dd3fc;">Account notice</p>
-        <h1 style="margin:0;font-size:28px;line-height:1.2;">Outstanding Balance</h1>
-        <p style="margin:10px 0 0;color:#d7e5f7;font-size:14px;">A friendly reminder about an open invoice</p>
+      <tr><td style="padding:36px 40px;background:linear-gradient(135deg,#b42318,#7a170f);color:#fff;text-align:center;">
+        <div style="display:inline-block;margin:0 0 14px;padding:7px 13px;border:1px solid rgba(255,255,255,.5);border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;">Immediate action required</div>
+        <h1 style="margin:0;font-size:30px;line-height:1.2;">Outstanding Balance Alert</h1>
+        <p style="margin:12px 0 0;color:#fee4e2;font-size:15px;font-weight:600;">This account requires your prompt attention</p>
       </td></tr>
       <tr><td style="padding:36px 40px 12px;">
         <p style="margin:0 0 14px;font-size:17px;font-weight:700;">Hello ${clientName},</p>
-        <p style="margin:0 0 24px;color:#526071;font-size:15px;line-height:1.7;">Our records show a remaining balance on invoice <strong>${invoiceNumber}</strong> for ${serviceName}. This is an outstanding-balance reminder; it does not mean that a payment attempt was declined.</p>
-        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #dbe4ee;border-radius:14px;background:#f8fafc;">
+        <p style="margin:0 0 24px;color:#344054;font-size:15px;line-height:1.7;"><strong style="color:#b42318;">Please address this balance immediately.</strong> Our records show an outstanding amount on invoice <strong>${invoiceNumber}</strong> for ${serviceName}. This notice does not mean that a payment attempt was declined.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #f04438;border-radius:14px;background:#fff6f5;">
           <tr><td style="padding:22px 24px;">
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr><td style="padding:8px 0;color:#718096;">Invoice</td><td style="padding:8px 0;text-align:right;font-weight:700;">${invoiceNumber}</td></tr>
               <tr><td style="padding:8px 0;color:#718096;">Due date</td><td style="padding:8px 0;text-align:right;font-weight:700;">${dueDate}</td></tr>
               <tr><td style="padding:8px 0;color:#718096;">Original amount</td><td style="padding:8px 0;text-align:right;font-weight:700;">${invoiceAmount}</td></tr>
               <tr><td style="padding:8px 0 14px;color:#718096;border-bottom:1px solid #dbe4ee;">Payments received</td><td style="padding:8px 0 14px;text-align:right;font-weight:700;border-bottom:1px solid #dbe4ee;">${amountPaid}</td></tr>
-              <tr><td style="padding:16px 0 0;color:#0a5b8f;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;">Remaining balance</td><td style="padding:16px 0 0;text-align:right;color:#0a5b8f;font-size:23px;font-weight:800;">${balance}</td></tr>
+              <tr><td style="padding:16px 0 0;color:#b42318;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;">Amount requiring attention</td><td style="padding:16px 0 0;text-align:right;color:#b42318;font-size:25px;font-weight:900;">${balance}</td></tr>
             </table>
           </td></tr>
         </table>
-        <p style="margin:24px 0;color:#526071;font-size:14px;line-height:1.7;">If you have already arranged payment, please disregard this notice. Otherwise, reply to this email and we will help you settle or discuss the balance.</p>
+        <div style="margin:24px 0 0;padding:16px 18px;border-left:5px solid #f04438;background:#fff1f0;color:#7a271a;font-size:14px;line-height:1.6;"><strong>Action required:</strong> Please settle the outstanding amount or contact us promptly to discuss payment arrangements. If payment has already been arranged, reply with the relevant details so we can update the account.</div>
       </td></tr>
-      <tr><td style="padding:20px 40px 30px;text-align:center;"><a href="mailto:support@icreatesolutionsandservices.com?subject=Outstanding%20Balance%20-%20${encodeURIComponent(plainInvoiceNumber)}" style="display:inline-block;padding:14px 28px;border-radius:999px;background:#0a5b8f;color:#fff;text-decoration:none;font-weight:700;">Discuss this balance</a></td></tr>
+      <tr><td style="padding:22px 40px 32px;text-align:center;"><a href="mailto:support@icreatesolutionsandservices.com?subject=Urgent%20Outstanding%20Balance%20-%20${encodeURIComponent(plainInvoiceNumber)}" style="display:inline-block;padding:15px 30px;border-radius:999px;background:#b42318;color:#fff;text-decoration:none;font-weight:800;box-shadow:0 8px 20px rgba(180,35,24,.28);">Resolve Outstanding Balance</a></td></tr>
       <tr><td style="padding:22px 40px;background:#0b1220;color:#a9b6c8;text-align:center;font-size:12px;">iCreate Solutions &amp; Services</td></tr>
     </table>
   </td></tr></table>
 </body></html>`;
 
-  const text = `Hello ${safeHeader(client?.name || 'Valued Client')},\n\nOUTSTANDING BALANCE NOTICE\n\nOur records show a remaining balance on invoice ${plainInvoiceNumber}. This is an outstanding-balance reminder; it does not mean that a payment attempt was declined.\n\nOriginal amount: ${invoiceAmount}\nPayments received: ${amountPaid}\nRemaining balance: ${balance}\nDue date: ${dueDate}\n\nIf you have already arranged payment, please disregard this notice. Otherwise, reply to this email for assistance.\n\niCreate Solutions & Services`;
+  const text = `Hello ${safeHeader(client?.name || 'Valued Client')},\n\nURGENT — OUTSTANDING BALANCE REQUIRES ATTENTION\n\nPlease address this balance immediately. Our records show an outstanding amount on invoice ${plainInvoiceNumber}. This notice does not mean that a payment attempt was declined.\n\nOriginal amount: ${invoiceAmount}\nPayments received: ${amountPaid}\nAmount requiring attention: ${balance}\nDue date: ${dueDate}\n\nPlease settle the outstanding amount or contact us promptly to discuss payment arrangements. If payment has already been arranged, reply with the relevant details.\n\niCreate Solutions & Services`;
   return { subject, html, text };
 }
 

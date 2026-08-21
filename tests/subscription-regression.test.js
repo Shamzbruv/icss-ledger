@@ -93,7 +93,8 @@ test('ordinary invoice alerts report the remaining balance without claiming a de
     assert.equal(getInvoiceOutstandingBalance(invoice), 110000);
     assert.equal(getInvoiceOutstandingBalance({ payment_status: 'PAID', total_amount: 7000, remaining_amount: 7000, balance_due: 0 }), 0);
     const notice = getInvoiceDelinquencyTemplate(invoice, { name: 'Test Client' });
-    assert.match(notice.subject, /Outstanding Balance Notice/);
+    assert.match(notice.subject, /URGENT: Outstanding Balance Requires Attention/);
+    assert.match(notice.text, /URGENT — OUTSTANDING BALANCE REQUIRES ATTENTION/);
     assert.match(notice.text, /JMD\s*110,000\.00/);
     assert.doesNotMatch(notice.text, /payment (?:was )?declined|unable to process/i);
 });
