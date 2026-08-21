@@ -1118,11 +1118,10 @@ router.put('/api/invoices/:id', async (req, res) => {
 });
 
 // PayPal Webhook/IPN Handler
-const { verifyPayPalWebhookSignature, getPayPalSubscription, resendPayPalWebhookEvent } = require('./src/services/paypalService');
+const { verifyPayPalWebhookSignature, getPayPalSubscription } = require('./src/services/paypalService');
 const {
     ensureSubscriptionContext,
     sendWelcomeOnce,
-    processPendingWelcomeEmails,
     processBirthdayGreetings
 } = require('./src/services/customerRelationsService');
 const { getPlanByPayPalId } = require('./src/services/subscriptionCatalog');
@@ -1184,76 +1183,6 @@ async function finishPaymentReceiptClaim(paymentId, claimToken, success, errorMe
         .maybeSingle();
     if (error) throw error;
     if (!finished) throw new Error('Payment receipt claim was superseded before it could be completed');
-}
-
-async function requestFailedPayPalRedeliveries(limit = 10) {
-    if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET || !process.env.PAYPAL_WEBHOOK_ID) {
-        console.warn('[PAYPAL] Failed-event recovery skipped because PayPal credentials or webhook ID are missing.');
-        return { requested: 0 };
-    }
-    const readiness = await getPayPalProcessingReadiness();
-    if (!readiness.ready) {
-        console.warn('[PAYPAL] Failed-event recovery is waiting for SUPABASE_FINAL_MIGRATION.sql (safe payment and receipt claims are not verified).');
-        return { requested: 0, migrationRequired: true };
-    }
-    const requestLimit = Math.max(1, Math.min(25, Number(limit) || 10));
-    const cooldownMs = 6 * 60 * 60 * 1000;
-    const cooldownCutoff = new Date(Date.now() - cooldownMs).toISOString();
-    const { data: failedEvents, error } = await supabase.from('paypal_webhook_events')
-        .select('paypal_event_id, event_type, last_error, recovery_attempt_count, recovery_last_requested_at')
-        .eq('status', 'failed')
-        .in('event_type', [
-            'BILLING.SUBSCRIPTION.ACTIVATED',
-            'PAYMENT.SALE.COMPLETED',
-            'PAYMENT.CAPTURE.COMPLETED'
-        ])
-        .lt('recovery_attempt_count', 5)
-        .or(`recovery_last_requested_at.is.null,recovery_last_requested_at.lt.${cooldownCutoff}`)
-        .or('last_error.is.null,last_error.not.ilike.%signature verification%')
-        .order('recovery_last_requested_at', { ascending: true, nullsFirst: true })
-        .order('created_at', { ascending: true })
-        .limit(requestLimit);
-    if (error) throw error;
-
-    let attempted = 0;
-    let requested = 0;
-    for (const event of failedEvents || []) {
-        if (attempted >= requestLimit) break;
-        // Rows rejected during signature verification were never trusted and
-        // must not enter the recovery path.
-        if (/signature verification/i.test(String(event.last_error || ''))) continue;
-        const priorAttempts = Number(event.recovery_attempt_count || 0);
-        const lastRequestedAt = event.recovery_last_requested_at
-            ? new Date(event.recovery_last_requested_at).getTime()
-            : 0;
-        if (priorAttempts >= 5 || (lastRequestedAt && Date.now() - lastRequestedAt < cooldownMs)) continue;
-
-        const requestedAt = new Date().toISOString();
-        let recoveryClaim = supabase.from('paypal_webhook_events').update({
-            recovery_attempt_count: priorAttempts + 1,
-            recovery_last_requested_at: requestedAt
-        })
-            .eq('paypal_event_id', event.paypal_event_id)
-            .eq('status', 'failed');
-        recoveryClaim = event.recovery_attempt_count === null
-            ? recoveryClaim.is('recovery_attempt_count', null)
-            : recoveryClaim.eq('recovery_attempt_count', event.recovery_attempt_count);
-        const { data: claimedRecovery, error: recoveryClaimError } = await recoveryClaim
-            .select('paypal_event_id')
-            .maybeSingle();
-        if (recoveryClaimError) throw recoveryClaimError;
-        if (!claimedRecovery) continue;
-        attempted++;
-
-        try {
-            await resendPayPalWebhookEvent(event.paypal_event_id);
-            requested++;
-            console.log(`[PAYPAL] Requested redelivery for failed event ${event.paypal_event_id}`);
-        } catch (redeliveryError) {
-            console.warn(`[PAYPAL] Redelivery request failed for ${event.paypal_event_id}: ${redeliveryError.message}`);
-        }
-    }
-    return { attempted, requested };
 }
 
 router.post('/api/subscription-onboarding', async (req, res) => {
@@ -1893,6 +1822,35 @@ router.post('/api/paypal/webhook', async (req, res) => {
                 const captureHasSubscriptionIdentity = body.event_type !== 'PAYMENT.CAPTURE.COMPLETED'
                     || Boolean(paypalSubscriptionId)
                     || String(explicitCustomId || '') === String(clientServiceId || '');
+
+                // Verified subscription payments are tracked directly from PayPal.
+                // They must never create, update, attach, or email an invoice.
+                const { isSubscriptionPaymentContext } = require('./src/services/subscriptionBillingService');
+                if (isSubscriptionPaymentContext({
+                    clientServiceId,
+                    captureHasSubscriptionIdentity,
+                    invoice: targetInvoice
+                })) {
+                    const subscriptionPaidAt = resource.create_time || resource.update_time || new Date().toISOString();
+                    const { error: subscriptionPaymentError } = await supabase.from('payments').update({
+                        invoice_id: null,
+                        amount: settledAmount,
+                        method: 'PayPal',
+                        payment_date: subscriptionPaidAt
+                    }).eq('id', paymentClaim.id);
+                    if (subscriptionPaymentError) throw subscriptionPaymentError;
+                    if (webhookRow) {
+                        const { error: processedError } = await supabase.from('paypal_webhook_events').update({
+                            status: 'processed',
+                            processed_at: new Date().toISOString(),
+                            custom_id: clientServiceId || customId
+                        }).eq('id', webhookRow.id);
+                        if (processedError) throw processedError;
+                    }
+                    console.log(`[PAYPAL] Recorded subscription payment ${paymentReferenceId} without generating or emailing an invoice.`);
+                    return res.status(200).send('OK');
+                }
+
                 if (SUBSCRIPTION_INVOICING_ENABLED && !targetInvoice && clientServiceId && captureHasSubscriptionIdentity) {
                     // Look for the most recent pending invoice for this service
                     const { data: latestUnpaid } = await supabase
@@ -2487,13 +2445,11 @@ router.post('/api/jobs/run-due-pulses', async (req, res) => {
         runDueClientCarePulses(); // Async, don't wait
 
         try {
-            const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
-            processSubscriptionReminders(7); // Check 7 days in advance
+            const { autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
             autoAdvanceRenewalDates(); // Auto-advance past dates
             processBirthdayGreetings().catch(err => console.error('Birthday greeting job failed:', err));
-            processPendingWelcomeEmails().catch(err => console.error('Pending welcome email job failed:', err));
         } catch (err) {
-            console.error('Failed to trigger subscription reminders or advancement:', err);
+            console.error('Failed to trigger subscription renewal advancement:', err);
         }
 
         res.json({ success: true, message: 'Batch run started' });
@@ -2546,7 +2502,7 @@ router.get('/api/admin/client-services', async (req, res) => {
             .select(`
                 *,
                 clients (name, email),
-                service_plans (name, price)
+                service_plans (name, price, billing_cycle)
             `)
             .order('created_at', { ascending: false });
 
@@ -3678,9 +3634,6 @@ app.listen(PORT, '0.0.0.0', () => {
     // Check hourly so birthday delivery uses each client's local calendar date.
     setInterval(() => {
         processBirthdayGreetings().catch(err => console.error('Scheduler Error (Birthday Greetings):', err));
-        processPendingWelcomeEmails().catch(err => console.error('Scheduler Error (Pending Welcome Emails):', err));
-        requestFailedPayPalRedeliveries()
-            .catch(err => console.error('Scheduler Error (PayPal Redelivery):', err));
     }, 60 * 60 * 1000);
 
     // Run Monthly Summary Check every 12 hours (it only acts on the 1st)
@@ -3688,12 +3641,11 @@ app.listen(PORT, '0.0.0.0', () => {
         runMonthlySummaryChecks().catch(err => console.error('Scheduler Error (Summary):', err));
     }, 12 * 60 * 60 * 1000);
 
-    // Run Subscription Reminders and Auto-Advancements every 24 hours
+    // Keep non-PayPal legacy renewal dates current. Customer billing emails are
+    // never sent from a timer; PayPal webhooks are authoritative.
     setInterval(() => {
         try {
-            const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
-            processSubscriptionReminders(7)
-                .catch(err => console.error('Scheduler Error (Subscription Reminders):', err));
+            const { autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
             autoAdvanceRenewalDates()
                 .catch(err => console.error('Scheduler Error (Subscription Auto-Advance):', err));
         } catch (err) {
@@ -3704,24 +3656,12 @@ app.listen(PORT, '0.0.0.0', () => {
     // Initial runs
     runDueClientCarePulses();
     runMonthlySummaryChecks();
-    // Ask PayPal to redeliver a small batch of previously verified payment
-    // events that failed during local processing (for example, a temporary
-    // schema or email outage). PayPal signs the new delivery normally, so it
-    // travels through the exact same verification and idempotency controls.
-    setTimeout(() => {
-        requestFailedPayPalRedeliveries()
-            .catch(err => console.error('Initial Run Error (PayPal Redelivery):', err));
-    }, 10000);
     try {
-        const { processSubscriptionReminders, autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
-        processSubscriptionReminders(7)
-            .catch(err => console.error('Initial Run Error (Subscription Reminders):', err));
+        const { autoAdvanceRenewalDates } = require('./src/services/subscriptionReminderService');
         autoAdvanceRenewalDates()
             .catch(err => console.error('Initial Run Error (Subscription Auto-Advance):', err));
         processBirthdayGreetings()
             .catch(err => console.error('Initial Run Error (Birthday Greetings):', err));
-        processPendingWelcomeEmails()
-            .catch(err => console.error('Initial Run Error (Pending Welcome Emails):', err));
     } catch (err) {
         console.error('Failed to trigger initial subscription routines:', err);
     }

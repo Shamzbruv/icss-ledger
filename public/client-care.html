@@ -169,9 +169,9 @@
                             </div>
 
                             <hr>
-                            <h5 class="mb-2">Schedule</h5>
+                            <h5 class="mb-2">Client Care Report Schedule</h5>
                             <div class="mb-3">
-                                <label>Frequency</label>
+                                <label>Report Frequency</label>
                                 <select id="frequencySelect" onchange="toggleScheduleFields()">
                                     <option value="weekly" selected>Weekly</option>
                                     <option value="monthly">Monthly</option>
@@ -299,7 +299,7 @@
                                     <tr>
                                         <th>Client</th>
                                         <th>Plan</th>
-                                        <th>Freq</th>
+                                        <th>Care Reports</th>
                                         <th>Next Send</th>
                                         <th>Next Renewal</th>
                                         <th>Last Report</th>
@@ -668,6 +668,7 @@
 
                     const meta = s.service_meta_json || {};
                     const planName = s.service_plans?.name || '';
+                    const billingCycle = String(meta.billing_cycle || s.service_plans?.billing_cycle || 'monthly').toLowerCase();
                     const clientName = s.clients?.name || '';
                     const clientEmail = s.clients?.email || '';
                     const missingInfo = computeMissingInfo(meta, planName);
@@ -684,7 +685,7 @@
                                 ${missingInfo.length > 0 ? `<br><small style="color: var(--warning-color);">⚠ Missing ${missingInfo.length} detail${missingInfo.length > 1 ? 's' : ''}</small>` : ''}
                             </div>
                         </td>
-                        <td><div class="cell-content">${escapeHtml(planName || 'Unknown Plan')}</div></td>
+                        <td><div class="cell-content">${escapeHtml(planName || 'Unknown Plan')}<br><small>Billing: ${escapeHtml(billingCycle.charAt(0).toUpperCase() + billingCycle.slice(1))}</small></div></td>
                         <td>
                             <div class="cell-content">
                                 <span class="badge bg-secondary">${escapeHtml(s.frequency)}</span>
@@ -1459,7 +1460,7 @@
     <div id="editScheduleModal" class="modal-overlay d-none">
         <div class="modal-content card fade-in" style="max-width: 500px; width: 90%;">
             <div class="modal-header">
-                <h3>Edit Plan & Schedule</h3>
+                <h3>Edit Plan & Care Report Schedule</h3>
                 <button class="btn btn-sm btn-outline-light" onclick="closeEditScheduleModal()">✕</button>
             </div>
             <div class="modal-body">
@@ -1474,7 +1475,7 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label>Frequency</label>
+                    <label>Report Frequency</label>
                     <select id="editFrequencySelect" class="form-control" onchange="toggleEditScheduleFields()">
                         <option value="weekly">Weekly</option>
                         <option value="monthly">Monthly</option>

@@ -1,86 +1,11 @@
 const supabase = require('../db');
-const { getSubscriptionRenewalTemplate } = require('./emailTemplates');
-const { sendEmail } = require('./emailService');
 const { addBillingPeriod } = require('./subscriptionBillingService');
 
-/**
- * Checks for subscriptions that are renewing in `daysNotice` days (default 7)
- * and sends a reminder email if one hasn't been sent yet.
- */
+// Subscription communication is event-driven. A server start, cron run, or
+// date window must never send billing messages to customers.
 async function processSubscriptionReminders(daysNotice = 7) {
-    console.log(`[REMINDERS] Checking for subscriptions renewing in ${daysNotice} days...`);
-    try {
-        // Calculate the target renewal date
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + daysNotice);
-        const targetDateStr = targetDate.toISOString().split('T')[0];
-        // Lower bound: never select services already overdue — only the upcoming window
-        const todayStr = new Date().toISOString().split('T')[0];
-
-        // Find services renewing between today and targetDate (inclusive)
-        const { data: services, error } = await supabase
-            .from('client_services')
-            .select(`
-                *,
-                clients (id, name, email),
-                service_plans (id, name, price)
-            `)
-            .eq('status', 'active')
-            .gte('next_renewal_date', todayStr)
-            .lte('next_renewal_date', targetDateStr);
-
-        if (error) throw error;
-
-        let sentCount = 0;
-
-        for (const service of (services || [])) {
-            // Check if reminder was already sent for this specific date
-            // Fallback: If service.next_renewal_date is missing, ignore it.
-            if (!service.next_renewal_date) continue;
-
-            if (service.last_renewal_reminder_sent_date === service.next_renewal_date) {
-                console.log(`[REMINDERS] Reminder already sent to ${service.clients.email} for renewal on ${service.next_renewal_date}`);
-                continue;
-            }
-
-            console.log(`[REMINDERS] Sending renewal reminder for ${service.clients.name} (${service.service_plans.name}) for date ${service.next_renewal_date}`);
-
-            try {
-                // Generate Email
-                const emailHtml = getSubscriptionRenewalTemplate(service);
-                const subject = `Upcoming Subscription Renewal: ${service.service_plans.name}`;
-
-                // Send Email via Resend structure
-                const emailSent = await sendEmail(
-                    service.clients.email,
-                    subject,
-                    emailHtml,
-                    'iCreate Solutions <no-reply@icreatesolutionsandservices.com>',
-                    null // Defaults to EMAIL_AUDIT_BCC in emailService
-                );
-
-                if (emailSent) {
-                    // Update DB securely
-                    await supabase
-                        .from('client_services')
-                        .update({ last_renewal_reminder_sent_date: service.next_renewal_date })
-                        .eq('id', service.id);
-
-                    sentCount++;
-                }
-
-            } catch (emailErr) {
-                console.error(`[REMINDERS] Error sending to ${service.clients.email}:`, emailErr.message);
-            }
-        }
-
-        console.log(`[REMINDERS] Processed ${sentCount} reminders.`);
-        return { success: true, processed: sentCount, targetDate: targetDateStr };
-
-    } catch (err) {
-        console.error('[REMINDERS] Critical error checking renewals:', err.message);
-        return { success: false, error: err.message };
-    }
+    console.log(`[REMINDERS] Automatic subscription emails are disabled; ignored ${daysNotice}-day reminder check.`);
+    return { success: true, processed: 0, disabled: true };
 }
 
 /**

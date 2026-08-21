@@ -10,7 +10,9 @@ process.env.SUPABASE_ANON_KEY ||= 'test-anon-key';
 const { calculateNextRunIso } = require('../src/services/scheduleTimeService');
 const { getPlanByPayPalId, findCatalogPlan } = require('../src/services/subscriptionCatalog');
 const { computeInvoiceState, validateInvoiceState } = require('../src/services/invoiceStateService');
-const { addBillingPeriod, syncServiceActivation, generateSubscriptionInvoice, processRecurringBilling } = require('../src/services/subscriptionBillingService');
+const { addBillingPeriod, syncServiceActivation, generateSubscriptionInvoice, processRecurringBilling, isSubscriptionPaymentContext } = require('../src/services/subscriptionBillingService');
+const { processSubscriptionReminders } = require('../src/services/subscriptionReminderService');
+const { getSubscriptionBillingCycle, getSubscriptionRenewalTemplate } = require('../src/services/emailTemplates');
 const { convertInvoiceAmountToJmd } = require('../src/services/postingRulesService');
 const { calculateNextEventVersion, MAX_POSTGRES_INTEGER } = require('../src/services/outboxEventService');
 
@@ -18,6 +20,7 @@ test('website plans map exact PayPal IDs and settled totals', () => {
     const refresh = getPlanByPayPalId('P-00F6350522773701SNECR4RI');
     assert.equal(refresh.code, 'REFRESH');
     assert.equal(refresh.name, 'Content Refresh');
+    assert.equal(refresh.billingCycle, 'monthly');
     assert.match(refresh.features.join(' '), /Unlimited edits/i);
     assert.equal(findCatalogPlan({ amount: 34.5 }).code, 'HOST_PRO');
 });
@@ -49,6 +52,28 @@ test('subscription workflows never create invoices', async () => {
     assert.equal(await syncServiceActivation('service-test'), null);
     assert.equal(await generateSubscriptionInvoice({ id: 'service-test' }), null);
     assert.deepEqual(await processRecurringBilling(), { processed: 0, disabled: true });
+    assert.deepEqual(await processSubscriptionReminders(), { success: true, processed: 0, disabled: true });
+});
+
+test('Client Care cadence never leaks into subscription billing cadence', () => {
+    const service = {
+        frequency: 'weekly',
+        next_renewal_date: '2026-08-28',
+        service_meta_json: {},
+        clients: { name: 'Test Client' },
+        service_plans: { name: 'Hosting + Domain Management', price: 38, billing_cycle: 'monthly' }
+    };
+    assert.equal(getSubscriptionBillingCycle(service, service.service_plans), 'Monthly');
+    const renewalHtml = getSubscriptionRenewalTemplate(service);
+    assert.match(renewalHtml, /Billing Cycle<\/td>[\s\S]*Monthly/);
+    assert.doesNotMatch(renewalHtml, /\$38\.00\/weekly/i);
+});
+
+test('verified subscription payments bypass invoice processing', () => {
+    assert.equal(isSubscriptionPaymentContext({ clientServiceId: 'service-1', captureHasSubscriptionIdentity: true }), true);
+    assert.equal(isSubscriptionPaymentContext({ invoice: { is_subscription: true } }), true);
+    assert.equal(isSubscriptionPaymentContext({ clientServiceId: 'service-1', captureHasSubscriptionIdentity: false }), false);
+    assert.equal(isSubscriptionPaymentContext({ invoice: { is_subscription: false } }), false);
 });
 
 test('invoice accounting event versions stay monotonic and inside PostgreSQL integer range', () => {

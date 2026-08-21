@@ -20,6 +20,10 @@ async function generateSubscriptionInvoice(service) {
     return null;
 }
 
+function isSubscriptionPaymentContext({ clientServiceId, captureHasSubscriptionIdentity, invoice } = {}) {
+    return Boolean((clientServiceId && captureHasSubscriptionIdentity) || invoice?.is_subscription);
+}
+
 async function cancelServiceBilling(serviceId) {
     const { data: invoices, error } = await supabase.from('invoices')
         .select('id, company_id, invoice_number, currency')
@@ -67,5 +71,6 @@ module.exports = {
     cancelServiceBilling,
     processRecurringBilling,
     generateSubscriptionInvoice,
+    isSubscriptionPaymentContext,
     addBillingPeriod
 };

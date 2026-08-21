@@ -31,6 +31,7 @@ async function ensureServicePlan(catalogPlan) {
         const { data: updated, error: updateError } = await supabase.from('service_plans').update({
             name: catalogPlan.name,
             price: catalogPlan.price,
+            billing_cycle: catalogPlan.billingCycle || 'monthly',
             default_frequency: catalogPlan.careFrequency === 'yearly' ? 'yearly' : 'monthly',
             features_json: catalogPlan.features || []
         }).eq('id', existing.id).select().single();
@@ -41,6 +42,7 @@ async function ensureServicePlan(catalogPlan) {
     }
     const { data, error: insertError } = await supabase.from('service_plans').insert({
         name: catalogPlan.name,
+        billing_cycle: catalogPlan.billingCycle || 'monthly',
         default_frequency: catalogPlan.careFrequency === 'yearly' ? 'yearly' : 'monthly',
         price: catalogPlan.price,
         features_json: catalogPlan.features || []
@@ -143,6 +145,7 @@ async function ensureSubscriptionContext(subscription, onboarding = {}) {
         paypal_subscription_id: subscriptionId,
         paypal_plan_id: subscription.plan_id,
         plan_code: catalogPlan.code,
+        billing_cycle: catalogPlan.billingCycle || plan.billing_cycle || 'monthly',
         entitlements: catalogPlan.features,
         contact_name: String(onboarding.fullName || oldMeta.contact_name || subscriber.fullName || '').trim(),
         contact_phone: String(onboarding.phone || oldMeta.contact_phone || subscriber.phone || '').trim(),

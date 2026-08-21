@@ -51,6 +51,19 @@ function formatDate(dateStr) {
   });
 }
 
+function getSubscriptionBillingCycle(service = {}, plan = {}) {
+  const supportedCycles = new Set(['monthly', 'yearly']);
+  const candidates = [
+    service.service_meta_json?.billing_cycle,
+    plan.billing_cycle,
+    plan.default_frequency
+  ];
+  const resolved = candidates
+    .map(value => String(value || '').trim().toLowerCase())
+    .find(value => supportedCycles.has(value)) || 'monthly';
+  return resolved.charAt(0).toUpperCase() + resolved.slice(1);
+}
+
 function getBaseHtml(bodyContent) {
   return `
     <!DOCTYPE html>
@@ -559,7 +572,8 @@ function getPaymentDeclinedTemplate(invoice, client) {
  */
 function getPaymentNudgeTemplate(service, client, plan) {
   const planName = plan?.name || service?.service_meta_json?.planName || 'your subscription';
-  const frequency = service?.frequency ? service.frequency.charAt(0).toUpperCase() + service.frequency.slice(1) : 'Recurring';
+  const frequency = getSubscriptionBillingCycle(service, plan);
+  const billingPeriodUnit = frequency === 'Yearly' ? 'year' : 'month';
   const renewalRaw = service?.next_renewal_date;
   const renewal = renewalRaw ? formatDate(renewalRaw) : null;
   const price = plan?.price ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price) : null;
@@ -575,7 +589,7 @@ function getPaymentNudgeTemplate(service, client, plan) {
   const priceRow = price ? `
       <tr>
         <td style="padding:10px 0 0 0; color:#4f46e5; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Subscription Amount</td>
-        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#4f46e5; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${frequency.toLowerCase()}</span></td>
+        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#4f46e5; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${billingPeriodUnit}</span></td>
       </tr>` : '';
 
   const html = `<!DOCTYPE html>
@@ -697,7 +711,8 @@ function getSubscriptionRenewalTemplate(service) {
 
   const renewalRaw = service.next_renewal_date;
   const renewalDate = renewalRaw ? formatDate(renewalRaw) : 'Soon';
-  const frequency = service.frequency ? service.frequency.charAt(0).toUpperCase() + service.frequency.slice(1) : 'Recurring';
+  const frequency = getSubscriptionBillingCycle(service, plan);
+  const billingPeriodUnit = frequency === 'Yearly' ? 'year' : 'month';
   const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price || 0);
 
   const html = `<!DOCTYPE html>
@@ -750,7 +765,7 @@ function getSubscriptionRenewalTemplate(service) {
                       </tr>
                       <tr>
                         <td style="padding:10px 0 0 0; color:#0056b3; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Amount Due</td>
-                        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#0056b3; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${frequency.toLowerCase()}</span></td>
+                        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#0056b3; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${billingPeriodUnit}</span></td>
                       </tr>
                     </table>
                   </td>
@@ -813,12 +828,8 @@ function getWelcomeSubscriptionTemplate(service) {
   const plainClientName = safeHeader(client.name || 'Valued Client');
   const plainPlanName = safeHeader(plan.name || 'Subscription Service');
 
-  const freq = (() => {
-    const BILLING_FREQUENCIES = new Set(['monthly', 'yearly']);
-    const raw = plan.default_frequency || plan.billing_cycle || service.frequency || 'monthly';
-    const resolved = BILLING_FREQUENCIES.has(raw) ? raw : 'monthly';
-    return resolved.charAt(0).toUpperCase() + resolved.slice(1).toLowerCase();
-  })();
+  const freq = getSubscriptionBillingCycle(service, plan);
+  const billingPeriodUnit = freq === 'Yearly' ? 'year' : 'month';
 
   const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price || 0);
   const renewalDate = service.next_renewal_date ? formatDate(service.next_renewal_date) : null;
@@ -882,7 +893,7 @@ function getWelcomeSubscriptionTemplate(service) {
                       ${renewalRow}
                       <tr>
                         <td style="padding:10px 0 0 0; color:#059669; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Amount</td>
-                        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#059669; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${freq.toLowerCase()}</span></td>
+                        <td style="padding:10px 0 0 0; text-align:right; font-weight:800; color:#059669; font-size:20px;">${price}<span style="font-size:12px; font-weight:500; color:#888;">/${billingPeriodUnit}</span></td>
                       </tr>
                     </table>
                   </td>
@@ -934,7 +945,7 @@ function getWelcomeSubscriptionTemplate(service) {
 </body>
 </html>`;
 
-  const textBody = `Hello ${plainClientName},\n\nWelcome to iCreate Solutions & Services!\n\nYour ${plainPlanName} subscription is now active.\n\nPlan: ${plainPlanName}\nBilling Cycle: ${freq}\nAmount: ${price}/${freq.toLowerCase()}${renewalDate ? `\nFirst Renewal: ${renewalDate}` : ''}\n\nYour subscription auto-renews, so no action is needed. Subscription payments are tracked separately and do not generate invoices.\n\nQuestions? Reply to this email or contact: support@icreatesolutionsandservices.com\n\nWelcome aboard,\niCreate Solutions & Services`;
+  const textBody = `Hello ${plainClientName},\n\nWelcome to iCreate Solutions & Services!\n\nYour ${plainPlanName} subscription is now active.\n\nPlan: ${plainPlanName}\nBilling Cycle: ${freq}\nAmount: ${price}/${billingPeriodUnit}${renewalDate ? `\nFirst Renewal: ${renewalDate}` : ''}\n\nYour subscription auto-renews, so no action is needed. Subscription payments are tracked separately and do not generate invoices.\n\nQuestions? Reply to this email or contact: support@icreatesolutionsandservices.com\n\nWelcome aboard,\niCreate Solutions & Services`;
 
   return { subject, html, text: textBody };
 }
@@ -1270,4 +1281,4 @@ Thanks for being a client — reply to this email any time if you have questions
   return { subject, text, html: getBaseHtml(htmlBody) };
 }
 
-module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate, getContractSigningRequestTemplate, getContractSignedConfirmationTemplate, getInfoRequestTemplate };
+module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate, getSubscriptionBillingCycle, getContractSigningRequestTemplate, getContractSignedConfirmationTemplate, getInfoRequestTemplate };
