@@ -231,6 +231,7 @@ const { generateReferenceCode } = require('./src/services/referenceService');
 const { getInvoiceEmailContent, getWelcomeSubscriptionTemplate } = require('./src/services/emailTemplates');
 const { sendPaymentReceipt } = require('./src/services/automationService');
 const { computeInvoiceState, validateInvoiceState } = require('./src/services/invoiceStateService');
+const { queueOutboxEvent } = require('./src/services/outboxEventService');
 
 const leadsRouter = require('./src/routes/leads');
 const reviewsRouter = require('./src/routes/reviews');
@@ -445,11 +446,17 @@ router.delete('/api/clients/:id', async (req, res) => {
 
 // Endpoint to list invoices for dashboard
 router.get('/api/invoices', async (req, res) => {
-    const { data, error } = await supabase
+    let query = supabase
         .from('invoices')
         .select('*, clients(name)')
-        .order('issue_date', { ascending: false })
-        .limit(20);
+        .order('issue_date', { ascending: false });
+
+    // Subscription billing is tracked in Client Care, not the commercial invoice register.
+    if (req.query.include_subscriptions !== 'true') {
+        query = query.or('is_subscription.eq.false,is_subscription.is.null');
+    }
+
+    const { data, error } = await query.limit(20);
 
     if (error) {
         console.error('Error fetching invoices:', error);
@@ -508,6 +515,7 @@ router.get('/api/invoices/download/:id', async (req, res) => {
 
 // Delete an invoice (admin only — for erroneous entries)
 router.delete('/api/invoices/:id', async (req, res) => {
+    let heldEventId = null;
     try {
         const { id } = req.params;
         if (!id) return res.status(400).json({ error: 'Invoice ID is required' });
@@ -519,18 +527,30 @@ router.delete('/api/invoices/:id', async (req, res) => {
             return res.status(409).json({ error: 'Invoices with payments cannot be deleted. Record a correction instead.' });
         }
 
-        const eventVersion = Date.now();
-        const { error: eventError } = await supabase.from('outbox_events').insert({
-            company_id: invoice.company_id,
-            aggregate_type: 'invoice',
-            aggregate_id: invoice.id,
-            event_version: eventVersion,
-            event_type: 'INVOICE_VOIDED',
-            idempotency_key: `${invoice.id}-${eventVersion}-INVOICE_VOIDED`,
-            payload_jsonb: { ...invoice, currency: invoice.currency || 'JMD' },
-            publish_status: 'pending'
-        });
-        if (eventError) throw new Error(`Could not queue the ledger reversal: ${eventError.message}`);
+        const { data: postedJournal, error: journalError } = await supabase.from('journals')
+            .select('id')
+            .eq('company_id', invoice.company_id)
+            .eq('source_id', invoice.id)
+            .eq('source_type', 'INVOICE')
+            .eq('status', 'posted')
+            .like('narration', 'Invoice%')
+            .limit(1)
+            .maybeSingle();
+        if (journalError) throw new Error(`Could not verify invoice accounting history: ${journalError.message}`);
+
+        // Hold the event until the operational delete succeeds. This prevents a
+        // reversal from publishing when a foreign-key constraint blocks deletion.
+        if (postedJournal) {
+            const heldEvent = await queueOutboxEvent({
+                companyId: invoice.company_id,
+                aggregateType: 'invoice',
+                aggregateId: invoice.id,
+                eventType: 'INVOICE_VOIDED',
+                payload: { ...invoice, currency: invoice.currency || 'JMD' },
+                publishStatus: 'held'
+            });
+            heldEventId = heldEvent.id;
+        }
 
         const { error } = await supabase
             .from('invoices')
@@ -539,10 +559,21 @@ router.delete('/api/invoices/:id', async (req, res) => {
 
         if (error) throw error;
 
-        res.json({ success: true, message: 'Invoice deleted successfully' });
+        if (heldEventId) {
+            const { error: releaseError } = await supabase.from('outbox_events')
+                .update({ publish_status: 'pending' })
+                .eq('id', heldEventId)
+                .eq('publish_status', 'held');
+            if (releaseError) throw new Error(`Invoice deleted, but its ledger reversal needs attention: ${releaseError.message}`);
+        }
+
+        res.json({ success: true, message: 'Invoice deleted successfully', ledgerReversalQueued: Boolean(heldEventId) });
     } catch (err) {
         console.error('Error deleting invoice:', err);
-        res.status(500).json({ error: err.message });
+        if (heldEventId) {
+            await supabase.from('outbox_events').delete().eq('id', heldEventId).eq('publish_status', 'held');
+        }
+        res.status(500).json({ error: 'Unable to delete this invoice safely. No accounting history was changed.' });
     }
 });
 
@@ -1071,18 +1102,13 @@ router.put('/api/invoices/:id', async (req, res) => {
         if (updateError) throw updateError;
 
         const { data: client } = await supabase.from('clients').select('name').eq('id', updated.client_id).maybeSingle();
-        const eventVersion = Date.now();
-        const { error: eventError } = await supabase.from('outbox_events').insert({
-            company_id: updated.company_id,
-            aggregate_type: 'invoice',
-            aggregate_id: updated.id,
-            event_version: eventVersion,
-            event_type: 'INVOICE_UPDATED',
-            idempotency_key: `${updated.id}-${eventVersion}-INVOICE_UPDATED`,
-            payload_jsonb: { ...updated, client_name: client?.name || 'Client', currency },
-            publish_status: 'pending'
+        await queueOutboxEvent({
+            companyId: updated.company_id,
+            aggregateType: 'invoice',
+            aggregateId: updated.id,
+            eventType: 'INVOICE_UPDATED',
+            payload: { ...updated, client_name: client?.name || 'Client', currency }
         });
-        if (eventError) throw new Error(`Invoice saved, but ledger update could not be queued: ${eventError.message}`);
 
         res.json({ success: true, invoice: updated, message: 'Invoice and ledger update saved.' });
     } catch (err) {
@@ -2011,15 +2037,13 @@ router.post('/api/paypal/webhook', async (req, res) => {
                             payment_method: 'PayPal'
                         };
 
-                        await supabase.from('outbox_events').insert({
-                            company_id: fullInvoice.company_id,
-                            aggregate_type: 'invoice',
-                            aggregate_id: fullInvoice.id,
-                            event_version: Date.now(), // High resolution timestamp as version for updates
-                            event_type: 'PAYMENT_APPLIED',
-                            idempotency_key: `${actualInvoiceId}-${paymentReferenceId}-PAYMENT_APPLIED`,
-                            payload_jsonb: eventPayload,
-                            publish_status: 'pending'
+                        await queueOutboxEvent({
+                            companyId: fullInvoice.company_id,
+                            aggregateType: 'invoice',
+                            aggregateId: fullInvoice.id,
+                            eventType: 'PAYMENT_APPLIED',
+                            idempotencyKey: `${actualInvoiceId}-${paymentReferenceId}-PAYMENT_APPLIED`,
+                            payload: eventPayload
                         });
                     }
                 } catch (accErr) {
@@ -2757,15 +2781,12 @@ router.post('/api/invoices/resend', async (req, res) => {
             if (paidDelta > 0) eventType = 'PAYMENT_APPLIED';
             else if (paidDelta < 0) eventType = 'PAYMENT_REVERSED';
 
-            await supabase.from('outbox_events').insert({
-                company_id: invoice.company_id,
-                aggregate_type: 'invoice',
-                aggregate_id: invoice.id,
-                event_version: Date.now(), // High resolution timestamp as version
-                event_type: eventType,
-                idempotency_key: `${invoice.id}-${Date.now()}-${eventType}`,
-                payload_jsonb: eventPayload,
-                publish_status: 'pending'
+            await queueOutboxEvent({
+                companyId: invoice.company_id,
+                aggregateType: 'invoice',
+                aggregateId: invoice.id,
+                eventType,
+                payload: eventPayload
             });
         } catch (accErr) {
             console.error('Accounting outbox event failed (Resend/Payment):', accErr.message);
@@ -2953,21 +2974,27 @@ router.get('/api/accounting/dashboard/trends', async (req, res) => {
             });
         }
         const { data: invoices, error } = await supabase.from('invoices')
-            .select('currency, total_amount, balance_due, payment_status, invoice_number, due_date, clients(name)')
+            .select('currency, total_amount, balance_due, payment_status, invoice_number, due_date, is_subscription, clients(name)')
             .eq('company_id', companyId)
             .order('issue_date', { ascending: false })
             .limit(100);
         if (error) throw error;
-        const currencyTotals = (invoices || []).reduce((totals, invoice) => {
+        const commercialInvoices = (invoices || []).filter(invoice => !invoice.is_subscription);
+        const currencyTotals = commercialInvoices.reduce((totals, invoice) => {
             const key = invoice.currency === 'USD' ? 'USD' : 'JMD';
             totals[key] += Number(invoice.total_amount || 0);
             return totals;
         }, { JMD: 0, USD: 0 });
-        const currencyCounts = (invoices || []).reduce((counts, invoice) => {
+        const currencyCounts = commercialInvoices.reduce((counts, invoice) => {
             counts[invoice.currency === 'USD' ? 'USD' : 'JMD'] += 1;
             return counts;
         }, { JMD: 0, USD: 0 });
-        res.json({ periods, currencyTotals, currencyCounts, invoices: invoices || [] });
+        res.json({
+            periods,
+            currencyTotals,
+            currencyCounts,
+            invoices: commercialInvoices
+        });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

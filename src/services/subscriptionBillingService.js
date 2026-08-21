@@ -1,4 +1,5 @@
 const supabase = require('../db');
+const { queueOutboxEvent } = require('./outboxEventService');
 
 /**
  * Subscription billing is intentionally separate from invoicing.
@@ -27,18 +28,13 @@ async function cancelServiceBilling(serviceId) {
     if (error) throw error;
 
     for (const invoice of invoices || []) {
-        const version = Date.now();
-        const { error: eventError } = await supabase.from('outbox_events').insert({
-            company_id: invoice.company_id,
-            aggregate_type: 'invoice',
-            aggregate_id: invoice.id,
-            event_version: version,
-            event_type: 'INVOICE_VOIDED',
-            idempotency_key: `${invoice.id}-${version}-INVOICE_VOIDED`,
-            payload_jsonb: { ...invoice, currency: invoice.currency || 'JMD' },
-            publish_status: 'pending'
+        await queueOutboxEvent({
+            companyId: invoice.company_id,
+            aggregateType: 'invoice',
+            aggregateId: invoice.id,
+            eventType: 'INVOICE_VOIDED',
+            payload: { ...invoice, currency: invoice.currency || 'JMD' }
         });
-        if (eventError) throw eventError;
         const { error: updateError } = await supabase.from('invoices')
             .update({ payment_status: 'VOID', status: 'void', balance_due: 0, remaining_amount: 0 })
             .eq('id', invoice.id);
