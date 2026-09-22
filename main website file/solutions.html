@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-[#050F1F]">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-63WCDFCGPR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-63WCDFCGPR');
+  </script>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>You Found the Opportunity. Let's Build the Solution. | iCreate Solutions & Services</title>
+  <link href="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png" rel="icon" type="image/png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+    rel="stylesheet">
+
+  <!-- Campaign landing page: exists to convert outreach-email traffic, not to rank organically -->
+  <meta name="robots" content="noindex, follow">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://icreatesolutionsandservices.com/solutions">
+  <meta property="og:title" content="You Found the Opportunity. Let's Build the Solution. | iCreate Solutions & Services">
+  <meta property="og:description"
+    content="We research businesses before we reach out. See the opportunity we found for you and claim your new-client offer with iCreate Solutions & Services.">
+  <meta property="og:image" content="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
+
+  <meta name="description"
+    content="We research businesses before we reach out. See the opportunity we found for you and claim your new-client offer with iCreate Solutions & Services.">
+  <link rel="canonical" href="https://icreatesolutionsandservices.com/solutions">
+
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="You Found the Opportunity. Let's Build the Solution. | iCreate Solutions & Services">
+  <meta property="twitter:description"
+    content="We research businesses before we reach out. See the opportunity we found for you and claim your new-client offer with iCreate Solutions & Services.">
+  <meta property="twitter:image" content="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
+
+  <style>
+    :root {
+      --primary: #0A1A3A;
+      --secondary: #00F5FF;
+      --accent: #D4AF37;
+      --dark: #050F1F;
+    }
+
+    html {
+      background-color: var(--dark) !important;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior-y: none;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--dark) !important;
+      color: #fff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4 { font-family: 'Neue Machina', 'Inter', sans-serif; }
+
+    section[id] { scroll-margin-top: 84px; }
+
+    .primary-bg { background-color: var(--primary); }
+    .primary-text { color: var(--primary); }
+    .secondary-bg { background-color: var(--secondary); }
+    .secondary-text { color: var(--secondary); }
+    .accent-bg { background-color: var(--accent); }
+    .accent-text { color: var(--accent); }
+
+    .hero-gradient {
+      background: linear-gradient(135deg, var(--primary) 0%, #001E3C 50%, #003366 100%);
+    }
+
+    /* Digital static (reused from main site) */
+    .digital-static { position: relative; overflow: hidden; }
+    .digital-static::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right, rgba(0, 245, 255, .1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 245, 255, .1) 1px, transparent 1px);
+      background-size: 4px 4px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: .3;
+    }
+    .digital-static::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(transparent 90%, rgba(0, 245, 255, .1) 100%);
+      background-size: 100% 4px;
+      animation: digitalRain 20s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+      opacity: .5;
+    }
+    @keyframes digitalRain { 0% { background-position: 0 0 } 100% { background-position: 0 100vh } }
+
+    .glow-effect { transition: all .3s ease; position: relative; overflow: hidden; }
+    .glow-effect::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(0, 245, 255, .4) 0%, transparent 60%);
+      transform: scale(0); opacity: 0;
+      transition: transform .5s cubic-bezier(.175, .885, .32, 1.275), opacity .5s ease;
+    }
+    .glow-effect:hover::before { transform: scale(1); opacity: 1; }
+    .glow-effect:hover { box-shadow: 0 0 20px rgba(0, 245, 255, .7); }
+
+    .fade-in { animation: fadeIn .8s ease-in forwards; opacity: 0; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(24px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Glass card (reused pattern from thank-you.html) */
+    .glass-card {
+      background: rgba(10, 26, 58, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 245, 255, 0.18);
+      border-radius: 24px;
+    }
+
+    /* Dark form fields (reused pattern from thank-you.html .field) */
+    .field { display: grid; gap: 7px; }
+    .field label { color: #cbd5e1; font-size: .8rem; font-weight: 700; }
+    .field input, .field textarea {
+      width: 100%; padding: 12px 14px; border: 1px solid rgba(148, 163, 184, .28);
+      border-radius: 10px; background: rgba(2, 8, 23, .62); color: #fff;
+      font: inherit; outline: none; transition: border-color .2s, box-shadow .2s; box-sizing: border-box;
+    }
+    .field textarea { resize: vertical; min-height: 90px; }
+    .field input:focus, .field textarea:focus {
+      border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(0, 245, 255, .12);
+    }
+    .field input.error, .field textarea.error { border-color: #ef4444; }
+    .field-error-msg { font-size: .76rem; color: #fca5a5; display: none; }
+    .field-error-msg.visible { display: block; }
+
+    /* Offer card */
+    .offer-card {
+      border: 1px solid rgba(212, 175, 55, .35);
+      background: linear-gradient(160deg, rgba(212,175,55,.08) 0%, rgba(10,26,58,.9) 45%);
+    }
+    .offer-badge {
+      display: inline-block;
+      background: rgba(212, 175, 55, .12); border: 1px solid rgba(212, 175, 55, .4);
+      color: var(--accent); font-weight: 700; font-size: .82rem;
+      padding: 8px 16px; border-radius: 999px; line-height: 1.5;
+    }
+    .offer-badge i { margin-right: 6px; }
+
+    /* Outcome cards */
+    .outcome-card {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; padding: 28px 24px; transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+    }
+    .outcome-card:hover { transform: translateY(-4px); border-color: rgba(0,245,255,.35); box-shadow: 0 20px 40px -20px rgba(0,245,255,.25); }
+    .outcome-icon {
+      width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,245,255,.1); color: var(--secondary); font-size: 1.15rem; margin-bottom: 16px;
+    }
+
+    /* Process steps */
+    .process-step { position: relative; text-align: center; }
+    .process-num {
+      width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 16px;
+      background: rgba(0,245,255,.1); border: 1px solid rgba(0,245,255,.4);
+      color: var(--secondary); font-weight: 800; font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    @media (min-width: 768px) {
+      .process-step:not(:last-child)::after {
+        content: ''; position: absolute; top: 28px; left: calc(50% + 40px); width: calc(100% - 80px);
+        height: 1px; background: linear-gradient(to right, rgba(0,245,255,.4), rgba(0,245,255,0));
+      }
+    }
+
+    /* Trust cards */
+    .trust-card {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px; padding: 22px;
+    }
+
+    /* Sticky mobile CTA bar */
+    #sticky-cta-bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 999;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+      background: rgba(5, 15, 31, .96); backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(0,245,255,.2);
+      transform: translateY(100%); transition: transform .3s ease, bottom .3s ease;
+    }
+    #sticky-cta-bar.visible { transform: translateY(0); }
+    @media (min-width: 768px) { #sticky-cta-bar { display: none; } }
+
+    /* WhatsApp FAB (reused from main site) */
+    #whatsapp-fab {
+      position: fixed; bottom: 96px; right: 22px; z-index: 1000;
+      display: flex; align-items: center; gap: 10px; text-decoration: none;
+    }
+    #whatsapp-fab-btn {
+      width: 56px; height: 56px; border-radius: 50%; background: #25D366; color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 1.7rem;
+      box-shadow: 0 4px 20px rgba(37,211,102,0.45); position: relative; transition: transform .2s, box-shadow .2s;
+    }
+    #whatsapp-fab-btn:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(37,211,102,0.6); }
+    #whatsapp-fab-btn::before {
+      content: ''; position: absolute; inset: -6px; border-radius: 50%;
+      border: 2px solid rgba(37,211,102,0.4); animation: whatsappPulse 2.4s ease-out infinite;
+    }
+    @keyframes whatsappPulse { 0% { transform: scale(1); opacity: .7; } 70% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(1.5); opacity: 0; } }
+    .whatsapp-fab-label {
+      background: #fff; color: #0A1A3A; font-weight: 600; font-size: .82rem; padding: 6px 12px;
+      border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.15); white-space: nowrap;
+      opacity: 0; transform: translateX(8px); transition: opacity .25s, transform .25s; pointer-events: none;
+    }
+    #whatsapp-fab:hover .whatsapp-fab-label { opacity: 1; transform: translateX(0); }
+    @media (max-width: 767px) {
+      .whatsapp-fab-label { display: none !important; }
+      #whatsapp-fab { bottom: 84px; right: 16px; }
+      #whatsapp-fab-btn { width: 50px; height: 50px; font-size: 1.5rem; }
+    }
+
+    /* Cookie banner (reused from main site) */
+    #cookie-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9998;
+      background: #0A1A3A; border-top: 2px solid rgba(0,245,255,0.25); color: #fff;
+      padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap; animation: slideUp .4s ease forwards;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .cookie-text { font-size: .83rem; color: rgba(255,255,255,.85); flex: 1; min-width: 200px; }
+    .cookie-text a { color: var(--secondary); }
+    .cookie-actions { display: flex; gap: 10px; flex-shrink: 0; }
+    .cookie-btn-accept {
+      background: var(--secondary); color: #0A1A3A; border: none; padding: 8px 20px; border-radius: 20px;
+      font-weight: 700; font-size: .82rem; cursor: pointer; transition: background .2s;
+    }
+    .cookie-btn-accept:hover { background: #00dde8; }
+    .cookie-btn-decline {
+      background: transparent; color: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.2);
+      padding: 8px 16px; border-radius: 20px; font-size: .82rem; cursor: pointer; transition: border-color .2s, color .2s;
+    }
+    .cookie-btn-decline:hover { border-color: rgba(255,255,255,.5); color: #fff; }
+    @media (max-width: 600px) { #cookie-banner { flex-direction: column; align-items: flex-start; } }
+
+    /* Accessibility: skip link */
+    #skip-link {
+      position: absolute; left: -9999px; top: 0; z-index: 10001;
+      background: var(--secondary); color: #0A1A3A; font-weight: 700; padding: 10px 18px; border-radius: 0 0 8px 0;
+    }
+    #skip-link:focus { left: 0; }
+
+    a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--secondary); outline-offset: 2px;
+    }
+
+    /* Hero + general mobile tweaks */
+    @media (max-width: 768px) {
+      .hero-title { font-size: 2.1rem; line-height: 1.2; }
+      .hero-actions { flex-direction: column; }
+      .hero-actions > * { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+  <a id="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ===== HEADER (simplified — no full nav, single CTA) ===== -->
+  <header class="primary-bg text-white fixed w-full z-50 shadow-lg digital-static">
+    <div class="container mx-auto px-6 py-4 relative" style="z-index:3;">
+      <div class="flex justify-between items-center">
+        <a class="text-2xl font-bold secondary-text flex items-center" href="/" aria-label="iCreate Solutions & Services — back to main site">
+          <i class="fas fa-cube mr-2" aria-hidden="true"></i>
+          <span>ICREATE</span>
+        </a>
+        <a href="#free-review" data-cta="primary" data-cta-id="header"
+           class="secondary-bg primary-text px-5 py-2 rounded-full font-bold hover:bg-cyan-400 transition glow-effect text-sm md:text-base">
+          Let's Talk
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ===== HERO ===== -->
+    <section id="hero" class="hero-gradient digital-static relative pt-32 pb-20 md:pt-44 md:pb-28">
+      <div class="container mx-auto px-6 relative" style="z-index:3;">
+        <div class="max-w-3xl mx-auto text-center">
+          <div id="hero-industry-badge" style="display:none;" class="mb-5 text-xs font-semibold tracking-wide uppercase secondary-text bg-cyan-400/10 border border-cyan-400/30 rounded-full px-4 py-1.5 inline-block"></div>
+
+          <h1 class="hero-title text-4xl md:text-6xl font-bold leading-tight fade-in">
+            You Found the Opportunity.<br class="hidden md:block"> Let's Build the Solution.
+          </h1>
+
+          <p id="hero-subtitle-generic" class="mt-6 text-lg md:text-xl text-gray-300 fade-in" style="animation-delay:.1s;">
+            We help businesses remove manual work, improve customer experiences and build digital systems designed around the way their business actually operates.
+          </p>
+          <p id="hero-subtitle-personalized" hidden class="mt-6 text-lg md:text-xl text-gray-300 fade-in" style="animation-delay:.1s;">
+            We help businesses remove manual work, improve customer experiences and build digital systems designed around the way <span id="hero-company-name" class="secondary-text font-semibold"></span> actually operates.
+          </p>
+
+          <div class="mt-8 fade-in" style="animation-delay:.2s;">
+            <span class="offer-badge">
+              <i class="fas fa-sparkles" aria-hidden="true"></i>
+              New Client Offer — Save <span id="hero-offer-percent">up to 20%</span> on your first project
+            </span>
+          </div>
+
+          <div class="hero-actions mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 fade-in" style="animation-delay:.3s;">
+            <a href="#free-review" data-cta="primary" data-cta-id="hero_primary"
+               class="secondary-bg primary-text px-8 py-4 rounded-full font-bold text-lg hover:bg-cyan-400 transition glow-effect w-full sm:w-auto text-center">
+              Let's Talk About My Business
+            </a>
+            <a href="#free-review" data-cta="secondary" data-cta-id="hero_secondary"
+               class="border-2 border-cyan-400/40 text-white px-8 py-4 rounded-full font-semibold text-lg hover:border-cyan-400 hover:bg-white/5 transition w-full sm:w-auto text-center">
+              Get My Free Recommendation
+            </a>
+          </div>
+
+          <p class="mt-6 text-sm text-gray-400 fade-in" style="animation-delay:.4s;">
+            <i class="fas fa-check-circle secondary-text mr-1" aria-hidden="true"></i>
+            50+ projects delivered · trusted by businesses across Jamaica, the US &amp; Canada
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== WHY WE REACHED OUT (personal + "what we noticed") ===== -->
+    <section id="why-you" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="why-you-heading">
+      <div class="container mx-auto px-6">
+        <div class="max-w-3xl mx-auto text-center">
+          <div class="inline-block mb-4 text-xs font-semibold tracking-widest uppercase secondary-text">Research-based outreach</div>
+          <h2 id="why-you-heading" class="text-3xl md:text-4xl font-bold">We Reached Out for a Reason</h2>
+          <p class="mt-6 text-lg text-gray-300 leading-relaxed">
+            If you received one of our emails, it's because we found a specific opportunity in your business —
+            not because you were added to a random blast list. Our recommendations aren't mass-produced.
+            We research companies before reaching out.
+          </p>
+          <p class="mt-5 text-lg text-gray-300 leading-relaxed">
+            We don't believe every business needs the same solution. We look at how your business currently
+            operates, identify opportunities for improvement, and recommend technology based on what would
+            actually make sense for your company.
+          </p>
+          <p id="why-you-generic" class="mt-6 text-cyan-300 font-semibold text-lg">
+            We'd love to explore what's possible for your business.
+          </p>
+          <p id="why-you-personalized" hidden class="mt-6 text-cyan-300 font-semibold text-lg">
+            We'd love to explore what's possible for <span id="why-you-company-name"></span>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PROBLEM / SOLUTION ===== -->
+    <section id="what-we-solve" class="py-20 md:py-28 hero-gradient" aria-labelledby="what-we-solve-heading">
+      <div class="container mx-auto px-6">
+        <div class="max-w-2xl mx-auto text-center mb-14">
+          <h2 id="what-we-solve-heading" class="text-3xl md:text-4xl font-bold">Problems We Help Businesses Solve</h2>
+          <p class="mt-4 text-gray-300 text-lg">
+            Too much manual admin work. Customers calling for things a system could handle. Outdated websites.
+            No customer portal. Poor lead follow-up. Disconnected tools that don't talk to each other.
+            We help you fix the ones slowing your business down.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="outcome-card fade-in" style="animation-delay:.05s;">
+            <div class="outcome-icon"><i class="fas fa-gauge-high" aria-hidden="true"></i></div>
+            <h3 class="text-lg font-bold mb-2">Website &amp; Conversion Improvements</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Outdated or underperforming websites that don't turn visitors into inquiries.</p>
+          </div>
+          <div class="outcome-card fade-in" style="animation-delay:.1s;">
+            <div class="outcome-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></div>
+            <h3 class="text-lg font-bold mb-2">Booking &amp; Appointment Automation</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Customers who have to call or message just to confirm availability.</p>
+          </div>
+          <div class="outcome-card fade-in" style="animation-delay:.15s;">
+            <div class="outcome-icon"><i class="fas fa-diagram-project" aria-hidden="true"></i></div>
+            <h3 class="text-lg font-bold mb-2">Internal Business Systems</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Repetitive staff processes and manual reporting eating up time.</p>
+          </div>
+          <div class="outcome-card fade-in" style="animation-delay:.2s;">
+            <div class="outcome-icon"><i class="fas fa-cart-shopping" aria-hidden="true"></i></div>
+            <h3 class="text-lg font-bold mb-2">E-commerce &amp; Payments</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">No easy way for customers to pay, order or self-serve online.</p>
+          </div>
+          <div class="outcome-card fade-in" style="animation-delay:.25s;">
+            <div class="outcome-icon"><i class="fas fa-mobile-screen" aria-hidden="true"></i></div>
+            <h3 class="text-lg font-bold mb-2">Mobile &amp; Web Apps</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">No customer portal, and several disconnected tools doing one job's worth of work.</p>
+          </div>
+          <div class="outcome-card fade-in" style="animation-delay:.3s;">
+            <div class="outcome-icon"><i class="fas fa-robot" aria-hidden="true"></i></div>
+            <h3 class="text-lg font-bold mb-2">AI &amp; Workflow Automation</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Poor lead follow-up and manual work a custom system could handle instead.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== OFFER ===== -->
+    <section id="offer" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="offer-headline">
+      <div class="container mx-auto px-6">
+        <div class="max-w-2xl mx-auto offer-card glass-card p-8 md:p-12 text-center fade-in">
+          <span class="offer-badge mb-5"><i class="fas fa-star" aria-hidden="true"></i> New Client Offer</span>
+          <h2 id="offer-headline" class="text-2xl md:text-3xl font-bold mt-2"></h2>
+          <p class="mt-5 text-gray-300 text-lg leading-relaxed" id="offer-description"></p>
+          <p class="mt-4 text-sm text-gray-400" id="offer-expiry"></p>
+          <a href="#free-review" data-cta="primary" data-cta-id="offer"
+             class="inline-block mt-8 secondary-bg primary-text px-8 py-4 rounded-full font-bold text-lg hover:bg-cyan-400 transition glow-effect">
+            <span id="offer-cta-text"></span>
+          </a>
+          <p class="mt-6 text-xs text-gray-500 leading-relaxed" id="offer-eligibility"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FREE REVIEW / LEAD FORM ===== -->
+    <section id="free-review" class="py-20 md:py-28 hero-gradient" aria-labelledby="free-review-heading">
+      <div class="container mx-auto px-6">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-10 items-start">
+          <div class="lg:col-span-2">
+            <h2 id="free-review-heading" class="text-3xl md:text-4xl font-bold">Tell Us What You're Trying to Improve</h2>
+            <p class="mt-4 text-gray-300 leading-relaxed">
+              Request a free digital opportunity review. No pressure — we'll show you the opportunity first.
+            </p>
+
+            <ul class="mt-8 space-y-4 text-sm text-gray-300">
+              <li class="flex gap-3"><i class="fas fa-circle-1 secondary-text mt-1" aria-hidden="true"></i><span>We review what you shared about your business.</span></li>
+              <li class="flex gap-3"><i class="fas fa-circle-2 secondary-text mt-1" aria-hidden="true"></i><span>We reply with real, specific observations — not a generic pitch.</span></li>
+              <li class="flex gap-3"><i class="fas fa-circle-3 secondary-text mt-1" aria-hidden="true"></i><span>You decide what's worth pursuing. No obligation.</span></li>
+            </ul>
+
+            <p class="mt-8 text-sm text-gray-400" id="response-time-text"></p>
+
+            <div class="mt-8 pt-8 border-t border-white/10">
+              <p class="text-sm text-gray-400 mb-3">Prefer WhatsApp?</p>
+              <a href="#" id="whatsapp-inline-link" data-whatsapp-link data-whatsapp-source="inline"
+                 target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center gap-2 text-sm font-semibold px-5 py-3 rounded-full"
+                 style="background:#25D366;color:#fff;">
+                <i class="fab fa-whatsapp text-lg" aria-hidden="true"></i> Chat With Us on WhatsApp
+              </a>
+            </div>
+          </div>
+
+          <div class="lg:col-span-3">
+            <div class="glass-card p-6 md:p-10">
+              <form id="review-form" novalidate>
+                <!-- Honeypot (hidden from real users) -->
+                <div style="position:absolute;left:-9999px;" aria-hidden="true">
+                  <label for="review-hp">Company website (leave blank)</label>
+                  <input type="text" id="review-hp" name="website_url_hp" tabindex="-1" autocomplete="off">
+                </div>
+                <input type="hidden" class="form_start_time" id="review-start-time" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div class="field">
+                    <label for="review-name">Name *</label>
+                    <input type="text" id="review-name" name="name" autocomplete="name" required>
+                    <p class="field-error-msg" id="review-name-error">Please enter your name.</p>
+                  </div>
+                  <div class="field">
+                    <label for="review-company">Company</label>
+                    <input type="text" id="review-company" name="business_name" autocomplete="organization">
+                  </div>
+                  <div class="field">
+                    <label for="review-email">Email *</label>
+                    <input type="email" id="review-email" name="email" autocomplete="email" required>
+                    <p class="field-error-msg" id="review-email-error">Please enter a valid email address.</p>
+                  </div>
+                  <div class="field">
+                    <label for="review-phone">WhatsApp / Phone <span class="text-gray-500 font-normal">(optional)</span></label>
+                    <input type="tel" id="review-phone" name="phone" autocomplete="tel">
+                  </div>
+                  <div class="field sm:col-span-2">
+                    <label for="review-goal">What would you like to improve? *</label>
+                    <textarea id="review-goal" name="goal" required placeholder="e.g. Our booking process is manual and customers have to call us."></textarea>
+                    <p class="field-error-msg" id="review-goal-error">Let us know what you'd like help with.</p>
+                  </div>
+                </div>
+
+                <div class="mt-5 flex items-start gap-3">
+                  <input type="checkbox" id="review-consent" required class="mt-1 w-4 h-4 accent-cyan-400">
+                  <label for="review-consent" class="text-xs text-gray-400 leading-relaxed">
+                    I agree to be contacted about my inquiry via email or WhatsApp. See our
+                    <a href="terms.html" target="_blank" class="secondary-text hover:underline">Privacy Policy</a>.
+                  </label>
+                </div>
+                <p class="field-error-msg" id="review-consent-error">Please confirm you're okay with us contacting you.</p>
+
+                <div id="review-form-status" role="status" aria-live="polite" class="mt-4 text-sm"></div>
+
+                <button type="submit" id="review-submit-btn"
+                        class="mt-6 w-full secondary-bg primary-text py-4 rounded-full font-bold text-lg hover:bg-cyan-400 transition glow-effect">
+                  Send My Request
+                </button>
+
+                <p class="mt-4 text-center text-xs text-gray-500">
+                  <a href="#" id="whatsapp-form-alt-link" class="secondary-text hover:underline">
+                    <i class="fab fa-whatsapp mr-1" aria-hidden="true"></i>Or send via WhatsApp instead
+                  </a>
+                </p>
+              </form>
+
+              <!-- Inline success state (shown after submit; CRM.showSuccess() also fires the sitewide modal) -->
+              <div id="review-form-success" hidden class="text-center py-6">
+                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-check text-white text-2xl" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-xl font-bold">Request Received</h3>
+                <p class="mt-2 text-gray-300 text-sm" id="response-time-text-success"></p>
+                <a href="#" id="whatsapp-success-link" data-whatsapp-link data-whatsapp-source="success"
+                   target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center gap-2 mt-6 text-sm font-semibold px-5 py-3 rounded-full"
+                   style="background:#25D366;color:#fff;">
+                  <i class="fab fa-whatsapp text-lg" aria-hidden="true"></i> Continue on WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TRUST / PROOF ===== -->
+    <section id="proof" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="proof-heading">
+      <div class="container mx-auto px-6">
+        <div class="max-w-2xl mx-auto text-center mb-14">
+          <h2 id="proof-heading" class="text-3xl md:text-4xl font-bold">Real Work. Real Businesses.</h2>
+          <p class="mt-4 text-gray-300 text-lg">A few examples of problems we've solved — framed around the outcome, not just the deliverable.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="trust-card fade-in" style="animation-delay:.05s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Non-Profit &amp; Education</div>
+            <h3 class="font-bold mb-2">Multi Alumni (MASS)</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Built a digital hub that makes it easier for alumni to stay connected and engaged, instead of relying on scattered social posts.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.1s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Engineering</div>
+            <h3 class="font-bold mb-2">JamRok Engineering</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Gave a technical services company a credible, professional online presence that matches the quality of their work.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.15s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Destination Weddings</div>
+            <h3 class="font-bold mb-2">TBO Destination Weddings</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Created a booking-ready experience that helps prospective couples explore packages and reach out with confidence.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.2s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Technical Services</div>
+            <h3 class="font-bold mb-2">Hoiletts Technical Services</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Replaced an outdated web presence with a site built to generate real inquiries.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.25s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Fashion</div>
+            <h3 class="font-bold mb-2">Windross Tailoring &amp; Design</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Turned a local fashion business into a searchable, professional online storefront.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.3s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Catering &amp; Events</div>
+            <h3 class="font-bold mb-2">iCrave Ghuchis Catering</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Gave a catering and events business a digital presence that reflects the quality of their service.</p>
+          </div>
+        </div>
+
+        <div id="dynamic-reviews-wrapper" hidden class="mt-16">
+          <h3 class="text-center text-lg font-semibold text-gray-300 mb-6">What Clients Say</h3>
+          <div id="dynamic-reviews-feed" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+        </div>
+
+        <p class="text-center mt-12">
+          <a href="portfolio.html" class="secondary-text text-sm font-semibold hover:underline">See more of our work →</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== HOW IT WORKS ===== -->
+    <section id="how-it-works" class="py-20 md:py-28 hero-gradient" aria-labelledby="how-it-works-heading">
+      <div class="container mx-auto px-6">
+        <div class="max-w-2xl mx-auto text-center mb-14">
+          <h2 id="how-it-works-heading" class="text-3xl md:text-4xl font-bold">How It Works</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-10 max-w-5xl mx-auto">
+          <div class="process-step fade-in" style="animation-delay:.05s;">
+            <div class="process-num">1</div>
+            <h3 class="font-bold mb-2">We Understand the Business</h3>
+            <p class="text-gray-400 text-sm">We look at how your business currently operates.</p>
+          </div>
+          <div class="process-step fade-in" style="animation-delay:.1s;">
+            <div class="process-num">2</div>
+            <h3 class="font-bold mb-2">We Identify the Opportunity</h3>
+            <p class="text-gray-400 text-sm">We pinpoint where technology can genuinely help.</p>
+          </div>
+          <div class="process-step fade-in" style="animation-delay:.15s;">
+            <div class="process-num">3</div>
+            <h3 class="font-bold mb-2">We Recommend the Solution</h3>
+            <p class="text-gray-400 text-sm">You get a practical recommendation, not a sales script.</p>
+          </div>
+          <div class="process-step fade-in" style="animation-delay:.2s;">
+            <div class="process-num">4</div>
+            <h3 class="font-bold mb-2">We Build &amp; Launch It</h3>
+            <p class="text-gray-400 text-sm">We build the solution and get it live.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FINAL CTA ===== -->
+    <section id="final-cta" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="final-cta-heading">
+      <div class="container mx-auto px-6 text-center">
+        <div class="max-w-2xl mx-auto">
+          <h2 id="final-cta-heading" class="text-3xl md:text-4xl font-bold">
+            Your Business Doesn't Need More Software.<br class="hidden md:block"> It Needs the Right Solution.
+          </h2>
+          <p class="mt-5 text-gray-300 text-lg leading-relaxed">
+            Tell us what's slowing your business down or what you're trying to improve. We'll help you determine
+            whether there's a smarter way to do it.
+          </p>
+          <a href="#free-review" id="final-cta-btn" data-cta="primary" data-cta-id="final_cta"
+             class="inline-block mt-8 secondary-bg primary-text px-8 py-4 rounded-full font-bold text-lg hover:bg-cyan-400 transition glow-effect">
+            Start the Conversation
+          </a>
+          <p class="mt-6 text-sm text-gray-400">
+            Eligible new clients can receive <span id="final-cta-offer-percent">up to 20%</span> off their first qualifying project.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER (slim) ===== -->
+  <footer class="primary-bg text-white py-10 digital-static mt-auto">
+    <div class="container mx-auto px-6 relative text-center" style="z-index:3;">
+      <a href="/" class="text-xl font-bold secondary-text inline-flex items-center gap-2">
+        <i class="fas fa-cube" aria-hidden="true"></i> ICREATE
+      </a>
+      <p class="text-gray-400 text-sm mt-3">Smart digital solutions for growing businesses.</p>
+      <p class="text-gray-400 text-sm mt-2">
+        <i class="fab fa-whatsapp mr-1" aria-hidden="true"></i>
+        <a href="https://wa.me/18765857469" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-300 transition">(876) 585-7469</a>
+      </p>
+      <p class="text-gray-500 text-xs mt-6">
+        <a href="/" class="hover:text-cyan-300 transition">← Back to the full site</a>
+        <span class="mx-2">·</span>
+        <a href="terms.html" class="hover:text-cyan-300 transition">Privacy Policy</a>
+      </p>
+      <p class="text-gray-500 text-xs mt-4">© 2026 ICREATE Solutions &amp; Services. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- ===== STICKY MOBILE CTA ===== -->
+  <div id="sticky-cta-bar">
+    <a href="#free-review" data-cta="primary" data-cta-id="sticky_mobile"
+       class="block w-full text-center secondary-bg primary-text py-3.5 rounded-full font-bold">
+      Let's Talk About My Business
+    </a>
+  </div>
+
+  <!-- ===== WHATSAPP FAB ===== -->
+  <a id="whatsapp-fab" href="#" data-whatsapp-link data-whatsapp-source="fab"
+     aria-label="Chat on WhatsApp" target="_blank" rel="noopener noreferrer">
+    <span class="whatsapp-fab-label">Received our email? Chat with us!</span>
+    <div id="whatsapp-fab-btn"><i class="fab fa-whatsapp" aria-hidden="true"></i></div>
+  </a>
+
+  <!-- ===== COOKIE BANNER (reused from main site; same localStorage key + GA4 ID) ===== -->
+  <div id="cookie-banner" role="region" aria-label="Cookie consent" style="display:none;">
+    <p class="cookie-text">We use cookies to improve your experience and track analytics via GA4. Your data is handled per our <a href="terms.html" target="_blank">Privacy Policy</a>.</p>
+    <div class="cookie-actions">
+      <button class="cookie-btn-accept" onclick="cookieAccept()" id="cookie-accept-btn">Accept All</button>
+      <button class="cookie-btn-decline" onclick="cookieDecline()" id="cookie-decline-btn">Decline</button>
+    </div>
+  </div>
+
+  <script src="js/crm-integration.js"></script>
+
+  <script>
+    // =====================================================================
+    // CENTRALIZED OUTREACH CONFIG — edit values here to change the offer,
+    // WhatsApp number/message and response-time copy sitewide on this page.
+    // =====================================================================
+    window.ICSS_OUTREACH_CONFIG = {
+      offer: {
+        discountLabel: 'up to 20%',
+        headline: 'A Little Something to Make the Decision Easier',
+        description: 'Selected new clients coming through this outreach campaign can receive {DISCOUNT} off their first qualifying project with iCreate Solutions & Services.',
+        eligibilityText: 'Applies to the project subtotal only — not third-party costs such as hosting, domains, payment processing, app-store fees or paid ads. Discount depends on project scope and is confirmed before any work begins. Eligibility and availability apply.',
+        // Set to an ISO date string (e.g. "2026-11-01") to show a real deadline. Leave null for capacity-based language instead of a fake countdown.
+        expirationDate: null,
+        ctaText: 'Claim My New-Client Offer'
+      },
+      responseTimeText: "We review every submission personally and follow up with real, specific observations — not an automated sales sequence.",
+      whatsapp: {
+        number: '18765857469',
+        prefillMessage: "Hi iCreate, I received your email and I'd like to discuss the opportunity you identified for my business."
+      }
+    };
+  </script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      function safeGtag() {
+        if (typeof gtag === 'function') { gtag.apply(null, arguments); }
+      }
+
+      // ---- Sanitize + capture outreach-specific URL params (never innerHTML) ----
+      function sanitizeParam(raw, maxLen) {
+        if (!raw) return '';
+        var trimmed = String(raw).trim().slice(0, maxLen || 60);
+        if (!/^[\w\s&.,'’\-]+$/u.test(trimmed)) return '';
+        return trimmed;
+      }
+      var qp = new URLSearchParams(window.location.search);
+      var outreach = {
+        company: sanitizeParam(qp.get('company'), 60),
+        industry: sanitizeParam(qp.get('industry'), 40),
+        campaign: sanitizeParam(qp.get('campaign'), 60),
+        source: sanitizeParam(qp.get('source'), 40)
+      };
+      window.ICSS_OUTREACH_PARAMS = outreach;
+
+      // ---- Personalization (textContent only — XSS safe) ----
+      if (outreach.company) {
+        document.getElementById('hero-company-name').textContent = outreach.company;
+        document.getElementById('hero-subtitle-generic').hidden = true;
+        document.getElementById('hero-subtitle-personalized').hidden = false;
+
+        document.getElementById('why-you-company-name').textContent = outreach.company;
+        document.getElementById('why-you-generic').hidden = true;
+        document.getElementById('why-you-personalized').hidden = false;
+
+        var companyField = document.getElementById('review-company');
+        if (companyField && !companyField.value) companyField.value = outreach.company;
+      }
+      if (outreach.industry) {
+        var badge = document.getElementById('hero-industry-badge');
+        badge.textContent = 'Especially relevant for ' + outreach.industry + ' businesses';
+        badge.style.display = 'inline-block';
+      }
+
+      // ---- Offer config rendering ----
+      var cfg = window.ICSS_OUTREACH_CONFIG;
+      function setText(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+
+      setText('offer-headline', cfg.offer.headline);
+      setText('offer-description', cfg.offer.description.replace('{DISCOUNT}', cfg.offer.discountLabel));
+      setText('offer-eligibility', cfg.offer.eligibilityText);
+      setText('offer-cta-text', cfg.offer.ctaText);
+      setText('hero-offer-percent', cfg.offer.discountLabel);
+      setText('final-cta-offer-percent', cfg.offer.discountLabel);
+      setText('response-time-text', cfg.responseTimeText);
+      setText('response-time-text-success', cfg.responseTimeText);
+
+      var expiryEl = document.getElementById('offer-expiry');
+      if (expiryEl) {
+        if (cfg.offer.expirationDate) {
+          var d = new Date(cfg.offer.expirationDate);
+          expiryEl.textContent = isNaN(d)
+            ? ''
+            : 'This offer is available through ' + d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) + '.';
+        } else {
+          expiryEl.textContent = 'A limited number of new-client project slots are available under this campaign.';
+        }
+      }
+
+      // ---- WhatsApp links (single source of truth) ----
+      var waLink = 'https://wa.me/' + cfg.whatsapp.number + '?text=' + encodeURIComponent(cfg.whatsapp.prefillMessage);
+      document.querySelectorAll('[data-whatsapp-link]').forEach(function (a) { a.href = waLink; });
+
+      // =====================================================================
+      // ANALYTICS
+      // =====================================================================
+      safeGtag('event', 'outreach_landing_view', {
+        company: outreach.company || undefined,
+        industry: outreach.industry || undefined,
+        campaign_param: outreach.campaign || undefined,
+        source_param: outreach.source || undefined
+      });
+
+      document.querySelectorAll('[data-cta]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var kind = btn.getAttribute('data-cta') === 'secondary' ? 'secondary_cta_click' : 'primary_cta_click';
+          safeGtag('event', kind, { cta_id: btn.getAttribute('data-cta-id') || '' });
+        });
+      });
+
+      document.querySelectorAll('[data-whatsapp-link]').forEach(function (a) {
+        a.addEventListener('click', function () {
+          safeGtag('event', 'whatsapp_click', { source: a.getAttribute('data-whatsapp-source') || '' });
+        });
+      });
+
+      function fireOnceVisible(selector, eventName) {
+        var el = document.querySelector(selector);
+        if (!el || !('IntersectionObserver' in window)) return;
+        var fired = false;
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !fired) {
+              fired = true;
+              safeGtag('event', eventName);
+              io.disconnect();
+            }
+          });
+        }, { threshold: 0.35 });
+        io.observe(el);
+      }
+      fireOnceVisible('#offer', 'offer_view');
+      fireOnceVisible('#proof', 'portfolio_view');
+
+      // Scroll depth
+      var fired50 = false, fired90 = false;
+      function onScroll() {
+        var scrollTop = window.scrollY || document.documentElement.scrollTop;
+        var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (docHeight <= 0) return;
+        var pct = (scrollTop / docHeight) * 100;
+        if (!fired50 && pct >= 50) { fired50 = true; safeGtag('event', 'scroll_50'); }
+        if (!fired90 && pct >= 90) {
+          fired90 = true;
+          safeGtag('event', 'scroll_90');
+          window.removeEventListener('scroll', onScroll);
+        }
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+
+      // Sticky mobile CTA — show once hero is scrolled past, hide once the form is in view
+      var stickyBar = document.getElementById('sticky-cta-bar');
+      var heroEl = document.getElementById('hero');
+      var formSectionEl = document.getElementById('free-review');
+      if (stickyBar && heroEl && formSectionEl && 'IntersectionObserver' in window) {
+        var heroVisible = true, formVisible = false;
+        function updateSticky() { stickyBar.classList.toggle('visible', !heroVisible && !formVisible); }
+        new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { heroVisible = e.isIntersecting; });
+          updateSticky();
+        }, { threshold: 0 }).observe(heroEl);
+        new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { formVisible = e.isIntersecting; });
+          updateSticky();
+        }, { threshold: 0.15 }).observe(formSectionEl);
+      }
+
+      // =====================================================================
+      // LEAD FORM
+      // =====================================================================
+      var form = document.getElementById('review-form');
+      var formCard = form;
+      var successEl = document.getElementById('review-form-success');
+      var statusEl = document.getElementById('review-form-status');
+      var submitBtn = document.getElementById('review-submit-btn');
+      var formStarted = false;
+
+      form.addEventListener('focusin', function () {
+        if (!formStarted) { formStarted = true; safeGtag('event', 'contact_form_start'); }
+      });
+
+      function fieldEls() {
+        return {
+          name: document.getElementById('review-name'),
+          email: document.getElementById('review-email'),
+          goal: document.getElementById('review-goal'),
+          consent: document.getElementById('review-consent')
+        };
+      }
+
+      function validate() {
+        var f = fieldEls();
+        var valid = true;
+        var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        function toggle(el, errId, ok) {
+          el.classList.toggle('error', !ok);
+          var err = document.getElementById(errId);
+          if (err) err.classList.toggle('visible', !ok);
+        }
+
+        var nameOk = f.name.value.trim().length > 0;
+        toggle(f.name, 'review-name-error', nameOk);
+        if (!nameOk) valid = false;
+
+        var emailOk = emailRe.test(f.email.value.trim());
+        toggle(f.email, 'review-email-error', emailOk);
+        if (!emailOk) valid = false;
+
+        var goalOk = f.goal.value.trim().length > 0;
+        toggle(f.goal, 'review-goal-error', goalOk);
+        if (!goalOk) valid = false;
+
+        var consentEl = document.getElementById('review-consent-error');
+        if (!f.consent.checked) { valid = false; if (consentEl) consentEl.classList.add('visible'); }
+        else if (consentEl) { consentEl.classList.remove('visible'); }
+
+        return valid;
+      }
+
+      function buildPayload(extraLeadType) {
+        var startTimeRaw = document.getElementById('review-start-time').value;
+        var startTime = parseInt(startTimeRaw, 10);
+        var elapsed = isNaN(startTime) ? 0 : (Date.now() - startTime);
+
+        return {
+          lead_type: extraLeadType || 'Outreach Landing Review',
+          source: 'Outreach Landing (/solutions)',
+          name: document.getElementById('review-name').value.trim(),
+          email: document.getElementById('review-email').value.trim(),
+          phone: document.getElementById('review-phone').value.trim(),
+          business_name: document.getElementById('review-company').value.trim(),
+          goal: document.getElementById('review-goal').value.trim(),
+          consent_given: document.getElementById('review-consent').checked,
+          honeypot: document.getElementById('review-hp').value,
+          submission_time_ms: elapsed,
+          form_data: {
+            outreach_company_param: outreach.company,
+            outreach_industry_param: outreach.industry,
+            outreach_campaign_param: outreach.campaign,
+            outreach_source_param: outreach.source
+          }
+        };
+      }
+
+      function showSuccess() {
+        form.hidden = true;
+        successEl.hidden = false;
+        safeGtag('event', 'contact_form_submit');
+        safeGtag('event', 'generate_lead', { method: 'outreach_landing_form', form_id: 'outreach_review_form' });
+        if (window.CRM && typeof window.CRM.showSuccess === 'function') window.CRM.showSuccess();
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!validate()) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending…';
+        statusEl.textContent = '';
+        statusEl.className = 'mt-4 text-sm';
+
+        window.CRM.submitLead(buildPayload())
+          .then(function () {
+            showSuccess();
+          })
+          .catch(function () {
+            statusEl.textContent = "Something went wrong sending that. Please try WhatsApp instead, or email us directly.";
+            statusEl.className = 'mt-4 text-sm text-red-400';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send My Request';
+          });
+      });
+
+      function submitViaWhatsApp(e) {
+        if (e) e.preventDefault();
+        var f = fieldEls();
+        var nameOk = f.name.value.trim().length > 0;
+        var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        var hasContact = emailRe.test(f.email.value.trim()) || document.getElementById('review-phone').value.trim().length > 0;
+
+        if (!nameOk || !hasContact) {
+          statusEl.textContent = 'Please add your name and either an email or phone number first.';
+          statusEl.className = 'mt-4 text-sm text-amber-400';
+          validate();
+          return;
+        }
+
+        var payload = buildPayload('Outreach Landing Review (WhatsApp)');
+        var goalText = payload.goal ? ('\n\nWhat I want to improve: ' + payload.goal) : '';
+        var msg = cfg.whatsapp.prefillMessage + '\n\nName: ' + payload.name +
+          (payload.business_name ? ('\nCompany: ' + payload.business_name) : '') + goalText;
+        var link = 'https://wa.me/' + cfg.whatsapp.number + '?text=' + encodeURIComponent(msg);
+
+        window.CRM.submitLead(payload).catch(function () { /* still open WhatsApp even if this fails */ });
+        safeGtag('event', 'whatsapp_click', { source: 'form_alt' });
+        window.open(link, '_blank', 'noopener,noreferrer');
+      }
+      document.getElementById('whatsapp-form-alt-link').addEventListener('click', submitViaWhatsApp);
+
+      // Final CTA: scroll to form and focus the first field for a smoother hand-off
+      document.getElementById('final-cta-btn').addEventListener('click', function () {
+        setTimeout(function () {
+          var nameField = document.getElementById('review-name');
+          if (nameField) nameField.focus({ preventScroll: true });
+        }, 500);
+      });
+
+      // =====================================================================
+      // REVIEWS FEED (reuses the existing public GET /api/reviews endpoint;
+      // hidden entirely if there's nothing real to show — never fabricated)
+      // =====================================================================
+      document.addEventListener('DOMContentLoaded', async function () {
+        try {
+          var wrapper = document.getElementById('dynamic-reviews-wrapper');
+          var feed = document.getElementById('dynamic-reviews-feed');
+          var res = await fetch('/api/reviews?limit=3');
+          if (!res.ok) return;
+          var reviews = await res.json();
+          if (!Array.isArray(reviews) || reviews.length === 0) return;
+
+          reviews.forEach(function (r, idx) {
+            var starsHtml = '';
+            for (var i = 1; i <= 5; i++) {
+              starsHtml += i <= r.rating ? '<i class="fas fa-star text-yellow-400"></i>' : '<i class="far fa-star text-gray-600"></i>';
+            }
+            var el = document.createElement('div');
+            el.className = 'trust-card fade-in';
+            el.style.animationDelay = (idx * 0.1) + 's';
+
+            var nameEl = document.createElement('div');
+            nameEl.className = 'font-semibold mb-1';
+            nameEl.textContent = r.name || '';
+
+            var starsEl = document.createElement('div');
+            starsEl.className = 'flex gap-1 text-sm mb-2';
+            starsEl.innerHTML = starsHtml;
+
+            var msgEl = document.createElement('p');
+            msgEl.className = 'text-gray-400 text-sm leading-relaxed';
+            msgEl.textContent = r.message || '';
+
+            el.appendChild(nameEl);
+            el.appendChild(starsEl);
+            el.appendChild(msgEl);
+            feed.appendChild(el);
+          });
+          wrapper.hidden = false;
+        } catch (e) {
+          // Fail silently — this is a progressive enhancement, not core functionality
+        }
+      });
+
+      // =====================================================================
+      // COOKIE BANNER (same localStorage key + GA4 measurement ID as the main site)
+      // =====================================================================
+      // The sticky mobile CTA bar and the cookie banner both pin to the
+      // bottom edge — lift the CTA bar above the banner while it's shown
+      // so the banner doesn't silently cover it.
+      function raiseStickyBarAbove(el) {
+        var bar = document.getElementById('sticky-cta-bar');
+        if (bar) bar.style.bottom = (el ? el.offsetHeight : 0) + 'px';
+      }
+
+      (function () {
+        var consent = localStorage.getItem('cookieConsent');
+        if (!consent) {
+          setTimeout(function () {
+            var b = document.getElementById('cookie-banner');
+            if (b) { b.style.display = 'flex'; raiseStickyBarAbove(b); }
+          }, 1500);
+        } else if (consent === 'declined') {
+          window['ga-disable-G-63WCDFCGPR'] = true;
+        }
+      })();
+    })();
+
+    function cookieAccept() {
+      localStorage.setItem('cookieConsent', 'accepted');
+      document.getElementById('cookie-banner').style.display = 'none';
+      var bar = document.getElementById('sticky-cta-bar');
+      if (bar) bar.style.bottom = '';
+      window.dispatchEvent(new Event('icss:consent-set'));
+      if (typeof gtag === 'function') gtag('event', 'consent_accepted');
+    }
+    function cookieDecline() {
+      localStorage.setItem('cookieConsent', 'declined');
+      window['ga-disable-G-63WCDFCGPR'] = true;
+      document.getElementById('cookie-banner').style.display = 'none';
+      var bar = document.getElementById('sticky-cta-bar');
+      if (bar) bar.style.bottom = '';
+      window.dispatchEvent(new Event('icss:consent-set'));
+      if (typeof gtag === 'function') gtag('event', 'consent_declined');
+    }
+  </script>
+</body>
+
+</html>

@@ -298,6 +298,13 @@ router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'main website file', 'index.html'));
 });
 
+// Dedicated outreach-campaign conversion landing page (see solutions.html).
+// Linked from personalized cold/warm outreach emails, e.g.
+// /solutions?company=ABC&industry=restaurant&utm_source=outreach&utm_medium=email&utm_campaign=new_client_growth_offer
+router.get('/solutions', (req, res) => {
+    res.sendFile(path.join(__dirname, 'main website file', 'solutions.html'));
+});
+
 router.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
