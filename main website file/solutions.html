@@ -308,17 +308,12 @@
             You Found the Opportunity.<br class="hidden md:block"> Let's Build the Solution.
           </h1>
 
-          <p id="hero-subtitle-generic" class="mt-6 text-lg md:text-xl text-gray-300 fade-in" style="animation-delay:.1s;">
-            We help businesses remove manual work, improve customer experiences and build digital systems designed around the way their business actually operates.
-          </p>
-          <p id="hero-subtitle-personalized" hidden class="mt-6 text-lg md:text-xl text-gray-300 fade-in" style="animation-delay:.1s;">
-            We help businesses remove manual work, improve customer experiences and build digital systems designed around the way <span id="hero-company-name" class="secondary-text font-semibold"></span> actually operates.
-          </p>
+          <p id="hero-subtitle" class="mt-6 text-lg md:text-xl text-gray-300 fade-in" style="animation-delay:.1s;"></p>
 
           <div class="mt-8 fade-in" style="animation-delay:.2s;">
             <span class="offer-badge">
               <i class="fas fa-sparkles" aria-hidden="true"></i>
-              New Client Offer — Save <span id="hero-offer-percent">up to 20%</span> on your first project
+              <span id="hero-offer-badge-text"></span>
             </span>
           </div>
 
@@ -345,30 +340,82 @@
     <section id="why-you" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="why-you-heading">
       <div class="container mx-auto px-6">
         <div class="max-w-3xl mx-auto text-center">
-          <div class="inline-block mb-4 text-xs font-semibold tracking-widest uppercase secondary-text">Research-based outreach</div>
-          <h2 id="why-you-heading" class="text-3xl md:text-4xl font-bold">We Reached Out for a Reason</h2>
-          <p class="mt-6 text-lg text-gray-300 leading-relaxed">
-            If you received one of our emails, it's because we found a specific opportunity in your business —
-            not because you were added to a random blast list. Our recommendations aren't mass-produced.
-            We research companies before reaching out.
+          <div class="inline-block mb-4 text-xs font-semibold tracking-widest uppercase secondary-text">Research-based outreach, not a blast list</div>
+          <h2 id="why-you-heading" class="text-3xl md:text-5xl font-bold">We Reached Out for a Reason</h2>
+          <p class="mt-6 text-lg md:text-xl text-gray-200 leading-relaxed">
+            If you received one of our emails, it means we actually looked at your business and identified
+            something we believe may be worth improving.
           </p>
-          <p class="mt-5 text-lg text-gray-300 leading-relaxed">
-            We don't believe every business needs the same solution. We look at how your business currently
-            operates, identify opportunities for improvement, and recommend technology based on what would
-            actually make sense for your company.
-          </p>
-          <p id="why-you-generic" class="mt-6 text-cyan-300 font-semibold text-lg">
-            We'd love to explore what's possible for your business.
-          </p>
-          <p id="why-you-personalized" hidden class="mt-6 text-cyan-300 font-semibold text-lg">
-            We'd love to explore what's possible for <span id="why-you-company-name"></span>.
-          </p>
+          <div class="mt-8 glass-card rounded-xl p-6 md:p-8 text-left" style="border-left: 4px solid var(--secondary);">
+            <p class="text-lg md:text-xl font-semibold text-white leading-relaxed">
+              <i class="fas fa-magnifying-glass secondary-text mr-2" aria-hidden="true"></i>
+              Our recommendations aren't mass-produced. We research companies before reaching out.
+            </p>
+            <p class="mt-4 text-gray-300 leading-relaxed">
+              We don't believe every business needs the same solution — we look at how yours currently
+              operates, identify a real opportunity, and recommend technology based on what would actually
+              make sense for your company.
+            </p>
+          </div>
+          <p id="why-you-line" class="mt-8 text-cyan-300 font-semibold text-lg"></p>
         </div>
       </div>
     </section>
 
+    <!-- ===== TRUST / PROOF ===== -->
+    <section id="proof" class="py-20 md:py-28 hero-gradient" aria-labelledby="proof-heading">
+      <div class="container mx-auto px-6">
+        <div class="max-w-2xl mx-auto text-center mb-14">
+          <h2 id="proof-heading" class="text-3xl md:text-4xl font-bold">Real Work. Real Businesses.</h2>
+          <p class="mt-4 text-gray-300 text-lg">A few examples of problems we've solved for real clients — framed around the outcome, not just the deliverable.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="trust-card fade-in" style="animation-delay:.05s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Non-Profit &amp; Education</div>
+            <h3 class="font-bold mb-2">Multi Alumni (MASS)</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Built a digital hub that makes it easier for alumni to stay connected and engaged, instead of relying on scattered social posts.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.1s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Engineering</div>
+            <h3 class="font-bold mb-2">JamRok Engineering</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Gave a technical services company a credible, professional online presence that matches the quality of their work.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.15s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Destination Weddings</div>
+            <h3 class="font-bold mb-2">TBO Destination Weddings</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Created a booking-ready experience that helps prospective couples explore packages and reach out with confidence.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.2s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Technical Services</div>
+            <h3 class="font-bold mb-2">Hoiletts Technical Services</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Replaced an outdated web presence with a site built to generate real inquiries.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.25s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Fashion</div>
+            <h3 class="font-bold mb-2">Windross Tailoring &amp; Design</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Turned a local fashion business into a searchable, professional online storefront.</p>
+          </div>
+          <div class="trust-card fade-in" style="animation-delay:.3s;">
+            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Catering &amp; Events</div>
+            <h3 class="font-bold mb-2">iCrave Ghuchis Catering</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Gave a catering and events business a digital presence that reflects the quality of their service.</p>
+          </div>
+        </div>
+
+        <div id="dynamic-reviews-wrapper" hidden class="mt-16">
+          <h3 class="text-center text-lg font-semibold text-gray-300 mb-6">What Clients Say</h3>
+          <div id="dynamic-reviews-feed" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+        </div>
+
+        <p class="text-center mt-12">
+          <a href="portfolio.html" class="secondary-text text-sm font-semibold hover:underline">See more of our work →</a>
+        </p>
+      </div>
+    </section>
+
     <!-- ===== PROBLEM / SOLUTION ===== -->
-    <section id="what-we-solve" class="py-20 md:py-28 hero-gradient" aria-labelledby="what-we-solve-heading">
+    <section id="what-we-solve" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="what-we-solve-heading">
       <div class="container mx-auto px-6">
         <div class="max-w-2xl mx-auto text-center mb-14">
           <h2 id="what-we-solve-heading" class="text-3xl md:text-4xl font-bold">Problems We Help Businesses Solve</h2>
@@ -415,24 +462,27 @@
     </section>
 
     <!-- ===== OFFER ===== -->
-    <section id="offer" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="offer-headline">
+    <section id="offer" class="py-20 md:py-28 hero-gradient" aria-labelledby="offer-headline">
       <div class="container mx-auto px-6">
         <div class="max-w-2xl mx-auto offer-card glass-card p-8 md:p-12 text-center fade-in">
           <span class="offer-badge mb-5"><i class="fas fa-star" aria-hidden="true"></i> New Client Offer</span>
-          <h2 id="offer-headline" class="text-2xl md:text-3xl font-bold mt-2"></h2>
-          <p class="mt-5 text-gray-300 text-lg leading-relaxed" id="offer-description"></p>
-          <p class="mt-4 text-sm text-gray-400" id="offer-expiry"></p>
+          <h2 id="offer-headline" class="text-2xl md:text-3xl font-bold mt-4"></h2>
+          <div class="mt-8">
+            <div id="offer-discount-display" class="text-5xl md:text-6xl font-extrabold accent-text tracking-tight"></div>
+            <p id="offer-subheadline" class="mt-3 text-lg md:text-xl text-gray-200"></p>
+          </div>
+          <p class="mt-6 text-sm text-gray-400" id="offer-eligibility"></p>
           <a href="#free-review" data-cta="primary" data-cta-id="offer"
              class="inline-block mt-8 secondary-bg primary-text px-8 py-4 rounded-full font-bold text-lg hover:bg-cyan-400 transition glow-effect">
             <span id="offer-cta-text"></span>
           </a>
-          <p class="mt-6 text-xs text-gray-500 leading-relaxed" id="offer-eligibility"></p>
+          <p class="mt-6 text-xs text-gray-500 leading-relaxed" id="offer-expiry"></p>
         </div>
       </div>
     </section>
 
     <!-- ===== FREE REVIEW / LEAD FORM ===== -->
-    <section id="free-review" class="py-20 md:py-28 hero-gradient" aria-labelledby="free-review-heading">
+    <section id="free-review" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="free-review-heading">
       <div class="container mx-auto px-6">
         <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-10 items-start">
           <div class="lg:col-span-2">
@@ -539,58 +589,6 @@
       </div>
     </section>
 
-    <!-- ===== TRUST / PROOF ===== -->
-    <section id="proof" class="py-20 md:py-28 bg-[#0B0F19]" aria-labelledby="proof-heading">
-      <div class="container mx-auto px-6">
-        <div class="max-w-2xl mx-auto text-center mb-14">
-          <h2 id="proof-heading" class="text-3xl md:text-4xl font-bold">Real Work. Real Businesses.</h2>
-          <p class="mt-4 text-gray-300 text-lg">A few examples of problems we've solved — framed around the outcome, not just the deliverable.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="trust-card fade-in" style="animation-delay:.05s;">
-            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Non-Profit &amp; Education</div>
-            <h3 class="font-bold mb-2">Multi Alumni (MASS)</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Built a digital hub that makes it easier for alumni to stay connected and engaged, instead of relying on scattered social posts.</p>
-          </div>
-          <div class="trust-card fade-in" style="animation-delay:.1s;">
-            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Engineering</div>
-            <h3 class="font-bold mb-2">JamRok Engineering</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Gave a technical services company a credible, professional online presence that matches the quality of their work.</p>
-          </div>
-          <div class="trust-card fade-in" style="animation-delay:.15s;">
-            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Destination Weddings</div>
-            <h3 class="font-bold mb-2">TBO Destination Weddings</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Created a booking-ready experience that helps prospective couples explore packages and reach out with confidence.</p>
-          </div>
-          <div class="trust-card fade-in" style="animation-delay:.2s;">
-            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Technical Services</div>
-            <h3 class="font-bold mb-2">Hoiletts Technical Services</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Replaced an outdated web presence with a site built to generate real inquiries.</p>
-          </div>
-          <div class="trust-card fade-in" style="animation-delay:.25s;">
-            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Fashion</div>
-            <h3 class="font-bold mb-2">Windross Tailoring &amp; Design</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Turned a local fashion business into a searchable, professional online storefront.</p>
-          </div>
-          <div class="trust-card fade-in" style="animation-delay:.3s;">
-            <div class="text-xs font-semibold secondary-text uppercase tracking-wide mb-2">Catering &amp; Events</div>
-            <h3 class="font-bold mb-2">iCrave Ghuchis Catering</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Gave a catering and events business a digital presence that reflects the quality of their service.</p>
-          </div>
-        </div>
-
-        <div id="dynamic-reviews-wrapper" hidden class="mt-16">
-          <h3 class="text-center text-lg font-semibold text-gray-300 mb-6">What Clients Say</h3>
-          <div id="dynamic-reviews-feed" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
-        </div>
-
-        <p class="text-center mt-12">
-          <a href="portfolio.html" class="secondary-text text-sm font-semibold hover:underline">See more of our work →</a>
-        </p>
-      </div>
-    </section>
-
     <!-- ===== HOW IT WORKS ===== -->
     <section id="how-it-works" class="py-20 md:py-28 hero-gradient" aria-labelledby="how-it-works-heading">
       <div class="container mx-auto px-6">
@@ -638,7 +636,7 @@
             Start the Conversation
           </a>
           <p class="mt-6 text-sm text-gray-400">
-            Eligible new clients can receive <span id="final-cta-offer-percent">up to 20%</span> off their first qualifying project.
+            Eligible new clients receive <span id="final-cta-offer-percent"></span> off their first qualifying project.
           </p>
         </div>
       </div>
@@ -698,10 +696,12 @@
     // =====================================================================
     window.ICSS_OUTREACH_CONFIG = {
       offer: {
-        discountLabel: 'up to 20%',
+        discountPercentText: '20%',              // flat mention, e.g. "20% off their first qualifying project"
+        discountDisplay: '20% OFF',               // large hero/offer-section display
+        offerLine: 'Your First Qualifying Project',
         headline: 'A Little Something to Make the Decision Easier',
-        description: 'Selected new clients coming through this outreach campaign can receive {DISCOUNT} off their first qualifying project with iCreate Solutions & Services.',
-        eligibilityText: 'Applies to the project subtotal only — not third-party costs such as hosting, domains, payment processing, app-store fees or paid ads. Discount depends on project scope and is confirmed before any work begins. Eligibility and availability apply.',
+        subheadline: 'Your first qualifying project with iCreate Solutions & Services',
+        eligibilityText: 'Available to eligible new clients. Project minimums, availability and terms apply.',
         // Set to an ISO date string (e.g. "2026-11-01") to show a real deadline. Leave null for capacity-based language instead of a fake countdown.
         expirationDate: null,
         ctaText: 'Claim My New-Client Offer'
@@ -722,51 +722,111 @@
         if (typeof gtag === 'function') { gtag.apply(null, arguments); }
       }
 
-      // ---- Sanitize + capture outreach-specific URL params (never innerHTML) ----
-      function sanitizeParam(raw, maxLen) {
-        if (!raw) return '';
-        var trimmed = String(raw).trim().slice(0, maxLen || 60);
-        if (!/^[\w\s&.,'’\-]+$/u.test(trimmed)) return '';
-        return trimmed;
-      }
-      var qp = new URLSearchParams(window.location.search);
-      var outreach = {
-        company: sanitizeParam(qp.get('company'), 60),
-        industry: sanitizeParam(qp.get('industry'), 40),
-        campaign: sanitizeParam(qp.get('campaign'), 60),
-        source: sanitizeParam(qp.get('source'), 40)
-      };
-      window.ICSS_OUTREACH_PARAMS = outreach;
-
-      // ---- Personalization (textContent only — XSS safe) ----
-      if (outreach.company) {
-        document.getElementById('hero-company-name').textContent = outreach.company;
-        document.getElementById('hero-subtitle-generic').hidden = true;
-        document.getElementById('hero-subtitle-personalized').hidden = false;
-
-        document.getElementById('why-you-company-name').textContent = outreach.company;
-        document.getElementById('why-you-generic').hidden = true;
-        document.getElementById('why-you-personalized').hidden = false;
-
-        var companyField = document.getElementById('review-company');
-        if (companyField && !companyField.value) companyField.value = outreach.company;
-      }
-      if (outreach.industry) {
-        var badge = document.getElementById('hero-industry-badge');
-        badge.textContent = 'Especially relevant for ' + outreach.industry + ' businesses';
-        badge.style.display = 'inline-block';
-      }
-
-      // ---- Offer config rendering ----
       var cfg = window.ICSS_OUTREACH_CONFIG;
       function setText(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
 
+      // ---- Sanitize outreach-specific URL params (never innerHTML) ----
+      // A sanitized value must be non-empty, within length, made only of safe
+      // characters, AND contain at least one letter/digit — this rejects
+      // whitespace-only or punctuation-only values (e.g. "?company=--") so we
+      // never treat those as "personalization present" and render an
+      // almost-empty sentence.
+      function sanitizeParam(raw, maxLen) {
+        if (!raw) return '';
+        var trimmed = String(raw).trim().slice(0, maxLen || 60);
+        if (!trimmed) return '';
+        if (!/^[\w\s&.,'’\-]+$/u.test(trimmed)) return '';
+        if (!/[\w]/u.test(trimmed)) return '';
+        return trimmed;
+      }
+
+      // Resolves the data used to personalize this page. Today this is
+      // entirely synchronous, derived from URL params. Later, a prospect id
+      // (e.g. ?p=RH2847) can extend this to fetch { company, contactName,
+      // industry, observation, recommendedOpportunity, campaignSource } from
+      // a backend lookup before personalization runs — applyPersonalization()
+      // below doesn't need to change, only what this function returns.
+      function resolveProspectData(qp) {
+        return {
+          company: sanitizeParam(qp.get('company'), 60),
+          industry: sanitizeParam(qp.get('industry'), 40),
+          campaign: sanitizeParam(qp.get('campaign'), 60),
+          source: sanitizeParam(qp.get('source'), 40)
+        };
+      }
+
+      var qp = new URLSearchParams(window.location.search);
+      var outreach = resolveProspectData(qp);
+      window.ICSS_OUTREACH_PARAMS = outreach;
+
+      // Builds a single sentence as real DOM text nodes (never innerHTML, so
+      // nothing from `company` can ever be parsed as markup) with the company
+      // name optionally highlighted in the middle. Used for every spot on the
+      // page that needs one sentence with an optional inline personalization —
+      // this is what keeps the DOM from ever holding two parallel copies of
+      // the same sentence (one hidden) the way earlier versions of this page did.
+      function renderSentence(el, before, company, after, fallback) {
+        el.textContent = '';
+        if (company) {
+          el.appendChild(document.createTextNode(before));
+          var span = document.createElement('span');
+          span.className = 'secondary-text font-semibold';
+          span.textContent = company;
+          el.appendChild(span);
+          el.appendChild(document.createTextNode(after));
+        } else {
+          el.textContent = fallback;
+        }
+      }
+
+      // ---- Personalization (single source element per sentence, XSS-safe) ----
+      function applyPersonalization(data) {
+        renderSentence(
+          document.getElementById('hero-subtitle'),
+          'We help businesses remove manual work, improve customer experiences and build digital systems designed around the way ',
+          data.company,
+          ' actually operates.',
+          'We help businesses remove manual work, improve customer experiences and build digital systems designed around the way their business actually operates.'
+        );
+
+        renderSentence(
+          document.getElementById('why-you-line'),
+          "We'd love to explore what's possible for ",
+          data.company,
+          '.',
+          "We'd love to explore what's possible for your business."
+        );
+
+        var badge = document.getElementById('hero-industry-badge');
+        if (data.industry) {
+          badge.textContent = 'Especially relevant for ' + data.industry + ' businesses';
+          badge.style.display = 'inline-block';
+        } else {
+          badge.textContent = '';
+          badge.style.display = 'none';
+        }
+
+        var companyField = document.getElementById('review-company');
+        if (companyField && !companyField.value && data.company) companyField.value = data.company;
+
+        // WhatsApp prefill — tastefully mentions the company when we have one,
+        // without overusing the name elsewhere on the page.
+        var waMessage = data.company
+          ? ('Hi iCreate, I received your email regarding ' + data.company + " and I'd like to discuss the opportunity you identified.")
+          : cfg.whatsapp.prefillMessage;
+        var waLink = 'https://wa.me/' + cfg.whatsapp.number + '?text=' + encodeURIComponent(waMessage);
+        document.querySelectorAll('[data-whatsapp-link]').forEach(function (a) { a.href = waLink; });
+      }
+      applyPersonalization(outreach);
+
+      // ---- Offer config rendering ----
       setText('offer-headline', cfg.offer.headline);
-      setText('offer-description', cfg.offer.description.replace('{DISCOUNT}', cfg.offer.discountLabel));
+      setText('offer-discount-display', cfg.offer.discountDisplay);
+      setText('offer-subheadline', cfg.offer.subheadline);
       setText('offer-eligibility', cfg.offer.eligibilityText);
       setText('offer-cta-text', cfg.offer.ctaText);
-      setText('hero-offer-percent', cfg.offer.discountLabel);
-      setText('final-cta-offer-percent', cfg.offer.discountLabel);
+      setText('hero-offer-badge-text', cfg.offer.discountDisplay + ' ' + cfg.offer.offerLine);
+      setText('final-cta-offer-percent', cfg.offer.discountPercentText);
       setText('response-time-text', cfg.responseTimeText);
       setText('response-time-text-success', cfg.responseTimeText);
 
@@ -781,10 +841,6 @@
           expiryEl.textContent = 'A limited number of new-client project slots are available under this campaign.';
         }
       }
-
-      // ---- WhatsApp links (single source of truth) ----
-      var waLink = 'https://wa.me/' + cfg.whatsapp.number + '?text=' + encodeURIComponent(cfg.whatsapp.prefillMessage);
-      document.querySelectorAll('[data-whatsapp-link]').forEach(function (a) { a.href = waLink; });
 
       // =====================================================================
       // ANALYTICS
