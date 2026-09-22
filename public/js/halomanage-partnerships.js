@@ -176,7 +176,7 @@ function formValues(templateMode) {
             terminationNotice: "{{termination_notice_days}}",
             expenseApproval: "{{expense_approval_threshold}}",
             tailPeriod: "{{post_termination_tail}}",
-            relationshipType: "commercial",
+            relationshipType: hm("relationshipType").value,
             additionalDuties: "{{additional_duties}}"
         };
     }
