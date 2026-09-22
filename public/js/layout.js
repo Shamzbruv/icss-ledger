@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <a href="/link-hub-admin" class="nav-link ${window.location.pathname.includes('link-hub-admin') ? 'active' : ''}"><i class="fas fa-link"></i><span>Link Hub</span></a>
                 <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}"><i class="fas fa-file-invoice"></i><span>Invoices</span></a>
                 <a href="/contracts" class="nav-link ${window.location.pathname.includes('contracts') ? 'active' : ''}"><i class="fas fa-file-signature"></i><span>Contracts</span></a>
+                <a href="/halomanage-partnerships.html" class="nav-link ${window.location.pathname.includes('halomanage-partnerships') ? 'active' : ''}"><i class="fas fa-handshake"></i><span>HaloManage Partners</span></a>
                 <a href="/client-care-pulse" class="nav-link ${window.location.pathname.includes('client-care') ? 'active' : ''}"><i class="fas fa-heart-pulse"></i><span>Client Care</span></a>
                 <a href="/accounting" class="nav-link ${window.location.pathname.includes('accounting') ? 'active' : ''}"><i class="fas fa-chart-line"></i><span>Accounting</span></a>
                 <button id="logoutBtn" class="header-logout" title="Logout" aria-label="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
