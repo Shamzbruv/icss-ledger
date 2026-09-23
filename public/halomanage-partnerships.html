@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HaloManage Partnership Contracts | ICSS Command Center</title>
+    <title>HaloManage Partner Contracts | ICSS Command Center</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,79 +24,64 @@
             margin-bottom: 24px;
             border: 1px solid rgba(255,255,255,.08);
             border-radius: 22px;
-            padding: 28px;
+            padding: 26px 28px;
             background:
                 radial-gradient(circle at 90% 10%, rgba(18,156,134,.25), transparent 34%),
                 linear-gradient(135deg, #111a35, #172346 62%, #102b3a);
             box-shadow: 0 24px 70px rgba(0,0,0,.22);
         }
-        .hm-hero::after {
-            content: "";
-            position: absolute;
-            right: -70px;
-            bottom: -100px;
-            width: 250px;
-            height: 250px;
-            border: 40px solid rgba(255,255,255,.035);
-            border-radius: 999px;
-        }
         .hm-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #72dec9;
-            font-size: .72rem;
-            font-weight: 800;
-            letter-spacing: .12em;
-            text-transform: uppercase;
+            display: inline-flex; align-items: center; gap: 8px;
+            color: #72dec9; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
         }
         .hm-hero h1 {
-            max-width: 760px;
-            margin: 10px 0 8px;
-            color: #fff;
-            font-family: "Source Serif 4", Georgia, serif;
-            font-size: clamp(2rem, 4vw, 3.4rem);
-            line-height: 1;
-            letter-spacing: -.045em;
+            max-width: 760px; margin: 10px 0 6px; color: #fff;
+            font-family: "Source Serif 4", Georgia, serif; font-size: clamp(1.7rem, 3.4vw, 2.6rem); letter-spacing: -.03em;
         }
-        .hm-hero p { max-width: 780px; color: #aebbd0; line-height: 1.7; }
-        .hm-law-note {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            max-width: 900px;
-            border: 1px solid rgba(242,184,75,.2);
-            border-radius: 14px;
-            padding: 13px 15px;
-            color: #d8c48f;
-            background: rgba(242,184,75,.06);
-            font-size: .8rem;
-            line-height: 1.55;
+        .hm-hero p { max-width: 780px; margin: 0; color: #aebbd0; line-height: 1.6; font-size: .92rem; }
+        .hm-hero-actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary-color); }
+        .stat-label { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        .status-draft { color: #A0A0A0; font-weight: bold; }
+        .status-sent, .status-viewed { color: #ffa502; font-weight: bold; }
+        .status-signed { color: #2ed573; font-weight: bold; }
+        .status-void { color: #ff4757; font-weight: bold; }
+
+        .filters-container { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filters-container select {
+            background: var(--bg-dark); border: 1px solid var(--border-color);
+            color: var(--text-light); padding: 8px 12px; border-radius: 4px;
         }
 
-        .hm-layout {
-            display: grid;
-            grid-template-columns: minmax(250px, 330px) minmax(0, 1fr);
-            gap: 22px;
-            align-items: start;
-        }
-        .hm-sidebar {
-            position: sticky;
-            top: 88px;
-            display: grid;
-            gap: 12px;
-        }
+        .section-title { margin: 24px 0 10px 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .helper-text { color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; }
+
+        .link-box { display: flex; gap: 8px; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 12px; }
+        .link-box input { flex: 1; background: transparent; border: none; color: var(--text-light); font-size: 0.85rem; outline: none; }
+
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+        .detail-grid .full { grid-column: 1 / -1; }
+        .detail-label { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .detail-value { font-size: 0.95rem; margin-top: 2px; white-space: pre-wrap; }
+
+        .signature-preview { background: #fff; border-radius: 6px; padding: 10px; display: inline-block; max-width: 260px; }
+        .signature-preview img { max-width: 100%; display: block; }
+        .signature-typed { font-family: 'Brush Script MT', cursive; font-size: 1.8rem; color: #111; }
+
+        .timeline { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+        .timeline-item { font-size: 0.82rem; color: var(--text-muted); }
+        .timeline-item strong { color: var(--text-light); display: block; font-size: 0.85rem; }
+
+        #contractModal .modal-content, #detailModal .modal-content { max-width: 760px; width: 95%; max-height: 90vh; overflow-y: auto; }
+
+        /* Template picker (create modal, step 1) */
+        .hm-template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
         .hm-template-card {
-            width: 100%;
-            border: 1px solid var(--border-color);
-            border-radius: 15px;
-            padding: 15px;
-            color: var(--text-light);
-            background: var(--bg-card);
-            text-align: left;
-            cursor: pointer;
+            width: 100%; border: 1px solid var(--border-color); border-radius: 14px; padding: 14px;
+            color: var(--text-light); background: var(--bg-card); text-align: left; cursor: pointer;
             transition: transform .15s ease, border-color .15s ease, background .15s ease;
         }
         .hm-template-card:hover { transform: translateY(-1px); border-color: rgba(18,156,134,.45); }
@@ -105,263 +90,251 @@
             background: linear-gradient(145deg, rgba(18,156,134,.13), rgba(255,255,255,.025));
             box-shadow: inset 3px 0 0 var(--hm-teal);
         }
-        .hm-template-card strong { display:block; margin-bottom:5px; font-size:.93rem; }
-        .hm-template-card small { display:block; color:var(--text-muted); line-height:1.45; }
+        .hm-template-card strong { display:block; margin-bottom:4px; font-size:.88rem; }
+        .hm-template-card small { display:block; color:var(--text-muted); line-height:1.4; font-size: .76rem; }
         .hm-template-card .hm-tag {
-            display:inline-flex;
-            margin-top:10px;
-            border-radius:999px;
-            padding:4px 8px;
-            color:#79d8c7;
-            background:rgba(18,156,134,.1);
-            font-size:.64rem;
-            font-weight:700;
-            letter-spacing:.04em;
-            text-transform:uppercase;
+            display:inline-flex; margin-top:8px; border-radius:999px; padding:3px 8px;
+            color:#79d8c7; background:rgba(18,156,134,.1); font-size:.6rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
         }
-
-        .hm-workspace { display:grid; gap:18px; min-width:0; }
-        .hm-card {
-            border:1px solid var(--border-color);
-            border-radius:18px;
-            background:var(--bg-card);
-            box-shadow:0 14px 35px rgba(0,0,0,.09);
-        }
-        .hm-card-head {
-            display:flex;
-            justify-content:space-between;
-            gap:16px;
-            align-items:flex-start;
-            padding:20px 22px;
-            border-bottom:1px solid var(--border-color);
-        }
-        .hm-card-head h2 { margin:0; font-size:1.15rem; color:var(--text-light); }
-        .hm-card-head p { margin:5px 0 0; max-width:720px; color:var(--text-muted); font-size:.8rem; line-height:1.5; }
-        .hm-form { padding:20px 22px; }
-        .hm-form-grid {
-            display:grid;
-            grid-template-columns:repeat(2, minmax(0,1fr));
-            gap:14px;
-        }
-        .hm-form-grid .full { grid-column:1 / -1; }
-        .hm-form label {
-            display:block;
-            margin-bottom:6px;
-            color:#b6c0cf;
-            font-size:.72rem;
-            font-weight:700;
-            letter-spacing:.03em;
-            text-transform:uppercase;
-        }
-        .hm-form .form-control { min-height:43px; }
-        .hm-field-help { margin-top:5px; color:var(--text-muted); font-size:.69rem; line-height:1.4; }
         .hm-highlight {
-            border:1px solid rgba(18,156,134,.28);
-            border-radius:14px;
-            padding:14px;
-            background:var(--hm-teal-soft);
+            border:1px solid rgba(18,156,134,.28); border-radius:14px; padding:14px; background:var(--hm-teal-soft);
         }
         .hm-highlight strong { display:block; color:#7ee1cf; font-size:.78rem; }
         .hm-highlight p { margin:5px 0 0; color:#aab8c9; font-size:.75rem; line-height:1.5; }
-
-        .hm-preview-toolbar {
-            display:flex;
-            flex-wrap:wrap;
-            gap:9px;
-            align-items:center;
-        }
-        .hm-preview {
-            max-height:72vh;
-            overflow:auto;
-            border-radius:0 0 18px 18px;
-            padding:30px clamp(20px, 5vw, 54px) 44px;
-            color:#1f2937;
-            background:#f7f5ef;
-        }
-        .hm-contract-paper {
-            max-width:850px;
-            margin:0 auto;
-            border:1px solid #e4dfd3;
-            border-radius:4px;
-            padding:clamp(24px, 5vw, 58px);
-            background:white;
-            box-shadow:0 22px 50px rgba(19,27,45,.10);
-            white-space:pre-wrap;
-            font-family:"Source Serif 4", Georgia, serif;
-            font-size:.92rem;
-            line-height:1.66;
-        }
-        .hm-empty { padding:32px; text-align:center; color:var(--text-muted); }
-
-        .hm-status {
-            display:inline-flex;
-            align-items:center;
-            gap:7px;
-            border-radius:999px;
-            padding:6px 10px;
-            color:#7ee1cf;
-            background:rgba(18,156,134,.11);
-            font-size:.7rem;
-            font-weight:700;
-        }
-        .hm-status i { font-size:.58rem; }
-
-        @media (max-width: 980px) {
-            .hm-layout { grid-template-columns:1fr; }
-            .hm-sidebar { position:static; grid-template-columns:repeat(2,minmax(0,1fr)); }
-        }
-        @media (max-width: 680px) {
-            .hm-hero { padding:22px 18px; }
-            .hm-sidebar { grid-template-columns:1fr; }
-            .hm-form-grid { grid-template-columns:1fr; }
-            .hm-form-grid .full { grid-column:auto; }
-            .hm-card-head { flex-direction:column; }
-            .hm-preview-toolbar { width:100%; }
-            .hm-preview-toolbar .btn { flex:1; }
-            .hm-contract-paper { padding:24px 19px; font-size:.86rem; }
-        }
     </style>
 </head>
+
 <body>
+
+    <!-- Layout.js injects Header here -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script type="module" src="js/layout.js"></script>
 
-    <main class="container fade-in hm-shell">
+    <div class="container fade-in hm-shell">
         <section class="hm-hero">
             <span class="hm-kicker"><i class="fa-solid fa-briefcase"></i> HaloManage · Partnership Framework</span>
-            <h1>Partnership Contract Library</h1>
+            <h1>Partner Contracts</h1>
             <p>
-                Build structured partnership and revenue-share agreements for people contributing to HaloManage.
-                Choose the role, set the commercial terms, and generate a detailed contract draft ready to copy into the ICSS contract-signing workflow.
+                Draft, send, and manage HaloManage partnership and revenue-share agreements — with the same
+                electronic-signature and email workflow used for client contracts.
             </p>
-            <div class="hm-law-note">
-                <i class="fa-solid fa-scale-balanced" style="margin-top:2px;"></i>
-                <span>
-                    These templates distinguish a revenue-share commercial collaborator from a formal general partner.
-                    That distinction matters because carrying on business together with a view to profit can create partnership consequences under Jamaican law.
-                    The formal-partnership option should be selected only when legal ownership/partner status is actually intended.
-                </span>
+            <div class="hm-hero-actions">
+                <a class="btn btn-secondary" href="/partner-contracts"><i class="fas fa-arrow-left"></i> All Companies</a>
+                <button class="btn btn-primary" onclick="openCreateModal()">+ New Partner Contract</button>
             </div>
         </section>
 
-        <div class="hm-layout">
-            <aside class="hm-sidebar" id="templateList" aria-label="Contract templates"></aside>
-
-            <section class="hm-workspace">
-                <div class="hm-card">
-                    <div class="hm-card-head">
-                        <div>
-                            <h2 id="templateTitle">Contract setup</h2>
-                            <p id="templateSummary"></p>
-                        </div>
-                        <span class="hm-status"><i class="fa-solid fa-circle"></i> HaloManage</span>
-                    </div>
-
-                    <div class="hm-form">
-                        <div class="hm-form-grid">
-                            <div>
-                                <label for="companyName">Company / owner entity</label>
-                                <input class="form-control" id="companyName" value="iCreate Solutions &amp; Services">
-                            </div>
-                            <div>
-                                <label for="productName">Business / product</label>
-                                <input class="form-control" id="productName" value="HaloManage">
-                            </div>
-                            <div>
-                                <label for="partnerName">Partner full legal name</label>
-                                <input class="form-control" id="partnerName" placeholder="Enter full legal name">
-                            </div>
-                            <div>
-                                <label for="partnerAddress">Partner address</label>
-                                <input class="form-control" id="partnerAddress" placeholder="Address">
-                            </div>
-                            <div>
-                                <label for="effectiveDate">Effective date</label>
-                                <input class="form-control" id="effectiveDate" type="date">
-                            </div>
-                            <div>
-                                <label for="term">Term</label>
-                                <input class="form-control" id="term">
-                            </div>
-
-                            <div class="full hm-highlight">
-                                <strong>Revenue-share formula</strong>
-                                <p>
-                                    Partner share = agreed percentage × Net Distributable Revenue. Net Distributable Revenue means collected HaloManage revenue
-                                    inside the selected scope, less legitimate and documented business expenses defined in the contract.
-                                </p>
-                            </div>
-
-                            <div>
-                                <label for="revenueShare">Revenue share %</label>
-                                <input class="form-control" id="revenueShare" type="number" min="0" max="100" step="0.25" value="10">
-                            </div>
-                            <div>
-                                <label for="paymentFrequency">Payment frequency</label>
-                                <select class="form-control" id="paymentFrequency">
-                                    <option>Monthly</option>
-                                    <option>Quarterly</option>
-                                    <option>Per completed client payment cycle</option>
-                                    <option>Other as stated in Schedule A</option>
-                                </select>
-                            </div>
-                            <div class="full">
-                                <label for="revenueScope">Revenue-share scope</label>
-                                <textarea class="form-control" id="revenueScope" rows="2"></textarea>
-                                <div class="hm-field-help">Be specific: all HaloManage revenue, partner-sourced clients only, a territory, a portfolio, or another defined pool.</div>
-                            </div>
-                            <div>
-                                <label for="paymentDueDays">Payment due after period closes</label>
-                                <input class="form-control" id="paymentDueDays" type="number" min="1" value="10">
-                            </div>
-                            <div>
-                                <label for="terminationNotice">Termination notice (days)</label>
-                                <input class="form-control" id="terminationNotice" type="number" min="0" value="14">
-                            </div>
-                            <div>
-                                <label for="expenseApproval">Expense approval threshold</label>
-                                <input class="form-control" id="expenseApproval" value="JMD $25,000">
-                            </div>
-                            <div>
-                                <label for="tailPeriod">Post-termination revenue tail</label>
-                                <input class="form-control" id="tailPeriod" value="90 days">
-                            </div>
-                            <div class="full" id="relationshipTypeWrap">
-                                <label for="relationshipType">Legal relationship for this agreement</label>
-                                <select class="form-control" id="relationshipType">
-                                    <option value="commercial">Commercial revenue-share partner — no equity or legal partnership by default</option>
-                                    <option value="formal">Formal general partnership — ownership / partnership status intended</option>
-                                </select>
-                                <div class="hm-field-help">The formal option adds capital, management, profit/loss, withdrawal and dissolution terms. It is not the default.</div>
-                            </div>
-                            <div class="full">
-                                <label for="additionalDuties">Additional role-specific duties or limits</label>
-                                <textarea class="form-control" id="additionalDuties" rows="3" placeholder="Optional — one duty or restriction per line"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="hm-card">
-                    <div class="hm-card-head">
-                        <div>
-                            <h2>Generated Contract</h2>
-                            <p>The preview below is assembled from the selected HaloManage template and your commercial terms.</p>
-                        </div>
-                        <div class="hm-preview-toolbar">
-                            <button class="btn btn-secondary" id="copyTemplateBtn"><i class="fa-regular fa-copy"></i> Copy template</button>
-                            <button class="btn btn-secondary" id="downloadBtn"><i class="fa-solid fa-download"></i> Download .txt</button>
-                            <button class="btn btn-primary" id="copyFilledBtn"><i class="fa-solid fa-file-signature"></i> Copy filled contract</button>
-                        </div>
-                    </div>
-                    <div class="hm-preview">
-                        <article class="hm-contract-paper" id="contractPreview"></article>
-                    </div>
-                </div>
-            </section>
+        <!-- Stats Row -->
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px;">
+            <div class="stat-card">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statDraft" style="color:#A0A0A0;">0</div>
+                <div class="stat-label">Draft</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statAwaiting" style="color:#ffa502;">0</div>
+                <div class="stat-label">Awaiting Signature</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statSigned" style="color:#2ed573;">0</div>
+                <div class="stat-label">Signed</div>
+            </div>
         </div>
-    </main>
+
+        <div class="card">
+            <div class="filters-container">
+                <select id="filterStatus" onchange="filterTable()">
+                    <option value="">All Statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="sent">Sent</option>
+                    <option value="viewed">Viewed</option>
+                    <option value="signed">Signed</option>
+                    <option value="void">Void</option>
+                </select>
+                <button class="btn btn-sm btn-outline-light" onclick="loadContracts()" style="margin-left: auto;">⟳ Refresh</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table-mobile-cards" id="contractsTable">
+                    <thead>
+                        <tr>
+                            <th>Partner</th>
+                            <th>Role</th>
+                            <th>Revenue Share</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contractsTableBody">
+                        <tr><td colspan="6" class="text-center">Loading partner contracts...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE PARTNER CONTRACT MODAL -->
+    <div id="contractModal" class="modal-overlay d-none">
+        <div class="modal-content card fade-in">
+            <div class="modal-header">
+                <h3 id="createModalTitle">New Partner Contract</h3>
+                <button class="btn btn-sm btn-outline-light" onclick="closeCreateModal()">✕</button>
+            </div>
+
+            <div class="modal-body" id="createFormView">
+                <div class="section-title">1. Choose a Role / Template</div>
+                <div class="hm-template-grid" id="templateGrid"></div>
+
+                <div class="section-title">2. Company &amp; Product</div>
+                <div class="form-grid">
+                    <div>
+                        <label for="cf_companyName">Company / owner entity</label>
+                        <input type="text" id="cf_companyName" class="form-control" value="iCreate Solutions &amp; Services">
+                    </div>
+                    <div>
+                        <label for="cf_productName">Business / product</label>
+                        <input type="text" id="cf_productName" class="form-control" value="HaloManage">
+                    </div>
+                </div>
+
+                <div class="section-title">3. Partner Information</div>
+                <div class="form-grid">
+                    <div>
+                        <label for="cf_partnerName">Partner Full Legal Name *</label>
+                        <input type="text" id="cf_partnerName" class="form-control" placeholder="e.g. Andrea Campbell">
+                    </div>
+                    <div>
+                        <label for="cf_partnerEmail">Partner Email *</label>
+                        <input type="email" id="cf_partnerEmail" class="form-control" placeholder="partner@example.com">
+                    </div>
+                    <div>
+                        <label for="cf_partnerPhone">Phone / WhatsApp</label>
+                        <input type="text" id="cf_partnerPhone" class="form-control" placeholder="Optional">
+                    </div>
+                    <div>
+                        <label for="cf_effectiveDate">Effective Date</label>
+                        <input type="date" id="cf_effectiveDate" class="form-control">
+                    </div>
+                    <div class="full" style="grid-column: 1 / -1;">
+                        <label for="cf_partnerAddress">Partner Address</label>
+                        <input type="text" id="cf_partnerAddress" class="form-control" placeholder="Optional">
+                    </div>
+                </div>
+
+                <div class="section-title">4. Commercial Terms</div>
+                <div class="form-grid">
+                    <div>
+                        <label for="cf_term">Term</label>
+                        <input type="text" id="cf_term" class="form-control">
+                    </div>
+                    <div>
+                        <label for="cf_revenueShare">Revenue Share %</label>
+                        <input type="number" id="cf_revenueShare" class="form-control" min="0" max="100" step="0.25" value="10">
+                    </div>
+
+                    <div class="full hm-highlight" style="grid-column: 1 / -1;">
+                        <strong>Revenue-share formula</strong>
+                        <p>Partner share = agreed percentage × Net Distributable Revenue (collected revenue in scope, less permitted business expenses).</p>
+                    </div>
+
+                    <div>
+                        <label for="cf_paymentFrequency">Payment Frequency</label>
+                        <select id="cf_paymentFrequency" class="form-control">
+                            <option>Monthly</option>
+                            <option>Quarterly</option>
+                            <option>Per completed client payment cycle</option>
+                            <option>Other as stated in Schedule A</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="cf_paymentDueDays">Payment Due (business days)</label>
+                        <input type="number" id="cf_paymentDueDays" class="form-control" min="1" value="10">
+                    </div>
+                    <div class="full" style="grid-column: 1 / -1;">
+                        <label for="cf_revenueScope">Revenue-Share Scope</label>
+                        <textarea id="cf_revenueScope" class="form-control" rows="2"></textarea>
+                        <div class="helper-text">Be specific: all HaloManage revenue, partner-sourced clients only, a territory, a portfolio, or another defined pool.</div>
+                    </div>
+                    <div>
+                        <label for="cf_terminationNotice">Termination Notice (days)</label>
+                        <input type="number" id="cf_terminationNotice" class="form-control" min="0" value="14">
+                    </div>
+                    <div>
+                        <label for="cf_expenseApproval">Expense Approval Threshold</label>
+                        <input type="text" id="cf_expenseApproval" class="form-control" value="JMD $25,000">
+                    </div>
+                    <div>
+                        <label for="cf_tailPeriod">Post-Termination Revenue Tail</label>
+                        <input type="text" id="cf_tailPeriod" class="form-control" value="90 days">
+                    </div>
+                    <div class="full" id="relationshipTypeWrap" style="grid-column: 1 / -1;">
+                        <label for="cf_relationshipType">Legal Relationship for This Agreement</label>
+                        <select id="cf_relationshipType" class="form-control">
+                            <option value="commercial">Commercial revenue-share partner — no equity or legal partnership by default</option>
+                            <option value="formal">Formal general partnership — ownership / partnership status intended</option>
+                        </select>
+                        <div class="helper-text">The formal option adds capital, management, profit/loss, withdrawal and dissolution terms. It is not the default.</div>
+                    </div>
+                    <div class="full" style="grid-column: 1 / -1;">
+                        <label for="cf_additionalDuties">Additional Role-Specific Duties or Limits</label>
+                        <textarea id="cf_additionalDuties" class="form-control" rows="3" placeholder="Optional — one duty or restriction per line"></textarea>
+                    </div>
+                </div>
+
+                <div class="section-title">Company Signature (Applied Automatically)</div>
+                <div class="form-grid">
+                    <div>
+                        <label for="cf_signerName">Authorized Signer Name</label>
+                        <input type="text" id="cf_signerName" class="form-control" value="S. Baker">
+                    </div>
+                    <div>
+                        <label>Signature on File</label>
+                        <div class="signature-preview" style="padding: 6px 10px;">
+                            <img src="assets/signature.png" alt="Company signature" style="max-height: 40px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body d-none" id="createSuccessView">
+                <p>✅ Partner contract created. Share this link with your partner, or send it by email now.</p>
+                <div class="link-box">
+                    <input type="text" id="createdLinkInput" readonly>
+                    <button class="btn btn-sm btn-outline-light" onclick="copyCreatedLink()">Copy</button>
+                </div>
+            </div>
+
+            <div class="modal-footer" id="createFormFooter" style="display:flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn btn-primary" id="createSubmitBtn" onclick="submitCreateContract()">Create Contract</button>
+            </div>
+            <div class="modal-footer d-none" id="createSuccessFooter" style="display:flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">Close</button>
+                <button class="btn btn-primary" id="sendNowBtn" onclick="sendCreatedContract()">Send by Email Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAIL / MANAGE MODAL -->
+    <div id="detailModal" class="modal-overlay d-none">
+        <div class="modal-content card fade-in">
+            <div class="modal-header">
+                <h3 id="detailModalTitle">Partner Contract</h3>
+                <button class="btn btn-sm btn-outline-light" onclick="closeDetailModal()">✕</button>
+            </div>
+            <div class="modal-body" id="detailBody">
+                <!-- populated by JS -->
+            </div>
+            <div class="modal-footer" id="detailFooter" style="display:flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <!-- populated by JS -->
+            </div>
+        </div>
+    </div>
 
     <script src="js/halomanage-partnerships.js"></script>
 </body>

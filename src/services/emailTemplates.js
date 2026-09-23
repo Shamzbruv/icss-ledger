@@ -3,6 +3,7 @@
  */
 
 const { formatMoney, COMPANY_EMAIL, COMPANY_PHONE } = require('./contractTemplate');
+const { findTemplate: findPartnerTemplate } = require('./partnerContractTemplate');
 
 const SERVICE_NAMES = {
   'WEB': 'Website Development',
@@ -1300,6 +1301,275 @@ function getContractSignedConfirmationTemplate(contract, companySignatureUrl = n
 }
 
 /**
+ * Partner Contract Signing Request — sent when the admin clicks "Send" on a partner contract.
+ * @param {Object} contract - partner_contracts row
+ * @param {string} signUrl - full public link to the partner sign page
+ */
+function getPartnerContractSigningRequestTemplate(contract, signUrl, companySignatureUrl = null) {
+  const partnerName = escapeHtml(contract.partner_name || 'there');
+  const productName = escapeHtml(contract.product_name || 'HaloManage');
+  const template = findPartnerTemplate(contract.template_id);
+  const roleLabel = escapeHtml(template.shortTitle || template.title);
+  const refLine = contract.agreement_reference ? `Ref: ${escapeHtml(contract.agreement_reference)}` : '';
+  const contactHref = `mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(`Question about my partner agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`)}`;
+
+  const subject = `Your ${contract.product_name || 'HaloManage'} Partner Agreement is Ready to Sign${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Partner Agreement — ${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}</title>
+</head>
+<body style="margin:0; padding:0; background:#f0f2f5; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5; padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.10);">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #101b3d 0%, #129c86 100%); padding:44px 40px; text-align:center;">
+              <div style="width:64px; height:64px; background:rgba(255,255,255,0.12); border-radius:50%; margin:0 auto 16px auto; display:flex; align-items:center; justify-content:center;">
+                <span style="font-size:30px; line-height:1;">🤝</span>
+              </div>
+              <p style="margin:0 0 8px 0; color:rgba(255,255,255,0.7); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Action Required</p>
+              <h1 style="margin:0; color:#ffffff; font-size:25px; font-weight:700; letter-spacing:-0.5px;">Your Partner Agreement is Ready</h1>
+              <p style="margin:12px 0 0 0; color:rgba(255,255,255,0.8); font-size:14px;">Please review and sign to confirm your ${productName} partnership</p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:40px 44px 10px 44px;">
+              <p style="margin:0 0 10px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hi ${partnerName},</p>
+              <p style="margin:0 0 28px 0; font-size:15px; color:#555555; line-height:1.7;">
+                Thank you for partnering with us on <strong style="color:#1a1a1a;">${productName}</strong>. Your ${roleLabel} agreement is ready for your electronic signature. Please review the terms and sign below to confirm.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb; border-radius:14px; border:1.5px solid #dde3ee; margin-bottom:30px;">
+                <tr>
+                  <td style="padding:22px 26px;">
+                    <p style="margin:0 0 14px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#101b3d;">Agreement Summary</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; color:#6b7280; font-size:13px;">Role</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${roleLabel}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; color:#6b7280; font-size:13px;">Revenue Share</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; text-align:right; font-weight:700; color:#129c86; font-size:14px;">${Number(contract.revenue_share_percent ?? 0)}%</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; ${refLine ? 'border-bottom:1px solid #e3e7f0;' : ''} color:#6b7280; font-size:13px;">Payment Frequency</td>
+                        <td style="padding:8px 0; ${refLine ? 'border-bottom:1px solid #e3e7f0;' : ''} text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${escapeHtml(contract.payment_frequency || 'Monthly')}</td>
+                      </tr>
+                      ${refLine ? `<tr><td style="padding:8px 0; color:#6b7280; font-size:13px;">Reference</td><td style="padding:8px 0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${escapeHtml(contract.agreement_reference)}</td></tr>` : ''}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              ${companySignatureUrl ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;">
+                <tr>
+                  <td style="padding:14px 18px; background:#fafbfc; border:1px solid #edf0f5; border-radius:10px;">
+                    <table cellpadding="0" cellspacing="0"><tr>
+                      <td style="padding-right:14px;"><img src="${companySignatureUrl}" alt="Authorized signature" style="height:30px; width:auto; display:block;"></td>
+                      <td style="border-left:1px solid #e3e7f0; padding-left:14px;">
+                        <p style="margin:0; font-size:12px; color:#1a1a1a; font-weight:600;">Already countersigned by ${escapeHtml(contract.company_signer_name || 'iCreate Solutions & Services')}</p>
+                        <p style="margin:2px 0 0 0; font-size:11px; color:#999;">Your signature below is the final step.</p>
+                      </td>
+                    </tr></table>
+                  </td>
+                </tr>
+              </table>` : ''}
+
+              <p style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#1a1a1a; text-transform:uppercase; letter-spacing:0.5px;">What happens next:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f7fb; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#101b3d; margin-right:12px; vertical-align:middle;">1</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Open the link below and read through the agreement at your own pace</span>
+                </td></tr>
+                <tr><td style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f7fb; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#101b3d; margin-right:12px; vertical-align:middle;">2</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Sign with your finger, a stylus, or your mouse — no printing or scanning</span>
+                </td></tr>
+                <tr><td style="padding:10px 0;">
+                  <span style="display:inline-block; width:28px; height:28px; background:#f5f7fb; border-radius:50%; text-align:center; line-height:28px; font-size:13px; font-weight:700; color:#101b3d; margin-right:12px; vertical-align:middle;">3</span>
+                  <span style="font-size:14px; color:#444; vertical-align:middle;">Get your own signed copy by email instantly</span>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding:10px 44px 36px 44px; text-align:center;">
+              <a href="${signUrl}"
+                 style="display:inline-block; background:linear-gradient(135deg, #101b3d 0%, #129c86 100%); color:#ffffff; text-decoration:none; padding:16px 36px; border-radius:50px; font-weight:700; font-size:15px; letter-spacing:0.3px; box-shadow:0 8px 24px rgba(16,27,61,0.35);">
+                Review &amp; Sign Agreement →
+              </a>
+              <p style="margin:16px 0 0 0; font-size:12px; color:#999; word-break:break-all;">Or copy this link into your browser:<br><a href="${signUrl}" style="color:#101b3d;">${signUrl}</a></p>
+            </td>
+          </tr>
+
+          <!-- CONTACT STRIP -->
+          <tr>
+            <td style="background:#fafafa; border-top:1px solid #edf0f5; padding:18px 44px; text-align:center;">
+              <p style="margin:0; font-size:13px; color:#777;">
+                Questions before you sign? <a href="${contactHref}" style="color:#101b3d; font-weight:600; text-decoration:none;">Email us</a> or call/WhatsApp <a href="tel:+18765857469" style="color:#101b3d; font-weight:600; text-decoration:none;">${COMPANY_PHONE}</a>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#1a1a1a; padding:28px 44px; text-align:center;">
+              <p style="margin:0 0 6px 0; color:#ffffff; font-size:14px; font-weight:600;">${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}</p>
+              <p style="margin:0; color:#888; font-size:12px;">© ${new Date().getFullYear()} ${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}. All rights reserved.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${contract.partner_name || 'there'},\n\nYour ${template.shortTitle || template.title} agreement for ${contract.product_name || 'HaloManage'} is ready for your electronic signature.\n\nRole: ${template.shortTitle || template.title}\nRevenue Share: ${Number(contract.revenue_share_percent ?? 0)}%\nPayment Frequency: ${contract.payment_frequency || 'Monthly'}\n${contract.agreement_reference ? `Reference: ${contract.agreement_reference}\n` : ''}\nAlready countersigned by ${contract.company_signer_name || 'iCreate Solutions & Services'} — your signature is the final step.\n\nReview and sign here: ${signUrl}\n\nQuestions? Email ${COMPANY_EMAIL} or call/WhatsApp ${COMPANY_PHONE}.\n\n— ${contract.company_name || 'iCreate Solutions & Services'}`;
+
+  return { subject, html, text };
+}
+
+/**
+ * Partner Contract Signed Confirmation — sent to the partner immediately after they sign,
+ * with the PDF attached.
+ * @param {Object} contract - partner_contracts row (post-signature)
+ */
+function getPartnerContractSignedConfirmationTemplate(contract, companySignatureUrl = null) {
+  const partnerName = escapeHtml(contract.partner_name || 'there');
+  const productName = escapeHtml(contract.product_name || 'HaloManage');
+  const template = findPartnerTemplate(contract.template_id);
+  const roleLabel = escapeHtml(template.shortTitle || template.title);
+  const signedDate = formatDate(contract.signed_at);
+  const refLine = contract.agreement_reference ? escapeHtml(contract.agreement_reference) : 'N/A';
+  const contactHref = `mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(`Question about my partner agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`)}`;
+
+  const partnerSignatureCell = (contract.signature_type === 'drawn' && contract.signature_data)
+    ? `<img src="${contract.signature_data}" alt="Partner signature" style="max-height:34px; max-width:150px; width:auto; display:block; margin:0 auto;">`
+    : `<p style="margin:0; font-family:'Brush Script MT','Segoe Script',cursive; font-size:24px; color:#1a1a1a;">${escapeHtml(contract.signature_data || contract.signer_legal_name || partnerName)}</p>`;
+
+  const signatureBlock = `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
+                <tr>
+                  <td width="50%" style="padding:18px 16px; background:#fbfbfd; border:1px solid #edf0f5; border-radius:12px 0 0 12px; text-align:center; vertical-align:bottom;">
+                    ${companySignatureUrl ? `<img src="${companySignatureUrl}" alt="Company signature" style="height:34px; width:auto; display:block; margin:0 auto;">` : `<p style="margin:0; font-family:'Brush Script MT','Segoe Script',cursive; font-size:24px; color:#1a1a1a;">${escapeHtml(contract.company_signer_name || 'iCreate Solutions & Services')}</p>`}
+                    <p style="margin:10px 0 0 0; padding-top:10px; border-top:1px solid #e3e7f0; font-size:11px; font-weight:600; color:#1a1a1a;">${escapeHtml(contract.company_signer_name || 'iCreate Solutions & Services')}</p>
+                    <p style="margin:2px 0 0 0; font-size:10px; color:#999; text-transform:uppercase; letter-spacing:0.5px;">Company</p>
+                  </td>
+                  <td width="50%" style="padding:18px 16px; background:#fbfbfd; border:1px solid #edf0f5; border-left:none; border-radius:0 12px 12px 0; text-align:center; vertical-align:bottom;">
+                    ${partnerSignatureCell}
+                    <p style="margin:10px 0 0 0; padding-top:10px; border-top:1px solid #e3e7f0; font-size:11px; font-weight:600; color:#1a1a1a;">${escapeHtml(contract.signer_legal_name || contract.partner_name || '')}</p>
+                    <p style="margin:2px 0 0 0; font-size:10px; color:#999; text-transform:uppercase; letter-spacing:0.5px;">Partner</p>
+                  </td>
+                </tr>
+              </table>`;
+
+  const subject = `✅ Signed: Your ${contract.product_name || 'HaloManage'} Partner Agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agreement Signed — ${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}</title>
+</head>
+<body style="margin:0; padding:0; background:#f0fdf4; font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4; padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.10);">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #059669 0%, #129c86 100%); padding:48px 40px; text-align:center;">
+              <div style="width:70px; height:70px; background:rgba(255,255,255,0.15); border-radius:50%; margin:0 auto 18px auto; display:flex; align-items:center; justify-content:center;">
+                <span style="font-size:36px; line-height:1;">🎉</span>
+              </div>
+              <p style="margin:0 0 6px 0; color:rgba(255,255,255,0.8); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Agreement Confirmed</p>
+              <h1 style="margin:0 0 10px 0; color:#ffffff; font-size:26px; font-weight:700; letter-spacing:-0.5px;">You're All Signed!</h1>
+              <p style="margin:0; color:rgba(255,255,255,0.85); font-size:14px;">Your ${productName} partnership is officially underway.</p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:40px 44px 10px 44px;">
+              <p style="margin:0 0 10px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hi ${partnerName},</p>
+              <p style="margin:0 0 28px 0; font-size:15px; color:#555555; line-height:1.7;">
+                Thank you for signing your ${roleLabel} agreement with <strong style="color:#1a1a1a;">${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}</strong>. A fully signed copy is attached to this email (PDF) for your records.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4; border-radius:14px; border:1.5px solid #a7f3d0; margin-bottom:30px;">
+                <tr>
+                  <td style="padding:22px 26px;">
+                    <p style="margin:0 0 14px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#059669;">Signature Confirmation</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; color:#6b7280; font-size:13px;">Reference</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${refLine}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; color:#6b7280; font-size:13px;">Signed By</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #d1fae5; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${escapeHtml(contract.signer_legal_name || contract.partner_name || '')}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; color:#6b7280; font-size:13px;">Date Signed</td>
+                        <td style="padding:8px 0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${signedDate}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 12px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#059669; text-align:center;">Signed By Both Parties</p>
+              ${signatureBlock}
+            </td>
+          </tr>
+
+          <!-- CONTACT STRIP -->
+          <tr>
+            <td style="background:#fafafa; border-top:1px solid #edf0f5; padding:18px 44px; text-align:center;">
+              <p style="margin:0; font-size:13px; color:#777;">
+                Questions about your agreement? <a href="${contactHref}" style="color:#059669; font-weight:600; text-decoration:none;">Email us</a> or call/WhatsApp <a href="tel:+18765857469" style="color:#059669; font-weight:600; text-decoration:none;">${COMPANY_PHONE}</a>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#1a1a1a; padding:28px 44px; text-align:center;">
+              <p style="margin:0 0 6px 0; color:#ffffff; font-size:14px; font-weight:600;">${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}</p>
+              <p style="margin:0; color:#888; font-size:12px;">© ${new Date().getFullYear()} ${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}. All rights reserved.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${contract.partner_name || 'there'},\n\nThank you for signing your ${template.shortTitle || template.title} agreement with ${contract.company_name || 'iCreate Solutions & Services'} for ${contract.product_name || 'HaloManage'}.\n\nReference: ${refLine}\nSigned By: ${contract.signer_legal_name || contract.partner_name || ''}\nDate Signed: ${signedDate}\n\nA signed copy (PDF) is attached to this email for your records.\n\nQuestions? Email ${COMPANY_EMAIL} or call/WhatsApp ${COMPANY_PHONE}.\n\n— ${contract.company_name || 'iCreate Solutions & Services'}`;
+
+  return { subject, html, text };
+}
+
+/**
  * Generates the "Request Missing Info" email — asks a client to fill in
  * whatever Client Care details are still blank, explaining why each one is
  * needed, with a link to the public self-service update page.
@@ -1348,4 +1618,4 @@ Thanks for being a client — reply to this email any time if you have questions
   return { subject, text, html: getBaseHtml(htmlBody) };
 }
 
-module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getInvoiceDelinquencyTemplate, getInvoiceOutstandingBalance, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate, getSubscriptionBillingCycle, getContractSigningRequestTemplate, getContractSignedConfirmationTemplate, getInfoRequestTemplate };
+module.exports = { getInvoiceEmailContent, getClientCarePulseEmailContent, getMonthlySummaryEmailContent, getPaymentDeclinedTemplate, getInvoiceDelinquencyTemplate, getInvoiceOutstandingBalance, getPaymentNudgeTemplate, getSubscriptionRenewalTemplate, getWelcomeSubscriptionTemplate, getSubscriptionBillingCycle, getContractSigningRequestTemplate, getContractSignedConfirmationTemplate, getPartnerContractSigningRequestTemplate, getPartnerContractSignedConfirmationTemplate, getInfoRequestTemplate };

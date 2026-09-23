@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Contracts | ICSS Command Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+    <style>
+        .pc-hero {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 28px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 22px;
+            padding: 30px;
+            background: linear-gradient(135deg, #0d1730 0%, #16213f 60%, #101b3d 100%);
+            box-shadow: 0 24px 70px rgba(0,0,0,.22);
+        }
+        .pc-hero h1 {
+            margin: 0 0 8px;
+            color: #fff;
+            font-family: "Source Serif 4", Georgia, serif;
+            font-size: clamp(1.7rem, 3.4vw, 2.6rem);
+        }
+        .pc-hero p { max-width: 720px; margin: 0; color: #aebbd0; line-height: 1.65; }
+
+        .pc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+        }
+        .pc-company-card {
+            display: block;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 22px;
+            background: var(--bg-card);
+            text-decoration: none;
+            color: inherit;
+            transition: transform .15s ease, border-color .15s ease;
+        }
+        .pc-company-card:hover { transform: translateY(-2px); border-color: rgba(18,156,134,.5); }
+        .pc-company-mark {
+            width: 46px; height: 46px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(18,156,134,.14); color: #129c86; font-size: 1.25rem; margin-bottom: 14px;
+        }
+        .pc-company-card h3 { margin: 0 0 6px; font-size: 1.05rem; color: var(--text-light); }
+        .pc-company-card p { margin: 0 0 14px; color: var(--text-muted); font-size: .85rem; line-height: 1.5; }
+        .pc-company-card .pc-cta { font-size: .82rem; font-weight: 700; color: #129c86; }
+
+        .pc-empty-note {
+            margin-top: 20px; padding: 16px 18px; border-radius: 12px;
+            border: 1px dashed var(--border-color); color: var(--text-muted); font-size: .82rem; line-height: 1.55;
+        }
+    </style>
+</head>
+<body>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script type="module" src="js/layout.js"></script>
+
+    <div class="container fade-in">
+        <section class="pc-hero">
+            <h1>Partner Contracts</h1>
+            <p>
+                Companies that iCreate Solutions &amp; Services owns and operates. Choose a company below to draft,
+                send, and manage its partnership and revenue-share agreements — with the same electronic-signature
+                workflow used for client contracts.
+            </p>
+        </section>
+
+        <div class="pc-grid" id="companyGrid">
+            <!-- populated by JS -->
+        </div>
+
+        <p class="pc-empty-note">
+            Only HaloManage is set up today. Adding another company iCreate owns or operates later just means adding
+            one more entry here — no rebuild required.
+        </p>
+    </div>
+
+    <script>
+        // Data-driven so a future company just needs a new entry here (plus its own
+        // per-company management page, mirroring halomanage-partnerships.html).
+        const COMPANIES = [
+            {
+                id: 'halomanage',
+                name: 'HaloManage',
+                description: 'Partnership and revenue-share agreements for people contributing to the HaloManage product — client acquisition, accounting/payroll, interim leadership, and HR consulting roles.',
+                icon: 'fa-solid fa-handshake',
+                href: '/halomanage-partnerships.html'
+            }
+        ];
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+        }
+
+        function renderCompanies() {
+            const grid = document.getElementById('companyGrid');
+            grid.innerHTML = COMPANIES.map((c) => `
+                <a class="pc-company-card" href="${escapeHtml(c.href)}">
+                    <div class="pc-company-mark"><i class="${c.icon}" aria-hidden="true"></i></div>
+                    <h3>${escapeHtml(c.name)}</h3>
+                    <p>${escapeHtml(c.description)}</p>
+                    <span class="pc-cta">Manage ${escapeHtml(c.name)} contracts →</span>
+                </a>
+            `).join('');
+        }
+
+        renderCompanies();
+    </script>
+</body>
+</html>

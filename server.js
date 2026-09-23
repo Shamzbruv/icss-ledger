@@ -179,6 +179,12 @@ const checkAuth = async (req, res, next) => {
         return next();
     }
 
+    // Same pattern for partner-contract signing (HaloManage and future iCreate-owned
+    // companies) — reached via a unique, unguessable token link.
+    if (currentPath.startsWith('/api/partner-contracts/public/')) {
+        return next();
+    }
+
     // Same pattern for the "update my info" links sent from Client Care — reached via a
     // unique, unguessable token, never through an admin session. Sending the request in the
     // first place stays protected (/api/info-requests/:serviceId/send).
@@ -236,12 +242,14 @@ const { queueOutboxEvent } = require('./src/services/outboxEventService');
 const leadsRouter = require('./src/routes/leads');
 const reviewsRouter = require('./src/routes/reviews');
 const contractsRouter = require('./src/routes/contracts');
+const partnerContractsRouter = require('./src/routes/partnerContracts');
 const infoRequestsRouter = require('./src/routes/infoRequests');
 
 // MOUNT ROUTES
 router.use('/api/leads', leadsRouter);
 router.use('/api/reviews', reviewsRouter);
 router.use('/api/contracts', contractsRouter);
+router.use('/api/partner-contracts', partnerContractsRouter);
 router.use('/api/info-requests', infoRequestsRouter);
 
 const DEFAULT_LINK_HUB = {
@@ -3632,9 +3640,25 @@ router.get('/contracts', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'contracts.html'));
 });
 
+// Companies iCreate Solutions & Services owns/operates (currently just HaloManage) — the
+// landing page for "Partner Contracts" in the sidebar.
+router.get('/partner-contracts', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'partner-contracts.html'));
+});
+
+// Per-company partner-contract management (list/create/send/manage) — HaloManage today.
+router.get('/halomanage-partnerships', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'halomanage-partnerships.html'));
+});
+
 // Public — reached by clients via their unique emailed link, no login required.
 router.get('/sign-contract', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'sign-contract.html'));
+});
+
+// Public — reached by partners via their unique emailed link, no login required.
+router.get('/sign-partner-contract', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'sign-partner-contract.html'));
 });
 
 // Public — reached by clients via their unique "Request Info" emailed link, no login required.
