@@ -40,7 +40,10 @@ CREATE TABLE IF NOT EXISTS partner_contracts (
   revenue_scope TEXT,
   payment_due_days INTEGER DEFAULT 10,
   termination_notice_days INTEGER DEFAULT 14,
-  expense_approval_threshold VARCHAR(100) DEFAULT 'JMD $25,000',
+  -- No default figure on purpose: left blank, the generated agreement treats this as
+  -- open to ongoing written agreement between the Company and Partner (revisable at any
+  -- time) rather than locking a dollar amount into the document. See partnerContractTemplate.js.
+  expense_approval_threshold VARCHAR(100),
   tail_period_text VARCHAR(100) DEFAULT '90 days',
   relationship_type VARCHAR(20) NOT NULL DEFAULT 'commercial'
     CHECK (relationship_type IN ('commercial', 'formal')),
@@ -70,6 +73,11 @@ CREATE TABLE IF NOT EXISTS partner_contracts (
   -- since-edited draft never retroactively change an already-sent agreement.
   terms_snapshot_json JSONB
 );
+
+-- Idempotent fix for a table created before this column's default was reconsidered
+-- (2026-09-25): "JMD $25,000" was baked into every new agreement by default; removed so a
+-- blank threshold correctly reads as "open to ongoing agreement" instead of a stale figure.
+ALTER TABLE partner_contracts ALTER COLUMN expense_approval_threshold DROP DEFAULT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_partner_contracts_sign_token ON partner_contracts(sign_token);
 CREATE INDEX IF NOT EXISTS idx_partner_contracts_status ON partner_contracts(status);

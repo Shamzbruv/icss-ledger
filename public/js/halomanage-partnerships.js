@@ -168,7 +168,7 @@ async function openCreateModal() {
     document.getElementById('cf_paymentFrequency').value = 'Monthly';
     document.getElementById('cf_paymentDueDays').value = 10;
     document.getElementById('cf_terminationNotice').value = 14;
-    document.getElementById('cf_expenseApproval').value = 'JMD $25,000';
+    document.getElementById('cf_expenseApproval').value = '';
     document.getElementById('cf_relationshipType').value = 'commercial';
     document.getElementById('cf_signerName').value = 'S. Baker';
 
@@ -216,7 +216,7 @@ async function submitCreateContract() {
         revenue_scope: document.getElementById('cf_revenueScope').value.trim() || null,
         payment_due_days: Number(document.getElementById('cf_paymentDueDays').value),
         termination_notice_days: Number(document.getElementById('cf_terminationNotice').value),
-        expense_approval_threshold: document.getElementById('cf_expenseApproval').value.trim() || 'JMD $25,000',
+        expense_approval_threshold: document.getElementById('cf_expenseApproval').value.trim() || null,
         tail_period_text: document.getElementById('cf_tailPeriod').value.trim() || '90 days',
         relationship_type: document.getElementById('cf_relationshipType').value,
         additional_duties: document.getElementById('cf_additionalDuties').value.trim() || null,
@@ -345,8 +345,12 @@ function renderDraftEditForm(c) {
             <div><label>Payment Due (business days)</label><input type="number" id="dd_paymentDueDays" class="form-control" min="1" value="${c.payment_due_days}"></div>
             <div class="full" style="grid-column: 1 / -1;"><label>Revenue-Share Scope</label><textarea id="dd_revenueScope" class="form-control" rows="2">${escapeHTML(c.revenue_scope || '')}</textarea></div>
             <div><label>Termination Notice (days)</label><input type="number" id="dd_terminationNotice" class="form-control" min="0" value="${c.termination_notice_days}"></div>
-            <div><label>Expense Approval Threshold</label><input type="text" id="dd_expenseApproval" class="form-control" value="${escapeHTML(c.expense_approval_threshold || '')}"></div>
             <div><label>Post-Termination Revenue Tail</label><input type="text" id="dd_tailPeriod" class="form-control" value="${escapeHTML(c.tail_period_text || '')}"></div>
+            <div class="full" style="grid-column: 1 / -1;">
+                <label>Expense Approval Threshold <span class="text-muted" style="text-transform:none; font-weight:400;">(optional)</span></label>
+                <input type="text" id="dd_expenseApproval" class="form-control" placeholder="Leave blank to keep this open" value="${escapeHTML(c.expense_approval_threshold || '')}">
+                <div class="helper-text">Left blank, the agreement states this is open to ongoing written agreement between the parties and can be raised at any time.</div>
+            </div>
             <div class="full" id="dd_relationshipTypeWrap" style="grid-column: 1 / -1;">
                 <label>Legal Relationship</label>
                 <select id="dd_relationshipType" class="form-control">
@@ -466,7 +470,7 @@ function collectDraftFormValues() {
         revenue_scope: document.getElementById('dd_revenueScope').value.trim() || null,
         payment_due_days: Number(document.getElementById('dd_paymentDueDays').value),
         termination_notice_days: Number(document.getElementById('dd_terminationNotice').value),
-        expense_approval_threshold: document.getElementById('dd_expenseApproval').value.trim() || 'JMD $25,000',
+        expense_approval_threshold: document.getElementById('dd_expenseApproval').value.trim() || null,
         tail_period_text: document.getElementById('dd_tailPeriod').value.trim() || '90 days',
         relationship_type: document.getElementById('dd_relationshipType').value,
         additional_duties: document.getElementById('dd_additionalDuties').value.trim() || null,

@@ -350,7 +350,9 @@ router.post('/', async (req, res) => {
             revenue_scope: body.revenue_scope || null,
             payment_due_days: body.payment_due_days ?? 10,
             termination_notice_days: body.termination_notice_days ?? 14,
-            expense_approval_threshold: body.expense_approval_threshold || 'JMD $25,000',
+            // No default figure — an unset threshold is meant to stay open to ongoing
+            // agreement between the parties rather than lock a number into the agreement.
+            expense_approval_threshold: body.expense_approval_threshold || null,
             tail_period_text: body.tail_period_text || '90 days',
             relationship_type: body.relationship_type === 'formal' ? 'formal' : 'commercial',
             additional_duties: body.additional_duties || null,

@@ -264,9 +264,10 @@
                         <label for="cf_terminationNotice">Termination Notice (days)</label>
                         <input type="number" id="cf_terminationNotice" class="form-control" min="0" value="14">
                     </div>
-                    <div>
-                        <label for="cf_expenseApproval">Expense Approval Threshold</label>
-                        <input type="text" id="cf_expenseApproval" class="form-control" value="JMD $25,000">
+                    <div class="full" style="grid-column: 1 / -1;">
+                        <label for="cf_expenseApproval">Expense Approval Threshold <span class="text-muted" style="text-transform:none; font-weight:400;">(optional)</span></label>
+                        <input type="text" id="cf_expenseApproval" class="form-control" placeholder="Leave blank to keep this open">
+                        <div class="helper-text">Left blank, the agreement states this is open to ongoing written agreement between the parties and can be raised at any time — no fixed figure gets locked into the document. Only fill this in if you want to commit to a specific number for this partner.</div>
                     </div>
                     <div>
                         <label for="cf_tailPeriod">Post-Termination Revenue Tail</label>

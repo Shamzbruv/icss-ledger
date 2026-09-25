@@ -184,7 +184,10 @@ function buildPartnerContractData(contract) {
     revenueScope: contract.revenue_scope || '',
     paymentDueDays: contract.payment_due_days ?? 10,
     terminationNoticeDays: contract.termination_notice_days ?? 14,
-    expenseApprovalThreshold: contract.expense_approval_threshold || 'JMD $25,000',
+    // No hardcoded default on purpose — an unset threshold means "open to ongoing
+    // agreement between the parties" rather than a figure locked into the document
+    // (see the branching in section 5.6 and Schedule A below).
+    expenseApprovalThreshold: contract.expense_approval_threshold || '',
     tailPeriod: contract.tail_period_text || '90 days',
     relationshipType: contract.relationship_type || 'commercial',
     additionalDuties: contract.additional_duties || '',
@@ -314,7 +317,11 @@ function renderPartnerContractSections(templateId, d) {
     "Other bona fide business expenses consistently recorded in the Company's books."
   ]);
   p('5.5 Excluded deductions. Unless both parties expressly agree otherwise in writing, deductions shall not include personal or non-business expenses, owner drawings, dividends, distributions of capital, unexplained cash withdrawals, sham or materially above-market related-party charges, fines or penalties resulting from wilful misconduct, or an expense deliberately created or reclassified for the principal purpose of suppressing the Partner\'s revenue share.');
-  p(`5.6 Extraordinary expenses. A single discretionary or non-routine expense above ${d.expenseApprovalThreshold} that materially affects the calculation shall be identified separately on the revenue-share statement. Disclosure does not give the Partner a veto over ordinary Company management unless Schedule A expressly provides an approval right.`);
+  if (d.expenseApprovalThreshold) {
+    p(`5.6 Extraordinary expenses. A single discretionary or non-routine expense above ${d.expenseApprovalThreshold} that materially affects the calculation shall be identified separately on the revenue-share statement. Disclosure does not give the Partner a veto over ordinary Company management unless Schedule A expressly provides an approval right.`);
+  } else {
+    p('5.6 Extraordinary expenses. A single discretionary or non-routine expense that materially affects the calculation shall be identified separately on the revenue-share statement once the Company and Partner have agreed a disclosure threshold in writing; either party may propose changing that threshold at any time by written notice. Disclosure does not give the Partner a veto over ordinary Company management unless Schedule A expressly provides an approval right.');
+  }
   p(`5.7 Net Distributable Revenue. Net Distributable Revenue equals Collected Revenue minus Permitted Business Expenses minus refunds, credits and chargebacks, plus or minus agreed prior-period adjustments. The Partner's payment equals Net Distributable Revenue multiplied by ${d.revenueSharePercent}%.`);
   p('5.8 No payment on a loss. If Net Distributable Revenue is zero or negative for a period, no revenue-share payment is due for that period. A negative balance shall not carry into a later period unless Schedule A expressly states otherwise.');
   p(`5.9 Payment cycle. Calculations shall be prepared ${String(d.paymentFrequency).toLowerCase()} and any amount due shall be paid within ${d.paymentDueDays} business days after the period closes and relevant receipts, refunds, expenses and processor settlements are reasonably reconciled.`);
@@ -417,7 +424,11 @@ function renderPartnerContractSections(templateId, d) {
   field('Revenue Share Scope', d.revenueScope || 'N/A', true);
   field('Payment frequency', d.paymentFrequency);
   field('Payment due', `${d.paymentDueDays} business days after close and reconciliation`);
-  field('Extraordinary-expense disclosure threshold', d.expenseApprovalThreshold);
+  field(
+    'Extraordinary-expense disclosure threshold',
+    d.expenseApprovalThreshold || 'To be agreed between the Company and Partner in writing; either party may propose revising it at any time.',
+    !d.expenseApprovalThreshold
+  );
   field('Termination notice', `${d.terminationNoticeDays} days`);
   field('Post-termination revenue tail', d.tailPeriod);
   field('Legal relationship', t.supportsFormal && d.relationshipType === 'formal'
