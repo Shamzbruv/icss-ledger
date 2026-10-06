@@ -25,7 +25,9 @@ A free, full-stack billing system integrated with Supabase, PDF generation, Emai
 3. **Environment Configuration**
    - Rename `.env.example` to `.env`.
    - Configure `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `RESEND_API_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, and `PAYPAL_MODE`. Railway must have the service-role key in `SUPABASE_SERVICE_KEY`; the backend intentionally refuses to use the public anon key in production.
-   - For automated GA4 traffic analysis, set `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_JSON` (or its base64 form in `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_BASE64`). In Client Care, save each site's numeric GA4 Property ID and grant the service-account email Viewer access to that property.
+   - For automated GA4 traffic analysis, set `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_JSON` (or its base64 form in `GOOGLE_ANALYTICS_SERVICE_ACCOUNT_BASE64`). In Client Care, save each site's numeric GA4 **Property ID** (Admin → Property settings, usually 9–10 digits — *not* the longer Data Stream ID and not the `G-` measurement ID) and grant the service-account email Viewer access to that property. The **Test Google Analytics** button in *Edit Service* explains in plain English what is (not) working.
+   - Enable the **Google Analytics Admin API** (and the Data API) for the same Google Cloud project as the service account. With the Admin API on, the system can find a missing or mistyped Property ID itself (matching the site's `G-` tag, the Data Stream ID or the domain, and only when exactly one property matches) and it refuses to show a client another business's traffic.
+   - Optional: `PAGESPEED_API_KEY` adds Google's PageSpeed score to the Web Maintenance and Content Refresh reports. Without it the check is simply left out. `CARE_ALERT_EMAIL` (default: `ADMIN_EMAIL`) receives alerts about outages, expiring certificates/domains and Google Analytics set-up problems. `PUBLIC_BASE_URL` sets the link used in those alerts.
    - Set `CRON_SECRET` for protected scheduled-job requests in production.
 
 4.  **Run the Server**
@@ -61,6 +63,22 @@ A free, full-stack billing system integrated with Supabase, PDF generation, Emai
     ```bash
     node -e 'require("./src/services/imapService").checkEmailsForPayments()'
     ```
+
+### Client Care reports
+
+Each active website plan gets a weekly report (and a monthly review on the 1st). Everything in a report comes from live checks of the client's own website and Google Analytics; nothing is invented.
+
+| Plan | What is checked and explained |
+| --- | --- |
+| Hosting Only | online/uptime, page speed, SSL padlock, secure forwarding, phone-friendliness, visitor statistics, how the homepage looks on Google |
+| Hosting + Domain Management | + domain renewal date, DNS, business-email protection, traffic sources and devices, how easy the page is to contact |
+| Web Maintenance | + security settings, insecure page items, WordPress/plugin updates, broken links, search basics, day-by-day traffic and countries |
+| Content Refresh | + page-by-page review, picture descriptions, sitemap, content freshness, and content ideas based on the most-viewed pages |
+
+- In *Client Care*, **Preview** runs the real checks and shows exactly what the client would receive (plus notes for the team that clients never see). It sends and saves nothing. **Send test to me** emails that preview to the admin only. **Run Now** emails the client.
+- The wording lives in `src/services/care/`: `carePlans.js` (what each plan covers), `careExplainers.js` (plain-English explanations), `careAnalytics.js` (visitor section), `careReport.js` (scoring and report model), `careReportEmail.js` (HTML + text rendering). The checks themselves are in `src/services/checks/`.
+- A Google Analytics connection problem never lowers a client's score or shows Google's error text to the client. The client sees a gentle "we're still connecting your visitor statistics" note while the team gets an alert (at most weekly) with exact steps.
+- Run the tests with `npm test`.
 
 ## Development
 

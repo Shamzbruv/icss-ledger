@@ -57,7 +57,7 @@ const FIELD_DEFS = [
     {
         key: 'ga_property_id',
         label: 'Your Google Analytics 4 Property ID',
-        why: "So we can include your real traffic (visitors, sessions, page views) in your weekly report. It's the numeric ID from GA4 Admin → Property Settings — not the \"G-\" measurement ID — and the property needs to grant Viewer access to our reporting service account.",
+        why: "So we can include your real traffic (visitors, visits, page views) in your weekly report. It's the PROPERTY ID shown in Google Analytics → Admin → Property settings (usually 9 or 10 digits) — not the \"G-\" measurement ID and not the longer Stream ID. The property also needs to give Viewer access to our reporting account, client-care-ga4-reader@icss-hub.iam.gserviceaccount.com.",
         websiteOnly: true,
         isMissing: (meta) => !meta.ga_property_id
     }

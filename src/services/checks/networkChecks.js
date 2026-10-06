@@ -56,18 +56,33 @@ async function sslExpiryCheck(domainOrUrl) {
                     : callback(null, record.address, record.family)
             }, res => {
                 const cert = res.socket.getPeerCertificate();
+                // The connection is made with rejectUnauthorized:false so we can read the certificate
+                // even when it is broken; `authorized` tells us whether a browser would trust it.
+                const authorized = res.socket.authorized === true;
+                const authError = res.socket.authorizationError ? String(res.socket.authorizationError.code || res.socket.authorizationError) : null;
                 res.resume();
                 if (!cert || Object.keys(cert).length === 0) {
                     return resolve({ status: 'fail', details: 'No SSL certificate was presented', evidence: {} });
                 }
                 const validTo = new Date(cert.valid_to);
                 const daysRemaining = Math.ceil((validTo - Date.now()) / 86400000);
+                const evidence = {
+                    validTo, daysRemaining, issuer: cert.issuer?.O || cert.issuer?.CN || null,
+                    subject: cert.subject?.CN || null, authorized, authorizationError: authError
+                };
+                const untrustedForDomain = ['ERR_TLS_CERT_ALTNAME_INVALID', 'CERT_HAS_EXPIRED', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'SELF_SIGNED_CERT_IN_CHAIN', 'CERT_REVOKED'];
                 if (daysRemaining < 0) {
-                    resolve({ status: 'fail', details: `SSL certificate expired on ${validTo.toISOString().split('T')[0]}`, evidence: { validTo, daysRemaining } });
-                } else if (daysRemaining < 14) {
-                    resolve({ status: 'warn', details: `SSL certificate expires soon (${daysRemaining} days left)`, evidence: { validTo, daysRemaining } });
+                    resolve({ status: 'fail', details: `SSL certificate expired on ${validTo.toISOString().split('T')[0]}`, evidence });
+                } else if (authError && untrustedForDomain.includes(authError)) {
+                    resolve({ status: 'fail', details: `SSL certificate is not trusted for this domain (${authError})`, evidence });
+                } else if (daysRemaining < 5) {
+                    resolve({ status: 'fail', details: `SSL certificate expires in ${daysRemaining} days`, evidence });
+                } else if (daysRemaining < 21) {
+                    resolve({ status: 'warn', details: `SSL certificate expires soon (${daysRemaining} days left)`, evidence });
+                } else if (authError) {
+                    resolve({ status: 'warn', details: `SSL certificate chain is incomplete (${authError})`, evidence });
                 } else {
-                    resolve({ status: 'pass', details: `SSL valid (${daysRemaining} days remaining)`, evidence: { validTo, daysRemaining, issuer: cert.issuer?.O || null } });
+                    resolve({ status: 'pass', details: `SSL valid (${daysRemaining} days remaining)`, evidence });
                 }
             });
             req.on('error', error => resolve(failedResult('SSL connection failed', error)));

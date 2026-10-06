@@ -332,11 +332,12 @@
                                         <th>Subject</th>
                                         <th>Score</th>
                                         <th>Status</th>
+                                        <th>Report</th>
                                     </tr>
                                 </thead>
                                 <tbody id="historyTableBody">
                                     <tr>
-                                        <td colspan="5" class="text-center">Loading history...</td>
+                                        <td colspan="6" class="text-center">Loading history...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -685,6 +686,7 @@
                                 <strong>${escapeHtml(clientName || 'Unknown')}</strong><br>
                                 <small>${escapeHtml(clientEmail)}</small>
                                 ${missingInfo.length > 0 ? `<br><small style="color: var(--warning-color);">⚠ Missing ${missingInfo.length} detail${missingInfo.length > 1 ? 's' : ''}</small>` : ''}
+                                ${/^\d{11,}$/.test(String(meta.ga_property_id || '').trim()) ? `<br><small style="color: var(--warning-color);" title="Property IDs are normally 9–10 digits. A longer number is usually the Data Stream ID. Open Edit Service and press Test Google Analytics.">⚠ Analytics ID looks like a Stream ID</small>` : ''}
                             </div>
                         </td>
                         <td><div class="cell-content">${escapeHtml(planName || 'Unknown Plan')}<br><small>Billing: ${escapeHtml(billingCycle.charAt(0).toUpperCase() + billingCycle.slice(1))}</small></div></td>
@@ -702,7 +704,8 @@
                         <td>
                             <button class="btn btn-sm btn-info" onclick="openRenewalModal('${s.id}', '${s.next_renewal_date || ''}')">Set Renewal</button>
                             <button class="btn btn-sm btn-secondary" onclick="openEditScheduleModal('${s.id}', '${s.plan_id}', '${s.frequency}', ${s.send_day_of_week}, ${s.send_day_of_month}, '${s.send_time || '09:00'}', '${s.timezone || 'America/Jamaica'}', '${encodeURIComponent(JSON.stringify(meta)).replace(/'/g, '%27')}', '${encodeURIComponent(clientName)}', '${encodeURIComponent(clientEmail)}', '${encodeURIComponent(planName)}')">Edit Service</button>
-                            <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')">Run Now</button>
+                            <button class="btn btn-sm btn-info" onclick="previewReport('${s.id}')" title="Runs the real checks and shows the report as the client would see it. Nothing is sent or saved.">Preview</button>
+                            <button class="btn btn-sm btn-primary" onclick="runCheck('${s.id}')" title="Runs the checks AND emails the report to the client">Run Now</button>
                             <button class="btn btn-sm btn-warning" onclick="sendSubscriptionDeclineAlert('${s.id}')" title="${hasVerifiedPayPalFailure ? 'Send the verified PayPal subscription decline alert' : 'No verified PayPal payment failure is recorded'}" style="margin-left: 5px;" ${hasVerifiedPayPalFailure ? '' : 'disabled'}>Subscription Decline</button>
                             ${requestInfoBtn}
                             <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')" style="margin-left: 5px;">Delete</button>
@@ -821,7 +824,7 @@
         });
 
         async function runCheck(serviceId) {
-            if (!(await showConfirm('Run system check for this client now?', 'info', 'Run Now'))) return;
+            if (!(await showConfirm('Run the checks and EMAIL this client their report now?\n\nTip: press Preview first to see exactly what they will receive.', 'info', 'Run & Email'))) return;
 
             // Show Loader
             const loader = document.getElementById('loadingOverlay');
@@ -851,6 +854,69 @@
             }
         }
 
+        // ------------------------------------------------------------------
+        // Report preview: runs the real checks and shows the report in a modal. Sends/saves nothing.
+        // The report HTML is rendered inside a sandboxed iframe (no scripts) because it contains
+        // text taken from the client's own website.
+        // ------------------------------------------------------------------
+        let previewServiceId = null;
+
+        async function previewReport(serviceId) {
+            previewServiceId = serviceId;
+            const frame = document.getElementById('previewFrame');
+            frame.srcdoc = '';
+            document.getElementById('previewTitle').textContent = 'Report preview';
+            document.getElementById('previewSendTestBtn').classList.remove('d-none');
+            document.getElementById('previewMeta').textContent = '';
+            document.getElementById('previewRecipients').textContent = '';
+            document.getElementById('previewLoading').classList.remove('d-none');
+            document.getElementById('previewSendTestBtn').disabled = true;
+            document.getElementById('reportPreviewModal').classList.remove('d-none');
+            try {
+                const res = await apiFetch(`/api/client-care-pulse/preview/${serviceId}`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data.error || 'Preview failed');
+                frame.srcdoc = data.html;
+                document.getElementById('previewMeta').textContent = `Subject: ${data.subject}  ·  Health score ${data.score}`;
+                const rec = data.recipients || {};
+                const cc = Array.isArray(rec.cc) ? rec.cc.join(', ') : (rec.cc || '');
+                document.getElementById('previewRecipients').textContent = `Would be sent to: ${rec.to || '(no email address on file!)'}${cc ? `  ·  CC: ${cc}` : ''}`;
+                document.getElementById('previewSendTestBtn').disabled = false;
+            } catch (e) {
+                frame.srcdoc = `<body style="font-family:sans-serif;padding:24px;color:#a4202a">Could not build the preview: ${escapeHtml(e.message)}</body>`;
+            } finally {
+                document.getElementById('previewLoading').classList.add('d-none');
+            }
+        }
+
+        function closeReportPreview() {
+            document.getElementById('reportPreviewModal').classList.add('d-none');
+            document.getElementById('previewFrame').srcdoc = '';
+            previewServiceId = null;
+        }
+
+        async function sendTestFromPreview() {
+            if (!previewServiceId) return;
+            const btn = document.getElementById('previewSendTestBtn');
+            btn.disabled = true;
+            btn.textContent = 'Sending…';
+            try {
+                const res = await apiFetch(`/api/client-care-pulse/send-test/${previewServiceId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data.error || 'Could not send the test');
+                await showAlert(`A test copy was emailed to ${data.sentTo}.\n\nThe client was NOT emailed.`, 'success');
+            } catch (e) {
+                await showAlert('Could not send the test: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✉️ Send test to me';
+            }
+        }
+
         async function deleteService(serviceId) {
             if (!(await showConfirm('Are you sure you want to delete this monitored service?', 'danger', 'Delete'))) return;
             try {
@@ -875,7 +941,7 @@
                 const tbody = document.getElementById('historyTableBody');
 
                 if (reports.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No reports sent yet.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No reports sent yet.</td></tr>';
                     return;
                 }
 
@@ -886,12 +952,41 @@
                     <td><div class="cell-content">${escapeHtml(r.email_subject || 'Client Care Pulse Report')}</div></td>
                     <td><div class="cell-content"><span class="badge bg-primary">${r.checklist_runs?.score || 0}%</span></div></td>
                     <td><div class="cell-content"><span class="badge ${r.status === 'sent' ? 'bg-success' : 'bg-danger'}">${r.status}</span></div></td>
+                    <td><div class="cell-content">${r.checklist_run_id ? `<button class="btn btn-sm btn-secondary" onclick="viewStoredReport('${escapeHtml(r.checklist_run_id)}')" title="Re-creates this report from the results stored with it">View</button>` : ''}</div></td>
                 </tr>
             `).join('');
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('historyTableBody').innerHTML = '<tr><td colspan="5" class="text-center" style="color: var(--danger-color);">Error loading history</td></tr>';
+                document.getElementById('historyTableBody').innerHTML = '<tr><td colspan="6" class="text-center" style="color: var(--danger-color);">Error loading history</td></tr>';
+            }
+        }
+
+        // Re-creates a report that was already sent, from the results stored with that run.
+        async function viewStoredReport(runId) {
+            previewServiceId = null;
+            const frame = document.getElementById('previewFrame');
+            frame.srcdoc = '';
+            document.getElementById('previewTitle').textContent = 'Sent report';
+            document.getElementById('previewMeta').textContent = '';
+            document.getElementById('previewRecipients').textContent = '';
+            document.getElementById('previewLoading').classList.remove('d-none');
+            document.getElementById('previewSendTestBtn').classList.add('d-none');
+            document.getElementById('reportPreviewModal').classList.remove('d-none');
+            try {
+                const res = await apiFetch(`/api/client-care-pulse/runs/${runId}/report`);
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data.error || 'Could not load this report');
+                frame.srcdoc = data.html;
+                const when = data.sentAt ? new Date(data.sentAt).toLocaleString() : new Date(data.createdAt).toLocaleString();
+                document.getElementById('previewMeta').textContent = `${data.clientName} · ${when} · Health score ${data.score}`;
+                document.getElementById('previewRecipients').textContent = data.currentEngine
+                    ? 'Re-created from the results stored with this report, using the current wording.'
+                    : 'This report was sent before the 2026 upgrade, so it only had a few checks. Shown here in the new layout using the results that were stored.';
+            } catch (e) {
+                frame.srcdoc = `<body style="font-family:sans-serif;padding:24px;color:#a4202a">Could not load this report: ${escapeHtml(e.message)}</body>`;
+            } finally {
+                document.getElementById('previewLoading').classList.add('d-none');
             }
         }
 
@@ -1220,7 +1315,9 @@
             document.getElementById('editBirthdayMonth').value = meta.birthday_month || '';
             document.getElementById('editBirthdayDay').value = meta.birthday_day || '';
             document.getElementById('editGaPropertyId').value = meta.ga_property_id || '';
-            
+            document.getElementById('gaTestResult').innerHTML = '';
+            updateGaIdWarning();
+
             const apiContainer = document.getElementById('editApiUrlsContainer');
             apiContainer.innerHTML = '';
             if (meta.api_urls && meta.api_urls.length > 0) {
@@ -1236,6 +1333,74 @@
             toggleEditScheduleFields();
             refreshMissingInfoHint();
             document.getElementById('editScheduleModal').classList.remove('d-none');
+        };
+
+        // A Property ID is normally 9-10 digits; the longer number next to "Stream ID" is the usual mix-up.
+        window.updateGaIdWarning = function() {
+            const value = document.getElementById('editGaPropertyId').value.trim().replace(/^properties\//i, '');
+            const el = document.getElementById('gaIdWarning');
+            if (/^\d{11,}$/.test(value)) {
+                el.style.display = 'block';
+                el.textContent = `⚠ ${value.length} digits is longer than a normal Property ID (9–10 digits). This may be a Data Stream ID. Press "Test Google Analytics" to check.`;
+            } else {
+                el.style.display = 'none';
+                el.textContent = '';
+            }
+        };
+
+        // Asks Google what is (not) working for this property and explains it in plain English.
+        window.testGoogleAnalytics = async function() {
+            const btn = document.getElementById('gaTestBtn');
+            const out = document.getElementById('gaTestResult');
+            const serviceId = document.getElementById('editScheduleServiceId').value;
+            const propertyId = document.getElementById('editGaPropertyId').value.trim().replace(/^properties\//i, '');
+            btn.disabled = true;
+            btn.textContent = 'Testing…';
+            out.innerHTML = '<span class="text-muted">Asking Google…</span>';
+            try {
+                const res = await apiFetch('/api/client-care-pulse/ga-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        serviceId,
+                        propertyId,
+                        websiteUrl: document.getElementById('editWebsiteUrl').value.trim(),
+                        domain: document.getElementById('editDomainName').value.trim()
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data.error || 'The test could not run');
+
+                const acct = data.serviceAccountEmail ? `<div style="margin-top:6px;">Reporting account: <code>${escapeHtml(data.serviceAccountEmail)}</code></div>` : '';
+                if (data.ok) {
+                    const s = data.sample || {};
+                    out.innerHTML = `<div style="color: var(--success-color);"><strong>✅ Connected.</strong> Google returned real data for the last 7 days: ${Number(s.visitors || 0).toLocaleString()} visitors, ${Number(s.visits || 0).toLocaleString()} visits, ${Number(s.pageViews || 0).toLocaleString()} page views.</div>${data.siteHasTag ? '' : '<div style="color: var(--warning-color); margin-top:4px;">⚠ But we could not find the Google counting code on the website’s homepage, so these numbers may be zero or from another source.</div>'}`;
+                    return;
+                }
+
+                const d = data.diagnosis || {};
+                let html = `<div style="color: var(--danger-color);"><strong>❌ ${escapeHtml(d.title || 'Not connected')}</strong></div>`;
+                if (d.plain) html += `<div style="margin-top:4px;">${escapeHtml(d.plain)}</div>`;
+                html += acct;
+                const m = data.match || {};
+                if (m.matched && String(m.propertyId) !== propertyId) {
+                    html += `<div style="margin-top:8px;"><strong>Found the likely correct Property ID:</strong> <code>${escapeHtml(m.propertyId)}</code> (matched by ${escapeHtml(String(m.reason || '').replace('-', ' '))}). <button type="button" class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="document.getElementById('editGaPropertyId').value='${escapeHtml(m.propertyId)}'; updateGaIdWarning(); refreshMissingInfoHint();">Use this ID</button> <span class="text-muted">then press Save Changes.</span></div>`;
+                } else if (m.reason === 'ambiguous' && Array.isArray(m.candidates)) {
+                    html += `<div style="margin-top:8px;">More than one property matched, so it was not chosen automatically: ${m.candidates.map(c => `<code>${escapeHtml(c.id)}</code> (${escapeHtml(c.displayName || '')})`).join(', ')}</div>`;
+                }
+                if (Array.isArray(d.steps) && d.steps.length) {
+                    html += `<ol style="margin:8px 0 0 18px; padding:0;">${d.steps.map(s => `<li style="margin-bottom:3px;">${escapeHtml(s)}</li>`).join('')}</ol>`;
+                }
+                if (data.discovery && data.discovery.available === false && data.discovery.reason === 'ADMIN_API_DISABLED' && data.discovery.activationUrl) {
+                    html += `<div style="margin-top:8px;"><a href="${escapeHtml(data.discovery.activationUrl)}" target="_blank" rel="noopener" style="color: #7dd3fc; text-decoration: underline;">Enable the Google Analytics Admin API (one click) →</a> <span class="text-muted">lets the system find and fix wrong Property IDs by itself.</span></div>`;
+                }
+                out.innerHTML = html;
+            } catch (e) {
+                out.innerHTML = `<span style="color: var(--danger-color);">Could not run the test: ${escapeHtml(e.message)}</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Test Google Analytics';
+            }
         };
 
         // Re-reads whatever is currently in the form (including edits the
@@ -1532,8 +1697,13 @@
                 </div>
                 <div class="mb-2">
                     <label>Google Analytics 4 Property ID</label>
-                    <input type="text" id="editGaPropertyId" class="form-control" inputmode="numeric" pattern="(?:properties/)?[0-9]+" placeholder="123456789" oninput="refreshMissingInfoHint()">
-                    <small class="text-muted">The GA4 property must grant Viewer access to the configured service-account email.</small>
+                    <input type="text" id="editGaPropertyId" class="form-control" inputmode="numeric" pattern="(?:properties/)?[0-9]+" placeholder="123456789" oninput="refreshMissingInfoHint(); updateGaIdWarning()">
+                    <small class="text-muted">Use the <strong>Property ID</strong> from Google Analytics → Admin → Property settings (usually 9–10 digits) — not the "G-" code and not the longer Stream ID. The property must also give <strong>Viewer</strong> access to our reporting account.</small>
+                    <div id="gaIdWarning" class="small" style="color: var(--warning-color); display: none; margin-top: 4px;"></div>
+                    <div class="d-flex gap-2" style="margin-top: 6px;">
+                        <button type="button" class="btn btn-sm btn-secondary" id="gaTestBtn" onclick="testGoogleAnalytics()">🔍 Test Google Analytics</button>
+                    </div>
+                    <div id="gaTestResult" class="small" style="margin-top: 8px;"></div>
                 </div>
                 <div class="mb-2">
                     <label>API URLs (Optional)</label>
@@ -1551,6 +1721,33 @@
                 <div class="d-flex gap-2">
                     <button class="btn btn-secondary" onclick="closeEditScheduleModal()">Cancel</button>
                     <button class="btn btn-primary" onclick="submitScheduleUpdate()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REPORT PREVIEW MODAL -->
+    <div id="reportPreviewModal" class="modal-overlay d-none">
+        <div class="modal-content card fade-in" style="max-width: 880px; width: 96%;">
+            <div class="modal-header">
+                <div>
+                    <h3 id="previewTitle">Report preview</h3>
+                    <div id="previewMeta" class="text-muted small" style="margin-top: 2px;"></div>
+                </div>
+                <button class="btn btn-sm btn-outline-light" onclick="closeReportPreview()">✕</button>
+            </div>
+            <div class="modal-body" style="padding: 0; position: relative;">
+                <div id="previewLoading" class="d-none" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; background: rgba(15,23,42,0.85); z-index: 2; text-align: center; padding: 20px;">
+                    <div class="spinner"></div>
+                    <p style="margin: 14px 0 0 0;">Running the real checks on this client's website…<br><span class="text-muted small">This takes up to a minute. Nothing is sent or saved.</span></p>
+                </div>
+                <iframe id="previewFrame" title="Report preview" sandbox="" style="width: 100%; height: calc(90vh - 250px); min-height: 320px; border: 0; background: #f3f5f8; display: block;"></iframe>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div id="previewRecipients" class="text-muted small"></div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-secondary" onclick="closeReportPreview()">Close</button>
+                    <button class="btn btn-primary" id="previewSendTestBtn" onclick="sendTestFromPreview()" disabled>✉️ Send test to me</button>
                 </div>
             </div>
         </div>

@@ -2396,7 +2396,66 @@ router.get('/api/client-care-pulse/reports', async (req, res) => {
 });
 
 // Monthly Summaries Endpoints
-const { runImmediateCheck, runDueClientCarePulses, getReportHistory, deleteClientService, calculateNextRun, generateMonthlySummary, runMonthlySummaryChecks } = require('./src/services/clientCarePulseService');
+const { runImmediateCheck, runDueClientCarePulses, getReportHistory, deleteClientService, calculateNextRun, generateMonthlySummary, runMonthlySummaryChecks, previewReport, renderStoredReport, sendTestReport, testGaConnection } = require('./src/services/clientCarePulseService');
+
+// Re-create a report that was already sent (from the results stored with that run).
+router.get('/api/client-care-pulse/runs/:runId/report', async (req, res) => {
+    try {
+        const stored = await renderStoredReport(req.params.runId);
+        res.json({ success: true, ...stored });
+    } catch (err) {
+        console.error('Stored report view failed:', err);
+        res.status(err.message === 'Report not found' ? 404 : 500).json({ error: err.message });
+    }
+});
+
+// Preview a client's report exactly as it would be built right now. Runs the real checks but
+// sends nothing and saves nothing.
+router.post('/api/client-care-pulse/preview/:serviceId', async (req, res) => {
+    try {
+        const preview = await previewReport(req.params.serviceId, { audience: 'admin' });
+        res.json({
+            success: true,
+            subject: preview.subject,
+            html: preview.html,
+            text: preview.text,
+            score: preview.score,
+            recipients: preview.recipients,
+            adminNotes: preview.model.adminNotes,
+            tone: preview.model.health.tone
+        });
+    } catch (err) {
+        console.error('Report preview failed:', err);
+        res.status(err.message === 'Service not found' ? 404 : 500).json({ error: err.message });
+    }
+});
+
+// Email a test copy of the report to the iCreate team only (never to the client).
+router.post('/api/client-care-pulse/send-test/:serviceId', async (req, res) => {
+    try {
+        // Always the signed-in admin (never an address taken from the request), so a test copy of a
+        // client's report can only ever go to the team.
+        const to = req.user?.email || req.session?.user?.email || process.env.ADMIN_EMAIL || 'Shamzbiz1@gmail.com';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(400).json({ error: 'No valid admin email address is available for the test.' });
+        const result = await sendTestReport(req.params.serviceId, to);
+        res.json(result);
+    } catch (err) {
+        console.error('Test report failed:', err);
+        res.status(err.message === 'Service not found' ? 404 : 500).json({ error: err.message });
+    }
+});
+
+// "Test Google Analytics": explains in plain English what is (or is not) working for a property.
+router.post('/api/client-care-pulse/ga-test', async (req, res) => {
+    try {
+        const { serviceId, propertyId, websiteUrl, domain } = req.body || {};
+        const result = await testGaConnection({ serviceId, propertyId, websiteUrl, domain });
+        res.json(result);
+    } catch (err) {
+        console.error('Google Analytics test failed:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 router.get('/api/client-care-pulse/monthly-summaries/:clientId', async (req, res) => {
     try {

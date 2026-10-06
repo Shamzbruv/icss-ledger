@@ -189,7 +189,12 @@ router.post('/public/:token', async (req, res) => {
 
         const planName = service.service_plans?.name || '';
         const stillMissing = computeMissingFields(newMeta, planName);
-        res.json({ success: true, remaining: stillMissing.length });
+        // A Stream ID is the usual mix-up for a Property ID. Don't reject it (the system can find
+        // the right property from it), just let the client know we'll double-check.
+        const note = updates.ga_property_id && updates.ga_property_id.length >= 11
+            ? "That number is longer than a typical Property ID, so it may be the Stream ID. No problem — we'll double-check it for you."
+            : null;
+        res.json({ success: true, remaining: stillMissing.length, note });
     } catch (err) {
         console.error('[INFO REQUEST] Public submit error:', err);
         res.status(500).json({ error: 'Something went wrong while saving your details. Please try again.' });

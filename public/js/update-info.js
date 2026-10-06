@@ -157,9 +157,10 @@ async function submitDetails() {
         }
 
         hideAll();
-        document.getElementById('successMessage').textContent = data.remaining > 0
+        const baseMessage = data.remaining > 0
             ? "Your details have been updated. We'll follow up separately about anything still outstanding."
             : 'Your details have been updated — thanks for taking care of that!';
+        document.getElementById('successMessage').textContent = data.note ? `${baseMessage} ${data.note}` : baseMessage;
         document.getElementById('successState').classList.remove('hidden');
     } catch (e) {
         console.error(e);
