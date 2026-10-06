@@ -12,6 +12,15 @@
  * a block list), not the wording.
  */
 
+const {
+  REFERRAL_TEMPLATE,
+  REFERRAL_ACKNOWLEDGEMENTS,
+  REFERRAL_COMPANY_SIGNER,
+  REFERRAL_DEFAULTS,
+  buildReferralFields,
+  renderReferralSections
+} = require('./referralContractTemplate');
+
 const GOVERNING_LAW = 'Jamaica';
 
 const PARTNER_TEMPLATES = [
@@ -144,21 +153,43 @@ const PARTNER_TEMPLATES = [
   }
 ];
 
+// Which iCreate company/programme each template belongs to. The four HaloManage role templates
+// above are 'halomanage'; the general Referral Partner Commission Agreement is 'referrals'.
+PARTNER_TEMPLATES.forEach((t) => {
+  t.companySlug = t.companySlug || 'halomanage';
+  t.kind = t.kind || 'revenue-share';
+});
+PARTNER_TEMPLATES.push(REFERRAL_TEMPLATE);
+
+// Rendering fallback: an unknown id (e.g. a template that was later renamed) still renders as
+// the first template instead of crashing an already-sent agreement.
 function findTemplate(templateId) {
   return PARTNER_TEMPLATES.find((t) => t.id === templateId) || PARTNER_TEMPLATES[0];
 }
 
+// Strict lookup for validating input: null when the id is not a real template.
+function getTemplate(templateId) {
+  return PARTNER_TEMPLATES.find((t) => t.id === templateId) || null;
+}
+
 // Metadata only (no duties/roleTerms) — safe to expose to the admin frontend for the template picker.
-function listTemplateSummaries() {
-  return PARTNER_TEMPLATES.map(({ id, title, shortTitle, tag, summary, term, scope, tail, supportsFormal }) => ({
-    id, title, shortTitle, tag, summary, term, scope, tail, supportsFormal
-  }));
+function listTemplateSummaries(companySlug) {
+  return PARTNER_TEMPLATES
+    .filter((t) => !companySlug || t.companySlug === companySlug)
+    .map(({ id, title, shortTitle, docLabel, tag, summary, term, scope, tail, supportsFormal, companySlug: slug, kind }) => ({
+      id, title, shortTitle, docLabel: docLabel || title, tag, summary, term, scope, tail, supportsFormal, companySlug: slug, kind
+    }));
 }
 
 function formatDateLong(dateInput) {
   if (!dateInput) return '[EFFECTIVE DATE]';
   try {
-    return new Date(dateInput).toLocaleDateString('en-JM', { year: 'numeric', month: 'long', day: 'numeric' });
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    // A plain calendar date ("2026-10-06", e.g. the agreement's effective date) is parsed as
+    // midnight UTC, so it must be printed in UTC too — otherwise a server west of UTC shows the
+    // day before on the agreement.
+    const calendarDate = typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput.trim());
+    return new Date(dateInput).toLocaleDateString('en-JM', calendarDate ? { ...options, timeZone: 'UTC' } : options);
   } catch (e) {
     return '[EFFECTIVE DATE]';
   }
@@ -169,20 +200,26 @@ function formatDateLong(dateInput) {
  * values the template needs.
  */
 function buildPartnerContractData(contract) {
-  return {
+  const template = findTemplate(contract.template_id);
+  const isReferral = template.kind === 'referral';
+  const data = {
     templateId: contract.template_id,
+    kind: template.kind || 'revenue-share',
+    docLabel: template.docLabel || `${contract.product_name || 'HaloManage'} Partner Agreement`,
     companyName: contract.company_name || 'iCreate Solutions & Services',
     productName: contract.product_name || 'HaloManage',
     partnerName: contract.partner_name || '',
     partnerEmail: contract.partner_email || '',
     partnerPhone: contract.partner_phone || '',
     partnerAddress: contract.partner_address || '',
-    effectiveDate: formatDateLong(contract.effective_date),
+    // A referral agreement always shows a real date (the form pre-fills today); fall back to when it
+    // was sent/created rather than printing a "[EFFECTIVE DATE]" placeholder to a partner.
+    effectiveDate: formatDateLong(contract.effective_date || (isReferral ? (contract.sent_at || contract.created_at || new Date()) : null)),
     term: contract.term_text || '',
     revenueSharePercent: Number(contract.revenue_share_percent ?? 0),
     paymentFrequency: contract.payment_frequency || 'Monthly',
     revenueScope: contract.revenue_scope || '',
-    paymentDueDays: contract.payment_due_days ?? 10,
+    paymentDueDays: contract.payment_due_days ?? (isReferral ? REFERRAL_DEFAULTS.paymentDueDays : 10),
     terminationNoticeDays: contract.termination_notice_days ?? 14,
     // No hardcoded default on purpose — an unset threshold means "open to ongoing
     // agreement between the parties" rather than a figure locked into the document
@@ -191,11 +228,18 @@ function buildPartnerContractData(contract) {
     tailPeriod: contract.tail_period_text || '90 days',
     relationshipType: contract.relationship_type || 'commercial',
     additionalDuties: contract.additional_duties || '',
-    companySignerName: contract.company_signer_name || 'S. Baker',
+    companySignerName: contract.company_signer_name || (isReferral ? REFERRAL_COMPANY_SIGNER : 'S. Baker'),
     companySignedAt: contract.company_signed_at || null,
     agreementReference: contract.agreement_reference || '',
     contractVersion: contract.contract_version || 'v1'
   };
+  if (isReferral) Object.assign(data, buildReferralFields(contract));
+  return data;
+}
+
+/** The acknowledgements the signer must tick for a template (HaloManage vs referral wording). */
+function getAcknowledgements(templateId) {
+  return findTemplate(templateId).kind === 'referral' ? REFERRAL_ACKNOWLEDGEMENTS : ACKNOWLEDGEMENTS;
 }
 
 // The four required acknowledgements — mirrors the shape/role of ACKNOWLEDGEMENTS in
@@ -238,6 +282,7 @@ function additionalDutiesList(raw) {
  */
 function renderPartnerContractSections(templateId, d) {
   const t = findTemplate(templateId);
+  if (t.kind === 'referral') return renderReferralSections(d);
   const S = [];
   const p = (text) => S.push({ type: 'p', text });
   const h2 = (text) => S.push({ type: 'h2', text });
@@ -464,6 +509,11 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
 }
 
+/** Escapes text, then turns **bold** markers into <strong> (nothing else becomes markup). */
+function richHtml(value) {
+  return escapeHtml(value).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
 /**
  * Renders the structured sections to an HTML fragment for the public partner-sign page.
  * Uses the same `contract-*` CSS classes as the iCreate sign page's block renderer so the
@@ -482,11 +532,15 @@ function renderPartnerContractHtml(contract) {
       case 'h3':
         return `<h3 class="contract-h3">${escapeHtml(block.text)}</h3>`;
       case 'p':
-        return `<p class="contract-p">${escapeHtml(block.text)}</p>`;
+        return `<p class="contract-p">${richHtml(block.text)}</p>`;
       case 'ul':
-        return `<ul class="contract-ul">${block.items.map((i) => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`;
+        return `<ul class="contract-ul">${block.items.map((i) => `<li>${richHtml(i)}</li>`).join('')}</ul>`;
+      case 'ol':
+        return `<ol class="contract-ol" type="a">${block.items.map((i) => `<li>${richHtml(i)}</li>`).join('')}</ol>`;
       case 'field':
         return `<div class="contract-field${block.long ? ' contract-field-long' : ''}"><span class="contract-field-label">${escapeHtml(block.label)}</span><span class="contract-field-value">${escapeHtml(block.value)}</span></div>`;
+      case 'signatures-intro':
+        return `<h2 class="contract-h2">${escapeHtml(block.title)}</h2><p class="contract-p">${richHtml(block.text)}</p>`;
       default:
         return '';
     }
@@ -499,10 +553,13 @@ module.exports = {
   GOVERNING_LAW,
   PARTNER_TEMPLATES,
   findTemplate,
+  getTemplate,
   listTemplateSummaries,
   formatDateLong,
   buildPartnerContractData,
   renderPartnerContractSections,
   renderPartnerContractHtml,
+  getAcknowledgements,
+  richHtml,
   ACKNOWLEDGEMENTS
 };

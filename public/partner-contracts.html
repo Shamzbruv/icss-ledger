@@ -53,6 +53,10 @@
         .pc-company-card p { margin: 0 0 14px; color: var(--text-muted); font-size: .85rem; line-height: 1.5; }
         .pc-company-card .pc-cta { font-size: .82rem; font-weight: 700; color: #129c86; }
 
+        .pc-section-title {
+            margin: 26px 0 12px; font-size: .8rem; font-weight: 800; letter-spacing: .12em;
+            text-transform: uppercase; color: var(--text-muted);
+        }
         .pc-empty-note {
             margin-top: 20px; padding: 16px 18px; border-radius: 12px;
             border: 1px dashed var(--border-color); color: var(--text-muted); font-size: .82rem; line-height: 1.55;
@@ -69,32 +73,51 @@
         <section class="pc-hero">
             <h1>Partner Contracts</h1>
             <p>
-                Companies that iCreate Solutions &amp; Services owns and operates. Choose a company below to draft,
-                send, and manage its partnership and revenue-share agreements — with the same electronic-signature
-                workflow used for client contracts.
+                Companies that iCreate Solutions &amp; Services owns and operates, plus agreements that apply across
+                iCreate. Choose one below to draft, send, and manage its agreements — with the same
+                electronic-signature workflow used for client contracts.
             </p>
         </section>
 
+        <h2 class="pc-section-title">Companies</h2>
         <div class="pc-grid" id="companyGrid">
             <!-- populated by JS -->
         </div>
 
+        <h2 class="pc-section-title">General Agreements</h2>
+        <div class="pc-grid" id="generalGrid">
+            <!-- populated by JS -->
+        </div>
+
         <p class="pc-empty-note">
-            Only HaloManage is set up today. Adding another company iCreate owns or operates later just means adding
+            Adding another company iCreate owns or operates, or another general agreement, later just means adding
             one more entry here — no rebuild required.
         </p>
     </div>
 
     <script>
-        // Data-driven so a future company just needs a new entry here (plus its own
-        // per-company management page, mirroring halomanage-partnerships.html).
+        // Data-driven so a future company or agreement just needs a new entry here (plus its own
+        // management page, mirroring halomanage-partnerships.html / referral-contracts.html).
         const COMPANIES = [
             {
                 id: 'halomanage',
                 name: 'HaloManage',
                 description: 'Partnership and revenue-share agreements for people contributing to the HaloManage product — client acquisition, accounting/payroll, interim leadership, and HR consulting roles.',
                 icon: 'fa-solid fa-handshake',
-                href: '/halomanage-partnerships.html'
+                href: '/halomanage-partnerships.html',
+                cta: 'Manage HaloManage contracts →'
+            }
+        ];
+
+        // Agreements that are not tied to one company.
+        const GENERAL = [
+            {
+                id: 'referrals',
+                name: 'Referral Contract',
+                description: 'Referral Partner Commission Agreement — send it to anyone who introduces clients to iCreate Solutions & Services. A flat commission on smaller projects and a percentage of larger ones, paid once the client has paid.',
+                icon: 'fa-solid fa-user-plus',
+                href: '/referral-contracts',
+                cta: 'Manage referral contracts →'
             }
         ];
 
@@ -102,19 +125,22 @@
             return String(value || '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
         }
 
-        function renderCompanies() {
-            const grid = document.getElementById('companyGrid');
-            grid.innerHTML = COMPANIES.map((c) => `
+        function cardHtml(c) {
+            return `
                 <a class="pc-company-card" href="${escapeHtml(c.href)}">
-                    <div class="pc-company-mark"><i class="${c.icon}" aria-hidden="true"></i></div>
+                    <div class="pc-company-mark"><i class="${escapeHtml(c.icon)}" aria-hidden="true"></i></div>
                     <h3>${escapeHtml(c.name)}</h3>
                     <p>${escapeHtml(c.description)}</p>
-                    <span class="pc-cta">Manage ${escapeHtml(c.name)} contracts →</span>
-                </a>
-            `).join('');
+                    <span class="pc-cta">${escapeHtml(c.cta)}</span>
+                </a>`;
         }
 
-        renderCompanies();
+        function renderCards() {
+            document.getElementById('companyGrid').innerHTML = COMPANIES.map(cardHtml).join('');
+            document.getElementById('generalGrid').innerHTML = GENERAL.map(cardHtml).join('');
+        }
+
+        renderCards();
     </script>
 </body>
 </html>

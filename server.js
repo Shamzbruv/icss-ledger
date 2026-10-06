@@ -3710,6 +3710,11 @@ router.get('/halomanage-partnerships', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'halomanage-partnerships.html'));
 });
 
+// General Referral Partner Commission Agreements (list/create/customize/send/manage).
+router.get('/referral-contracts', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'referral-contracts.html'));
+});
+
 // Public — reached by clients via their unique emailed link, no login required.
 router.get('/sign-contract', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'sign-contract.html'));

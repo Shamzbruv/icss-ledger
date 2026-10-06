@@ -236,11 +236,16 @@ function generateContractPDF(contract) {
       for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
         const bottom = doc.page.height - 40;
+        // The footer sits inside the bottom margin. Without zeroing it first, pdfkit starts a brand-new
+        // page for every footer line, leaving one blank page after each real page.
+        const savedBottomMargin = doc.page.margins.bottom;
+        doc.page.margins.bottom = 0;
         doc.fontSize(7.5).fillColor('#999999').font('Helvetica')
           .text(
             `${data.agreementReference || 'ICSS Service Agreement'}   •   Page ${i - range.start + 1} of ${range.count}   •   Generated ${new Date().toLocaleDateString('en-US')}`,
             margin, bottom, { width: contentWidth, align: 'center' }
           );
+        doc.page.margins.bottom = savedBottomMargin;
       }
 
       doc.end();

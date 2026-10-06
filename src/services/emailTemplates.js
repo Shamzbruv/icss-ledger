@@ -3,7 +3,8 @@
  */
 
 const { formatMoney, COMPANY_EMAIL, COMPANY_PHONE } = require('./contractTemplate');
-const { findTemplate: findPartnerTemplate } = require('./partnerContractTemplate');
+const { findTemplate: findPartnerTemplate, buildPartnerContractData } = require('./partnerContractTemplate');
+const { referralSummaryRows, formatJmd, percentText } = require('./referralContractTemplate');
 
 const SERVICE_NAMES = {
   'WEB': 'Website Development',
@@ -1104,10 +1105,38 @@ function getPartnerContractSigningRequestTemplate(contract, signUrl, companySign
   const productName = escapeHtml(contract.product_name || 'HaloManage');
   const template = findPartnerTemplate(contract.template_id);
   const roleLabel = escapeHtml(template.shortTitle || template.title);
-  const refLine = contract.agreement_reference ? `Ref: ${escapeHtml(contract.agreement_reference)}` : '';
-  const contactHref = `mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(`Question about my partner agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`)}`;
+  const isReferral = template.kind === 'referral';
+  const agreementNoun = isReferral ? 'referral agreement' : 'partner agreement';
+  const contactHref = `mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(`Question about my ${agreementNoun}${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`)}`;
 
-  const subject = `Your ${contract.product_name || 'HaloManage'} Partner Agreement is Ready to Sign${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`;
+  // The "Agreement Summary" box: HaloManage role agreements show role / revenue share / payment
+  // frequency; the referral agreement shows its two-tier commission and payment timing.
+  const summaryData = isReferral ? buildPartnerContractData(contract.terms_snapshot_json || contract) : null;
+  const summaryRows = isReferral
+    ? referralSummaryRows(summaryData).map(([label, value]) => ({ label, value }))
+    : [
+      { label: 'Role', value: template.shortTitle || template.title },
+      { label: 'Revenue Share', value: `${Number(contract.revenue_share_percent ?? 0)}%`, accent: true },
+      { label: 'Payment Frequency', value: contract.payment_frequency || 'Monthly' }
+    ];
+  if (contract.agreement_reference) summaryRows.push({ label: 'Reference', value: contract.agreement_reference });
+  const summaryRowsHtml = summaryRows.map((row, index) => {
+    const border = index < summaryRows.length - 1 ? 'border-bottom:1px solid #e3e7f0;' : '';
+    return `<tr>
+                        <td style="padding:8px 0; ${border} color:#6b7280; font-size:13px;">${escapeHtml(row.label)}</td>
+                        <td style="padding:8px 0; ${border} text-align:right; font-weight:${row.accent ? 700 : 600}; color:${row.accent ? '#129c86' : '#1a1a1a'}; font-size:14px;">${escapeHtml(row.value)}</td>
+                      </tr>`;
+  }).join('');
+  const summaryText = summaryRows.map((row) => `${row.label}: ${row.value}`).join('\n');
+
+  const subject = isReferral
+    ? `Your Referral Partner Commission Agreement is Ready to Sign${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`
+    : `Your ${contract.product_name || 'HaloManage'} Partner Agreement is Ready to Sign${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`;
+  const headline = isReferral ? 'Your Referral Agreement is Ready' : 'Your Partner Agreement is Ready';
+  const subHeadline = isReferral ? 'Please review and sign to confirm your referral partnership' : `Please review and sign to confirm your ${productName} partnership`;
+  const introHtml = isReferral
+    ? `Thank you for helping introduce clients to <strong style="color:#1a1a1a;">${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}</strong>. Your ${roleLabel} commission agreement is ready for your electronic signature. Please review the terms and sign below to confirm.`
+    : `Thank you for partnering with us on <strong style="color:#1a1a1a;">${productName}</strong>. Your ${roleLabel} agreement is ready for your electronic signature. Please review the terms and sign below to confirm.`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -1129,8 +1158,8 @@ function getPartnerContractSigningRequestTemplate(contract, signUrl, companySign
                 <span style="font-size:30px; line-height:1;">🤝</span>
               </div>
               <p style="margin:0 0 8px 0; color:rgba(255,255,255,0.7); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Action Required</p>
-              <h1 style="margin:0; color:#ffffff; font-size:25px; font-weight:700; letter-spacing:-0.5px;">Your Partner Agreement is Ready</h1>
-              <p style="margin:12px 0 0 0; color:rgba(255,255,255,0.8); font-size:14px;">Please review and sign to confirm your ${productName} partnership</p>
+              <h1 style="margin:0; color:#ffffff; font-size:25px; font-weight:700; letter-spacing:-0.5px;">${headline}</h1>
+              <p style="margin:12px 0 0 0; color:rgba(255,255,255,0.8); font-size:14px;">${subHeadline}</p>
             </td>
           </tr>
 
@@ -1139,7 +1168,7 @@ function getPartnerContractSigningRequestTemplate(contract, signUrl, companySign
             <td style="padding:40px 44px 10px 44px;">
               <p style="margin:0 0 10px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hi ${partnerName},</p>
               <p style="margin:0 0 28px 0; font-size:15px; color:#555555; line-height:1.7;">
-                Thank you for partnering with us on <strong style="color:#1a1a1a;">${productName}</strong>. Your ${roleLabel} agreement is ready for your electronic signature. Please review the terms and sign below to confirm.
+                ${introHtml}
               </p>
 
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb; border-radius:14px; border:1.5px solid #dde3ee; margin-bottom:30px;">
@@ -1147,19 +1176,7 @@ function getPartnerContractSigningRequestTemplate(contract, signUrl, companySign
                   <td style="padding:22px 26px;">
                     <p style="margin:0 0 14px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#101b3d;">Agreement Summary</p>
                     <table width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; color:#6b7280; font-size:13px;">Role</td>
-                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${roleLabel}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; color:#6b7280; font-size:13px;">Revenue Share</td>
-                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; text-align:right; font-weight:700; color:#129c86; font-size:14px;">${Number(contract.revenue_share_percent ?? 0)}%</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:8px 0; ${refLine ? 'border-bottom:1px solid #e3e7f0;' : ''} color:#6b7280; font-size:13px;">Payment Frequency</td>
-                        <td style="padding:8px 0; ${refLine ? 'border-bottom:1px solid #e3e7f0;' : ''} text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${escapeHtml(contract.payment_frequency || 'Monthly')}</td>
-                      </tr>
-                      ${refLine ? `<tr><td style="padding:8px 0; color:#6b7280; font-size:13px;">Reference</td><td style="padding:8px 0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">${escapeHtml(contract.agreement_reference)}</td></tr>` : ''}
+                      ${summaryRowsHtml}
                     </table>
                   </td>
                 </tr>
@@ -1233,7 +1250,10 @@ function getPartnerContractSigningRequestTemplate(contract, signUrl, companySign
 </body>
 </html>`;
 
-  const text = `Hi ${contract.partner_name || 'there'},\n\nYour ${template.shortTitle || template.title} agreement for ${contract.product_name || 'HaloManage'} is ready for your electronic signature.\n\nRole: ${template.shortTitle || template.title}\nRevenue Share: ${Number(contract.revenue_share_percent ?? 0)}%\nPayment Frequency: ${contract.payment_frequency || 'Monthly'}\n${contract.agreement_reference ? `Reference: ${contract.agreement_reference}\n` : ''}\nAlready countersigned by ${contract.company_signer_name || 'iCreate Solutions & Services'} — your signature is the final step.\n\nReview and sign here: ${signUrl}\n\nQuestions? Email ${COMPANY_EMAIL} or call/WhatsApp ${COMPANY_PHONE}.\n\n— ${contract.company_name || 'iCreate Solutions & Services'}`;
+  const lead = isReferral
+    ? `Your ${template.title} is ready for your electronic signature.`
+    : `Your ${template.shortTitle || template.title} agreement for ${contract.product_name || 'HaloManage'} is ready for your electronic signature.`;
+  const text = `Hi ${contract.partner_name || 'there'},\n\n${lead}\n\n${summaryText}\n\nAlready countersigned by ${contract.company_signer_name || 'iCreate Solutions & Services'} — your signature is the final step.\n\nReview and sign here: ${signUrl}\n\nQuestions? Email ${COMPANY_EMAIL} or call/WhatsApp ${COMPANY_PHONE}.\n\n— ${contract.company_name || 'iCreate Solutions & Services'}`;
 
   return { subject, html, text };
 }
@@ -1250,7 +1270,37 @@ function getPartnerContractSignedConfirmationTemplate(contract, companySignature
   const roleLabel = escapeHtml(template.shortTitle || template.title);
   const signedDate = formatDate(contract.signed_at);
   const refLine = contract.agreement_reference ? escapeHtml(contract.agreement_reference) : 'N/A';
-  const contactHref = `mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(`Question about my partner agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`)}`;
+  const isReferral = template.kind === 'referral';
+  const contactHref = `mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(`Question about my ${isReferral ? 'referral' : 'partner'} agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`)}`;
+  const agreementLabel = isReferral ? template.title : `${template.shortTitle || template.title} agreement`;
+
+  // Referral partners get their commission terms restated in the confirmation, for their records.
+  const commissionData = isReferral ? buildPartnerContractData(contract.terms_snapshot_json || contract) : null;
+  const commissionBlock = isReferral ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb; border-radius:14px; border:1.5px solid #dde3ee; margin-bottom:30px;">
+                <tr>
+                  <td style="padding:22px 26px;">
+                    <p style="margin:0 0 14px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#101b3d;">Your Commission</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; color:#6b7280; font-size:13px;">Projects under ${escapeHtml(formatJmd(commissionData.commissionThresholdAmount))}</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; text-align:right; font-weight:700; color:#129c86; font-size:14px;">${escapeHtml(formatJmd(commissionData.flatCommissionAmount))} per referral</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; color:#6b7280; font-size:13px;">Projects of ${escapeHtml(formatJmd(commissionData.commissionThresholdAmount))} or more</td>
+                        <td style="padding:8px 0; border-bottom:1px solid #e3e7f0; text-align:right; font-weight:700; color:#129c86; font-size:14px;">${escapeHtml(percentText(commissionData.commissionPercent))}% of amount received</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0; color:#6b7280; font-size:13px;">Paid</td>
+                        <td style="padding:8px 0; text-align:right; font-weight:600; color:#1a1a1a; font-size:14px;">within ${Number(commissionData.paymentDueDays)} business days of the client's payment clearing</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>` : '';
+  const commissionText = isReferral
+    ? `\nYour commission:\n- Projects under ${formatJmd(commissionData.commissionThresholdAmount)}: ${formatJmd(commissionData.flatCommissionAmount)} per referral\n- Projects of ${formatJmd(commissionData.commissionThresholdAmount)} or more: ${percentText(commissionData.commissionPercent)}% of the amount received\n- Paid within ${Number(commissionData.paymentDueDays)} business days of the client's payment clearing\n`
+    : '';
 
   const partnerSignatureCell = (contract.signature_type === 'drawn' && contract.signature_data)
     ? `<img src="${contract.signature_data}" alt="Partner signature" style="max-height:34px; max-width:150px; width:auto; display:block; margin:0 auto;">`
@@ -1267,12 +1317,14 @@ function getPartnerContractSignedConfirmationTemplate(contract, companySignature
                   <td width="50%" style="padding:18px 16px; background:#fbfbfd; border:1px solid #edf0f5; border-left:none; border-radius:0 12px 12px 0; text-align:center; vertical-align:bottom;">
                     ${partnerSignatureCell}
                     <p style="margin:10px 0 0 0; padding-top:10px; border-top:1px solid #e3e7f0; font-size:11px; font-weight:600; color:#1a1a1a;">${escapeHtml(contract.signer_legal_name || contract.partner_name || '')}</p>
-                    <p style="margin:2px 0 0 0; font-size:10px; color:#999; text-transform:uppercase; letter-spacing:0.5px;">Partner</p>
+                    <p style="margin:2px 0 0 0; font-size:10px; color:#999; text-transform:uppercase; letter-spacing:0.5px;">${isReferral ? 'Referral Partner' : 'Partner'}</p>
                   </td>
                 </tr>
               </table>`;
 
-  const subject = `✅ Signed: Your ${contract.product_name || 'HaloManage'} Partner Agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`;
+  const subject = isReferral
+    ? `✅ Signed: Your Referral Partner Commission Agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`
+    : `✅ Signed: Your ${contract.product_name || 'HaloManage'} Partner Agreement${contract.agreement_reference ? ` (${contract.agreement_reference})` : ''}`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -1295,7 +1347,7 @@ function getPartnerContractSignedConfirmationTemplate(contract, companySignature
               </div>
               <p style="margin:0 0 6px 0; color:rgba(255,255,255,0.8); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Agreement Confirmed</p>
               <h1 style="margin:0 0 10px 0; color:#ffffff; font-size:26px; font-weight:700; letter-spacing:-0.5px;">You're All Signed!</h1>
-              <p style="margin:0; color:rgba(255,255,255,0.85); font-size:14px;">Your ${productName} partnership is officially underway.</p>
+              <p style="margin:0; color:rgba(255,255,255,0.85); font-size:14px;">${isReferral ? 'Your referral partnership is officially underway.' : `Your ${productName} partnership is officially underway.`}</p>
             </td>
           </tr>
 
@@ -1304,7 +1356,7 @@ function getPartnerContractSignedConfirmationTemplate(contract, companySignature
             <td style="padding:40px 44px 10px 44px;">
               <p style="margin:0 0 10px 0; font-size:17px; color:#1a1a1a; font-weight:600;">Hi ${partnerName},</p>
               <p style="margin:0 0 28px 0; font-size:15px; color:#555555; line-height:1.7;">
-                Thank you for signing your ${roleLabel} agreement with <strong style="color:#1a1a1a;">${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}</strong>. A fully signed copy is attached to this email (PDF) for your records.
+                Thank you for signing your ${escapeHtml(agreementLabel)} with <strong style="color:#1a1a1a;">${escapeHtml(contract.company_name || 'iCreate Solutions & Services')}</strong>. A fully signed copy is attached to this email (PDF) for your records.
               </p>
 
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4; border-radius:14px; border:1.5px solid #a7f3d0; margin-bottom:30px;">
@@ -1329,6 +1381,7 @@ function getPartnerContractSignedConfirmationTemplate(contract, companySignature
                 </tr>
               </table>
 
+              ${commissionBlock}
               <p style="margin:0 0 12px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#059669; text-align:center;">Signed By Both Parties</p>
               ${signatureBlock}
             </td>
@@ -1358,7 +1411,8 @@ function getPartnerContractSignedConfirmationTemplate(contract, companySignature
 </body>
 </html>`;
 
-  const text = `Hi ${contract.partner_name || 'there'},\n\nThank you for signing your ${template.shortTitle || template.title} agreement with ${contract.company_name || 'iCreate Solutions & Services'} for ${contract.product_name || 'HaloManage'}.\n\nReference: ${refLine}\nSigned By: ${contract.signer_legal_name || contract.partner_name || ''}\nDate Signed: ${signedDate}\n\nA signed copy (PDF) is attached to this email for your records.\n\nQuestions? Email ${COMPANY_EMAIL} or call/WhatsApp ${COMPANY_PHONE}.\n\n— ${contract.company_name || 'iCreate Solutions & Services'}`;
+  const forLine = isReferral ? '' : ` for ${contract.product_name || 'HaloManage'}`;
+  const text = `Hi ${contract.partner_name || 'there'},\n\nThank you for signing your ${agreementLabel} with ${contract.company_name || 'iCreate Solutions & Services'}${forLine}.\n\nReference: ${refLine}\nSigned By: ${contract.signer_legal_name || contract.partner_name || ''}\nDate Signed: ${signedDate}\n${commissionText}\nA signed copy (PDF) is attached to this email for your records.\n\nQuestions? Email ${COMPANY_EMAIL} or call/WhatsApp ${COMPANY_PHONE}.\n\n— ${contract.company_name || 'iCreate Solutions & Services'}`;
 
   return { subject, html, text };
 }

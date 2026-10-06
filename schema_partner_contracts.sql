@@ -79,6 +79,15 @@ CREATE TABLE IF NOT EXISTS partner_contracts (
 -- blank threshold correctly reads as "open to ongoing agreement" instead of a stale figure.
 ALTER TABLE partner_contracts ALTER COLUMN expense_approval_threshold DROP DEFAULT;
 
+-- Referral Partner Commission Agreement (company_slug = 'referrals', template_id = 'referral-commission'):
+--   custom_terms_json  commercial terms the admin sets per partner before sending, e.g.
+--                      { flat_commission_amount, commission_threshold_amount, commission_percent, additional_terms[] }
+--   signer_extra_json  details the partner types on the signing page, e.g.
+--                      { address, phone, trn, witness_name, witness_signature, witness_signed_at }
+-- Both are optional and unused by the HaloManage agreements. (Added 2026-10-06.)
+ALTER TABLE partner_contracts ADD COLUMN IF NOT EXISTS custom_terms_json JSONB;
+ALTER TABLE partner_contracts ADD COLUMN IF NOT EXISTS signer_extra_json JSONB;
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_partner_contracts_sign_token ON partner_contracts(sign_token);
 CREATE INDEX IF NOT EXISTS idx_partner_contracts_status ON partner_contracts(status);
 CREATE INDEX IF NOT EXISTS idx_partner_contracts_email ON partner_contracts(partner_email);

@@ -80,6 +80,15 @@ Each active website plan gets a weekly report (and a monthly review on the 1st).
 - A Google Analytics connection problem never lowers a client's score or shows Google's error text to the client. The client sees a gentle "we're still connecting your visitor statistics" note while the team gets an alert (at most weekly) with exact steps.
 - Run the tests with `npm test`.
 
+### Partner Contracts
+
+*Partner Contracts* in the sidebar lists the companies iCreate owns (HaloManage) and general agreements:
+
+- **HaloManage** — four role agreements (client acquisition, accounting/payroll, 90-day interim, HR consulting).
+- **Referral Contract** — the *Referral Partner Commission Agreement* for anyone who introduces clients: a flat commission (default JMD $2,000) on projects below a threshold (default JMD $120,000) and a percentage (default 5%) above it, paid within 7/14/30 business days of the client's payment clearing. Each partner's copy can be customized (amounts, threshold, percentage, payment time, notice period, optional extra terms) before sending.
+
+Both use the same workflow as client contracts: draft → email (or copy the link) → partner views → partner signs electronically (drawn or typed) → company countersignature is applied automatically → signed PDF with audit trail emailed to the partner, owner notified. Drafts can be edited and previewed as PDF; sent agreements can be resent or voided; signed ones can be downloaded. When the Company has no address/phone for a referral partner, the signing page asks for them, plus an optional TRN and an optional witness. The agreement wording lives in `src/services/referralContractTemplate.js` (referral) and `src/services/partnerContractTemplate.js` (HaloManage); the shared routes are in `src/routes/partnerContracts.js`. Referral terms are stored in `partner_contracts.custom_terms_json` / `signer_extra_json` (see `schema_partner_contracts.sql`).
+
 ## Development
 
 - `src/services/pdfService.js`: Customizes the PDF layout.

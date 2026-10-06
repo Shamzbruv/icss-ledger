@@ -43,7 +43,8 @@ function templateLabel(id) {
 async function loadTemplates() {
     if (allTemplates.length) return allTemplates;
     try {
-        const res = await apiFetch('/api/partner-contracts/templates');
+        // Only this company's role templates (the general Referral agreement has its own page).
+        const res = await apiFetch('/api/partner-contracts/templates?company=halomanage');
         if (res.ok) allTemplates = await res.json();
     } catch (e) {
         console.error('Failed to load partner contract templates', e);
@@ -86,7 +87,7 @@ function selectTemplate(id) {
 async function loadContracts() {
     try {
         await loadTemplates();
-        const res = await apiFetch('/api/partner-contracts');
+        const res = await apiFetch('/api/partner-contracts?company=halomanage');
         if (res.ok) {
             allContracts = await res.json();
             filterTable();
@@ -384,7 +385,7 @@ function renderReadOnlyDetail(c) {
     if (c.status === 'signed') {
         const sigContent = (c.signature_type === 'drawn' && c.signature_data)
             ? `<div class="signature-preview"><img src="${c.signature_data}" alt="Partner signature"></div>`
-            : `<div class="signature-typed">${escapeHTML(c.signature_data || c.signer_legal_name || '')}</div>`;
+            : `<div class="signature-preview"><div class="signature-typed">${escapeHTML(c.signature_data || c.signer_legal_name || '')}</div></div>`;
         signatureBlock = `
             <div class="section-title">Partner Signature</div>
             ${sigContent}

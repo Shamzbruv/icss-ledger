@@ -9,7 +9,10 @@ let sigCtx = null;
 let drawing = false;
 let hasDrawnSignature = false;
 
-const ACK_KEYS = ['relationship_ack', 'revenue_share_ack', 'duties_and_authority_ack', 'signature_confirmation'];
+// The acknowledgements differ per agreement type, so the list comes from the server with the contract.
+let ackKeys = ['signature_confirmation'];
+// Referral agreements ask for a few extra details (address / phone, optional TRN and witness).
+let signerFields = null;
 
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
@@ -52,9 +55,9 @@ async function init() {
 
         contractPayload = data;
 
-        const productName = data.contract.product_name || 'HaloManage';
-        document.getElementById('topbarTitle').textContent = `${productName} Partner Agreement`;
-        document.title = `Sign Your ${productName} Partner Agreement | iCreate Solutions & Services`;
+        const docLabel = data.docLabel || `${data.contract.product_name || 'HaloManage'} Partner Agreement`;
+        document.getElementById('topbarTitle').textContent = docLabel;
+        document.title = `Sign Your ${docLabel} | iCreate Solutions & Services`;
 
         if (data.alreadySigned) {
             return showAlreadySigned(data);
@@ -91,6 +94,16 @@ function showSignForm(data) {
     renderAcknowledgements(data.acknowledgements || []);
     document.getElementById('todayDate').textContent = formatLongDate(new Date());
 
+    signerFields = data.signerFields || null;
+    if (signerFields) {
+        document.getElementById('signerDetailsCard').classList.remove('hidden');
+        document.getElementById('addressGroup').classList.toggle('hidden', !signerFields.needsAddress);
+        document.getElementById('phoneGroup').classList.toggle('hidden', !signerFields.needsPhone);
+        ['addressInput', 'phoneInput', 'trnInput', 'witnessNameInput', 'witnessSigInput'].forEach((id) => {
+            document.getElementById(id).addEventListener('input', updateSubmitState);
+        });
+    }
+
     document.getElementById('legalNameInput').addEventListener('input', updateSubmitState);
     document.getElementById('typedSigInput').addEventListener('input', updateSubmitState);
     document.getElementById('ack_signature_confirmation').addEventListener('change', updateSubmitState);
@@ -103,6 +116,7 @@ function showSignForm(data) {
 function renderAcknowledgements(acks) {
     const container = document.getElementById('ackSection');
     container.innerHTML = '';
+    ackKeys = acks.map((a) => a.key);
 
     acks.forEach((a) => {
         if (a.key === 'signature_confirmation') {
@@ -121,6 +135,18 @@ function renderAcknowledgements(acks) {
     });
 
     container.querySelectorAll('input[type="checkbox"]').forEach((cb) => cb.addEventListener('change', updateSubmitState));
+}
+
+function toggleWitness() {
+    const box = document.getElementById('witnessBox');
+    const opening = box.classList.contains('hidden');
+    box.classList.toggle('hidden', !opening);
+    document.getElementById('witnessToggle').textContent = opening ? '− Remove witness' : '+ Add a witness (optional)';
+    if (!opening) {
+        document.getElementById('witnessNameInput').value = '';
+        document.getElementById('witnessSigInput').value = '';
+    }
+    updateSubmitState();
 }
 
 function expandContract() {
@@ -201,7 +227,7 @@ function setSigMode(mode) {
 function updateSubmitState() {
     const legalName = document.getElementById('legalNameInput').value.trim();
 
-    const allAcksChecked = ACK_KEYS.every((key) => {
+    const allAcksChecked = ackKeys.every((key) => {
         const el = document.getElementById(`ack_${key}`);
         return el && el.checked;
     });
@@ -210,7 +236,19 @@ function updateSubmitState() {
         ? hasDrawnSignature
         : document.getElementById('typedSigInput').value.trim().length > 1;
 
-    const ok = legalName.length >= 2 && allAcksChecked && sigProvided;
+    // Referral agreements: the address / telephone are required only when the Company did not have them.
+    let detailsOk = true;
+    if (signerFields) {
+        if (signerFields.needsAddress && document.getElementById('addressInput').value.trim().length < 5) detailsOk = false;
+        if (signerFields.needsPhone && document.getElementById('phoneInput').value.replace(/\D/g, '').length < 7) detailsOk = false;
+        // A witness needs both a name and a typed signature.
+        const witnessName = document.getElementById('witnessNameInput').value.trim();
+        const witnessSig = document.getElementById('witnessSigInput').value.trim();
+        if (witnessName && witnessSig.length < 2) detailsOk = false;
+        if (!witnessName && witnessSig) detailsOk = false;
+    }
+
+    const ok = legalName.length >= 2 && allAcksChecked && sigProvided && detailsOk;
     document.getElementById('submitBtn').disabled = !ok;
 }
 
@@ -224,7 +262,7 @@ async function submitSignature() {
         : document.getElementById('typedSigInput').value.trim();
 
     const acknowledgements = {};
-    ACK_KEYS.forEach((key) => {
+    ackKeys.forEach((key) => {
         const el = document.getElementById(`ack_${key}`);
         acknowledgements[key] = !!(el && el.checked);
     });
@@ -235,6 +273,15 @@ async function submitSignature() {
         signature_data: signatureData,
         acknowledgements
     };
+    if (signerFields) {
+        payload.signer_details = {
+            address: document.getElementById('addressInput').value.trim(),
+            phone: document.getElementById('phoneInput').value.trim(),
+            trn: document.getElementById('trnInput').value.trim(),
+            witness_name: document.getElementById('witnessNameInput').value.trim(),
+            witness_signature: document.getElementById('witnessSigInput').value.trim()
+        };
+    }
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;

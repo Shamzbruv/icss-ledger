@@ -47,6 +47,9 @@
         .contract-p { font-size: 0.85rem; line-height: 1.65; color: #333; margin: 0 0 10px 0; }
         .contract-ul { margin: 0 0 12px 0; padding-left: 22px; }
         .contract-ul li { font-size: 0.85rem; line-height: 1.6; color: #333; margin-bottom: 4px; }
+        .contract-ol { margin: 0 0 12px 0; padding-left: 26px; list-style-type: lower-alpha; }
+        .contract-ol li { font-size: 0.85rem; line-height: 1.6; color: #333; margin-bottom: 4px; }
+        .contract-p strong, .contract-ul strong, .contract-ol strong { color: #111; }
         .contract-field { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px dashed #eee; }
         .contract-field-long { flex-direction: column; gap: 2px; }
         .contract-field-label { font-weight: 700; color: var(--navy); min-width: 200px; }
@@ -70,6 +73,18 @@
             font-size: 0.95rem; font-family: inherit; color: var(--ink);
         }
         .field-group input[type="text"]:focus { outline: none; border-color: var(--navy); }
+        .field-group input[type="tel"], .field-group textarea {
+            width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; color: var(--ink); background: #fff;
+        }
+        .field-group textarea { min-height: 70px; resize: vertical; }
+        .field-group input[type="tel"]:focus, .field-group textarea:focus { outline: none; border-color: var(--navy); }
+        .field-hint { font-size: 0.76rem; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+        .optional-tag { font-weight: 400; color: var(--muted); font-size: 0.78rem; }
+        .witness-toggle { background: none; border: none; color: var(--navy); font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0; }
+        .witness-box { border: 1.5px dashed var(--border); border-radius: 10px; padding: 16px; margin-top: 12px; background: #fcfcfd; }
+        .witness-box input[type="text"] { margin-bottom: 10px; }
+        .witness-box input.witness-sig { font-family: 'Dancing Script', cursive; font-size: 1.6rem; color: var(--navy); text-align: center; }
         .readonly-date { padding: 12px 14px; background: #f5f6f8; border-radius: 8px; color: var(--muted); font-size: 0.9rem; border: 1.5px solid var(--border); }
 
         .sig-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -167,6 +182,36 @@
             <div class="card">
                 <div class="section-label">Acknowledgements — Please Confirm</div>
                 <div id="ackSection"></div>
+            </div>
+
+            <!-- Referral agreements only: details the Company may not have, plus optional TRN and witness -->
+            <div class="card hidden" id="signerDetailsCard">
+                <div class="section-label">Your Details</div>
+
+                <div class="field-group hidden" id="addressGroup">
+                    <label class="field-label" for="addressInput">Your Address *</label>
+                    <textarea id="addressInput" maxlength="300" placeholder="Street, town / city, parish"></textarea>
+                </div>
+                <div class="field-group hidden" id="phoneGroup">
+                    <label class="field-label" for="phoneInput">Telephone Number *</label>
+                    <input type="tel" id="phoneInput" maxlength="50" placeholder="e.g. (876) 555-0123">
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="trnInput">TRN / Identification No. <span class="optional-tag">(optional)</span></label>
+                    <input type="text" id="trnInput" maxlength="30" placeholder="Only if you would like it on the agreement">
+                    <div class="field-hint">This is stored only on your signed agreement and is never shown on this page or in emails.</div>
+                </div>
+
+                <div class="field-group" style="margin-bottom:0;">
+                    <button type="button" class="witness-toggle" id="witnessToggle" onclick="toggleWitness()">+ Add a witness (optional)</button>
+                    <div class="witness-box hidden" id="witnessBox">
+                        <label class="field-label" for="witnessNameInput">Witness Full Name</label>
+                        <input type="text" id="witnessNameInput" maxlength="150" placeholder="Full name of the person witnessing your signature">
+                        <label class="field-label" for="witnessSigInput">Witness Signature (type their name)</label>
+                        <input type="text" id="witnessSigInput" class="witness-sig" maxlength="150" placeholder="Witness name">
+                        <div class="field-hint">A witness is optional. If you add one, they should be with you while you sign.</div>
+                    </div>
+                </div>
             </div>
 
             <div class="card">
