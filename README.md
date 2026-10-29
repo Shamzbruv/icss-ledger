@@ -117,7 +117,8 @@ changes use the Publish button. The website refreshes published content within
 Content is stored under `link_hub_settings.content.website` in the existing
 single-business settings document. Link Hub saves preserve website content, and
 website saves preserve Link Hub settings. Optimistic revision checks reject stale
-edits. No new database tables or public Supabase grants are required. The server
+edits. Apply `schema_link_hub.sql` if the settings table is missing. It enables RLS,
+revokes browser access and explicitly grants only the backend service role. The server
 uses its existing service connection; management APIs use Command Center auth.
 Career and referral requests are saved in `leads` with `source = 'Work with ICSS'`
 and are available both in the website manager's inbox and the existing Leads UI.
@@ -146,3 +147,15 @@ verify the login flow and provider-outage handling without real credentials.
 
 Run `npm test` for the regression suite. Tests use mocked services and do not post
 live accounting records, submit real applications or send production emails.
+
+
+## Database recovery checks
+
+`schema_client_relationship_messages.sql` restores the durable message claim store
+used by existing subscription and client relationship workers. Apply it if the
+table is missing; it does not enqueue messages. Both recovery schemas preserve
+existing records and restrict table access to the backend service role.
+
+Dashboard accounting activity reads the deployed `journals` / `journal_lines`
+ledger, not the retired `journal_entries` table. It displays posted entries and
+sums debit lines in the ledger's base currency, JMD.

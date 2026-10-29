@@ -585,14 +585,8 @@ router.get('/api/dashboard/recent-activity', async (req, res) => {
             .order('issue_date', { ascending: false })
             .limit(5);
 
-        // Fetch top 5 journal entries
-        let journalEntries = [];
-        const { data: journals } = await supabase
-            .from('journal_entries')
-            .select('id, entry_number, description, total_amount, date')
-            .order('date', { ascending: false })
-            .limit(5);
-        if (journals) journalEntries = journals;
+        const journalActivities = await require('./src/services/dashboardActivityService')
+            .loadRecentJournalActivity(supabase);
 
         // Fetch top 5 client services by created_at
         const { data: clientServicesC } = await supabase
@@ -633,17 +627,7 @@ router.get('/api/dashboard/recent-activity', async (req, res) => {
             });
         }
 
-        journalEntries.forEach(jn => {
-            activities.push({
-                type: 'accounting',
-                id: jn.id,
-                title: `Journal ${jn.entry_number || 'Entry'}`,
-                description: jn.description || 'Accounting Entry',
-                amount: jn.total_amount,
-                status: 'POSTED',
-                date: jn.date
-            });
-        });
+        activities.push(...journalActivities);
 
         services.forEach(cs => {
             const hasSentEmail = cs.last_emailed_at && new Date(cs.last_emailed_at) > new Date(cs.created_at);
