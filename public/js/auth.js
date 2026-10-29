@@ -1,3 +1,19 @@
+// Bound SDK work as well as HTTP requests: a stale refresh session must not
+// leave the sign-in button disabled indefinitely.
+const withAuthTimeout = (work, milliseconds = 12000) => {
+    let timer;
+    return Promise.race([
+        Promise.resolve().then(work),
+        new Promise((_, reject) => {
+            timer = setTimeout(() => {
+                const error = new Error('Authentication timed out. Please try again.');
+                error.name = 'TimeoutError';
+                reject(error);
+            }, milliseconds);
+        })
+    ]).finally(() => clearTimeout(timer));
+};
+
 const initializeAuth = async () => {
     try {
         const loginForm = document.getElementById('loginForm');
@@ -10,7 +26,6 @@ const initializeAuth = async () => {
 
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                const stayLoggedIn = document.getElementById('stayLoggedIn').checked;
 
                 // Update UI to loading state
                 submitBtn.disabled = true;
@@ -18,33 +33,32 @@ const initializeAuth = async () => {
                 loginError.style.display = 'none';
 
                 try {
-                    const supabase = await window.ensureSupabaseClient();
+                    // Ask the server first; an unavailable provider should return a
+                    // clear error without waiting for browser session recovery.
                     const response = await fetch(`${window.CONFIG.API_BASE_URL}/auth/login`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password }), signal: AbortSignal.timeout(18000)
                     });
-                    let session;
-                    if (response.status === 404) {
-                        const result = await supabase.auth.signInWithPassword({ email, password });
-                        if (result.error) throw result.error;
-                        session = result.data.session;
-                    } else {
-                        const result = await response.json();
-                        if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
-                        const saved = await supabase.auth.setSession({
-                            access_token: result.session.access_token,
-                            refresh_token: result.session.refresh_token
-                        });
-                        if (saved.error) throw saved.error;
-                        session = saved.data.session;
+                    if (response.status === 404) throw new Error('The sign-in endpoint is unavailable. Please reload the page and try again.');
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
+                    if (!result.session?.access_token || !result.session?.refresh_token) {
+                        throw new Error('The authentication service did not return a session. Please try again.');
                     }
-                    if (!session) throw new Error('No authenticated session was created. Please try again.');
+                    const supabase = await withAuthTimeout(() => window.ensureSupabaseClient());
+                    const saved = await withAuthTimeout(() => supabase.auth.setSession({
+                        access_token: result.session.access_token,
+                        refresh_token: result.session.refresh_token
+                    }));
+                    if (saved.error) throw saved.error;
+                    if (!saved.data?.session) throw new Error('No authenticated session was created. Please try again.');
                     window.location.href = '/dashboard';
 
                 } catch (err) {
                     console.error('Login error:', err.message);
                     loginError.textContent = ['TimeoutError','AbortError'].includes(err.name) ? 'The authentication service did not respond. Please check that the ICSS Supabase project is active and try again.' : err.message || 'Unable to sign in.';
                     loginError.style.display = 'block';
+                } finally {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = 'Sign In';
                 }
@@ -53,8 +67,8 @@ const initializeAuth = async () => {
 
         // Check if user is already logged in and on the login page
         const checkSession = async () => {
-            const supabase = await window.ensureSupabaseClient();
-            const { data: { session } } = await supabase.auth.getSession();
+            const supabase = await withAuthTimeout(() => window.ensureSupabaseClient());
+            const { data: { session } } = await withAuthTimeout(() => supabase.auth.getSession());
             if (session) {
                 if (window.location.pathname.endsWith('login.html') || window.location.pathname === '/' || window.location.pathname.endsWith('/login')) {
                     console.log('Session found, redirecting to dashboard');
@@ -64,7 +78,8 @@ const initializeAuth = async () => {
         };
 
         checkSession().catch(error => {
-            if (loginError && !loginError.textContent) { loginError.textContent = error.message || 'Authentication is temporarily unavailable.'; loginError.style.display = 'block'; }
+            // A stale saved session must not replace the result of a new login.
+            console.warn('Saved session check failed:', error.message);
         });
     } catch (err) {
         console.error('Auth bootstrap error:', err);
