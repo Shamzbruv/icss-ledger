@@ -16,13 +16,13 @@
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>Global Web Development, App & Design Agency | iCreate Solutions & Services</title>
-  <link href="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png" rel="icon" type="image/png" />
-  <link rel="stylesheet" href="/assets/css/legacy-utilities.css?v=20261029">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png?v=public-20261029" rel="icon" type="image/png" />
+  <link rel="stylesheet" href="/assets/css/legacy-utilities.css?v=restore-20261029">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"  media="print" onload="this.media='all'"/>
   <link href="https://fonts.googleapis.com" rel="preconnect" />
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
-    rel="stylesheet">
+    rel="stylesheet" media="print" onload="this.media='all'">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
@@ -95,7 +95,7 @@
     content="Looking for a top-tier web developer? iCreate Solutions builds stunning websites, mobile apps, graphic designs & business automation for clients globally, including Jamaican companies. Get a free quote today!">
   <meta property="twitter:image" content="https://i.postimg.cc/ZKJvnxxH/Untitled-design.png">
   <style>
-    @import url('https://fonts.cdnfonts.com/css/neue-machina');
+
 
     :root {
       --primary: #0A1A3A;
@@ -1027,6 +1027,7 @@
     .quiz-btn-next:hover { background: #00dde8; transform: translateY(-1px); }
     #quiz-modal-close {
       position: absolute;
+      z-index: 2;
       top: 14px;
       right: 18px;
       background: rgba(255,255,255,0.15);
@@ -1390,8 +1391,9 @@
   </style>
 
 
-<link rel="stylesheet" href="/assets/css/legacy-fixes.css?v=20261029">
-<script defer src="/assets/js/legacy-navigation.js?v=20261029"></script>
+<link rel="stylesheet" href="/assets/css/legacy-fixes.css?v=restore-20261029">
+<script defer src="/assets/js/legacy-navigation.js?v=restore-20261029"></script>
+<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/neue-machina" media="print" onload="this.media='all'">
 </head>
 
 <body class="relative bg-[#050F1F] min-h-[100vh] flex flex-col overflow-x-hidden">
@@ -1450,11 +1452,12 @@
             <i class="fas fa-bars text-2xl"></i>
           </button>
         </div>
-        <div class="hidden md:flex space-x-8">
+        <div class="hidden md:flex space-x-5">
           <a class="nav-link text-white hover:text-cyan-300 transition" href="#home">Home</a>
           <a class="nav-link text-white hover:text-cyan-300 transition" href="#services">Services</a>
           <a class="nav-link text-white hover:text-cyan-300 transition" href="#portfolio">Portfolio</a>
-          <a class="nav-link text-white hover:text-cyan-300 transition" href="#about">About</a>
+          <a class="nav-link text-white hover:text-cyan-300 transition" href="/about">About</a>
+          <a class="nav-link text-white hover:text-cyan-300 transition" href="/work-with-icss">Work with ICSS</a>
           <a class="nav-link text-white hover:text-cyan-300 transition" href="#project-estimator">Contact</a>
         </div>
         <div class="hidden md:block">
@@ -1468,7 +1471,8 @@
         <a class="block py-2 text-white hover:text-cyan-300 transition" href="#home">Home</a>
         <a class="block py-2 text-white hover:text-cyan-300 transition" href="#services">Services</a>
         <a class="block py-2 text-white hover:text-cyan-300 transition" href="#portfolio">Portfolio</a>
-        <a class="block py-2 text-white hover:text-cyan-300 transition" href="#about">About</a>
+        <a class="block py-2 text-white hover:text-cyan-300 transition" href="/about">About</a>
+        <a class="block py-2 text-white hover:text-cyan-300 transition" href="/work-with-icss">Work with ICSS</a>
         <a class="block py-2 text-white hover:text-cyan-300 transition" href="#project-estimator">Contact</a>
         <a class="secondary-bg primary-text w-full mt-3 px-6 py-2 rounded-full font-bold hover:bg-cyan-400 transition"
           href="#project-estimator">
@@ -2357,13 +2361,10 @@
         </div>
       </div>
       <div class="mt-16 text-center fade-in" style="animation-delay: 0.6s;">
-        <button
-          class="primary-bg text-white px-8 py-3 rounded-full font-bold hover:bg-blue-900 transition flex items-center mx-auto glow-effect">
-          <a class="primary-bg text-white px-8 py-3 rounded-full font-bold hover:bg-blue-900 transition flex items-center mx-auto glow-effect"
-            href="subscriptions.html">
+        <a class="primary-bg text-white px-8 py-3 rounded-full font-bold hover:bg-blue-900 transition flex items-center mx-auto glow-effect"
+            href="/services">
             <i class="fas fa-tools mr-2"></i> View All Services
           </a>
-        </button>
       </div>
     </div>
   </section>
@@ -2771,7 +2772,7 @@
     </div>
   </section>
 
-  <section class="py-20 bg-white" id="about">
+  <section class="py-20 bg-white" id="process">
     <div class="container mx-auto px-6">
       <div class="text-center mb-16 fade-in">
         <h2 class="text-3xl md:text-4xl font-bold primary-text mb-4">Our <span class="secondary-text">Process</span>
@@ -2958,7 +2959,7 @@
       </div>
     </div>
   </section>
-  <section class="py-20 bg-white">
+  <section class="py-20 bg-white" id="founder">
     <div class="container mx-auto px-6">
       <div class="text-center mb-16 fade-in">
         <h2 class="text-3xl md:text-4xl font-bold primary-text mb-4">Meet the <span
@@ -2969,7 +2970,7 @@
       <div class="flex justify-center">
         <div class="team-member max-w-sm w-full fade-in">
           <div class="bg-gray-100 rounded-xl overflow-hidden shadow-lg relative group">
-            <img alt="Shamar Baker - Founder" class="w-full h-auto object-cover aspect-square"
+            <img alt="Shamar Baker - Founder" loading="lazy" decoding="async" class="w-full h-auto object-cover aspect-square"
               src="https://i.postimg.cc/sX05mmbk/1760580147247.png" />
             <div class="p-6 text-center">
               <h3 class="text-xl font-bold primary-text mb-1">Shamar Baker</h3>
@@ -2977,7 +2978,7 @@
               <p class="text-gray-600 text-sm mb-4">Dedicated to crafting high-quality, customized digital solutions
                 tailored to every client's unique vision and goals.</p>
               <div class="flex justify-center space-x-4">
-                <a class="text-gray-500 hover:text-cyan-500" href="https://www.linkedin.com/company/icreate-solutions-services/"
+                <a class="text-gray-500 hover:text-cyan-500" href="https://www.linkedin.com/in/shamar-baker-0b75a8284" aria-label="Shamar Baker on LinkedIn"
                   target="_blank" rel="noopener noreferrer">
                   <i class="fab fa-linkedin-in"></i>
                 </a>
@@ -3159,7 +3160,7 @@
           <h3 class="text-lg font-bold mb-6">Company</h3>
           <ul class="space-y-3">
             <li><a class="text-gray-300 hover:text-cyan-300 transition" href="#about">About Us</a></li>
-            <li><a class="text-gray-300 hover:text-cyan-300 transition" href="#about">Our Process</a></li>
+            <li><a class="text-gray-300 hover:text-cyan-300 transition" href="/#process">Our Process</a></li>
             <li><a class="text-gray-300 hover:text-cyan-300 transition" href="#contact">Contact</a></li>
           </ul>
         </div>
@@ -3186,7 +3187,7 @@
           </a>
           <a href="/login"
             class="text-gray-600 hover:text-cyan-300 ml-2 transition" title="Restricted Access">
-            <i class="fas fa-lock"></i>
+            <i class="fas fa-lock" aria-hidden="true"></i> Command Center
           </a>
         </p>
       </div>
@@ -3507,7 +3508,7 @@
     // Create particles for hero section
     function createParticles() {
       const container = document.getElementById('particles-container');
-      const particleCount = 50;
+      const particleCount = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : (window.innerWidth < 768 ? 8 : 14);
 
       for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
@@ -3687,7 +3688,7 @@
               <h3 class="text-2xl font-bold mb-4">Enterprise Project Detected</h3>
               <p class="text-gray-300 mb-6">For enterprise-grade solutions with complex requirements, we recommend a dedicated discovery call to provide an accurate proposal.</p>
               <div class="text-center">
-                 <button class="secondary-bg primary-text px-8 py-3 rounded-full font-bold hover:bg-cyan-400 transition glow-effect" onclick="document.getElementById('schedule-consultation-btn').click()">
+                 <button class="secondary-bg primary-text px-8 py-3 rounded-full font-bold hover:bg-cyan-400 transition glow-effect" onclick="document.getElementById('consultation-modal').classList.remove('hidden')">
                    Schedule Discovery Call
                  </button>
               </div>

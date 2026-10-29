@@ -114,7 +114,6 @@ const checkAuth = async (req, res, next) => {
     if (!currentPath.startsWith('/api')) return next();
     if ((currentPath === '/api/website/public' && req.method === 'GET') ||
         (currentPath === '/api/website/applications' && req.method === 'POST')) return next();
-    if (!isSchemaValid) return res.status(503).json({ error: 'The database is unavailable. Please try again when the ICSS Supabase project is running.' });
 
     // PayPal webhook must stay open; its own handler verifies the signature
     // Jobs/Cron endpoints are protected by CRON_SECRET inside their specific handlers
@@ -199,7 +198,7 @@ const router = express.Router();
 const staticOptions = {
     extensions: ['html'],
     setHeaders(res, filename) {
-        res.setHeader('Cache-Control', /\.(css|js|png|jpg|jpeg|webp|svg|woff2)$/i.test(filename)
+        res.setHeader('Cache-Control', /(?:config|auth)\.js$/.test(filename) ? 'no-store' : /\.(css|js|png|jpg|jpeg|webp|svg|woff2)$/i.test(filename)
             ? 'public, max-age=3600' : 'no-cache');
     }
 };
@@ -2856,93 +2855,27 @@ router.get('/api/service-plans', async (req, res) => {
 
 // --- Authentication Routes ---
 
-router.get('/login', (req, res) => {
-    if (req.session.isAuthenticated) {
-        return res.redirect(`${BASE_PATH}/dashboard`);
-    }
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-router.post('/auth/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        // 1. Try to sign in with Supabase Auth
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
+const { publicAuthConfig } = require('./src/services/publicAuthConfig');
+router.use('/auth', require('./src/routes/auth')({
+    getConfig: () => publicAuthConfig(),
+    createAuthClient: () => {
+        const { supabaseUrl, supabaseKey } = publicAuthConfig();
+        return require('@supabase/supabase-js').createClient(supabaseUrl, supabaseKey, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+            global: { fetch: (url, options = {}) => fetch(url, { ...options, signal: options.signal || AbortSignal.timeout(12000) }) }
         });
-
-        if (error) {
-            console.error('Supabase Auth Login Error:', error.message);
-
-            // Fallback: Check against .env credentials (ADMIN_USER) strictly as a backup or for "root" access
-            // This allows the original admin to still login if needed, or we can remove it if we want purely Supabase
-            const validUser = process.env.ADMIN_USER;
-            const storedHash = process.env.ADMIN_PASS_HASH;
-
-            if (validUser && storedHash && email === validUser) {
-                const match = await bcrypt.compare(password, storedHash);
-                if (match) {
-                    req.session.isAuthenticated = true;
-                    req.session.user = { email: validUser, role: 'admin' };
-                    return res.json({ success: true, redirect: `${BASE_PATH}/dashboard` });
-                }
-            }
-
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        if (data.user) {
-            // Login Successful via Supabase
-            req.session.isAuthenticated = true;
-            req.session.user = {
-                id: data.user.id,
-                email: data.user.email,
-                role: 'user' // You could fetch more role info if needed
-            };
-
-            // Force save session before response
-            await new Promise((resolve, reject) => {
-                req.session.save((err) => {
-                    if (err) return reject(err);
-                    resolve();
-                });
-            });
-
-            return res.json({ success: true, redirect: `${BASE_PATH}/dashboard` });
-        }
-
-    } catch (err) {
-        console.error('Login error:', err);
-        res.status(500).json({ error: 'Internal error' });
-    }
-});
+    },
+    verifyToken: verifySupabaseJwt,
+    basePath: BASE_PATH
+}));
 
 router.post('/auth/logout', (req, res) => {
+    if (!req.session) return res.status(400).json({ error: 'Use Command Center sign out to revoke the Supabase session.' });
     req.session.destroy((err) => {
         if (err) console.error('Logout error:', err);
         res.clearCookie('connect.sid'); // Check express-session documentation for exact cookie name if changed
         res.json({ success: true, redirect: `${BASE_PATH}/login` });
     });
-});
-
-// Debug Endpoint to check session status
-router.get('/auth/check', (req, res) => {
-    console.log('[DEBUG] /auth/check hit. Session:', req.session);
-    if (req.session.isAuthenticated) {
-        res.json({
-            authenticated: true,
-            user: req.session.user,
-            sessionID: req.sessionID
-        });
-    } else {
-        res.json({
-            authenticated: false,
-            message: 'No active session found',
-            sessionID: req.sessionID
-        });
-    }
 });
 
 // =============================================================================

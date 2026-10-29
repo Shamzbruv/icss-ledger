@@ -98,8 +98,10 @@ Both use the same workflow as client contracts: draft → email (or copy the lin
 ## Website structure and content management
 
 The public website now has dedicated `/services`, `/portfolio`, `/project.html?id=…`,
-`/about`, `/contact` and `/work-with-icss` pages. The original detailed estimator,
-package information and inquiry tools remain at `/project-planner.html`.
+`/about`, `/contact` and `/work-with-icss` pages. The homepage preserves the original
+blue technology theme, founder profile and social links, full service offerings,
+packages, estimator, instant quote, reviews and inquiry tools. The estimator is at
+`/#project-estimator`; `/project-planner.html` provides an additional entry point.
 
 In Command Center, use **Website & Portfolio** or **Careers & Referrals** to open
 `/website-manager`. Add or edit projects, choose a category and system type, set
@@ -123,11 +125,21 @@ acknowledging an unsaved change. Restore database availability to use live conte
 applications and accounting. The server retries its database health check once a
 minute after an outage.
 
-The redesigned pages use small local CSS and JavaScript files. Older public pages
+Dedicated pages use small local CSS and JavaScript files. Older public pages
 use a precompiled Tailwind stylesheet instead of the browser runtime. After changing
 utility classes on those pages, run `npm run build:styles` and commit the result.
-`scripts/build-public-pages.py` regenerates the public shell and initial content
-from the bundled defaults; runtime changes belong in Website Manager.
+`scripts/build-public-pages.py` regenerates dedicated pages from bundled defaults
+and the homepage from the complete `project-planner.html` template. It replaces
+only the homepage portfolio section with managed project cards. Runtime content
+changes belong in Website Manager.
+
+Command Center loads public authentication settings from `/auth/config`, using
+`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` or `SUPABASE_ANON_KEY`. This endpoint
+rejects service-role keys. `/auth/login` uses an isolated public client per attempt
+and returns a Supabase session for browser persistence; it does not depend on an
+unconfigured Express session. `/auth/check` verifies an explicit bearer token.
+The Supabase project must be active for real login and data access. Mocked tests
+verify the login flow and provider-outage handling without real credentials.
 
 Run `npm test` for the regression suite. Tests use mocked services and do not post
 live accounting records, submit real applications or send production emails.

@@ -1,0 +1,75 @@
+{
+  "services": [
+    {
+      "title": "Web Development",
+      "url": "/web-development.html",
+      "summary": "Custom websites, web applications, API integrations and a digital presence built for your business."
+    },
+    {
+      "title": "Mobile App Development",
+      "url": "/mobile-app-development.html",
+      "summary": "iOS, Android and cross-platform applications, from interface design to deployment."
+    },
+    {
+      "title": "Graphic Design",
+      "url": "/graphic-design.html",
+      "summary": "Brand identity, logos, social media kits, marketing materials and motion graphics."
+    },
+    {
+      "title": "Business Automation",
+      "url": "/business-automation.html",
+      "summary": "Workflow automation, chatbots, CRM integration and connected business processes."
+    },
+    {
+      "title": "E-commerce Solutions",
+      "url": "/ecommerce-solutions.html",
+      "summary": "Online stores and shopping experiences that connect products, customers and orders."
+    },
+    {
+      "title": "CMS & WordPress",
+      "url": "/cms-wordpress.html",
+      "summary": "Content management websites that make it easier to maintain your online presence."
+    },
+    {
+      "title": "Custom Scripts & Integrations",
+      "url": "/custom-scripts.html",
+      "summary": "Tools and integrations that reduce repeated work and connect your existing systems."
+    },
+    {
+      "title": "UI & UX Design",
+      "url": "/ui-ux-design.html",
+      "summary": "User journeys, interface design and responsive product experiences."
+    },
+    {
+      "title": "Website Maintenance & Support",
+      "url": "/subscriptions.html",
+      "summary": "Ongoing website updates, hosting and support plans."
+    }
+  ],
+  "industries": [
+    {
+      "title": "Financial Services",
+      "summary": "Automating compliance, loan processing, and customer onboarding with secure, audit-trail-enabled workflows."
+    },
+    {
+      "title": "Tourism & Hospitality",
+      "summary": "Streamlining reservation systems, guest communications, and inventory management for enhanced efficiency."
+    },
+    {
+      "title": "Healthcare",
+      "summary": "Automating patient scheduling, billing, and medical record management with HIPAA-compliant solutions."
+    },
+    {
+      "title": "Retail & E-commerce",
+      "summary": "Optimizing inventory tracking, order processing, and personalized marketing automation."
+    },
+    {
+      "title": "Manufacturing",
+      "summary": "Enhancing production scheduling, quality control, and maintenance workflows with IoT integration."
+    },
+    {
+      "title": "Government",
+      "summary": "Improving citizen services with document processing automation and regulatory compliance handling."
+    }
+  ]
+}

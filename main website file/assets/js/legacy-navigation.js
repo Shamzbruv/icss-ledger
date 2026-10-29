@@ -1,5 +1,5 @@
 (() => {
-  const routes = {home:'/',services:'/services',portfolio:'/portfolio',about:'/about',contact:'/contact','project-estimator':'/contact'};
+  const routes = {home:'/',services:'/services',portfolio:'/portfolio',about:'/about',contact:'/contact','project-estimator':'/#project-estimator'};
   document.querySelectorAll('nav a, footer a, #mobile-menu a').forEach(a => {
     const match = a.getAttribute('href')?.match(/^(?:index\.html)?#([\w-]+)$/);
     if (match && routes[match[1]]) a.href = routes[match[1]];

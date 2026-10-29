@@ -19,24 +19,31 @@ const initializeAuth = async () => {
 
                 try {
                     const supabase = await window.ensureSupabaseClient();
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                        email,
-                        password
+                    const response = await fetch(`${window.CONFIG.API_BASE_URL}/auth/login`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password }), signal: AbortSignal.timeout(18000)
                     });
-
-                    if (error) {
-                        throw error;
+                    let session;
+                    if (response.status === 404) {
+                        const result = await supabase.auth.signInWithPassword({ email, password });
+                        if (result.error) throw result.error;
+                        session = result.data.session;
+                    } else {
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
+                        const saved = await supabase.auth.setSession({
+                            access_token: result.session.access_token,
+                            refresh_token: result.session.refresh_token
+                        });
+                        if (saved.error) throw saved.error;
+                        session = saved.data.session;
                     }
-
-                    // Successful login
-                    console.log('Login successful:', data);
-
-                    // Supabase handles persistence automatically based on its internal logic.
-                    window.location.href = 'dashboard';
+                    if (!session) throw new Error('No authenticated session was created. Please try again.');
+                    window.location.href = '/dashboard';
 
                 } catch (err) {
                     console.error('Login error:', err.message);
-                    loginError.textContent = err.message || 'Invalid email or password.';
+                    loginError.textContent = ['TimeoutError','AbortError'].includes(err.name) ? 'The authentication service did not respond. Please check that the ICSS Supabase project is active and try again.' : err.message || 'Unable to sign in.';
                     loginError.style.display = 'block';
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = 'Sign In';
@@ -51,12 +58,14 @@ const initializeAuth = async () => {
             if (session) {
                 if (window.location.pathname.endsWith('login.html') || window.location.pathname === '/' || window.location.pathname.endsWith('/login')) {
                     console.log('Session found, redirecting to dashboard');
-                    window.location.href = 'dashboard';
+                    window.location.href = '/dashboard';
                 }
             }
         };
 
-        checkSession();
+        checkSession().catch(error => {
+            if (loginError && !loginError.textContent) { loginError.textContent = error.message || 'Authentication is temporarily unavailable.'; loginError.style.display = 'block'; }
+        });
     } catch (err) {
         console.error('Auth bootstrap error:', err);
         const loginError = document.getElementById('loginError');

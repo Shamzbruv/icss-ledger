@@ -15,6 +15,21 @@ const CONFIG = {
 window.CONFIG = CONFIG;
 
 let supabaseClientPromise = null;
+let runtimeAuthConfigPromise = null;
+async function loadRuntimeAuthConfig() {
+    if (!runtimeAuthConfigPromise) runtimeAuthConfigPromise = fetch(`${CONFIG.API_BASE_URL}/auth/config`, {
+        cache: 'no-store', signal: AbortSignal.timeout(8000)
+    }).then(async response => {
+        // A separately hosted static frontend can retain its original public config.
+        if (response.status === 404) return;
+        const config = await response.json();
+        if (!response.ok) throw new Error(config.error || 'Authentication configuration is unavailable.');
+        if (!config.supabaseUrl || !config.supabaseKey) throw new Error('Authentication settings are incomplete.');
+        CONFIG.SUPABASE_URL = config.supabaseUrl;
+        CONFIG.SUPABASE_ANON_KEY = config.supabaseKey;
+    }).catch(error => { runtimeAuthConfigPromise = null; throw error; });
+    return runtimeAuthConfigPromise;
+}
 
 async function ensureSupabaseClient() {
     if (window.supabaseClient) {
@@ -23,6 +38,7 @@ async function ensureSupabaseClient() {
 
     if (!supabaseClientPromise) {
         supabaseClientPromise = (async () => {
+            await loadRuntimeAuthConfig();
             const timeoutAt = Date.now() + 5000;
 
             while (!window.supabase?.createClient) {

@@ -1,0 +1,30 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const express=require('express');
+const {publicAuthConfig}=require('../src/services/publicAuthConfig');
+const routes=require('../src/routes/auth');
+test('runtime configuration exposes only publishable or anon credentials',()=>{
+ assert.deepEqual(publicAuthConfig({SUPABASE_URL:'https://runtime.supabase.co/',SUPABASE_ANON_KEY:'sb_publishable_example',SUPABASE_SERVICE_KEY:'server-secret'}),{supabaseUrl:'https://runtime.supabase.co',supabaseKey:'sb_publishable_example'});
+ const jwt=role=>`header.${Buffer.from(JSON.stringify({role})).toString('base64url')}.signature`;
+ assert.equal(publicAuthConfig({SUPABASE_URL:'https://runtime.supabase.co',SUPABASE_ANON_KEY:jwt('anon')}).supabaseKey,jwt('anon'));
+ assert.throws(()=>publicAuthConfig({SUPABASE_URL:'https://runtime.supabase.co',SUPABASE_ANON_KEY:jwt('service_role')}));
+ assert.throws(()=>publicAuthConfig({SUPABASE_URL:'https://runtime.supabase.co',SUPABASE_ANON_KEY:'sb_secret_unsafe'}));
+});
+test('login returns a verified session without requiring Express sessions or mutating the database client',async t=>{
+ let attempts=0,reply={data:{session:{access_token:'test-access',refresh_token:'test-refresh',user:{id:'user-1'}}},error:null};
+ const app=express();app.use(express.json());
+ app.use('/auth',routes({getConfig:()=>({supabaseUrl:'https://runtime.supabase.co',supabaseKey:'sb_publishable_example'}),createAuthClient:()=>{attempts++;return{auth:{signInWithPassword:async()=>reply}};},verifyToken:async token=>token==='test-access'?{id:'user-1',email:'qa@example.invalid'}:null}));
+ const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));t.after(()=>server.close());
+ const base=`http://127.0.0.1:${server.address().port}`;
+ const login=body=>fetch(base+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const body={email:'qa@example.invalid',password:'test-password'};
+ let r=await fetch(base+'/auth/config');assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');assert.equal((await r.json()).supabaseUrl,'https://runtime.supabase.co');
+ r=await login({email:body.email});assert.equal(r.status,400);assert.equal(attempts,0);
+ r=await login(body);assert.equal(r.status,200);let data=await r.json();assert.equal(data.session.access_token,'test-access');assert.equal(data.redirect,'/dashboard');
+ await login(body);assert.equal(attempts,2,'each attempt gets its own isolated auth client');
+ reply={data:null,error:{status:400,code:'invalid_credentials'}};r=await login(body);assert.equal(r.status,401);assert.match((await r.json()).error,/incorrect/);
+ reply={data:null,error:{status:503,name:'AuthRetryableFetchError'}};r=await login(body);assert.equal(r.status,503);assert.match((await r.json()).error,/paused or inactive/);
+ r=await fetch(base+'/auth/check');assert.deepEqual(await r.json(),{authenticated:false});
+ r=await fetch(base+'/auth/check',{headers:{Authorization:'Bearer test-access'}});assert.deepEqual(await r.json(),{authenticated:true,user:{id:'user-1',email:'qa@example.invalid'}});
+ r=await fetch(base+'/auth/check',{headers:{Authorization:'Bearer invalid'}});assert.deepEqual(await r.json(),{authenticated:false});
+});
