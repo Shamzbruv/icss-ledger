@@ -25,10 +25,10 @@ async function getChartOfAccounts(companyId) {
 
 async function getAccount(companyId, accountCode) {
     const { data, error } = await supabase
-        .from('coa_accounts')
+        .from('chart_of_accounts')
         .select('*')
         .eq('company_id', companyId)
-        .eq('account_code', accountCode)
+        .eq('code', accountCode)
         .single();
 
     if (error) throw new Error(`Account ${accountCode} not found: ${error.message}`);
@@ -68,6 +68,8 @@ async function postJournalEntry(entry) {
         throw new Error('Journal entry must have at least 2 lines (debit and credit).');
     }
 
+    require('./accountingViewModel').validateJournalLines(lines, entryDate);
+
     // 1. Validate balance (sum debits === sum credits)
     const totalDebits = lines.reduce((sum, l) => sum + Number(l.debitAmount || 0), 0);
     const totalCredits = lines.reduce((sum, l) => sum + Number(l.creditAmount || 0), 0);
@@ -85,13 +87,14 @@ async function postJournalEntry(entry) {
 
     // 3. Check if period is locked (unless post-close adjustment)
     if (!isPostCloseAdjustment) {
-        const { data: closedPeriod } = await supabase
+        const { data: closedPeriod, error: periodError } = await supabase
             .from('closed_periods')
             .select('id')
             .eq('company_id', companyId)
             .eq('period', periodStr)
             .maybeSingle();
 
+        if (periodError) throw new Error(`Could not verify the accounting period: ${periodError.message}`);
         if (closedPeriod) {
             throw new Error(
                 `Period ${periodStr} is closed. To post to a closed period, set isPostCloseAdjustment=true.`
@@ -102,12 +105,13 @@ async function postJournalEntry(entry) {
     // 4. Resolve account IDs based on codes if necessary. 
     // In our payload we receive accountCode but schema requires account_id.
     const accountCodes = lines.map(l => l.accountCode);
-    const { data: accounts } = await supabase
+    const { data: accounts, error: accountsError } = await supabase
         .from('chart_of_accounts')
         .select('id, code, name')
         .eq('company_id', companyId)
         .in('code', accountCodes);
 
+    if (accountsError) throw new Error(`Could not load chart of accounts: ${accountsError.message}`);
     const accountMap = {};
     (accounts || []).forEach(a => { accountMap[a.code] = a; });
 
@@ -257,32 +261,7 @@ async function reversalEntry(originalEntryId, reason, companyId) {
  * Returns an array of { accountCode, accountName, accountType, debits, credits, balance }
  */
 async function getTrialBalance(companyId, periodStart, periodEnd) {
-    // Get all journal lines via journal entries in range
-    const { data: entries, error: jeErr } = await supabase
-        .from('journals')
-        .select('id')
-        .eq('company_id', companyId)
-        .gte('journal_date', periodStart)
-        .lte('journal_date', periodEnd);
-
-    if (jeErr) throw new Error(`Trial balance fetch failed: ${jeErr.message}`);
-
-    if (!entries || entries.length === 0) {
-        return [];
-    }
-
-    const entryIds = entries.map(e => e.id);
-
-    // Fetch lines with account relationship joined
-    const { data: lines, error: lineErr } = await supabase
-        .from('journal_lines')
-        .select(`
-            debit, credit,
-            chart_of_accounts!inner(code, name, account_type, normal_balance)
-        `)
-        .in('journal_id', entryIds);
-
-    if (lineErr) throw new Error(`Trial balance lines fetch failed: ${lineErr.message}`);
+    const lines = await require('./ledgerReadService').readLedgerLines(companyId, periodStart, periodEnd);
 
     // Aggregate by account
     const balances = {};

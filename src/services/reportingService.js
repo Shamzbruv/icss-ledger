@@ -17,32 +17,7 @@ function normalizeAccountType(accountType) {
 }
 
 async function getJournalLinesForPeriod(companyId, periodStart, periodEnd) {
-    const { data: entries, error: jeErr } = await supabase
-        .from('journals')
-        .select('id, journal_date, source_type, status')
-        .eq('company_id', companyId)
-        .gte('journal_date', periodStart)
-        .lte('journal_date', periodEnd)
-        .eq('status', 'posted');
-
-    if (jeErr) throw new Error(`Journal entries fetch failed: ${jeErr.message}`);
-    if (!entries || entries.length === 0) return [];
-
-    const entryIds = entries.map(e => e.id);
-    const entryMap = {};
-    entries.forEach(e => { entryMap[e.id] = e; });
-
-    const { data: lines, error: lineErr } = await supabase
-        .from('journal_lines')
-        .select(`
-            journal_id, debit, credit, description, account_id,
-            chart_of_accounts!account_id(code, name, account_type, normal_balance)
-        `)
-        .in('journal_id', entryIds);
-
-    if (lineErr) throw new Error(`Journal lines fetch failed: ${lineErr.message}`);
-
-    return (lines || []).map(l => ({ ...l, entry: entryMap[l.journal_id] }));
+    return require('./ledgerReadService').readLedgerLines(companyId, periodStart, periodEnd);
 }
 
 function aggregateByAccount(lines) {
@@ -90,7 +65,7 @@ async function getProfitAndLoss(companyId, start, end, basis = 'accrual', ytdSta
 
     // For cash basis, only include lines from entries where source_type is 'PAYMENT' or 'EXPENSE'
     const filteredLines = basis === 'cash'
-        ? lines.filter(l => ['PAYMENT', 'EXPENSE'].includes(l.entry?.source_type))
+        ? lines.filter(l => ['PAYMENT', 'EXPENSE'].includes(String(l.entry?.source_type || '').toUpperCase()))
         : lines;
 
     const accounts = aggregateByAccount(filteredLines);
@@ -194,7 +169,7 @@ async function getBalanceSheet(companyId, asOf) {
         },
         check: {
             assetsMinusLiabilitiesMinusEquity: Math.round((totalAssets - totalLiabilities - totalEquity) * 100) / 100,
-            balanced: Math.abs(totalAssets - totalLiabilities - totalEquity) < 1
+            balanced: Math.abs(totalAssets - totalLiabilities - totalEquity) < 0.01
         }
     };
 }
@@ -203,52 +178,44 @@ async function getBalanceSheet(companyId, asOf) {
 // CASH FLOW SUMMARY
 // ============================================================================
 
-async function getCashFlowSummary(companyId, start, end) {
-    const lines = await getJournalLinesForPeriod(companyId, start, end);
-
-    let operatingCashIn = 0;     // Payments received (Cr bank by payments)
-    let operatingCashOut = 0;    // Cash expenses (Dr expense / Cr bank)
-    let investingCashOut = 0;    // Asset purchases (Dr asset / Cr bank)
-    let financingCashIn = 0;     // Capital injections (Dr bank / Cr owner capital)
-    let financingCashOut = 0;    // Owner drawings (Dr drawings / Cr bank)
-
-    lines.forEach(l => {
-        const code = l.chart_of_accounts?.code;
-        if (!code) return;
-        if (code === '1010' || code === '1000') { // Bank/Cash accounts
-            // Net movement in bank
-            operatingCashIn += Number(l.debit || 0);
-            operatingCashOut += Number(l.credit || 0);
+function summarizeCashFlow(lines, start, end) {
+    const entries = new Map();
+    for (const line of lines) {
+        const id = line.journal_id || line.entry?.id;
+        if (!entries.has(id)) entries.set(id, []);
+        entries.get(id).push(line);
+    }
+    let operatingCashIn = 0, operatingCashOut = 0, investingCashOut = 0;
+    let financingCashIn = 0, financingCashOut = 0, bankMovement = 0;
+    for (const group of entries.values()) {
+        const movement = group.filter(l => ['1000','1010'].includes(l.chart_of_accounts?.code))
+            .reduce((sum,l) => sum + Number(l.debit || 0) - Number(l.credit || 0), 0);
+        bankMovement += movement;
+        if (Math.abs(movement) < 0.005) continue; // bank transfers and non-cash journals
+        const capital = group.filter(l => ['3000','3010'].includes(l.chart_of_accounts?.code));
+        if (movement > 0) {
+            const finance = Math.min(movement, capital.reduce((sum,l) => sum + Math.max(0, Number(l.credit || 0) - Number(l.debit || 0)), 0));
+            financingCashIn += finance; operatingCashIn += movement - finance;
+        } else {
+            let out = -movement;
+            const finance = Math.min(out, capital.reduce((sum,l) => sum + Math.max(0, Number(l.debit || 0) - Number(l.credit || 0)), 0));
+            financingCashOut += finance; out -= finance;
+            const assets = group.filter(l => l.chart_of_accounts?.code === '1500');
+            const investment = Math.min(out, assets.reduce((sum,l) => sum + Math.max(0, Number(l.debit || 0) - Number(l.credit || 0)), 0));
+            investingCashOut += investment; operatingCashOut += out - investment;
         }
-        if (code === '1500') { // Fixed assets purchased via bank
-            investingCashOut += Number(l.debit || 0);
-        }
-        if (code === '3000' || code === '3010') { // Owner capital / drawings
-            if (Number(l.credit) > 0) financingCashIn += Number(l.credit);
-            if (Number(l.debit) > 0) financingCashOut += Number(l.debit);
-        }
-    });
-
-    const netCash = operatingCashIn - operatingCashOut - investingCashOut + financingCashIn - financingCashOut;
-
+    }
+    const round = n => Math.round(n * 100) / 100;
     return {
         period: { start, end },
-        operating: {
-            cashIn: Math.round(operatingCashIn * 100) / 100,
-            cashOut: Math.round(operatingCashOut * 100) / 100,
-            net: Math.round((operatingCashIn - operatingCashOut) * 100) / 100
-        },
-        investing: {
-            assetPurchases: Math.round(investingCashOut * 100) / 100,
-            net: Math.round(-investingCashOut * 100) / 100
-        },
-        financing: {
-            capitalInjections: Math.round(financingCashIn * 100) / 100,
-            ownerDrawings: Math.round(financingCashOut * 100) / 100,
-            net: Math.round((financingCashIn - financingCashOut) * 100) / 100
-        },
-        netCashMovement: Math.round(netCash * 100) / 100
+        operating: { cashIn: round(operatingCashIn), cashOut: round(operatingCashOut), net: round(operatingCashIn - operatingCashOut) },
+        investing: { assetPurchases: round(investingCashOut), net: round(-investingCashOut) },
+        financing: { capitalInjections: round(financingCashIn), ownerDrawings: round(financingCashOut), net: round(financingCashIn - financingCashOut) },
+        netCashMovement: round(bankMovement)
     };
+}
+async function getCashFlowSummary(companyId, start, end) {
+    return summarizeCashFlow(await getJournalLinesForPeriod(companyId, start, end), start, end);
 }
 
 // ============================================================================
@@ -258,21 +225,19 @@ async function getCashFlowSummary(companyId, start, end) {
 async function getARAgingReport(companyId) {
     const settings = await getAccountingSettings(companyId);
     const usdToJmd = Number(settings?.fx_rate_usd_to_jmd || 158);
-    const { data: invoices, error } = await supabase
+    const invoices = await require('./ledgerReadService').readAll(() => supabase
         .from('invoices')
         .select('*, clients(name, email)')
         .eq('company_id', companyId)
         .not('payment_status', 'eq', 'PAID')
-        .order('issue_date', { ascending: true });
-
-    if (error) throw new Error(error.message);
+        .order('id'));
 
     const today = new Date();
     const buckets = { current: [], days0_30: [], days31_60: [], days61_90: [], over90: [] };
 
-    (invoices || []).forEach(inv => {
+    (invoices || []).filter(inv => !inv.is_subscription && inv.payment_status !== 'VOID').forEach(inv => {
         const dueDate = inv.due_date ? new Date(inv.due_date) : null;
-        const sourceBalance = Number(inv.balance_due || inv.total_amount || 0);
+        const sourceBalance = Number(inv.balance_due ?? inv.total_amount ?? 0);
         const currency = inv.currency === 'USD' ? 'USD' : 'JMD';
         const balance = Math.round(sourceBalance * (currency === 'USD' ? usdToJmd : 1) * 100) / 100;
         if (balance <= 0) return;
@@ -321,13 +286,14 @@ async function getARAgingReport(companyId) {
 
 async function getRevenueReconciliation(companyId, start, end) {
     // Revenue per invoices (operational)
-    const { data: invoices } = await supabase
+    const invoices = await require('./ledgerReadService').readAll(() => supabase
         .from('invoices')
         .select('total_amount, currency, invoice_number, issue_date')
         .eq('company_id', companyId)
         .neq('payment_status', 'VOID')
         .gte('issue_date', start)
-        .lte('issue_date', end);
+        .lte('issue_date', end)
+        .order('id'));
 
     const settings = await getAccountingSettings(companyId);
     const usdToJmd = Number(settings?.fx_rate_usd_to_jmd || 158);
@@ -363,79 +329,33 @@ async function getDashboardWidgets(companyId) {
     const currentYear = today.getFullYear();
     const ytdStart = `${currentYear}-01-01`;
 
-    // 1. Runway Calculation
-    // Cash balance / Average Monthly Burn (last 3 months)
-    const { data: cashAccounts } = await supabase
-        .from('chart_of_accounts')
-        .select('id')
-        .eq('company_id', companyId)
-        .in('code', ['1000', '1010']); // Bank and Cash
-
-    let cashBalance = 0;
-    if (cashAccounts && cashAccounts.length > 0) {
-        const cashIds = cashAccounts.map(a => a.id);
-        const { data: cashLines, error } = await supabase
-            .from('journal_lines')
-            .select(`debit, credit, journals!inner(status)`)
-            .in('account_id', cashIds)
-            .eq('journals.status', 'posted');
-
-        if (error) {
-            console.error('Error fetching cash lines:', error);
-            throw new Error('Journal entries fetch failed: ' + error.message);
-        }
-
-        cashBalance = (cashLines || []).reduce((sum, l) => sum + (Number(l.debit) - Number(l.credit)), 0);
-    }
+    const allLines = await getJournalLinesForPeriod(companyId, '2000-01-01', today.toISOString().slice(0,10));
+    const cashBalance = allLines.filter(l => ['1000','1010'].includes(l.chart_of_accounts?.code))
+        .reduce((sum,l) => sum + Number(l.debit || 0) - Number(l.credit || 0), 0);
 
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const pnl90 = await getProfitAndLoss(companyId, ninetyDaysAgo.toISOString().split('T')[0], today.toISOString().split('T')[0]);
-    const monthlyBurn = (pnl90.summary.totalExpenses || 0) / 3;
-    const runwayMonths = monthlyBurn > 0 ? (cashBalance / monthlyBurn) : 999;
-
-    // 2. MRR (Monthly Recurring Revenue)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const pnl30 = await getProfitAndLoss(companyId, thirtyDaysAgo.toISOString().split('T')[0], today.toISOString().split('T')[0]);
+    const [pnl90, pnl30, arAging, pnlYTD] = await Promise.all([
+        getProfitAndLoss(companyId, ninetyDaysAgo.toISOString().split('T')[0], today.toISOString().split('T')[0]),
+        getProfitAndLoss(companyId, thirtyDaysAgo.toISOString().split('T')[0], today.toISOString().split('T')[0]),
+        getARAgingReport(companyId),
+        getProfitAndLoss(companyId, ytdStart, today.toISOString().split('T')[0])
+    ]);
+    const monthlyBurn = (pnl90.summary.totalExpenses || 0) / 3;
+    const runwayMonths = monthlyBurn > 0 ? (cashBalance / monthlyBurn) : 999;
     const mrr = pnl30.summary.netRevenue || 0;
 
-    // 3. A/R Aging Summary (from invoices)
-    const arAging = await getARAgingReport(companyId);
-
-    // 3b. Supplement with ledger-based AR (account 1100) — catches manual journal entries
-    //     for invoices sent via external systems not recorded in the invoices table.
-    //     These are added directly on top of invoice AR since they are separate receivables.
-    try {
-        const { data: arAccount } = await supabase
-            .from('chart_of_accounts')
-            .select('id')
-            .eq('company_id', companyId)
-            .eq('code', '1100')
-            .maybeSingle();
-
-        if (arAccount) {
-            const { data: arLines } = await supabase
-                .from('journal_lines')
-                .select('debit, credit, journals!inner(status)')
-                .eq('account_id', arAccount.id)
-                .eq('journals.status', 'posted');
-
-            const ledgerARBalance = Math.max(0, (arLines || []).reduce((sum, l) => sum + (Number(l.debit) - Number(l.credit)), 0));
-
-            // Add full ledger AR balance into "Current" — manual entries have no due date
-            if (ledgerARBalance > 0) {
-                arAging.ledgerBalance = Math.round(ledgerARBalance * 100) / 100;
-                arAging.reconciliationDifference = Math.round((ledgerARBalance - arAging.totals.grandTotal) * 100) / 100;
-            }
-        }
-    } catch (e) {
-        console.warn('[getDashboardWidgets] Failed to supplement AR with ledger balance:', e.message);
-    }
+    // Reconcile the AR ledger against invoice receivables without adding the
+    // same invoice a second time or silently treating failed queries as zero.
+    const ledgerARBalance = allLines.filter(l => l.chart_of_accounts?.code === '1100')
+        .reduce((sum,l) => sum + Number(l.debit || 0) - Number(l.credit || 0), 0);
+    arAging.ledgerBalance = Math.round(ledgerARBalance * 100) / 100;
+    arAging.reconciliationDifference = Math.round((ledgerARBalance - arAging.totals.grandTotal) * 100) / 100;
 
     // 4. Net Profit Margin (YTD)
-    const pnlYTD = await getProfitAndLoss(companyId, ytdStart, today.toISOString().split('T')[0]);
     const netProfitMargin = pnlYTD.summary.netRevenue > 0
         ? (pnlYTD.summary.netProfit / pnlYTD.summary.netRevenue) * 100
         : 0;
@@ -466,6 +386,7 @@ module.exports = {
     getProfitAndLoss,
     getBalanceSheet,
     getCashFlowSummary,
+    summarizeCashFlow,
     getARAgingReport,
     getRevenueReconciliation,
     getDashboardWidgets

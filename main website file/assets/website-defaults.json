@@ -1,0 +1,445 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "id": "skybeach",
+      "title": "Skybeach",
+      "category": "Hospitality",
+      "complexity": "advanced",
+      "summary": "A restaurant experience with digital menus and business management.",
+      "description": "A website and connected management tools that help Skybeach present its offerings and maintain menu information.",
+      "url": "https://skybeachja.com",
+      "image": "",
+      "featured": true,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "Website",
+        "Menu management",
+        "Backend"
+      ],
+      "sortOrder": 0,
+      "appUrl": ""
+    },
+    {
+      "id": "myhalomanage",
+      "title": "MyHaloManage",
+      "category": "Business software",
+      "complexity": "advanced",
+      "summary": "An HR platform built around the everyday work of managing people.",
+      "description": "An interconnected human resources system covering employee records, attendance, leave, onboarding, recognition and performance.",
+      "url": "",
+      "image": "",
+      "featured": true,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HR management",
+        "Roles & permissions",
+        "Reporting"
+      ],
+      "sortOrder": 1,
+      "appUrl": ""
+    },
+    {
+      "id": "icss-bookings",
+      "title": "ICSS Bookings",
+      "category": "ICSS products",
+      "complexity": "advanced",
+      "summary": "A professional online presence and booking system within reach.",
+      "description": "Our booking platform helps service businesses offer a professional website experience, manage appointments and receive customer requests without commissioning a full custom platform.",
+      "url": "https://icssbookings.com",
+      "image": "",
+      "featured": true,
+      "published": true,
+      "kind": "ICSS product",
+      "technologies": [
+        "Multi-tenant platform",
+        "Booking management",
+        "Website builder"
+      ],
+      "sortOrder": 2,
+      "appUrl": ""
+    },
+    {
+      "id": "grace-connect",
+      "title": "Grace Connect",
+      "category": "Mobile apps",
+      "complexity": "advanced",
+      "summary": "A digital home for faith, fellowship and church life.",
+      "description": "Created in Jamaica for Christian communities, Grace Connect brings church announcements, events, prayer, Bible engagement, community interaction and leadership tools together.",
+      "url": "https://graceconnect.love",
+      "image": "",
+      "featured": true,
+      "published": true,
+      "kind": "ICSS product",
+      "technologies": [
+        "Flutter",
+        "Community features",
+        "Church administration"
+      ],
+      "sortOrder": 3,
+      "appUrl": "https://play.google.com/store/apps/details?id=love.graceconnect"
+    },
+    {
+      "id": "grace-connect-website",
+      "title": "Grace Connect \u2014 Website",
+      "category": "Websites",
+      "complexity": "simple",
+      "summary": "Introducing the Grace Connect experience to churches and members.",
+      "description": "A dedicated product website that explains Grace Connect, introduces its features and helps churches and members find their next step.",
+      "url": "https://graceconnect.love",
+      "image": "",
+      "featured": true,
+      "published": true,
+      "kind": "ICSS product",
+      "technologies": [
+        "Product website",
+        "Responsive design",
+        "Church onboarding"
+      ],
+      "sortOrder": 4,
+      "appUrl": ""
+    },
+    {
+      "id": "multi-alumni-mass",
+      "title": "Multi Alumni (MASS)",
+      "category": "Non-Profit & Education",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Multi Alumni (MASS).",
+      "description": "A website created to introduce Multi Alumni (MASS), present its services and help visitors take the next step.",
+      "url": "https://multialumni.org",
+      "image": "/assets/images/portfolio/multialumni_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 10,
+      "appUrl": ""
+    },
+    {
+      "id": "jamrok-engineering",
+      "title": "JamRok Engineering",
+      "category": "Engineering",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for JamRok Engineering.",
+      "description": "A website created to introduce JamRok Engineering, present its services and help visitors take the next step.",
+      "url": "https://jamrokengineering.com",
+      "image": "/assets/images/portfolio/jamrok_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 11,
+      "appUrl": ""
+    },
+    {
+      "id": "tashana-brown-o-connor",
+      "title": "Tashana Brown-O\u2019Connor",
+      "category": "Destination Weddings",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Tashana Brown-O\u2019Connor.",
+      "description": "A website created to introduce Tashana Brown-O\u2019Connor, present its services and help visitors take the next step.",
+      "url": "https://tbodestinationplanner.com",
+      "image": "/assets/images/portfolio/tbo_wedding.jpg",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 12,
+      "appUrl": ""
+    },
+    {
+      "id": "shellz-decor",
+      "title": "Shellz Decor",
+      "category": "Event & Decor",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Shellz Decor.",
+      "description": "A website created to introduce Shellz Decor, present its services and help visitors take the next step.",
+      "url": "projects/shellzdecor/index.html",
+      "image": "/assets/images/portfolio/shellz_text.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 13,
+      "appUrl": ""
+    },
+    {
+      "id": "clive-beecher",
+      "title": "Clive Beecher",
+      "category": "Tours",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Clive Beecher.",
+      "description": "A website created to introduce Clive Beecher, present its services and help visitors take the next step.",
+      "url": "projects/clive-beecher/index.html",
+      "image": "/assets/images/portfolio/clive_text.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 14,
+      "appUrl": ""
+    },
+    {
+      "id": "security-service",
+      "title": "Security Service",
+      "category": "Security",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Security Service.",
+      "description": "A website created to introduce Security Service, present its services and help visitors take the next step.",
+      "url": "projects/security-service/index.html",
+      "image": "/assets/images/portfolio/security_text.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 15,
+      "appUrl": ""
+    },
+    {
+      "id": "hoiletts-technical-services",
+      "title": "Hoiletts Technical Services",
+      "category": "Technical Services",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Hoiletts Technical Services.",
+      "description": "A website created to introduce Hoiletts Technical Services, present its services and help visitors take the next step.",
+      "url": "https://hoilettstechnicalservices.com",
+      "image": "/assets/images/portfolio/hoiletts_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 16,
+      "appUrl": ""
+    },
+    {
+      "id": "only-vibz-tour",
+      "title": "Only Vibz Tour",
+      "category": "Tourism",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Only Vibz Tour.",
+      "description": "A website created to introduce Only Vibz Tour, present its services and help visitors take the next step.",
+      "url": "projects/only-vibz/index.html",
+      "image": "/assets/images/portfolio/onlyvibz_text.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 17,
+      "appUrl": ""
+    },
+    {
+      "id": "windross-tailoring-design",
+      "title": "Windross Tailoring & Design",
+      "category": "Fashion",
+      "complexity": "advanced",
+      "summary": "Custom tailoring, with a connected booking experience.",
+      "description": "A tailored online presence with a booking engine and administration for custom clothing enquiries and appointments.",
+      "url": "https://windrosstailoringanddesign.com/",
+      "image": "/assets/images/portfolio/windross_new_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 18,
+      "appUrl": ""
+    },
+    {
+      "id": "icrave-ghuchis",
+      "title": "iCrave Ghuchis",
+      "category": "Catering & Event Services",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for iCrave Ghuchis.",
+      "description": "A website created to introduce iCrave Ghuchis, present its services and help visitors take the next step.",
+      "url": "https://icraveghuchiscateringservices.com",
+      "image": "/assets/images/portfolio/icrave_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 19,
+      "appUrl": ""
+    },
+    {
+      "id": "tlc-family-services",
+      "title": "TLC Family Services",
+      "category": "Family Services",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for TLC Family Services.",
+      "description": "A website created to introduce TLC Family Services, present its services and help visitors take the next step.",
+      "url": "https://tlcfamilyservices.com",
+      "image": "/assets/images/portfolio/tlc_hero.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 20,
+      "appUrl": ""
+    },
+    {
+      "id": "crossfire-worship-center",
+      "title": "Crossfire Worship Center",
+      "category": "Religious Organization",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Crossfire Worship Center.",
+      "description": "A website created to introduce Crossfire Worship Center, present its services and help visitors take the next step.",
+      "url": "https://crossfireworshipcenter.org",
+      "image": "/assets/images/portfolio/crossfire_hero.jpg",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 21,
+      "appUrl": ""
+    },
+    {
+      "id": "d-appliance-genie",
+      "title": "D'Appliance Genie",
+      "category": "Appliance Repair",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for D'Appliance Genie.",
+      "description": "A website created to introduce D'Appliance Genie, present its services and help visitors take the next step.",
+      "url": "",
+      "image": "/assets/images/portfolio/genie_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 22,
+      "appUrl": ""
+    },
+    {
+      "id": "876-curate-4-u",
+      "title": "876 Curate 4 U",
+      "category": "Wedding & Event Planning",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for 876 Curate 4 U.",
+      "description": "A website created to introduce 876 Curate 4 U, present its services and help visitors take the next step.",
+      "url": "https://876curate4u.com",
+      "image": "/assets/images/portfolio/curate4u_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 23,
+      "appUrl": ""
+    },
+    {
+      "id": "health-is-wealth-ja",
+      "title": "Health Is Wealth JA",
+      "category": "Health & Wellness",
+      "complexity": "simple",
+      "summary": "A tailored digital presence for Health Is Wealth JA.",
+      "description": "A website created to introduce Health Is Wealth JA, present its services and help visitors take the next step.",
+      "url": "https://healthiswealthja.com/",
+      "image": "/assets/images/portfolio/healthiswealth_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 24,
+      "appUrl": ""
+    },
+    {
+      "id": "beauty-plus-academy",
+      "title": "Beauty Plus Academy",
+      "category": "Beauty Services & Training",
+      "complexity": "advanced",
+      "summary": "A salon and training website with tools for managing the business.",
+      "description": "A website and management experience for salon services, pricing, training and business content.",
+      "url": "https://beautyplusacademyandsalon.com/",
+      "image": "/assets/images/portfolio/beautyplus_favicon.png",
+      "featured": false,
+      "published": true,
+      "kind": "Client project",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "sortOrder": 25,
+      "appUrl": ""
+    }
+  ],
+  "jobs": [],
+  "about": {
+    "eyebrow": "Jamaican roots. Global ambition.",
+    "title": "From a creative spark to practical digital solutions.",
+    "story": [
+      "iCreate Solutions & Services began with an idea long before it became a registered business. In 2023, Shamar Baker imagined the iCreate name while exploring animation as a hobby and taking on graphic design work.",
+      "While working at Conduent, Shamar was introduced to coding. The possibilities caught his attention, and building his first website turned that curiosity into a new direction. Collaborating with developers across the world and contributing to a range of projects helped shape both his skills and his approach to solving problems.",
+      "The business name was officially registered in July 2025. Today, iCreate Solutions & Services builds websites, mobile apps and business systems for Jamaican businesses and clients around the world.",
+      "Along the way, ICSS created Grace Connect, a Christian community and church platform born in Jamaica, and ICSS Bookings, a booking system for people who want a professional website experience within a smaller budget.",
+      "The ambition is straightforward: develop useful solutions that fit how businesses actually work, make local technology easier to access, and help Jamaican talent serve the world."
+    ],
+    "motto": "Transforming Ideas into Powerful Digital Experiences.",
+    "linkedin": "https://www.linkedin.com/company/icreate-solutions-services/"
+  },
+  "referral": {
+    "enabled": true,
+    "title": "Grow with us. Earn through referrals.",
+    "description": "Know a business that needs a website, app or better way to work? Apply to join the ICSS referral program. We will discuss eligibility, commission terms and the agreement with you before you begin.",
+    "terms": "Submitting this form is a request to join. Commission rates, qualifying referrals and payment terms are agreed in writing; applying does not create an employment relationship or guarantee earnings."
+  }
+}

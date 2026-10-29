@@ -21,7 +21,7 @@ const BASE_PATH = APP_BASE_PATH;
 app.set('trust proxy', 1);
 
 // Middleware
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '2mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // CORS Policy
@@ -66,39 +66,22 @@ let isSchemaValid = false;
 let schemaErrors = [];
 
 const checkSchema = async () => {
-    schemaErrors = [];
-    // We check for a few critical columns to ensure migration ran
-    // Check Invoices: payment_status, company_id
-    // Check Services: next_run_at
     try {
-        const { error: invoiceError } = await supabase.from('invoices').select('payment_status, company_id, currency').limit(1);
-        if (invoiceError && invoiceError.message.includes('does not exist')) {
-            throw new Error(`Missing columns in 'invoices': ${invoiceError.message}`);
-        }
-
-        const { error: serviceError } = await supabase.from('client_services').select('next_run_at').limit(1);
-        if (serviceError && serviceError.message.includes('does not exist')) {
-            throw new Error(`Missing columns in 'client_services': ${serviceError.message}`);
-        }
-
-        const { error: leadsError } = await supabase.from('leads').select('id').limit(1);
-        if (leadsError && leadsError.message.includes('does not exist')) {
-            throw new Error(`Missing 'leads' table: ${leadsError.message}`);
-        }
-
-        const { error: reviewsError } = await supabase.from('reviews').select('id').limit(1);
-        if (reviewsError && reviewsError.message.includes('does not exist')) {
-            throw new Error(`Missing 'reviews' table. Please run schema_reviews.sql: ${reviewsError.message}`);
-        }
-
-        // If simple selects work, we assume schema is okay
+        const checks = await Promise.all([
+            supabase.from('invoices').select('payment_status, company_id, currency').limit(1).abortSignal(AbortSignal.timeout(6000)),
+            supabase.from('client_services').select('next_run_at').limit(1).abortSignal(AbortSignal.timeout(6000)),
+            supabase.from('leads').select('id').limit(1).abortSignal(AbortSignal.timeout(6000)),
+            supabase.from('reviews').select('id').limit(1).abortSignal(AbortSignal.timeout(6000))
+        ]);
+        const failed = checks.find(result => result.error);
+        if (failed) throw failed.error;
+        schemaErrors = [];
         isSchemaValid = true;
-        console.log('✅ Database Schema Check Passed');
-    } catch (err) {
-        console.error('❌ CRITICAL: Unknown Schema Error or Migration Missing');
-        console.error(err.message);
-        schemaErrors.push(err.message);
+        console.log('Database connection and schema checks passed');
+    } catch (error) {
+        schemaErrors = [error.message];
         isSchemaValid = false;
+        console.warn('Database is unavailable or a required table is missing.');
     }
     return isSchemaValid;
 };
@@ -125,24 +108,13 @@ if (!process.env.EMAIL_AUDIT_BCC) {
 // - PayPal webhook path is always open (signature verified inside the handler).
 // - Static files and HTML pages are always open (client-side auth handles redirects).
 const checkAuth = async (req, res, next) => {
-    // Maintenance Mode Check
-    if (!isSchemaValid) {
-        if (!req.path.startsWith('/css') && !req.path.startsWith('/js')) {
-            return res.status(503).send(`
-                <h1>503 Service Unavailable</h1>
-                <p>The application database is not ready.</p>
-                <p><strong>Error:</strong> ${schemaErrors.join(', ') || 'Schema validation failed'}</p>
-                <p>Please run <code>SUPABASE_FINAL_MIGRATION.sql</code> in your connection settings.</p>
-            `);
-        }
-    }
-
     const currentPath = req.path;
-
-    // Always pass through non-API routes (HTML pages, assets)
-    if (!currentPath.startsWith('/api')) {
-        return next();
-    }
+    // Marketing pages and the published content fallback stay available during
+    // a database outage. Every management route still requires authentication.
+    if (!currentPath.startsWith('/api')) return next();
+    if ((currentPath === '/api/website/public' && req.method === 'GET') ||
+        (currentPath === '/api/website/applications' && req.method === 'POST')) return next();
+    if (!isSchemaValid) return res.status(503).json({ error: 'The database is unavailable. Please try again when the ICSS Supabase project is running.' });
 
     // PayPal webhook must stay open; its own handler verifies the signature
     // Jobs/Cron endpoints are protected by CRON_SECRET inside their specific handlers
@@ -224,8 +196,15 @@ const checkAuth = async (req, res, next) => {
 const router = express.Router();
 
 // Serve Static Files -> Main Website & Public folder
-router.use(express.static(path.join(__dirname, 'main website file')));
-router.use(express.static(path.join(__dirname, 'public')));
+const staticOptions = {
+    extensions: ['html'],
+    setHeaders(res, filename) {
+        res.setHeader('Cache-Control', /\.(css|js|png|jpg|jpeg|webp|svg|woff2)$/i.test(filename)
+            ? 'public, max-age=3600' : 'no-cache');
+    }
+};
+router.use(express.static(path.join(__dirname, 'main website file'), staticOptions));
+router.use(express.static(path.join(__dirname, 'public'), staticOptions));
 
 // Apply Auth Middleware
 router.use(checkAuth);
@@ -244,6 +223,10 @@ const reviewsRouter = require('./src/routes/reviews');
 const contractsRouter = require('./src/routes/contracts');
 const partnerContractsRouter = require('./src/routes/partnerContracts');
 const infoRequestsRouter = require('./src/routes/infoRequests');
+
+const { createWebsiteContentService } = require('./src/services/websiteContentService');
+const websiteContentService = createWebsiteContentService(supabase);
+router.use('/api/website', require('./src/routes/website')(supabase, websiteContentService));
 
 // MOUNT ROUTES
 router.use('/api/leads', leadsRouter);
@@ -279,7 +262,8 @@ router.get('/api/link-hub', async (req, res) => {
         const { data, error } = await supabase.from('link_hub_settings').select('content').eq('id', 1).maybeSingle();
         if (error && error.code !== 'PGRST116' && error.code !== '42P01') throw error;
         res.set('Cache-Control', 'no-store');
-        res.json(data?.content || DEFAULT_LINK_HUB);
+        const { website, ...linkHub } = data?.content?.profile ? data.content : DEFAULT_LINK_HUB;
+        res.json(linkHub);
     } catch (err) {
         console.warn('[LINK HUB] Using defaults:', err.message);
         res.json(DEFAULT_LINK_HUB);
@@ -293,9 +277,9 @@ router.put('/api/link-hub', async (req, res) => {
             return res.status(400).json({ error: 'Invalid link hub settings.' });
         }
         if (content.links.length > 30) return res.status(400).json({ error: 'A maximum of 30 links is allowed.' });
-        const { data, error } = await supabase.from('link_hub_settings').upsert({ id: 1, content, updated_at: new Date().toISOString() }).select('content').single();
-        if (error) throw error;
-        res.json(data.content);
+        const { website, ...linkHub } = content;
+        await websiteContentService.writeSection('linkHub', linkHub);
+        res.json(linkHub);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -2212,38 +2196,6 @@ router.post('/api/paypal/webhook', async (req, res) => {
 // ==========================================
 const { getDashboardWidgets } = require('./src/services/reportingService');
 
-router.get('/api/accounting/dashboard/widgets', async (req, res) => {
-    try {
-        const { company_id } = req.query;
-        if (!company_id) return res.status(400).json({ error: 'Missing company_id' });
-        const widgets = await getDashboardWidgets(company_id);
-        res.json(widgets);
-    } catch (err) {
-        console.error('Widget error:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-router.get('/api/accounting/tax/estimate', async (req, res) => {
-    try {
-        const { year, company_id } = req.query;
-        // Basic mock of tax reserve estimate until full YTD computation is requested
-        res.json({ contributions: { totalContributions: 0 } });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-router.get('/api/accounting/tax/compliance-calendar', async (req, res) => {
-    try {
-        const { year, company_id } = req.query;
-        const events = await getComplianceCalendar(Number(year) || new Date().getFullYear(), company_id);
-        res.json(events || []);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
 // --- CLIENT CARE PULSE API ---
 
 
@@ -3016,7 +2968,8 @@ router.get('/api/accounting/settings', async (req, res) => {
     try {
         const companyId = await resolveCompanyId(req);
         const settings = await getAccountingSettings(companyId);
-        res.json(settings || {});
+        const gct = await getGCTConfig(companyId);
+        res.json({ ...(settings || {}), gct_registration_number: gct?.registration_number || '' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -3025,17 +2978,20 @@ router.get('/api/accounting/dashboard/trends', async (req, res) => {
         const companyId = await resolveCompanyId(req);
         const now = new Date();
         const periods = [];
-        for (let offset = 5; offset >= 0; offset -= 1) {
-            const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1));
+        const months = Array.from({ length: 6 }, (_, i) => {
+            const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (5 - i), 1));
             const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
+            return { start, end };
+        });
+        periods.push(...await Promise.all(months.map(async ({ start, end }) => {
             const pnl = await getProfitAndLoss(companyId, start.toISOString().slice(0, 10), end.toISOString().slice(0, 10));
-            periods.push({
+            return {
                 label: start.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' }),
                 revenue: Number(pnl.summary?.netRevenue || 0),
                 expenses: Number(pnl.summary?.totalExpenses || 0),
                 profit: Number(pnl.summary?.netProfit || 0)
-            });
-        }
+            };
+        })));
         const { data: invoices, error } = await supabase.from('invoices')
             .select('currency, total_amount, balance_due, payment_status, invoice_number, due_date, is_subscription, clients(name)')
             .eq('company_id', companyId)
@@ -3084,7 +3040,10 @@ router.post('/api/accounting/integrity/invoices/repair', async (req, res) => {
 router.put('/api/accounting/settings', async (req, res) => {
     try {
         const companyId = await resolveCompanyId(req);
-        const updated = await upsertAccountingSettings(companyId, req.body);
+        const { gct_registration_number, ...updates } = req.body;
+        if (updates.fx_rate_usd_to_jmd !== undefined && (!Number.isFinite(Number(updates.fx_rate_usd_to_jmd)) || Number(updates.fx_rate_usd_to_jmd) <= 0)) return res.status(400).json({ error: 'FX rate must be greater than zero.' });
+        const updated = await upsertAccountingSettings(companyId, updates);
+        if (gct_registration_number !== undefined) await upsertGCTConfig(companyId, { is_registered: updates.gct_registered, registration_number: String(gct_registration_number).slice(0, 100) });
         res.json({ success: true, settings: updated });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -3151,36 +3110,6 @@ router.get('/api/accounting/trial-balance', async (req, res) => {
         const { start, end } = req.query;
         const tb = await getTrialBalance(companyId, start || `${new Date().getFullYear()}-01-01`, end || new Date().toISOString().split('T')[0]);
         res.json(tb);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// GET /api/accounting/reports/pnl
-router.get('/api/accounting/reports/pnl', async (req, res) => {
-    try {
-        const companyId = await resolveCompanyId(req);
-        const { start, end, basis, ytdStart } = req.query;
-        const pnl = await getProfitAndLoss(companyId, start, end, basis || 'accrual', ytdStart);
-        res.json(pnl);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// GET /api/accounting/reports/balance-sheet
-router.get('/api/accounting/reports/balance-sheet', async (req, res) => {
-    try {
-        const companyId = await resolveCompanyId(req);
-        const { asOf } = req.query;
-        const bs = await getBalanceSheet(companyId, asOf || new Date().toISOString().split('T')[0]);
-        res.json(bs);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// GET /api/accounting/reports/cash-flow
-router.get('/api/accounting/reports/cash-flow', async (req, res) => {
-    try {
-        const companyId = await resolveCompanyId(req);
-        const { start, end } = req.query;
-        const cf = await getCashFlowSummary(companyId, start, end);
-        res.json(cf);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -3270,7 +3199,7 @@ router.get('/api/accounting/tax/compliance-calendar', async (req, res) => {
         const companyId = await resolveCompanyId(req);
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const settings = await getAccountingSettings(companyId);
-        const calendar = getComplianceCalendar(settings?.business_type || 'sole_trader', year);
+        const calendar = await getComplianceCalendar(year, companyId);
         res.json(calendar);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -3752,6 +3681,10 @@ app.listen(PORT, '0.0.0.0', () => {
             if (valid) startPolling(5000); // Poll every 5 seconds
         })
         .catch(err => console.error('Outbox startup check failed:', err));
+
+    setInterval(() => {
+        if (!isSchemaValid) checkSchema().then(valid => { if (valid) startPolling(5000); });
+    }, 60000);
 
     // Automation Scheduler
     // Run Check logic every 15 minutes

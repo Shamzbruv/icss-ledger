@@ -94,3 +94,40 @@ Both use the same workflow as client contracts: draft → email (or copy the lin
 - `src/services/pdfService.js`: Customizes the PDF layout.
 - `src/services/emailService.js`: Handles email transport.
 - `src/services/imapService.js`: Logic for detecting bank transfer emails.
+
+## Website structure and content management
+
+The public website now has dedicated `/services`, `/portfolio`, `/project.html?id=…`,
+`/about`, `/contact` and `/work-with-icss` pages. The original detailed estimator,
+package information and inquiry tools remain at `/project-planner.html`.
+
+In Command Center, use **Website & Portfolio** or **Careers & Referrals** to open
+`/website-manager`. Add or edit projects, choose a category and system type, set
+visibility and home-page placement, and publish changes. Vacancies, referral
+program information and the About story use the same editor. No vacancy is
+advertised until it is published. Application reviews save immediately; content
+changes use the Publish button. The website refreshes published content within
+30 seconds.
+
+Content is stored under `link_hub_settings.content.website` in the existing
+single-business settings document. Link Hub saves preserve website content, and
+website saves preserve Link Hub settings. Optimistic revision checks reject stale
+edits. No new database tables or public Supabase grants are required. The server
+uses its existing service connection; management APIs use Command Center auth.
+Career and referral requests are saved in `leads` with `source = 'Work with ICSS'`
+and are available both in the website manager's inbox and the existing Leads UI.
+
+When the database is unavailable, public pages use the bundled portfolio and
+business story. Admin publishing and form submissions return an error instead of
+acknowledging an unsaved change. Restore database availability to use live content,
+applications and accounting. The server retries its database health check once a
+minute after an outage.
+
+The redesigned pages use small local CSS and JavaScript files. Older public pages
+use a precompiled Tailwind stylesheet instead of the browser runtime. After changing
+utility classes on those pages, run `npm run build:styles` and commit the result.
+`scripts/build-public-pages.py` regenerates the public shell and initial content
+from the bundled defaults; runtime changes belong in Website Manager.
+
+Run `npm test` for the regression suite. Tests use mocked services and do not post
+live accounting records, submit real applications or send production emails.

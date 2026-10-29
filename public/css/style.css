@@ -1122,3 +1122,8 @@ html, body { overscroll-behavior-y: none; }
     .page-hero-icon { width:52px; height:52px; }
     .edit-mode-banner { align-items:flex-start; flex-direction:column; }
 }
+
+/* Keep every Command Center destination reachable on smaller desktop screens. */
+@media(min-width:769px){.header-content{gap:18px}.main-nav{min-width:0;overflow-x:auto;scrollbar-width:thin;max-width:calc(100% - 160px)}.main-nav>a,.main-nav>button{flex-shrink:0}}
+/* Decorative header artwork must never intercept action buttons. */
+.page-hero::after{pointer-events:none}

@@ -18,7 +18,15 @@ const anonClient = createClient(
  * @param {string} token - The Bearer token from the Authorization header
  * @returns {Promise<object|null>} - Supabase user object, or null if invalid/expired
  */
+const pendingVerifications = new Map();
 async function verifySupabaseJwt(token) {
+    if (!token) return null;
+    if (pendingVerifications.has(token)) return pendingVerifications.get(token);
+    const pending = verifyToken(token);
+    pendingVerifications.set(token, pending);
+    try { return await pending; } finally { pendingVerifications.delete(token); }
+}
+async function verifyToken(token) {
     if (!token) return null;
     try {
         const { data, error } = await anonClient.auth.getUser(token);

@@ -82,57 +82,56 @@ function initTabs() {
 /* ==========================================================================
    DASHBOARD
    ========================================================================== */
+let dashboardLoading = null;
 async function loadDashboard() {
-    const year = new Date().getFullYear();
-    try {
-        const formatJMD = (val) => new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(val);
-
-        // Fetch new Widget Data
-        const wRes = await apiFetch(`/api/accounting/dashboard/widgets?company_id=${currentCompanyId}`);
-        const widgets = await wRes.json();
-
-        document.getElementById('kpi-mrr').textContent = formatJMD(widgets.mrr);
-        document.getElementById('kpi-cash').textContent = formatJMD(widgets.cashBalance);
-
-        let runwayText = `${widgets.runwayMonths} Months`;
-        if (widgets.runwayMonths > 120) runwayText = 'Infinite';
-        else if (widgets.runwayMonths < 0) runwayText = 'N/A';
-        document.getElementById('kpi-runway').textContent = runwayText;
-
-        document.getElementById('kpi-margin').textContent = `${widgets.ytdNetProfitMargin}%`;
-
-        // Tax Estimate
-        const taxRes = await apiFetch(`/api/accounting/tax/estimate?year=${year}&company_id=${currentCompanyId}`);
-        const taxData = await taxRes.json();
-        const taxReserve = taxData?.contributions?.totalContributions || 0;
-        document.getElementById('kpi-tax-reserve').textContent = formatJMD(taxReserve);
-
-        renderAgingChart(widgets.arAgingTotals);
-        renderExpenseChart(widgets.expenseBreakdown);
-
-        // Compliance Reminders
-        const calRes = await apiFetch(`/api/accounting/tax/compliance-calendar?year=${year}&company_id=${currentCompanyId}`);
-        const calendar = await calRes.json();
-        renderComplianceCalendar(calendar);
-
-        // Load Subscriptions Data directly into the Dashboard
-        await loadSubscriptions();
-        
-        // Load the new Trial Balance Account Watchlist
-        await loadTrialBalanceDashboard();
-        await Promise.all([loadFinancialVisuals(), loadInvoiceLedgerIntegrity()]);
-
-        // AR KPI card — use the same combined total as the aging chart (invoices + ledger)
-        const arEl = document.getElementById('kpi-ar-ledger');
-        if (arEl) {
-            const totalAR = widgets.arAgingTotals?.grandTotal || 0;
-            arEl.textContent = new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(totalAR);
+    if (dashboardLoading) return dashboardLoading;
+    dashboardLoading = (async () => {
+        const year = new Date().getFullYear();
+        const money = val => new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD' }).format(Number(val || 0));
+        const jobs = [
+            (async () => {
+                const widgets = await accountingData(`/api/accounting/dashboard/widgets?company_id=${currentCompanyId}`);
+                document.getElementById('kpi-mrr').textContent = money(widgets.mrr);
+                document.getElementById('kpi-cash').textContent = money(widgets.cashBalance);
+                document.getElementById('kpi-runway').textContent = widgets.runwayMonths > 120 ? 'No current burn' : widgets.runwayMonths < 0 ? 'N/A' : `${widgets.runwayMonths} Months`;
+                document.getElementById('kpi-margin').textContent = `${widgets.ytdNetProfitMargin}%`;
+                document.getElementById('kpi-ar-ledger').textContent = money(widgets.arAgingTotals?.grandTotal);
+                renderAgingChart(widgets.arAgingTotals); renderExpenseChart(widgets.expenseBreakdown);
+            })(),
+            (async () => {
+                const tax = await accountingData(`/api/accounting/tax/estimate?year=${year}&company_id=${currentCompanyId}`);
+                document.getElementById('kpi-tax-reserve').textContent = money(tax?.contributions?.totalContributions);
+            })(),
+            (async () => renderComplianceCalendar(await accountingData(`/api/accounting/tax/compliance-calendar?year=${year}&company_id=${currentCompanyId}`)))(),
+            loadSubscriptions(), loadTrialBalanceDashboard(), loadFinancialVisuals(), loadInvoiceLedgerIntegrity()
+        ];
+        const results = await Promise.allSettled(jobs);
+        if (results.some(r => r.status === 'rejected')) {
+            showToast('Some accounting panels could not load. Refresh to retry; unavailable totals are not zero balances.', 'error');
+            results.filter(r => r.status === 'rejected').forEach(r => console.error(r.reason));
         }
-
-    } catch (err) {
-        console.error('Dashboard load error:', err);
-        showToast('Failed to load dashboard data', 'error');
-    }
+    })();
+    try { await dashboardLoading; } finally { dashboardLoading = null; }
+}
+async function accountingData(url) {
+    const response = await apiFetch(url);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Accounting data could not be loaded.');
+    return data;
+}
+function accountingMonthBounds(value) {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) throw new Error('Select a valid month.');
+    const [year, month] = value.split('-').map(Number);
+    return { start: `${value}-01`, end: `${value}-${new Date(Date.UTC(year, month, 0)).getUTCDate()}` };
+}
+async function downloadAccountingFile(url, filename) {
+    try {
+        const response = await apiFetch(url);
+        if (!response.ok) { const data = await response.json(); throw new Error(data.error || 'Download failed.'); }
+        const blob = await response.blob(), href = URL.createObjectURL(blob), a = document.createElement('a');
+        a.href = href; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(href), 60000);
+    } catch (error) { showToast(error.message, 'error'); }
 }
 
 function escapeAccountingHtml(value) {
@@ -291,9 +290,10 @@ async function loadSubscriptions() {
     try {
         const res = await apiFetch('/api/admin/client-services');
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Accounting request failed.');
         
         if (!data || data.length === 0 || data.error) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No active subscriptions found. Add them in Client Care.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No subscriptions found. Add them in Client Care.</td></tr>';
             if (document.getElementById('kpi-subs-mrr')) document.getElementById('kpi-subs-mrr').textContent = 'JMD 0.00';
             return;
         }
@@ -303,20 +303,21 @@ async function loadSubscriptions() {
         let totalMRR = 0;
         const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
         const settingsResponse = await apiFetch(`/api/accounting/settings?company_id=${currentCompanyId}`);
-        const settings = settingsResponse.ok ? await settingsResponse.json() : {};
+        const settings = await settingsResponse.json();
+        if (!settingsResponse.ok) throw new Error(settings.error || 'FX settings could not be loaded.');
         const FX_RATE = Number(settings.fx_rate_usd_to_jmd || 158);
 
         tbody.innerHTML = data.map(sub => {
             let priceUSD = parseFloat(sub.service_plans?.price || 0);
-            let priceJMD = priceUSD * FX_RATE;
+            let priceJMD = priceUSD * FX_RATE / (sub.frequency === 'yearly' ? 12 : 1);
 
             if (sub.status === 'active') {
                 totalMRR += priceJMD;
             }
             return `
             <tr>
-                <td data-label="Client Name"><strong>${sub.clients?.name || 'Unknown'}</strong></td>
-                <td data-label="Plan">${sub.service_plans?.name || 'Custom Plan'}</td>
+                <td data-label="Client Name"><strong>${escapeAccountingHtml(sub.clients?.name || 'Unknown')}</strong></td>
+                <td data-label="Plan">${escapeAccountingHtml(sub.service_plans?.name || 'Custom Plan')}</td>
                 <td data-label="Billing Cycle"><span class="badge bg-light text-dark">${sub.frequency}</span></td>
                 <td data-label="Next Billing">
                     ${sub.next_renewal_date ? new Date(sub.next_renewal_date).toLocaleDateString() : 'N/A'}
@@ -585,6 +586,7 @@ async function loadJournal() {
 
         const res = await apiFetch(url);
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Accounting request failed.');
 
         tbody.innerHTML = '';
 
@@ -611,7 +613,7 @@ async function loadJournal() {
                 totalDebits += Number(l.debit || 0);
                 totalCredits += Number(l.credit || 0);
                 return `<div style="${l.credit > 0 ? 'padding-left: 20px;' : 'font-weight: 500;'}">
-                    ${acctCode} - ${acctName}
+                    ${escapeAccountingHtml(acctCode)} - ${escapeAccountingHtml(acctName)}
                  </div>`;
             }).join('');
 
@@ -632,7 +634,7 @@ async function loadJournal() {
                 <tr>
                     <td data-label="Date">${date}</td>
                     <td data-label="Source"><span class="badge badge-secondary">${sourceType}</span></td>
-                    <td data-label="Description">${entry.narration || ''} ${isReversal ? '<span class="badge badge-danger">REVERSAL</span>' : ''}</td>
+                    <td data-label="Description">${escapeAccountingHtml(entry.narration || '')} ${isReversal ? '<span class="badge badge-danger">REVERSAL</span>' : ''}</td>
                     <td data-label="Account">${linesHtml}</td>
                     <td data-label="Debit" class="text-right">${amountHtml}</td>
                     <td data-label="Credit" class="text-right">${creditHtml}</td>
@@ -643,8 +645,8 @@ async function loadJournal() {
         // -- Populate summary KPI bar --
         const setKPI = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
         setKPI('jnl-total-entries', data.entries.length);
-        setKPI('jnl-total-debits', formatMoney(totalDebits / 2)); // each line logged twice (dr+cr)
-        setKPI('jnl-total-credits', formatMoney(totalCredits / 2));
+        setKPI('jnl-total-debits', formatMoney(totalDebits));
+        setKPI('jnl-total-credits', formatMoney(totalCredits));
         setKPI('jnl-accounts-hit', accountsHit.size);
 
     } catch (err) {
@@ -656,6 +658,7 @@ async function loadJournal() {
 
 document.getElementById('btnRefreshJournal').addEventListener('click', loadJournal);
 document.getElementById('journalFilterSource')?.addEventListener('change', loadJournal);
+document.getElementById('journalFilterMonth')?.addEventListener('change', loadJournal);
 
 
 /* ==========================================================================
@@ -665,6 +668,7 @@ async function loadExpenses() {
     try {
         const res = await apiFetch(`/api/accounting/expenses?company_id=${currentCompanyId}`);
         const expenses = await res.json();
+        if (!res.ok) throw new Error(expenses.error || 'Expenses could not be loaded.');
 
         const tbody = document.getElementById('expensesTableBody');
         tbody.innerHTML = '';
@@ -792,7 +796,7 @@ function initExpenseForm() {
             if (!res.ok) throw new Error(await res.text());
 
             showToast('Expense recorded and posted to journal!', 'success');
-            document.getElementById('modalExpense').style.display = 'none';
+            document.getElementById('modalExpense').classList.add('d-none');
             e.target.reset();
             loadExpenses(); // Refresh table
 
@@ -969,12 +973,11 @@ window.accountingJS = {
         }
     },
     openExpenseModal: async () => {
-        document.getElementById('modalExpense').style.display = 'block';
+        await loadCoADropdown();
+        document.getElementById('modalExpense').classList.remove('d-none');
         const res = await apiFetch(`/api/accounting/settings?company_id=${currentCompanyId}`);
         const settings = await res.json();
-        if (settings && settings.gct_registered) {
-            document.getElementById('gctInputGroup').style.display = 'block';
-        }
+        document.getElementById('gctInputGroup').style.display = settings?.gct_registered ? 'block' : 'none';
     },
     toggleExpenseFields: (type) => { },
 
@@ -1021,7 +1024,7 @@ window.accountingJS = {
         }
     },
 
-    openAssetModal: () => { document.getElementById('modalAsset').style.display = 'block'; },
+    openAssetModal: () => { document.getElementById('modalAsset').classList.remove('d-none'); },
 
     viewReport: async (reportType) => {
         try {
@@ -1065,7 +1068,7 @@ window.accountingJS = {
             if (reportType === 'pnl') {
                 const month = document.getElementById('pnlMonth').value;
                 let url = `/api/accounting/reports/pnl?company_id=${currentCompanyId}`;
-                if (month) { url += `&start=${month}-01&end=${month}-31`; }
+                if (month) { const range = accountingMonthBounds(month); url += `&start=${range.start}&end=${range.end}`; }
                 title.innerText = 'Profit & Loss';
                 const d = await apiFetch(url).then(r => r.json());
                 if (d.error) throw new Error(d.error);
@@ -1128,7 +1131,7 @@ window.accountingJS = {
             } else if (reportType === 'cash-flow') {
                 const month = document.getElementById('cfMonth').value;
                 let url = `/api/accounting/reports/cash-flow?company_id=${currentCompanyId}`;
-                if (month) { url += `&start=${month}-01&end=${month}-31`; }
+                if (month) { const range = accountingMonthBounds(month); url += `&start=${range.start}&end=${range.end}`; }
                 title.innerText = 'Cash Flow';
                 const d = await apiFetch(url).then(r => r.json());
                 if (d.error) throw new Error(d.error);
@@ -1327,6 +1330,7 @@ window.accountingJS = {
             });
 
             const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Accounting request failed.');
             if (!res.ok) throw new Error(data.error || 'Failed to confirm import');
 
             showToast(`Batch confirmed successfully! ${data.linesPosted} journals posted.`, 'success');
@@ -1368,6 +1372,7 @@ async function initBulkImportForm() {
                 body: JSON.stringify({ rawText, sourceType: 'clipboard_expense', parseSettings })
             });
             const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Accounting request failed.');
             if (!res.ok) throw new Error(data.error || 'Failed to parse');
 
             window.accountingJS.currentBulkImportBatchId = data.batchId;
@@ -1491,6 +1496,7 @@ async function loadAssets() {
     try {
         const res = await apiFetch(`/api/accounting/assets?company_id=${currentCompanyId}`);
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Accounting request failed.');
 
         const tbody = document.getElementById('assetsTableBody');
         tbody.innerHTML = '';
@@ -1541,9 +1547,9 @@ function initAssetForm() {
         const fd = new FormData(e.target);
         const payload = {
             assetName: fd.get('assetName'),
-            category: fd.get('assetCategory'),
+            assetCategory: fd.get('assetCategory'),
             purchaseDate: fd.get('purchaseDate'),
-            originalCost: parseFloat(fd.get('cost')),
+            cost: parseFloat(fd.get('cost')),
             businessUsePercent: parseFloat(fd.get('businessUsePercent')),
             usefulLifeYears: parseInt(fd.get('usefulLifeYears'))
         };
@@ -1558,7 +1564,7 @@ function initAssetForm() {
             if (!res.ok) throw new Error(await res.text());
 
             showToast('Asset Capitalized & Journal Entry Posted!', 'success');
-            document.getElementById('modalAsset').style.display = 'none';
+            document.getElementById('modalAsset').classList.add('d-none');
             e.target.reset();
             loadAssets();
         } catch (err) { showToast(err.message, 'error'); }
@@ -1586,6 +1592,7 @@ async function loadGCTTracker() {
     try {
         const res = await apiFetch(`/api/accounting/tax/gct-status?company_id=${currentCompanyId}`);
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Accounting request failed.');
 
         const badge = document.getElementById('gct-status-badge');
         const fill = document.getElementById('gct-bar-fill');
@@ -1637,7 +1644,7 @@ document.getElementById('btnDownloadForm4A').addEventListener('click', () => {
     const start = `${year}-${month}-01`;
     const end = new Date(year, parseInt(month), 0).toISOString().split('T')[0];
 
-    window.location.href = `/api/accounting/gct/form4a?company_id=${currentCompanyId}&start=${start}&end=${end}&pdf=true`;
+    downloadAccountingFile(`/api/accounting/gct/form4a?company_id=${currentCompanyId}&start=${start}&end=${end}&pdf=true`, `ICSS-GCT-${period}.pdf`);
 });
 
 /* ==========================================================================
@@ -1654,6 +1661,7 @@ function initSettingsForm() {
     document.getElementById('btnSettings').addEventListener('click', async () => {
         const res = await apiFetch(`/api/accounting/settings?company_id=${currentCompanyId}`);
         const settings = await res.json();
+        if (!res.ok) throw new Error(settings.error || 'Accounting settings could not be loaded.');
         if (settings) {
             const form = document.getElementById('formSettings');
             if (settings.business_type) form.business_type.value = settings.business_type;
@@ -1664,9 +1672,7 @@ function initSettingsForm() {
 
             cb.checked = settings.gct_registered === true;
             group.style.display = cb.checked ? 'block' : 'none';
-            if (settings.gct_config && settings.gct_config.registration_number) {
-                document.getElementById('gct_registration_number').value = settings.gct_config.registration_number;
-            }
+            document.getElementById('gct_registration_number').value = settings.gct_registration_number || settings.gct_config?.registration_number || '';
         }
     });
 
@@ -1679,7 +1685,8 @@ function initSettingsForm() {
             nht_category: fd.get('nht_category'),
             accountant_email: fd.get('accountant_email'),
             gct_registered: document.getElementById('gctRegisteredCb').checked,
-            fx_rate_usd_to_jmd: parseFloat(fd.get('fx_rate_usd_to_jmd'))
+            fx_rate_usd_to_jmd: parseFloat(fd.get('fx_rate_usd_to_jmd')),
+            gct_registration_number: fd.get('gct_registration_number') || ''
         };
 
         try {
@@ -1696,7 +1703,7 @@ function initSettingsForm() {
             }
 
             showToast('Settings saved successfully', 'success');
-            document.getElementById('modalSettings').style.display = 'none';
+            document.getElementById('modalSettings').classList.add('d-none');
         } catch (err) { showToast('Failed to save settings', 'error'); }
     });
 }
@@ -1708,7 +1715,7 @@ function initModals() {
         if (!year) return;
 
         showToast(`Generating Jamaica Tax Pack for ${year}... Please wait.`, 'info');
-        window.location.href = `/api/accounting/tax/generate-pack/${year}?company_id=${currentCompanyId}`;
+        downloadAccountingFile(`/api/accounting/tax/generate-pack/${encodeURIComponent(year)}?company_id=${currentCompanyId}`, `ICSS-Tax-Pack-${year}.pdf`);
     });
 
     // Generate Owner Pack
@@ -1722,7 +1729,7 @@ function initModals() {
         if (!month) return;
 
         showToast(`Generating Owner Pack for ${month}... Please wait.`, 'info');
-        window.location.href = `/api/accounting/reports/owner-pack/${month}?company_id=${currentCompanyId}`;
+        downloadAccountingFile(`/api/accounting/reports/owner-pack/${encodeURIComponent(month)}?company_id=${currentCompanyId}`, `ICSS-Owner-Pack-${month}.pdf`);
     });
 }
 

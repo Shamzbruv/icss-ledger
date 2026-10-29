@@ -63,7 +63,7 @@
         <div class="tab-content active" id="tab-dashboard">
             <div class="dashboard-grid mt-4"
                 style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                <!-- 1: Active Subscriptions MRR -->
+                <!-- 1: Subscription plans -->
                 <div class="card kpi-card highlight-card">
                     <div class="kpi-title">SUBSCRIPTION VALUE (EST.)</div>
                     <div class="kpi-value" id="kpi-subs-mrr"><i class="fas fa-spinner fa-spin"></i></div>
@@ -72,31 +72,31 @@
                 <!-- 1: Total Revenue MRR -->
                 <div class="card kpi-card">
                     <div class="kpi-title">REVENUE · LAST 30 DAYS</div>
-                    <div class="kpi-value" id="kpi-mrr">JMD 0.00</div>
+                    <div class="kpi-value" id="kpi-mrr">—</div>
                     <div class="kpi-subtext">Posted service revenue</div>
                 </div>
                 <!-- 2: Cash Balance -->
                 <div class="card kpi-card">
                     <div class="kpi-title">CASH BALANCE</div>
-                    <div class="kpi-value" id="kpi-cash">JMD 0.00</div>
+                    <div class="kpi-value" id="kpi-cash">—</div>
                     <div class="kpi-subtext">Total Bank & Cash</div>
                 </div>
                 <!-- 3: Runway -->
                 <div class="card kpi-card">
                     <div class="kpi-title">CASH RUNWAY</div>
-                    <div class="kpi-value" id="kpi-runway">0.0 Months</div>
+                    <div class="kpi-value" id="kpi-runway">—</div>
                     <div class="kpi-subtext">Based on 90D Burn Rate</div>
                 </div>
                 <!-- 4: NPM -->
                 <div class="card kpi-card">
                     <div class="kpi-title">NET PROFIT MARGIN</div>
-                    <div class="kpi-value" id="kpi-margin">0.0%</div>
+                    <div class="kpi-value" id="kpi-margin">—</div>
                     <div class="kpi-subtext">YTD Profitability</div>
                 </div>
                 <!-- 5: Tax Reserve -->
                 <div class="card kpi-card highlight-card">
                     <div class="kpi-title">TAX RESERVE</div>
-                    <div class="kpi-value" id="kpi-tax-reserve">JMD 0.00</div>
+                    <div class="kpi-value" id="kpi-tax-reserve">—</div>
                     <div class="kpi-subtext">Estimate from current tax settings</div>
                 </div>
                 <!-- 6: AR Ledger Balance -->
@@ -154,7 +154,7 @@
             <!-- ========================================== -->
             <div class="card mt-4" id="dashboard-subscriptions-table">
                 <div class="flex-between mb-3">
-                    <h3 class="card-title m-0">Active Subscriptions (Synced from Client Care)</h3>
+                    <h3 class="card-title m-0">Subscriptions (Synced from Client Care)</h3>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-mobile-cards" id="subscriptionsTable">
@@ -626,7 +626,7 @@
                         Registered for GCT with TAJ
                     </label>
                     <div id="gctRegNumGroup" style="display: none;" class="ml-4 pl-2 border-left mb-3">
-                        <input type="text" class="form-control form-control-sm" id="gct_registration_number"
+                        <input type="text" class="form-control form-control-sm" id="gct_registration_number" name="gct_registration_number"
                             placeholder="GCT Registration Number">
                     </div>
                 </div>
