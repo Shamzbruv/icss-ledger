@@ -105,7 +105,10 @@ packages, estimator, instant quote, reviews and inquiry tools. The estimator is 
 
 In Command Center, use **Website & Portfolio** or **Careers & Referrals** to open
 `/website-manager`. Add or edit projects, choose a category and system type, set
-visibility and home-page placement, and publish changes. Vacancies, referral
+visibility and portfolio display order, and publish changes. The homepage automatically
+previews the three most recently added published projects; editing a project does
+not reset its added date. Existing projects without an added date retain their
+previous display order until new projects are added. Vacancies, referral
 program information and the About story use the same editor. No vacancy is
 advertised until it is published. Application reviews save immediately; content
 changes use the Publish button. The website refreshes published content within

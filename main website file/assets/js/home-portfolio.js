@@ -4,9 +4,8 @@
     const safeImage = value => { if(/^\/(?!\/)/.test(value||''))return value;try{if(new URL(value).protocol==='https:')return value;}catch{}return ''; };
     function render(content) {
         if(!target || !Array.isArray(content.projects))return;
-        const all=content.projects.filter(p=>p.published).sort((a,b)=>a.sortOrder-b.sortOrder);
-        const featured=all.filter(p=>p.featured);
-        const projects=(featured.length?featured:all).slice(0,6);
+        const projects=(Array.isArray(content.recentProjects) ? content.recentProjects :
+            content.projects.filter(p=>p.published).sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0)||a.sortOrder-b.sortOrder)).slice(0,3);
         target.innerHTML=projects.map(p=>{
             const href=`/project.html?id=${encodeURIComponent(p.id)}`,image=safeImage(p.image);
             return `<article class="project-card"><a class="project-cover" href="${href}" aria-label="Explore ${escape(p.title)}">${image?`<img src="${escape(image)}" alt="${escape(p.title)}" width="480" height="267" loading="lazy" decoding="async">`:`<span class="project-monogram">${escape(p.title)}</span>`}</a><div class="project-info"><div class="project-meta"><span class="badge ${escape(p.complexity)}">${p.complexity==='advanced'?'Advanced backend':p.complexity==='mobile'?'Mobile application':'Simple website'}</span><small>${escape(p.category)}</small></div><h3><a href="${href}">${escape(p.title)}</a></h3><p>${escape(p.summary)}</p><a class="text-link" href="${href}">Explore project ↗</a></div></article>`;

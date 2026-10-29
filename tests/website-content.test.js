@@ -100,3 +100,37 @@ test('career and referral submissions are durable, scoped and never falsely ackn
     assert.equal((await send('/applications',payload)).status,503);
     assert.equal((await send('/admin',{content:defaults,revision:db.state.row.updated_at},'PUT',true)).status,503);
 });
+
+test('homepage previews exactly the three newest published additions, independent of featured flags and display order', () => {
+    const d = clone(defaults);
+    const sample = d.projects[0];
+    d.projects = [
+        {...sample, id:'legacy', sortOrder:-100, featured:true},
+        {...sample, id:'older', createdAt:'2026-10-01T00:00:00Z', sortOrder:0, featured:true},
+        {...sample, id:'newest', createdAt:'2026-10-29T00:00:00Z', sortOrder:100, featured:false},
+        {...sample, id:'middle', createdAt:'2026-10-20T00:00:00Z', sortOrder:20, featured:false},
+        {...sample, id:'draft', createdAt:'2026-10-30T00:00:00Z', published:false}
+    ];
+    const result = publicContent(d);
+    assert.deepEqual(result.recentProjects.map(p=>p.id), ['newest','middle','older']);
+    assert.equal(result.projects.length,4,'the full portfolio keeps every published project');
+    assert.equal(publicContent({...d,projects:[]}).recentProjects.length,0);
+    assert.equal(publicContent({...d,projects:d.projects.slice(0,1)}).recentProjects.length,1);
+});
+test('adding projects records server dates while edits preserve recency and legacy projects keep their order', async () => {
+    const db=memoryDb(row()), service=createWebsiteContentService(db), d=clone(defaults);
+    assert.deepEqual(publicContent(d).recentProjects.map(p=>p.id),d.projects.filter(p=>p.published).slice(0,3).map(p=>p.id));
+    d.projects.push({...d.projects[0],id:'new-addition',featured:false,sortOrder:999,createdAt:'2099-01-01T00:00:00Z'});
+    let rev=await service.writeSection('website',validateContent(d),'2026-10-01T00:00:00.000Z');
+    const saved=clone(db.state.row.content.website);
+    const added=saved.projects.find(p=>p.id==='new-addition').createdAt;
+    assert.ok(Date.parse(added)<=Date.now(),'the server assigns the addition date');
+    assert.equal(publicContent(saved).recentProjects[0].id,'new-addition');
+    saved.projects[0].title='Edited legacy project';saved.projects[0].sortOrder=-999;
+    saved.projects.find(p=>p.id==='new-addition').title='Edited new project';
+    await service.writeSection('website',validateContent(saved),rev);
+    const edited=db.state.row.content.website;
+    assert.equal(edited.projects[0].createdAt,null);
+    assert.equal(edited.projects.find(p=>p.id==='new-addition').createdAt,added);
+    assert.equal(publicContent(edited).recentProjects[0].id,'new-addition');
+});

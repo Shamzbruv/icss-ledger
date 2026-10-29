@@ -35,7 +35,7 @@
         if (['index','portfolio','project','about','work-with-icss'].includes(page)) {
             try {
                 const data = provided || await content();
-                if (page === 'index') $('featured-projects').innerHTML = publishedProjects(data).filter(p => p.featured).slice(0,3).map(card).join('') || '<p class="empty">New work will be shared here soon.</p>';
+                if (page === 'index') $('featured-projects').innerHTML = (data.recentProjects || publishedProjects(data).sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0))).slice(0,3).map(card).join('') || '<p class="empty">New work will be shared here soon.</p>';
                 if (page === 'portfolio') {
                     currentProjects = publishedProjects(data);
                     const projects = currentProjects;

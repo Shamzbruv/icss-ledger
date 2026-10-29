@@ -41,9 +41,18 @@ function validateContent(input) {
         about: { eyebrow: text(input.about.eyebrow, 150), title: text(input.about.title, 200, true), story: input.about.story.map(p => text(p, 3000)), motto: text(input.about.motto, 250), linkedin: safeUrl(input.about.linkedin, false) },
         referral: { enabled: input.referral.enabled === true, title: text(input.referral.title, 200, true), description: text(input.referral.description, 3000), terms: text(input.referral.terms, 3000) } };
 }
+function recentProjects(projects) {
+    return projects.map((project, index) => ({ project, index }))
+        .filter(({ project }) => project.published)
+        .sort((a, b) => {
+            const aDate = Date.parse(a.project.createdAt) || 0;
+            const bDate = Date.parse(b.project.createdAt) || 0;
+            return bDate - aDate || (aDate ? b.index - a.index : a.project.sortOrder - b.project.sortOrder);
+        }).slice(0, 3).map(({ project }) => project);
+}
 function publicContent(content) {
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-    return { ...content, projects: content.projects.filter(p => p.published).sort((a,b) => a.sortOrder - b.sortOrder),
+    return { ...content, recentProjects: recentProjects(content.projects), projects: content.projects.filter(p => p.published).sort((a,b) => a.sortOrder - b.sortOrder),
         jobs: content.jobs.filter(j => j.published && (!j.closesOn || j.closesOn >= today)) };
 }
 function createWebsiteContentService(db) {
@@ -78,6 +87,16 @@ function createWebsiteContentService(db) {
         if (expectedRevision !== undefined && expectedRevision !== (row?.updated_at || null)) {
             const error = new Error('The content changed in another window. Reload before saving.'); error.status = 409; throw error;
         }
+        if (section === 'website') {
+            const previous = new Map((row?.content?.website?.projects || defaults.projects).map(p => [p.id, p]));
+            const addedAt = new Date().toISOString();
+            value = { ...value, projects: value.projects.map(project => ({
+                ...project,
+                // Editing or reordering a project must not make it newly added.
+                // Legacy projects retain their existing order until new work is added.
+                createdAt: previous.has(project.id) ? previous.get(project.id).createdAt || null : addedAt
+            })) };
+        }
         const content = section === 'website' ? { ...(row?.content || {}), website: value }
             : { ...value, ...(row?.content?.website ? { website: row.content.website } : {}) };
         const updated_at = new Date(Math.max(Date.now(), (Date.parse(row?.updated_at || '') || 0) + 1)).toISOString();
@@ -91,4 +110,4 @@ function createWebsiteContentService(db) {
     }
     return { read, writeSection };
 }
-module.exports = { createWebsiteContentService, validateContent, publicContent, safeUrl };
+module.exports = { createWebsiteContentService, validateContent, publicContent, recentProjects, safeUrl };
