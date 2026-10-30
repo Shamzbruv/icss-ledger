@@ -4,8 +4,11 @@ const crypto = require('crypto');
 const supabase = require('../db');
 const { sendEmail, sendContractEmail } = require('../services/emailService');
 const { getContractSigningRequestTemplate, getContractSignedConfirmationTemplate } = require('../services/emailTemplates');
-const { renderContractHtml, ACKNOWLEDGEMENTS, defaultPaymentArrangement } = require('../services/contractTemplate');
+const { renderContractHtml, getAcknowledgements, buildContractData, defaultPaymentArrangement } = require('../services/contractTemplate');
 const { generateContractPDF } = require('../services/contractPdfService');
+
+const { normalizeContractCc, referenceCopyTemplate } = require('../services/contractDelivery');
+const CONTINUATION_VERSION = require('../services/continuingDevelopmentTemplate').VERSION;
 
 const ACTIVE_STATUSES = new Set(['draft', 'sent', 'viewed']);
 // Some deployments mount the app under a subpath (see DEPLOYMENT.md, cPanel Scenario A) —
@@ -101,10 +104,10 @@ router.get('/public/:token', async (req, res) => {
         res.json({
             contract: toPublicContract(contract),
             html,
-            acknowledgements: ACKNOWLEDGEMENTS.map((a) => ({
+            acknowledgements: getAcknowledgements(renderSource).map((a) => ({
                 key: a.key,
                 title: a.title,
-                text: a.text({ depositPercent: renderSource.deposit_percent ?? contract.deposit_percent }),
+                text: a.text(buildContractData(renderSource)),
                 items: a.items || null
             })),
             alreadySigned: contract.status === 'signed'
@@ -137,7 +140,7 @@ router.post('/public/:token/sign', async (req, res) => {
         }
 
         const ackInput = acknowledgements || {};
-        const missing = ACKNOWLEDGEMENTS.filter((a) => ackInput[a.key] !== true);
+        const missing = getAcknowledgements(contract.terms_snapshot_json || contract).filter((a) => ackInput[a.key] !== true);
         if (missing.length > 0) {
             return res.status(400).json({ error: 'You must agree to all terms before signing.', missing: missing.map((m) => m.key) });
         }
@@ -195,7 +198,8 @@ router.post('/public/:token/sign', async (req, res) => {
             const pdfBuffer = await generateContractPDF(signed);
             const { subject, html, text } = getContractSignedConfirmationTemplate(signed, buildCompanySignatureUrl(req));
             const filename = `${signed.agreement_reference || 'Service-Agreement'}.pdf`;
-            await sendContractEmail(signed.client_email, subject, text, html, pdfBuffer, filename);
+            const cc = normalizeContractCc(signed.terms_snapshot_json?.delivery_cc, signed.client_email);
+            await sendContractEmail(signed.client_email, subject, text, html, pdfBuffer, filename, null, cc.length ? cc : null);
         } catch (emailErr) {
             console.error('[CONTRACTS] Failed to email signed copy to client:', emailErr);
         }
@@ -292,7 +296,7 @@ router.post('/', async (req, res) => {
             status: 'draft',
             sign_token: generateSignToken(),
             agreement_reference: generateAgreementReference(),
-            contract_version: 'v1',
+            contract_version: body.contract_version === CONTINUATION_VERSION ? CONTINUATION_VERSION : 'v1',
             client_name: body.client_name,
             business_name: body.business_name || null,
             client_email: body.client_email,
@@ -305,7 +309,7 @@ router.post('/', async (req, res) => {
             payment_arrangement: body.payment_arrangement || defaultPaymentArrangement(depositPercent, Math.round((100 - depositPercent) * 100) / 100),
             company_signer_name: body.company_signer_name || 'S. Baker',
             company_signature_path: '/assets/signature.png',
-            company_signed_at: nowIso
+            company_signed_at: body.contract_version === CONTINUATION_VERSION ? null : nowIso
         };
 
         const { data, error } = await supabase.from('contracts').insert(insertPayload).select().single();
@@ -354,8 +358,13 @@ router.post('/:id/send', async (req, res) => {
         if (contract.status === 'signed') return res.status(400).json({ error: 'This agreement has already been signed.' });
         if (contract.status === 'void') return res.status(400).json({ error: 'This agreement has been voided.' });
 
+        let cc;
+        try { cc = normalizeContractCc(req.body?.cc_emails ?? contract.terms_snapshot_json?.delivery_cc, contract.client_email); }
+        catch (validationError) { return res.status(400).json({ error: validationError.message }); }
+
         // Freeze the figures the client is about to see.
-        const termsSnapshot = {
+        const termsSnapshot = contract.status !== 'draft' && contract.terms_snapshot_json
+            ? { ...contract.terms_snapshot_json, delivery_cc: cc } : {
             client_name: contract.client_name,
             business_name: contract.business_name,
             client_email: contract.client_email,
@@ -369,11 +378,13 @@ router.post('/:id/send', async (req, res) => {
             company_signer_name: contract.company_signer_name,
             company_signed_at: contract.company_signed_at,
             agreement_reference: contract.agreement_reference,
-            contract_version: contract.contract_version
+            contract_version: contract.contract_version,
+            delivery_cc: cc
         };
+        if (!termsSnapshot.company_signed_at) termsSnapshot.company_signed_at = new Date().toISOString();
 
         const signUrl = buildSignUrl(req, contract.sign_token);
-        const { subject, html, text } = getContractSigningRequestTemplate(contract, signUrl, buildCompanySignatureUrl(req));
+        const { subject, html, text } = getContractSigningRequestTemplate({ ...contract, ...termsSnapshot }, signUrl, buildCompanySignatureUrl(req));
         await sendContractEmail(contract.client_email, subject, text, html);
 
         const wasFirstSend = !contract.sent_at;
@@ -383,14 +394,27 @@ router.post('/:id/send', async (req, res) => {
                 status: contract.status === 'draft' ? 'sent' : contract.status,
                 sent_at: contract.sent_at || new Date().toISOString(),
                 updated_at: new Date().toISOString(),
-                terms_snapshot_json: termsSnapshot
+                terms_snapshot_json: termsSnapshot,
+                company_signed_at: termsSnapshot.company_signed_at
             })
             .eq('id', contract.id)
             .select()
             .single();
         if (updateError) throw updateError;
 
-        res.json({ success: true, resent: !wasFirstSend, contract: attachSignUrl(req, updated), signUrl });
+        let ccWarning = null;
+        if (cc.length) {
+            try {
+                const copy = referenceCopyTemplate({ ...contract, ...termsSnapshot });
+                const pdf = await generateContractPDF({ ...contract, status: "sent", terms_snapshot_json: termsSnapshot });
+                await sendContractEmail(contract.client_email, copy.subject, copy.text, copy.html, pdf, `${contract.agreement_reference || "Agreement"}.pdf`, null, cc);
+            } catch (copyError) {
+                console.error("[CONTRACTS] Reference CC copy failed:", copyError);
+                ccWarning = "The signing invitation was sent, but the CC reference copy failed. Check the CC addresses and resend if needed.";
+            }
+        }
+
+        res.json({ success: true, cc_emails: cc, ccWarning, resent: !wasFirstSend, contract: attachSignUrl(req, updated), signUrl });
     } catch (err) {
         console.error('[CONTRACTS] Send error:', err);
         res.status(500).json({ error: err.message || 'Failed to send the agreement email.' });

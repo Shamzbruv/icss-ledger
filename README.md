@@ -159,3 +159,9 @@ existing records and restrict table access to the backend service role.
 Dashboard accounting activity reads the deployed `journals` / `journal_lines`
 ledger, not the retired `journal_entries` table. It displays posted entries and
 sums debit lines in the ledger's base currency, JMD.
+
+### Continuing development and contract CC copies
+
+Client contracts can use **Continuing development - existing client** to create an addendum that preserves the earlier project agreement. Drafts remain editable and can be previewed as PDF; the additional phase's payment arrangement is accepted when the client signs. The shared HTML/PDF wording is in `continuingDevelopmentTemplate.js`.
+
+Every contract send/resend now opens a recipient review with up to five optional CC addresses. Only the designated signer receives the signing link. A second reference email carries the PDF with the selected visible CC recipients, and the completed signed PDF is copied to them. Recipients are validated before sending; selected CC addresses are stored in the existing terms snapshot, so this feature requires no database migration. If reference-copy delivery fails after the signer invitation succeeds, the interface reports that partial delivery explicitly.

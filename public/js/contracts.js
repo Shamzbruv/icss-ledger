@@ -4,6 +4,7 @@ let allContracts = [];
 let createdContract = null;
 let currentDetailContract = null;
 let paymentArrangementTouched = false;
+let pendingDelivery = null;
 
 const STATUS_LABELS = { draft: 'Draft', sent: 'Sent', viewed: 'Viewed', signed: 'Signed', void: 'Void' };
 
@@ -114,6 +115,7 @@ function openCreateModal() {
     ['cf_clientName', 'cf_businessName', 'cf_clientEmail', 'cf_clientPhone', 'cf_projectType', 'cf_projectDescription', 'cf_projectCost']
         .forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('cf_currency').value = 'JMD';
+    document.getElementById('cf_contractVersion').value = 'v1';
     document.getElementById('cf_depositPercent').value = 50;
     document.getElementById('cf_signerName').value = 'S. Baker';
     paymentArrangementTouched = false;
@@ -153,6 +155,7 @@ async function submitCreateContract() {
     }
 
     const payload = {
+        contract_version: document.getElementById('cf_contractVersion').value,
         client_name: clientName,
         business_name: document.getElementById('cf_businessName').value.trim() || null,
         client_email: clientEmail,
@@ -204,22 +207,45 @@ function copyCreatedLink() {
     });
 }
 
-async function sendCreatedContract() {
-    if (!createdContract) return;
-    const btn = document.getElementById('sendNowBtn');
-    btn.disabled = true;
-    btn.textContent = 'Sending…';
+function openDeliveryModal(contract, onSuccess) {
+    pendingDelivery = { contract, onSuccess };
+    document.getElementById('deliveryRecipient').textContent = contract.client_email;
+    document.getElementById('deliveryCc').value = (contract.terms_snapshot_json?.delivery_cc || []).join(', ');
+    document.getElementById('deliveryError').textContent = '';
+    document.getElementById('confirmDeliveryBtn').disabled = false;
+    document.getElementById('confirmDeliveryBtn').textContent = contract.sent_at ? 'Resend agreement' : 'Send agreement';
+    document.getElementById('deliveryModal').classList.remove('d-none');
+    document.getElementById('deliveryCc').focus();
+}
+function closeDeliveryModal() {
+    if (document.getElementById('confirmDeliveryBtn').disabled) return;
+    document.getElementById('deliveryModal').classList.add('d-none');
+    pendingDelivery = null;
+}
+async function submitContractDelivery() {
+    if (!pendingDelivery) return;
+    const input = document.getElementById('deliveryCc');
+    if (!input.checkValidity()) { input.reportValidity(); return; }
+    const cc = [...new Set(input.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean))];
+    if (cc.length > 5) { document.getElementById('deliveryError').textContent = 'Add no more than five CC recipients.'; return; }
+    const btn = document.getElementById('confirmDeliveryBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
     try {
-        const res = await apiFetch(`/api/contracts/${createdContract.id}/send`, { method: 'POST' });
+        const res = await apiFetch(`/api/contracts/${pendingDelivery.contract.id}/send`, { method:'POST', body:JSON.stringify({ cc_emails:cc }) });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to send');
-        await showAlert(`Agreement emailed to ${createdContract.client_email}.`, 'success');
-        closeCreateModal();
-    } catch (e) {
-        showAlert(e.message || 'Failed to send the agreement email.', 'error');
+        if (!res.ok) throw new Error(data.error || 'Unable to send the agreement.');
+        const done = pendingDelivery.onSuccess;
         btn.disabled = false;
-        btn.textContent = 'Send by Email Now';
+        closeDeliveryModal();
+        if (done) done();
+        await showAlert(data.ccWarning || 'Signing invitation sent. Any selected CC recipients receive a reference copy.', data.ccWarning ? 'warning' : 'success');
+    } catch (err) {
+        document.getElementById('deliveryError').textContent = err.message;
+        btn.disabled = false; btn.textContent = 'Send agreement';
     }
+}
+function sendCreatedContract() {
+    if (createdContract) openDeliveryModal(createdContract, closeCreateModal);
 }
 
 // =============================================================================
@@ -260,6 +286,7 @@ function closeDetailModal() {
 
 function renderDraftEditForm(c) {
     return `
+        ${c.contract_version === 'continuation-v1' ? '<p class="helper-text">Continuing development addendum · existing client</p>' : ''}
         <div class="section-title">Client Information</div>
         <div class="form-grid">
             <div><label>Client Full Name *</label><input type="text" id="dd_clientName" class="form-control" value="${escapeHTML(c.client_name)}"></div>
@@ -349,6 +376,7 @@ function renderDetailFooter(c) {
         return `
             <button class="btn btn-outline-light" style="color:#ff4757; border-color:#ff4757;" onclick="deleteContract('${c.id}', 'draft')">Delete Draft</button>
             <div style="display:flex; gap:10px;">
+                <button class="btn btn-outline-light" onclick="viewPdf('${c.id}')">Preview PDF</button>
                 <button class="btn btn-secondary" onclick="saveDraft('${c.id}')">Save Changes</button>
                 <button class="btn btn-primary" onclick="sendDraft('${c.id}')">Send Agreement</button>
             </div>
@@ -407,6 +435,7 @@ async function saveDraft(id, { silent = false } = {}) {
         const res = await apiFetch(`/api/contracts/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to save changes');
+        currentDetailContract = data;
         if (!silent) await showAlert('Changes saved.', 'success');
         return true;
     } catch (e) {
@@ -416,33 +445,12 @@ async function saveDraft(id, { silent = false } = {}) {
 }
 
 async function sendDraft(id) {
-    const saved = await saveDraft(id, { silent: true });
-    if (!saved) return;
-    try {
-        const res = await apiFetch(`/api/contracts/${id}/send`, { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to send');
-        await showAlert('Agreement emailed to the client.', 'success');
-        closeDetailModal();
-    } catch (e) {
-        showAlert(e.message || 'Failed to send the agreement email.', 'error');
-    }
+    const saved = await saveDraft(id, { silent:true });
+    if (saved) openDeliveryModal(currentDetailContract, closeDetailModal);
 }
-
-async function resendContract(id) {
-    const confirmed = (typeof showConfirm === 'function')
-        ? await showConfirm('Resend the signing link to this client by email?', 'info', 'Resend')
-        : confirm('Resend the signing link to this client by email?');
-    if (!confirmed) return;
-    try {
-        const res = await apiFetch(`/api/contracts/${id}/send`, { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to resend');
-        await showAlert('Agreement resent.', 'success');
-        closeDetailModal();
-    } catch (e) {
-        showAlert(e.message || 'Failed to resend the agreement email.', 'error');
-    }
+function resendContract(id) {
+    const contract = currentDetailContract?.id === id ? currentDetailContract : allContracts.find(c => c.id === id);
+    if (contract) openDeliveryModal(contract, closeDetailModal);
 }
 
 async function deleteContract(id, status, permanent = false) {

@@ -12,6 +12,8 @@
  * form controls / checked items by the sign page and PDF respectively.
  */
 
+const { VERSION: CONTINUATION_VERSION, continuingAcknowledgements, renderContinuingDevelopmentSections } = require('./continuingDevelopmentTemplate');
+
 const COMPANY_NAME = 'I Create Solutions & Services';
 const COMPANY_WEBSITE = 'icreatesolutionsandservices.com';
 const COMPANY_TERMS_URL = `${COMPANY_WEBSITE}/terms`;
@@ -119,6 +121,7 @@ const ACKNOWLEDGEMENTS = [
  *   { type: 'title'|'h1'|'h2'|'h3'|'p'|'ul'|'ol'|'field', ... }
  */
 function renderContractSections(d) {
+  if (d.contractVersion === CONTINUATION_VERSION) return renderContinuingDevelopmentSections(d);
   const S = [];
   const p = (text) => S.push({ type: 'p', text });
   const h1 = (text) => S.push({ type: 'h1', text });
@@ -489,7 +492,12 @@ function renderContractHtml(contract) {
   return parts.join('\n');
 }
 
+function getAcknowledgements(contract) {
+  return (contract.contract_version || contract.contractVersion) === CONTINUATION_VERSION ? continuingAcknowledgements() : ACKNOWLEDGEMENTS;
+}
+
 module.exports = {
+  getAcknowledgements,
   COMPANY_NAME,
   COMPANY_WEBSITE,
   COMPANY_TERMS_URL,

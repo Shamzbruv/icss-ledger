@@ -1,7 +1,7 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
-const { buildContractData, renderContractSections, formatDateLong, ACKNOWLEDGEMENTS } = require('./contractTemplate');
+const { buildContractData, renderContractSections, formatDateLong, getAcknowledgements } = require('./contractTemplate');
 
 const NAVY = '#0B2447';
 const DARK = '#222222';
@@ -28,7 +28,7 @@ function drawBlock(doc, block, ctx) {
       ensureSpace(doc, 30);
       doc.moveDown(0.8);
       doc.fillColor(ORANGE).font('Helvetica-Bold').fontSize(9)
-        .text(block.text, margin, doc.y, { width: contentWidth, characterSpacing: 1.2 });
+        .text(block.text, margin, doc.y, { width: contentWidth, characterSpacing: 0 });
       doc.moveDown(0.2);
       break;
     case 'h2':
@@ -91,14 +91,16 @@ function drawAcknowledgements(doc, contract, ctx) {
   doc.moveTo(margin, doc.y + 4).lineTo(margin + contentWidth, doc.y + 4).strokeColor('#dddddd').lineWidth(1).stroke();
   doc.moveDown(0.8);
 
-  ACKNOWLEDGEMENTS.forEach((item) => {
+  const source = contract.terms_snapshot_json || contract;
+  getAcknowledgements(source).forEach((item) => {
     const checked = ack[item.key] === true;
     ensureSpace(doc, 30);
-    doc.fillColor(checked ? '#1a7f37' : '#999999').font('Helvetica-Bold').fontSize(10)
-      .text(checked ? '☑  ' : '☐  ', margin, doc.y, { continued: true, width: contentWidth });
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(9.5).text(item.title);
+    const checkY = doc.y;
+    doc.rect(margin, checkY + 1, 8, 8).strokeColor(checked ? '#1a7f37' : '#999999').stroke();
+    if (checked) doc.moveTo(margin + 1, checkY + 5).lineTo(margin + 3, checkY + 7).lineTo(margin + 7, checkY + 2).stroke();
+    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(9.5).text(item.title, margin + 18, checkY, { width: contentWidth - 18, characterSpacing: 0 });
     doc.fillColor(DARK).font('Helvetica').fontSize(9)
-      .text(item.text(contract), margin + 18, doc.y, { width: contentWidth - 18, lineGap: 1.5 });
+      .text(item.text(buildContractData(source)), margin + 18, doc.y, { width: contentWidth - 18, lineGap: 1.5 });
 
     if (item.items) {
       item.items.forEach((sub) => {
@@ -127,18 +129,18 @@ function drawSignatures(doc, contract, data, ctx) {
   // --- Company signature (left) ---
   const signaturePath = path.join(__dirname, '../../public/assets/signature.png');
   let leftY = blockTop;
-  if (fs.existsSync(signaturePath)) {
+  if (!(data.contractVersion === 'continuation-v1' && contract.status === 'draft') && fs.existsSync(signaturePath)) {
     doc.image(signaturePath, leftX, leftY, { width: 110 });
     leftY += 62;
   } else {
-    doc.font('Helvetica-Oblique').fontSize(16).fillColor(DARK).text(data.companySignerName, leftX, leftY + 20, { width: colWidth });
+    if (!(data.contractVersion === 'continuation-v1' && contract.status === 'draft')) doc.font('Helvetica-Oblique').fontSize(16).fillColor(DARK).text(data.companySignerName, leftX, leftY + 20, { width: colWidth });
     leftY += 62;
   }
   doc.moveTo(leftX, leftY).lineTo(leftX + colWidth, leftY).strokeColor('#aaaaaa').lineWidth(0.75).stroke();
   doc.font('Helvetica-Bold').fontSize(9.5).fillColor(DARK).text(data.companySignerName, leftX, leftY + 6, { width: colWidth });
   doc.font('Helvetica').fontSize(8).fillColor(GRAY)
     .text('Authorized Signature — I Create Solutions & Services', leftX, doc.y, { width: colWidth });
-  doc.text(`Signed: ${formatDateLong(data.companySignedAt) || formatDateLong(new Date())}`, leftX, doc.y, { width: colWidth });
+  doc.text(data.contractVersion === 'continuation-v1' && contract.status === 'draft' ? 'Draft - company approval pending' : `Signed: ${formatDateLong(data.companySignedAt) || formatDateLong(new Date())}`, leftX, doc.y, { width: colWidth });
 
   // --- Client signature (right) ---
   let rightY = blockTop;
