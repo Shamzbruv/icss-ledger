@@ -3,15 +3,24 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Invoices | ICSS Command Center</title>
     <!-- Use extracted CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20261101-app">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="assets/icss-logo.png">
+
+    <meta name="theme-color" content="#0b2447">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ICSS">
+    <link rel="manifest" href="/command-center.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/pwa.css?v=20261101">
+    <script defer src="/js/pwa.js?v=20261101"></script>
 </head>
 
 <body>
@@ -19,7 +28,7 @@
     <!-- Layout.js injects Header here -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/config.js?v=restore-20261029"></script>
-    <script type="module" src="js/layout.js"></script>
+    <script type="module" src="js/layout.js?v=20261101-app"></script>
 
     <div class="container fade-in">
 
@@ -29,7 +38,7 @@
                 <h2>Invoices</h2>
                 <p>Create, edit, send, and track one-off client invoices in JMD or USD.</p>
             </div>
-            <div class="page-hero-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+            <div class="page-hero-icon"><svg class="invoice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 7h2M8 11h2m2 3v6m2-5h-3a1 1 0 0 0 0 2h2a1 1 0 0 1 0 2h-3"/></svg></div>
         </section>
 
         <div id="editModeBanner" class="edit-mode-banner d-none">

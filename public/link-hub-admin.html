@@ -1,4 +1,13 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Link Hub | ICSS Command Center</title><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/link-hub-admin.css"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="icon" href="/assets/icss-logo.png"></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover"><title>Link Hub | ICSS Command Center</title><link rel="stylesheet" href="/css/style.css?v=20261101-app"><link rel="stylesheet" href="/css/link-hub-admin.css"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="icon" href="/assets/icss-logo.png">
+    <meta name="theme-color" content="#0b2447">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ICSS">
+    <link rel="manifest" href="/command-center.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/pwa.css?v=20261101">
+    <script defer src="/js/pwa.js?v=20261101"></script>
+</head>
 <body><main class="container fade-in hub-admin"><div class="page-heading"><div><p class="kicker">QR DESTINATION</p><h1>Link Hub</h1><p class="lead">Control what people see when they scan your QR code.</p></div><a class="btn btn-outline-light" href="/links" target="_blank">Open Public Page ↗</a></div>
 <div id="notice" class="notice" hidden></div>
 <section class="admin-grid"><div class="editor-stack">
@@ -7,4 +16,4 @@
  <article class="card"><div class="section-title"><div><h2>Promotional popup</h2><p>Show a neat offer shortly after visitors arrive.</p></div><label class="switch"><input id="offerEnabled" type="checkbox"><span></span><b>Enabled</b></label></div><div class="form-grid"><label>Small heading<input id="offerEyebrow" class="form-control" maxlength="30"></label><label>Offer title<input id="offerTitle" class="form-control" maxlength="90"></label><label class="wide">Description<textarea id="offerDescription" class="form-control" rows="3" maxlength="300"></textarea></label><label>Discount code<input id="offerCode" class="form-control" maxlength="30"></label><label>Button label<input id="offerButtonText" class="form-control" maxlength="50"></label><label class="wide">Button link<input id="offerButtonUrl" class="form-control" placeholder="https://wa.me/..."></label></div></article>
  <div class="save-bar"><span id="saveStatus">Changes are not saved automatically.</span><button id="saveHub" class="btn btn-primary">Save &amp; Publish</button></div>
  </div><aside class="preview-wrap"><div class="preview-label">LIVE PREVIEW</div><iframe id="hubPreview" src="/links" title="Link hub preview"></iframe></aside></section></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/js/config.js?v=restore-20261029"></script><script type="module" src="/js/layout.js"></script><script src="/js/link-hub-admin.js"></script></body></html>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/js/config.js?v=restore-20261029"></script><script type="module" src="/js/layout.js?v=20261101-app"></script><script src="/js/link-hub-admin.js"></script></body></html>

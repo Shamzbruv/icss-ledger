@@ -30,21 +30,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span class="brand-copy"><strong>ICSS</strong><small>Command Center</small></span>
                 </a>
             </div>
-            <button class="menu-toggle" id="menuToggle">
+            <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNav">
                 <i class="fas fa-bars"></i>
             </button>
-            <nav class="main-nav" id="mainNav">
+            <nav class="main-nav" id="mainNav" aria-label="Command Center">
                 <a href="/dashboard" class="nav-link ${window.location.pathname === '/' || window.location.pathname === '/dashboard' ? 'active' : ''}"><i class="fas fa-gauge-high"></i><span>Dashboard</span></a>
                 <a href="/leads" class="nav-link ${window.location.pathname.includes('leads') ? 'active' : ''}"><i class="fas fa-user-plus"></i><span>Leads</span></a>
                 <a href="/reviews-admin" class="nav-link ${window.location.pathname.includes('reviews') ? 'active' : ''}"><i class="fas fa-star"></i><span>Reviews</span></a>
                 <a href="/link-hub-admin" class="nav-link ${window.location.pathname.includes('link-hub-admin') ? 'active' : ''}"><i class="fas fa-link"></i><span>Link Hub</span></a>
                 <a href="/website-manager?section=portfolio" class="nav-link ${window.location.pathname.includes('website-manager') && !window.location.search.includes('careers') ? 'active' : ''}"><i class="fas fa-briefcase"></i><span>Website & Portfolio</span></a>
                 <a href="/website-manager?section=careers" class="nav-link ${window.location.pathname.includes('website-manager') && window.location.search.includes('careers') ? 'active' : ''}"><i class="fas fa-users"></i><span>Careers & Referrals</span></a>
-                <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}"><i class="fas fa-file-invoice"></i><span>Invoices</span></a>
+                <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}"><svg class="invoice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 7h2M8 11h2m2 3v6m2-5h-3a1 1 0 0 0 0 2h2a1 1 0 0 1 0 2h-3"/></svg><span>Invoices</span></a>
                 <a href="/contracts" class="nav-link ${window.location.pathname.includes('contracts') ? 'active' : ''}"><i class="fas fa-file-signature"></i><span>Contracts</span></a>
                 <a href="/partner-contracts" class="nav-link ${(window.location.pathname.includes('partner-contracts') || window.location.pathname.includes('halomanage-partnerships') || window.location.pathname.includes('referral-contracts')) ? 'active' : ''}"><i class="fas fa-handshake"></i><span>Partner Contracts</span></a>
                 <a href="/client-care-pulse" class="nav-link ${window.location.pathname.includes('client-care') ? 'active' : ''}"><i class="fas fa-heart-pulse"></i><span>Client Care</span></a>
                 <a href="/accounting" class="nav-link ${window.location.pathname.includes('accounting') ? 'active' : ''}"><i class="fas fa-chart-line"></i><span>Accounting</span></a>
+                <button type="button" class="header-install" data-app-install aria-label="Install ICSS Command Center" title="Install Command Center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"/></svg><span>Install app</span></button>
                 <button id="logoutBtn" class="header-logout" title="Logout" aria-label="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
             </nav>
         </div>
@@ -54,6 +55,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Insert at the beginning of body
     document.body.insertAdjacentHTML('afterbegin', component);
 
+    mainNavLinks();
+    document.dispatchEvent(new Event('icss:layout-ready'));
+    function mainNavLinks() {
+        document.querySelectorAll('.main-nav .nav-link').forEach(link => {
+            link.title = link.textContent.trim();
+            link.setAttribute('aria-label', link.textContent.trim());
+            if (link.classList.contains('active')) link.setAttribute('aria-current', 'page');
+        });
+    }
+
     // Mobile Menu Toggle Logic
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.getElementById('mainNav');
@@ -61,6 +72,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         menuToggle.addEventListener('click', () => {
             mainNav.classList.toggle('active');
             menuToggle.classList.toggle('active');
+            menuToggle.setAttribute('aria-expanded', String(mainNav.classList.contains('active')));
+            menuToggle.setAttribute('aria-label', mainNav.classList.contains('active') ? 'Close navigation' : 'Open navigation');
             const icon = menuToggle.querySelector('i');
             if (mainNav.classList.contains('active')) {
                 icon.classList.replace('fa-bars', 'fa-times');
@@ -74,11 +87,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             link.addEventListener('click', () => {
                 mainNav.classList.remove('active');
                 menuToggle.classList.remove('active');
+                menuToggle.setAttribute('aria-expanded', 'false');
+                menuToggle.setAttribute('aria-label', 'Open navigation');
                 const icon = menuToggle.querySelector('i');
                 icon.classList.replace('fa-times', 'fa-bars');
             });
         });
     }
+
+    document.addEventListener('keydown', event => {
+        if (document.querySelector('dialog[open]')) return;
+        if (event.key === 'Escape' && mainNav?.classList.contains('active')) {
+            mainNav.classList.remove('active');
+            menuToggle.classList.remove('active');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            menuToggle.setAttribute('aria-label', 'Open navigation');
+            menuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
+            menuToggle.focus();
+        }
+    });
 
     // 4. Inject Back to Top Button
     const bttButton = document.createElement('button');

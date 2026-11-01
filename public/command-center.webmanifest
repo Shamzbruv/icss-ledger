@@ -1,0 +1,22 @@
+{
+  "id": "/command-center",
+  "name": "ICSS Command Center",
+  "short_name": "ICSS",
+  "description": "Manage ICSS invoices, clients, contracts, accounting and website content.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101014",
+  "theme_color": "#0b2447",
+  "lang": "en-JM",
+  "icons": [
+    { "src": "/assets/app-icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/app-icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/app-icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Invoices", "url": "/invoices", "description": "Create and manage invoices" },
+    { "name": "Contracts", "url": "/contracts", "description": "Manage client agreements" },
+    { "name": "Accounting", "url": "/accounting", "description": "Open accounting and reports" }
+  ]
+}

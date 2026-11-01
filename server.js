@@ -198,7 +198,7 @@ const router = express.Router();
 const staticOptions = {
     extensions: ['html'],
     setHeaders(res, filename) {
-        res.setHeader('Cache-Control', /(?:config|auth)\.js$/.test(filename) ? 'no-store' : /\.(css|js|png|jpg|jpeg|webp|svg|woff2)$/i.test(filename)
+        res.setHeader('Cache-Control', /(?:config|auth|command-center-sw)\.js$/.test(filename) ? 'no-store' : /\.(css|js|png|jpg|jpeg|webp|svg|woff2)$/i.test(filename)
             ? 'public, max-age=3600' : 'no-cache');
     }
 };

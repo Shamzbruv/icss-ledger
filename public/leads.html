@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Website Leads | ICSS Command Center</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20261101-app">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -76,11 +76,20 @@
             white-space: pre-wrap;
         }
     </style>
+
+    <meta name="theme-color" content="#0b2447">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ICSS">
+    <link rel="manifest" href="/command-center.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/pwa.css?v=20261101">
+    <script defer src="/js/pwa.js?v=20261101"></script>
 </head>
 <body>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/config.js?v=restore-20261029"></script>
-    <script type="module" src="js/layout.js"></script>
+    <script type="module" src="js/layout.js?v=20261101-app"></script>
 
     <div class="container fade-in">
         <h1 class="mb-4">Website Leads / CRM</h1>

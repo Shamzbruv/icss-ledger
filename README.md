@@ -165,3 +165,21 @@ sums debit lines in the ledger's base currency, JMD.
 Client contracts can use **Continuing development - existing client** to create an addendum that preserves the earlier project agreement. Drafts remain editable and can be previewed as PDF; the additional phase's payment arrangement is accepted when the client signs. The shared HTML/PDF wording is in `continuingDevelopmentTemplate.js`.
 
 Every contract send/resend now opens a recipient review with up to five optional CC addresses. Only the designated signer receives the signing link. A second reference email carries the PDF with the selected visible CC recipients, and the completed signed PDF is copied to them. Recipients are validated before sending; selected CC addresses are stored in the existing terms snapshot, so this feature requires no database migration. If reference-copy delivery fails after the signer invitation succeeds, the interface reports that partial delivery explicitly.
+
+## Installable Command Center
+
+Admin pages and `/login` link to `/command-center.webmanifest`. Use **Install app**
+in the admin navigation or **Install Command Center** on the login page. Supported
+browsers open the installed app in a standalone window at `/dashboard`; the
+existing sign-in remains required. The install control provides browser-specific
+instructions when an install prompt is not available. App shortcuts open invoices,
+contracts and accounting.
+
+`public/command-center-sw.js` has root scope because the existing admin URLs are
+flat. Its explicit route allowlist handles only admin document navigations. It
+caches only a generic, self-contained offline screen: invoices, credentials,
+API responses, signing links and public pages are never cached by this worker.
+An internet connection is required to load records or save changes.
+
+App icons are code-native assets under `public/assets/app-icons/`. The Invoice
+navigation and page header use inline SVG so they render without an icon font.
