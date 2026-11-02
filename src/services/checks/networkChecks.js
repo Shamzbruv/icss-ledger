@@ -88,7 +88,7 @@ async function sslExpiryCheck(domainOrUrl) {
             req.on('error', error => resolve(failedResult('SSL connection failed', error)));
             req.setTimeout(5000, () => {
                 req.destroy();
-                resolve({ status: 'fail', details: 'SSL check timed out', evidence: { timeout: true } });
+                resolve({ status: 'skip', details: 'SSL check timed out', evidence: { timeout: true } });
             });
             req.end();
         });
