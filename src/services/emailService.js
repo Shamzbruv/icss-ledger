@@ -34,7 +34,7 @@ async function sendInvoiceEmail(to, subject, text, html, pdfBuffer = null, invoi
         subject,
         text,
         html,
-        reply_to: 'icreatesolutions.ja@gmail.com'
+        replyTo: 'icreatesolutions.ja@gmail.com'
     };
 
     if (pdfBuffer && invoiceNumber) {
@@ -65,7 +65,7 @@ async function sendEmail(to, subject, html, fromEmail = 'iCreate Solutions <supp
             to: Array.isArray(to) ? to : [to],
             subject,
             html,
-            reply_to: 'icreatesolutions.ja@gmail.com'
+            replyTo: 'icreatesolutions.ja@gmail.com'
         };
 
         mailOptions.bcc = getMergedBcc(bcc);
@@ -93,7 +93,7 @@ async function sendContractEmail(to, subject, text, html, pdfBuffer = null, file
         subject,
         text,
         html,
-        reply_to: 'icreatesolutions.ja@gmail.com'
+        replyTo: 'icreatesolutions.ja@gmail.com'
     };
 
     if (pdfBuffer && filename) {
