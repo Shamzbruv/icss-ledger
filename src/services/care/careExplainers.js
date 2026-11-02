@@ -244,6 +244,7 @@ const RULES = {
     SSL(item, env) {
         const e = item.evidence || {};
         const base = { group: 'security', title: 'Is your security padlock valid?', glossary: ['ssl'] };
+        if (!Number.isFinite(e.daysRemaining) && !e.authorizationError) return { ...base, status: 'info', headline: 'Certificate check could not be completed.', detail: item.details || 'The certificate expiry date could not be verified.', meaning: 'This does not establish that the certificate has expired.', who: 'us' };
         const until = e.validTo ? fmt.date(e.validTo) : null;
         if (item.status === 'pass') return { ...base, headline: `Yes — your padlock is valid until ${until} (${fmt.plural(e.daysRemaining, 'day')} from now).`, detail: `That is the little lock beside your address in the browser.${e.issuer ? ` It was issued by ${e.issuer}.` : ''}`, meaning: 'Visitors see that your site is genuine and their information is protected.' };
         if (item.status === 'warn') {
