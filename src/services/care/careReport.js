@@ -34,6 +34,7 @@ function scoreResults(results) {
     let cap = 100;
     const failedCodes = [];
     for (const r of results || []) {
+        if (r.item_code === 'SSL' && !Number.isFinite(r.evidence?.daysRemaining) && !r.evidence?.authorizationError) continue;
         if (!(r.status in POINTS)) continue;
         const weight = WEIGHTS[r.item_code] ?? 5;
         if (!weight) continue;
@@ -355,7 +356,8 @@ function buildWeeklyReport({ service = {}, client = {}, tier: tierIn, results = 
         scoreboard.push({ label: 'Speed', value: Number.isFinite(ms) ? `${Math.round(ms / 100) / 10}s` : '—', sub: 'homepage opens', state: perf.status === 'pass' ? 'good' : perf.status === 'warn' ? 'warn' : 'bad' });
     }
     const ssl = byCode.SSL;
-    if (ssl && ssl.status !== 'skip') scoreboard.push({ label: 'Padlock', value: ssl.status === 'fail' ? 'Problem' : (ssl.evidence?.daysRemaining != null ? `${ssl.evidence.daysRemaining} days` : 'Valid'), sub: 'until it renews', state: ssl.status === 'pass' ? 'good' : ssl.status === 'warn' ? 'warn' : 'bad' });
+    if (ssl && !Number.isFinite(ssl.evidence?.daysRemaining) && !ssl.evidence?.authorizationError) scoreboard.push({ label: 'Padlock', value: 'Unverified', sub: 'check incomplete', state: 'warn' });
+    else if (ssl && ssl.status !== 'skip') scoreboard.push({ label: 'Padlock', value: ssl.status === 'fail' ? 'Problem' : (ssl.evidence?.daysRemaining != null ? `${ssl.evidence.daysRemaining} days` : 'Valid'), sub: 'until it renews', state: ssl.status === 'pass' ? 'good' : ssl.status === 'warn' ? 'warn' : 'bad' });
     if (analytics.state === 'ok') {
         const t = analytics.tiles[0];
         scoreboard.push({ label: 'Visitors', value: t.value, sub: t.change.short, state: t.change.dir === 'down' ? 'warn' : 'good' });
