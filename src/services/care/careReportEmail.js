@@ -8,7 +8,7 @@
 const { fmt, GROUPS } = require('./careExplainers');
 const { COMPANY_PHONE } = require('../contractTemplate');
 
-const SUPPORT_EMAIL = 'support@icreatesolutionsandservices.com';
+const SUPPORT_EMAIL = 'icreatesolutions.ja@gmail.com';
 const FONT = "'Segoe UI',Arial,Helvetica,sans-serif";
 
 const COLORS = {
