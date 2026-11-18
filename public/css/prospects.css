@@ -1,0 +1,9 @@
+.prospect-page{max-width:940px;margin:24px auto;padding:0 16px 50px;color:#142e48}
+.prospect-page h1{font-size:clamp(1.8rem,4vw,2.6rem);margin:.5rem 0}
+.prospect-page header p,.prospect-page small{color:#4c6377}
+.queue-tools,.steps,.save-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin:1rem 0}
+.prospect-page button,.prospect-page select,.prospect-page input[type=date]{border:1px solid #b9c8d6;border-radius:7px;background:white;color:#183b5b;padding:.5rem .7rem;font:inherit}
+.prospect-page button{cursor:pointer}.prospect-page button:disabled{opacity:.5}.prospect-page details{background:white;border:1px solid #d5dfe8;border-radius:10px;margin:.5rem 0;padding:.8rem 1rem;overflow-wrap:anywhere}
+.prospect-page summary{cursor:pointer;font-weight:650}.prospect-page summary small{display:block;font-weight:400;margin:.3rem 0 0 1rem}
+.prospect-page pre{white-space:pre-wrap;font:inherit;line-height:1.5}.prospect-page textarea{display:block;width:100%;min-height:3.5rem;padding:.6rem;box-sizing:border-box}
+.prospect-page .save{background:#134c76;color:white}.steps label{display:inline-flex;align-items:center;gap:.25rem}.prospect-page a{color:#155884}
