@@ -5,8 +5,8 @@ from urllib.parse import quote
 WEB=Path(__file__).resolve().parents[1]/'main website file'
 D=json.loads((WEB/'assets/website-defaults.json').read_text())
 e=lambda x:html.escape(str(x),quote=True)
-nav=[('Home','/'),('Services','/services'),('Portfolio','/portfolio'),('About','/about'),('Work with ICSS','/work-with-icss')]
-def brand():return '<a class="brand" href="/" aria-label="iCreate Solutions and Services home"><svg class="brand-cube" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 2 6v12l10 5 10-5V6L12 1Zm0 2.4L19.5 7 12 10.6 4.5 7 12 3.4ZM4 8.8l7 3.4v8L4 16.8v-8Zm9 11.4v-8l7-3.4v8l-7 3.4Z"/></svg><span><strong>ICREATE</strong></span></a>'
+nav=[('Home','/'),('Services','/services'),('Hosting','/subscriptions.html#hosting'),('Portfolio','/portfolio'),('About','/about'),('Work with ICSS','/work-with-icss')]
+def brand():return '<a class="brand" href="/" aria-label="ICSS home"><img src="/assets/studio/icss-bulb.svg" alt="" width="29" height="29" style="display:inline-block;width:29px;height:29px;vertical-align:middle;border-radius:0"><span><strong>ICSS</strong></span></a>'
 
 def shell(name,title,desc,body):
  links=''.join(f'<a href="{url}"'+(' aria-current="page"' if title==label or (name=='index' and label=='Home') else '')+f'>{label}</a>' for label,url in nav)
