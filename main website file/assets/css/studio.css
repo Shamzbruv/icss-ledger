@@ -1,0 +1,28 @@
+/* Public homepage and project planner */
+#home.studio-hero {background:#050c18;color:#f5f5f0;padding:clamp(112px,11vw,174px) max(5vw,20px) 0;position:relative;overflow:hidden}
+.studio-hero-inner,.studio-owner-inner,.studio-products {max-width:1400px;margin:auto}
+.studio-hero-inner {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);align-items:center;gap:clamp(16px,3vw,60px)}
+.studio-label,.studio-products>span {font:650 .71rem/1.5 Inter,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+.studio-label {color:#d8bc91;margin:0 0 1.65rem}
+.studio-copy h1,.studio-owner h2 {font:500 clamp(3.1rem,5.4vw,6rem)/1.02 Inter,system-ui,sans-serif;letter-spacing:-.067em;color:inherit;text-transform:none;margin:0;text-shadow:none}
+.studio-copy h1 em {font-family:Georgia,serif;font-weight:400;letter-spacing:-.065em;color:#dce9ff}
+.studio-intro {max-width:32rem;font:400 clamp(1rem,1.2vw,1.16rem)/1.65 Inter,system-ui,sans-serif;color:#bbcadc;margin:1.6rem 0}
+.studio-art {margin:0;position:relative}
+.studio-art img {display:block;width:100%;height:auto;border-radius:14px}
+.studio-actions,.studio-owner-links {display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.studio-actions a,.studio-actions button {display:inline-flex;align-items:center;gap:20px;border:1px solid #52637c;border-radius:7px;padding:13px 19px;color:#edf4ff;font:650 .92rem/1.45 Inter,system-ui,sans-serif;cursor:pointer}
+.studio-actions button {background:#dceaff;color:#101d31;border-color:#dceaff}
+.studio-actions :is(button,a):hover {box-shadow:0 0 0 2px #93bfff}
+.studio-estimate {display:inline-block;color:#b6c7de;font-size:.84rem;text-decoration:underline;text-underline-offset:4px;margin-top:17px}
+.studio-products {margin-top:clamp(30px,4vw,68px);display:flex;align-items:center;flex-wrap:wrap;gap:16px 7%;border-top:1px solid #27364c;padding:22px 0;color:#cbd8e7}
+.studio-products>span {color:#adbbcc;font-size:.65rem}.studio-products a,.studio-owner-links a {font-size:.88rem;font-weight:600}
+.studio-products a:hover,.studio-owner-links a:hover {text-decoration:underline}
+.studio-owner {background:#f3f1eb;color:#14243a;padding:clamp(55px,8vw,110px) max(6vw,22px)}
+.studio-owner-inner {max-width:1040px;display:grid;grid-template-columns:.82fr 1fr;gap:clamp(32px,7vw,110px);align-items:center}
+.studio-owner img {width:100%;height:auto;border-radius:8px}
+.studio-owner .studio-label {color:#715637}.studio-owner h2 {font-family:Georgia,serif;letter-spacing:-.055em;margin-bottom:24px}
+.studio-owner p:not(.studio-label) {line-height:1.75;margin:12px 0;color:#3b4a5c}
+.studio-owner-links {margin-top:24px;gap:10px 24px}.studio-owner-links a {color:#154b7b}
+#portfolio .project-card {box-shadow:0 10px 32px #111e3014;border-color:#415069;background:#101e31}
+#portfolio .project-card::before {display:none}#portfolio .project-card:hover {box-shadow:0 12px 35px #142e4a2b}
+@media(max-width:760px){.studio-hero-inner,.studio-owner-inner {grid-template-columns:1fr}.studio-hero-inner{gap:30px}.studio-art{max-width:580px}.studio-copy h1{font-size:clamp(2.8rem,10vw,4.3rem)}.studio-products{column-gap:20px}.studio-products>span{flex-basis:100%}.studio-owner img{max-width:390px}.studio-owner h2{font-size:3rem}}

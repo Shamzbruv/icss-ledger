@@ -1394,7 +1394,7 @@
 <link rel="stylesheet" href="/assets/css/legacy-fixes.css?v=restore-20261029">
 <script defer src="/assets/js/legacy-navigation.js?v=restore-20261029"></script>
 <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/neue-machina" media="print" onload="this.media='all'">
-</head>
+<link rel="stylesheet" href="/assets/css/studio.css?v=20261118"></head>
 
 <body class="relative bg-[#050F1F] min-h-[100vh] flex flex-col overflow-x-hidden">
 
@@ -1481,65 +1481,18 @@
       </div>
     </div>
   </nav>
-  <section class="hero-gradient min-h-screen flex items-center relative overflow-hidden pt-16 digital-static" id="home">
-    <div class="particles" id="particles-container"></div>
-    <div class="absolute inset-0 opacity-20">
-      <div class="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-cyan-300 blur-3xl animate-pulse"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-32 h-32 rounded-full bg-cyan-300 blur-3xl animate-pulse"
-        style="animation-delay: 1s;"></div>
-    </div>
-    <div class="container mx-auto px-6 py-20 hero-content">
-      <div class="flex flex-col md:flex-row items-center">
-        <div class="md:w-1/2 mb-12 md:mb-0 fade-in">
-          <h1 class="hero-title text-4xl md:text-6xl font-bold text-white mb-6">
-            A Globally Trusted <span class="secondary-text">Digital</span> Agency — Websites, Apps & <span class="accent-text">Designs</span> That Deliver Results
-          </h1>
-          <p class="text-xl md:text-2xl text-gray-300 font-light mb-8 max-w-2xl hero-subtitle fade-in"
-            style="animation-delay: 0.2s">
-            We build world-class websites, mobile apps, and custom automation solutions for businesses globally, with proud Jamaican roots. Ready to grow your business online?
-          </p>
-          <div class="hero-actions flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-            <button id="hero-quiz-cta"
-              class="secondary-bg primary-text px-8 py-3 rounded-full font-bold hover:bg-cyan-400 transition glow-effect pulse"
-              onclick="openQuizModal('Hero Quiz CTA')">
-              <i class="fas fa-bolt mr-2"></i>Get Instant Quote
-            </button>
-            <a id="hero-solution-cta"
-              class="border-2 border-cyan-300 text-white px-8 py-3 rounded-full font-bold hover:bg-cyan-900 transition glow-effect"
-              href="#solution-finder" onclick="gtag('event','select_content',{content_name:'Hero Solution Finder CTA'})">
-              <i class="fas fa-compass mr-2"></i>Explore Solutions
-            </a>
-          </div>
-          <p class="mt-4" style="font-size:0.8rem;">
-            <a href="#project-estimator" style="color:rgba(255,255,255,0.55);text-decoration:underline;font-size:0.8rem;"
-               onclick="gtag('event','select_content',{content_name:'Hero Estimator Link'})">
-              Or use the full project estimator →
-            </a>
-          </p>
-        </div>
-        <div class="md:w-1/2 fade-in" style="animation-delay: 0.2s;">
-          <div class="relative">
-            <div
-              class="w-full h-80 md:h-96 bg-black bg-opacity-30 rounded-2xl backdrop-blur-sm border border-cyan-300 border-opacity-30 digital-static overflow-hidden flex items-center justify-center">
-              <div class="text-center px-8">
-                <div class="text-xs md:text-sm tracking-[0.35em] uppercase text-cyan-300 mb-3">ICREATE</div>
-                <h2 class="text-2xl md:text-4xl font-bold text-white mb-2">SOLUTIONS &amp; SERVICES</h2>
-                <p class="text-sm md:text-base text-cyan-100 uppercase tracking-[0.2em] tech-font">Digital Innovation
-                  Experts</p>
-              </div>
-            </div>
-            <div class="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-cyan-300 opacity-20 animate-pulse"></div>
-            <div class="absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-cyan-300 opacity-20 animate-pulse"
-              style="animation-delay: 1s;"></div>
-          </div>
-        </div>
+  <section id="home" class="studio-hero" aria-labelledby="studio-title">
+    <div class="studio-hero-inner">
+      <div class="studio-copy">
+        <p class="studio-label">iCreate Solutions &amp; Services · Jamaica</p>
+        <h1 id="studio-title">Software built<br>around <em>your business.</em></h1>
+        <p class="studio-intro">From your first online booking to the dashboard that runs your day, we design websites, apps and custom software around the way you work.</p>
+        <div class="studio-actions"><button type="button" id="hero-quiz-cta" onclick="openQuizModal('Hero Quiz CTA')">Get a project quote <span aria-hidden="true">↗</span></button><a id="hero-solution-cta" href="#solution-finder">Explore solutions <span aria-hidden="true">↓</span></a></div>
+        <a class="studio-estimate" href="#project-estimator">Estimate your project</a>
       </div>
+      <figure class="studio-art"><img src="/assets/studio/studio-art.webp" alt="Jamaica etched in gold circuitry on layered sapphire glass" width="1400" height="933" fetchpriority="high"></figure>
     </div>
-    <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
-      <a class="text-white text-2xl" href="#services">
-        <i class="fas fa-chevron-down"></i>
-      </a>
-    </div>
+    <div class="studio-products"><span>Explore our work</span><a href="https://icssbookings.com">ICSS Bookings ↗</a><a href="/portfolio">Project portfolio ↗</a><a href="https://graceconnect.love">Grace Connect ↗</a></div>
   </section>
   <!-- ===== SOLUTION FINDER CTA SECTION ===== -->
   <section id="solution-finder" class="py-24 bg-[#0B0F19] relative overflow-hidden">
@@ -2959,40 +2912,10 @@
       </div>
     </div>
   </section>
-  <section class="py-20 bg-white" id="founder">
-    <div class="container mx-auto px-6">
-      <div class="text-center mb-16 fade-in">
-        <h2 class="text-3xl md:text-4xl font-bold primary-text mb-4">Meet the <span
-            class="secondary-text">Founder</span></h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">The visionary mind behind our innovative digital solutions.
-        </p>
-      </div>
-      <div class="flex justify-center">
-        <div class="team-member max-w-sm w-full fade-in">
-          <div class="bg-gray-100 rounded-xl overflow-hidden shadow-lg relative group">
-            <img alt="Shamar Baker - Founder" loading="lazy" decoding="async" class="w-full h-auto object-cover aspect-square"
-              src="https://i.postimg.cc/sX05mmbk/1760580147247.png" />
-            <div class="p-6 text-center">
-              <h3 class="text-xl font-bold primary-text mb-1">Shamar Baker</h3>
-              <p class="text-cyan-600 mb-3">Founder &amp; Digital Innovation Expert</p>
-              <p class="text-gray-600 text-sm mb-4">Dedicated to crafting high-quality, customized digital solutions
-                tailored to every client's unique vision and goals.</p>
-              <div class="flex justify-center space-x-4">
-                <a class="text-gray-500 hover:text-cyan-500" href="https://www.linkedin.com/in/shamar-baker-0b75a8284" aria-label="Shamar Baker on LinkedIn"
-                  target="_blank" rel="noopener noreferrer">
-                  <i class="fab fa-linkedin-in"></i>
-                </a>
-                <a class="text-gray-500 hover:text-cyan-500" href="https://www.instagram.com/icreate_solutions/?hl=en"
-                  target="_blank" rel="noopener noreferrer">
-                  <i class="fab fa-instagram"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  <section id="founder" class="studio-owner"><div class="studio-owner-inner">
+    <img src="/assets/studio/shamar-baker.webp" width="900" height="900" loading="lazy" decoding="async" alt="Shamar Baker, owner and founder of iCreate Solutions &amp; Services">
+    <div><p class="studio-label">Owner &amp; founder</p><h2>Shamar Baker</h2><p>I started iCreate in Jamaica to build software that fits how people actually work. That’s the thinking behind ICSS Bookings for service providers and ICSS Plaza for merchants.</p><p>Tell me what takes up too much of your day. That’s where we can start.</p>
+    <div class="studio-owner-links"><a href="/contact">Discuss your project ↗</a><a href="https://www.linkedin.com/in/shamar-baker-0b75a8284">LinkedIn ↗</a><a href="https://www.instagram.com/icreate_solutions/">Instagram ↗</a></div></div></div></section>
   <section class="py-20 primary-bg text-white digital-static" id="contact">
     <div class="container mx-auto px-6">
       <div class="max-w-6xl mx-auto">
@@ -3505,31 +3428,6 @@
     });
     // --- END NEW FLIP CARD CLICK LOGIC ---
 
-    // Create particles for hero section
-    function createParticles() {
-      const container = document.getElementById('particles-container');
-      const particleCount = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : (window.innerWidth < 768 ? 8 : 14);
-
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('particle');
-
-        const size = Math.random() * 4 + 2; // 2–6px
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-
-        const posX = Math.random() * 100;
-        particle.style.left = `${posX}%`;
-
-        const delay = Math.random() * 15;
-        particle.style.animationDelay = `${delay}s`;
-
-        const opacity = Math.random() * 0.5 + 0.1;
-        particle.style.opacity = opacity;
-
-        container.appendChild(particle);
-      }
-    }
 
     // Animate stats counting up
     function animateStats() {
@@ -3598,7 +3496,7 @@
 
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', function () {
-      createParticles();
+
       initIntersectionObserver();
 
       // Stagger fade-in animation delays (respect existing inline delays)

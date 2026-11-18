@@ -29,3 +29,14 @@ body[data-page=index] .hero{min-height:calc(100svh - 80px);display:flex;align-it
 @media(max-width:780px){.site-header{height:76px}.site-nav{top:76px;background:var(--primary);border-color:#00f5ff3d;box-shadow:0 20px 30px #050f1f55}.site-nav .nav-cta{margin-top:8px;text-align:center}.hero{padding:62px 0}.hero-grid{grid-template-columns:1fr;gap:48px}body[data-page=index] .hero{padding:60px 0 70px;min-height:0}body[data-page=index] .hero h1{font-size:clamp(34px,7.7vw,54px)}body[data-page=index] .hero p{font-size:17px}.tech-display{min-height:290px}.tech-display-wrap{margin:0 8px}.tech-display-wrap::before,.tech-display-wrap::after{width:65px;height:65px}.tech-display h2{font-size:28px}.site-nav>a:not(.nav-cta)::after{display:none}}
 @media(prefers-reduced-motion:reduce){.project-card:hover{transform:none}}
 .founder-photo{width:100%;max-width:480px;aspect-ratio:1;object-fit:cover;border-radius:20px;box-shadow:0 14px 35px #0a1a3a20}
+
+/* Studio palette across the public catalogue, portfolio, company and enquiry pages. */
+.site-header,.site-footer {background:#081323;border-color:#27364c}
+.hero {background:linear-gradient(100deg,#081323 12%,#10233c 72%,#193653);border-color:#354966}
+.hero::before,.section.dark::before,.site-footer::before {opacity:.13}
+.hero .eyebrow {color:#dfc69e}.hero h1 {font-weight:550;letter-spacing:-.06em;text-shadow:none}
+.section.soft {background:#f5f3ee}.site-nav .nav-cta,.button {box-shadow:none}
+.project-card,.service-card {box-shadow:0 10px 30px #101c2f10;border-color:#a7b7c7}
+.project-card {background:#0e1e32}.project-card::before {display:none}
+.project-card:hover,.service-card:hover {box-shadow:0 14px 35px #13253a22;border-color:#788ea8}
+#founder .founder-photo {border-radius:8px;box-shadow:none}#founder h2 {font-family:Georgia,serif;font-weight:400}
