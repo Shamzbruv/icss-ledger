@@ -16,6 +16,7 @@ body.sidebar-compact { --side-width: 72px; }
 #commandSidebar :focus-visible { outline: 2px solid #63c9ff; outline-offset: -2px; }
 #commandSidebar .side-nav :is(i,svg) { width: 19px; height: 18px; flex: none; text-align: center; }
 #commandSidebar [hidden], #sideBackdrop[hidden] { display: none !important; }
+#commandSidebar .side-nav span { display: inline; }
 @media(min-width:801px) {
  .sidebar-compact #commandSidebar .side-inner { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(0,1fr); }
  .sidebar-compact #commandSidebar :is(.brand-link,.side-nav>a,.side-nav>button) { justify-content: center; }
