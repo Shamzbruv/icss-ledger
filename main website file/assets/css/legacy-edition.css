@@ -23,3 +23,11 @@ body .edition-nav,body .edition-foot{background:#081321;color:#f6f3eb}
 .ed-landing input,.ed-landing select,.ed-landing textarea{color:#152b3c!important}
 #project-estimator,.primary-bg.digital-static{background-color:#101e30}.hero-gradient .secondary-text{color:#d5bc92}
 @media(max-width:780px){.edition-nav-inner,.edition-foot-inner{flex-wrap:wrap;gap:12px}.edition-nav button{display:block}.edition-nav nav{display:none;flex-basis:100%;padding:12px 0}.edition-nav nav.open{display:flex}.edition-foot nav{gap:12px}}
+.edition-planner #home,.edition-planner #founder,.edition-planner #portfolio,.edition-planner #reviews{display:none}
+.planner-intro{padding:clamp(125px,13vw,175px) 6% 54px;background:#081421;color:#f7f5ef;border-bottom:1px solid #a38a60}
+.planner-intro>div{max-width:1160px;margin:auto}.planner-intro p{margin:24px 0 8px;color:#d9c299;text-transform:uppercase;letter-spacing:.14em;font-size:.72rem}
+.planner-intro h1{font:400 clamp(3.1rem,7vw,6.2rem)/1 Georgia,serif;letter-spacing:-.055em;margin:0 0 25px}
+.planner-intro nav{display:flex;flex-wrap:wrap;gap:14px 28px}.planner-intro a{color:#d8e7f5;font-size:.9rem;text-decoration:underline;text-underline-offset:4px}
+.edition-planner #packages,.edition-planner #services,.edition-planner #process{background:#f7f5ef}.edition-planner .package-card{border:1px solid #bbb4a5;border-radius:5px;box-shadow:none}.edition-planner .package-card>div:first-child{background:#112437;color:#fff}
+.edition-planner .package-card h3,.edition-planner #packages h2,.edition-planner #services h2,.edition-planner #project-estimator h2{font-family:Georgia,serif;letter-spacing:-.04em;font-weight:400}
+.edition-planner [id^=pkg][id$="-form"],.edition-planner #project-estimator,.edition-planner #solution-finder{scroll-margin-top:100px}
