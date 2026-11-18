@@ -111,3 +111,13 @@
         remote.then(async d=>{await initial;await init(d);}).catch(()=>{});
     }
 })();
+
+if (document.body.dataset.page === 'contact') {
+    const params = new URLSearchParams(location.search);
+    const product = params.get('product');
+    const message = document.querySelector('#contact-form [name="message"]');
+    if (message && !message.value) {
+        if (product === 'ICSS Plaza') message.value = 'I would like to learn more about ICSS Plaza for my store.';
+        if (params.get('service') === 'Website review') message.value = 'I would like to request a review of my website.';
+    }
+}

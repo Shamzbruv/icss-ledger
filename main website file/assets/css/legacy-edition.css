@@ -1,0 +1,25 @@
+/* Public pages with specialised forms use their existing form and payment handlers. */
+body {--secondary:#9bbbd5;--primary:#0b1928}
+body .hero-bg,body .hero-gradient {background:linear-gradient(115deg,#081421,#172e43);color:#f5f3ec}
+body .hero-bg::before,body .digital-static::before{opacity:.1}
+.hero-bg h1,.hero-gradient h1{font-family:Georgia,serif;font-weight:400;letter-spacing:-.05em;line-height:1.04}
+body .edition-nav,body .edition-foot{background:#081321;color:#f6f3eb}
+.edition-nav{position:relative;z-index:35;border-bottom:1px solid #3d4853}
+.edition-nav-inner,.edition-foot-inner{display:flex;max-width:1240px;margin:auto;padding:17px 5%;align-items:center;gap:24px;justify-content:space-between}
+.edition-nav .ed-brand,.edition-foot .ed-brand{font:750 19px/1.1 Inter,system-ui,sans-serif;letter-spacing:.07em;color:#f5efdf}
+.edition-nav nav,.edition-foot nav{display:flex;flex-wrap:wrap;align-items:center;gap:18px;font-size:14px;color:#d9e3eb}
+.edition-nav a:focus-visible,.edition-foot a:focus-visible{outline:2px solid #e0c99c}
+.edition-nav button{display:none;background:#132b40;border:1px solid #526474;color:white;border-radius:4px;padding:7px 12px}
+.edition-foot{margin-top:auto}.edition-foot-inner{padding-block:35px}
+.ed-landing{background:#f6f4ef!important;color:#192b39!important}
+.ed-landing .hero-bg .container{text-align:left;max-width:1180px}.ed-landing .hero-bg p{margin-left:0}.ed-landing .hero-bg .flex{justify-content:flex-start}
+.ed-landing .hero-bg h1{max-width:900px}
+.ed-landing section.bg-gray-900,.ed-landing section.bg-gray-800{background:#f6f4ef;color:#192b39;border-color:#d2cfc4}
+.ed-landing section.bg-gray-800{background:#e9e5dc}
+.ed-landing section:not(.hero-bg) :is(.bg-gray-800,.bg-gray-900,.bg-gradient-to-br){background:#fff;color:#182c40;box-shadow:none;border-color:#c6c6be;border-radius:5px}
+.ed-landing section:not(.hero-bg) :is(.text-gray-300,.text-gray-400,.text-cyan-400){color:#476071}
+.ed-landing .hero-bg a:first-child,.ed-landing #ld-submit-btn{background:#d8c59d;color:#142433;box-shadow:none;border-radius:4px}
+.ed-landing h2{font-family:Georgia,serif;font-weight:400;letter-spacing:-.04em}
+.ed-landing input,.ed-landing select,.ed-landing textarea{color:#152b3c!important}
+#project-estimator,.primary-bg.digital-static{background-color:#101e30}.hero-gradient .secondary-text{color:#d5bc92}
+@media(max-width:780px){.edition-nav-inner,.edition-foot-inner{flex-wrap:wrap;gap:12px}.edition-nav button{display:block}.edition-nav nav{display:none;flex-basis:100%;padding:12px 0}.edition-nav nav.open{display:flex}.edition-foot nav{gap:12px}}
