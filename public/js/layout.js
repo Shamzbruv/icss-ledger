@@ -21,35 +21,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.head.appendChild(fa);
     }
 
+    const sidebarStyle = document.createElement('link');
+    sidebarStyle.rel = 'stylesheet';
+    sidebarStyle.href = '/css/command-sidebar.css?v=20261118';
+    document.head.appendChild(sidebarStyle);
+
     const component = `
-    <header class="app-header">
-        <div class="container header-content">
+    <header id="commandSidebar">
+        <div class="side-inner">
             <div class="brand-section">
                 <a href="/dashboard" class="brand-link" aria-label="ICSS Command Center dashboard">
                     <span class="brand-mark">IC</span>
                     <span class="brand-copy"><strong>ICSS</strong><small>Command Center</small></span>
                 </a>
             </div>
-            <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNav">
+            <button class="side-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNav">
                 <i class="fas fa-bars"></i>
             </button>
-            <nav class="main-nav" id="mainNav" aria-label="Command Center">
+            <nav class="side-nav" id="mainNav" aria-label="Command Center">
                 <a href="/dashboard" class="nav-link ${window.location.pathname === '/' || window.location.pathname === '/dashboard' ? 'active' : ''}"><i class="fas fa-gauge-high"></i><span>Dashboard</span></a>
+                <a href="/prospects.html" class="nav-link ${['/prospects','/prospects.html'].includes(window.location.pathname) ? 'active' : ''}"><i class="fas fa-address-book"></i><span>Daily Prospects</span></a>
                 <a href="/leads" class="nav-link ${window.location.pathname.includes('leads') ? 'active' : ''}"><i class="fas fa-user-plus"></i><span>Leads</span></a>
                 <a href="/reviews-admin" class="nav-link ${window.location.pathname.includes('reviews') ? 'active' : ''}"><i class="fas fa-star"></i><span>Reviews</span></a>
                 <a href="/link-hub-admin" class="nav-link ${window.location.pathname.includes('link-hub-admin') ? 'active' : ''}"><i class="fas fa-link"></i><span>Link Hub</span></a>
                 <a href="/website-manager?section=portfolio" class="nav-link ${window.location.pathname.includes('website-manager') && !window.location.search.includes('careers') ? 'active' : ''}"><i class="fas fa-briefcase"></i><span>Website & Portfolio</span></a>
                 <a href="/website-manager?section=careers" class="nav-link ${window.location.pathname.includes('website-manager') && window.location.search.includes('careers') ? 'active' : ''}"><i class="fas fa-users"></i><span>Careers & Referrals</span></a>
                 <a href="/invoices" class="nav-link ${window.location.pathname.includes('invoices') ? 'active' : ''}"><svg class="invoice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 7h2M8 11h2m2 3v6m2-5h-3a1 1 0 0 0 0 2h2a1 1 0 0 1 0 2h-3"/></svg><span>Invoices</span></a>
-                <a href="/contracts" class="nav-link ${window.location.pathname.includes('contracts') ? 'active' : ''}"><i class="fas fa-file-signature"></i><span>Contracts</span></a>
+                <a href="/contracts" class="nav-link ${window.location.pathname === '/contracts' ? 'active' : ''}"><i class="fas fa-file-signature"></i><span>Contracts</span></a>
                 <a href="/partner-contracts" class="nav-link ${(window.location.pathname.includes('partner-contracts') || window.location.pathname.includes('halomanage-partnerships') || window.location.pathname.includes('referral-contracts')) ? 'active' : ''}"><i class="fas fa-handshake"></i><span>Partner Contracts</span></a>
                 <a href="/client-care-pulse" class="nav-link ${window.location.pathname.includes('client-care') ? 'active' : ''}"><i class="fas fa-heart-pulse"></i><span>Client Care</span></a>
                 <a href="/accounting" class="nav-link ${window.location.pathname.includes('accounting') ? 'active' : ''}"><i class="fas fa-chart-line"></i><span>Accounting</span></a>
                 <button type="button" class="header-install" data-app-install aria-label="Install ICSS Command Center" title="Install Command Center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"/></svg><span>Install app</span></button>
-                <button id="logoutBtn" class="header-logout" title="Logout" aria-label="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+                <button id="logoutBtn" class="header-logout" title="Logout" aria-label="Logout"><i class="fas fa-arrow-right-from-bracket"></i><span>Sign out</span></button>
             </nav>
         </div>
     </header>
+    <button id="sideBackdrop" hidden tabindex="-1" aria-label="Close navigation"></button>
     `;
 
     // Insert at the beginning of body
@@ -58,54 +65,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     mainNavLinks();
     document.dispatchEvent(new Event('icss:layout-ready'));
     function mainNavLinks() {
-        document.querySelectorAll('.main-nav .nav-link').forEach(link => {
+        document.querySelectorAll('#mainNav .nav-link').forEach(link => {
             link.title = link.textContent.trim();
             link.setAttribute('aria-label', link.textContent.trim());
             if (link.classList.contains('active')) link.setAttribute('aria-current', 'page');
         });
     }
 
-    // Mobile Menu Toggle Logic
-    const menuToggle = document.getElementById('menuToggle');
-    const mainNav = document.getElementById('mainNav');
-    if (menuToggle && mainNav) {
-        menuToggle.addEventListener('click', () => {
-            mainNav.classList.toggle('active');
-            menuToggle.classList.toggle('active');
-            menuToggle.setAttribute('aria-expanded', String(mainNav.classList.contains('active')));
-            menuToggle.setAttribute('aria-label', mainNav.classList.contains('active') ? 'Close navigation' : 'Open navigation');
-            const icon = menuToggle.querySelector('i');
-            if (mainNav.classList.contains('active')) {
-                icon.classList.replace('fa-bars', 'fa-times');
-            } else {
-                icon.classList.replace('fa-times', 'fa-bars');
-            }
-        });
-
-        // Close menu when clicking links
-        mainNav.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                mainNav.classList.remove('active');
-                menuToggle.classList.remove('active');
-                menuToggle.setAttribute('aria-expanded', 'false');
-                menuToggle.setAttribute('aria-label', 'Open navigation');
-                const icon = menuToggle.querySelector('i');
-                icon.classList.replace('fa-times', 'fa-bars');
-            });
-        });
+    const toggle = document.getElementById('menuToggle');
+    const nav = document.getElementById('mainNav');
+    const sidebar = document.getElementById('commandSidebar');
+    const backdrop = document.getElementById('sideBackdrop');
+    const mobile = window.matchMedia('(max-width: 800px)');
+    let compact = false, drawer = false;
+    try { compact = localStorage.getItem('icss.sidebar.compact') === 'true'; } catch {}
+    function renderSidebar() {
+        const expanded = mobile.matches ? drawer : !compact;
+        document.body.classList.add('with-command-sidebar');
+        document.body.classList.toggle('sidebar-compact', compact);
+        document.body.classList.toggle('sidebar-open', mobile.matches && drawer);
+        nav.hidden = mobile.matches && !drawer;
+        backdrop.hidden = !mobile.matches || !drawer;
+        const label = expanded ? 'Collapse navigation' : 'Expand navigation';
+        toggle.title = label;
+        toggle.setAttribute('aria-label', label);
+        toggle.setAttribute('aria-expanded', String(expanded));
+        toggle.querySelector('i').className = 'fas ' + (expanded ? 'fa-angles-left' : mobile.matches ? 'fa-bars' : 'fa-angles-right');
     }
-
+    function closeDrawer() {
+        if (!drawer) return;
+        drawer = false;
+        renderSidebar();
+        toggle.focus();
+    }
+    toggle.addEventListener('click', () => {
+        if (mobile.matches) drawer = !drawer;
+        else {
+            compact = !compact;
+            try { localStorage.setItem('icss.sidebar.compact', String(compact)); } catch {}
+        }
+        renderSidebar();
+    });
+    backdrop.addEventListener('click', closeDrawer);
     document.addEventListener('keydown', event => {
-        if (document.querySelector('dialog[open]')) return;
-        if (event.key === 'Escape' && mainNav?.classList.contains('active')) {
-            mainNav.classList.remove('active');
-            menuToggle.classList.remove('active');
-            menuToggle.setAttribute('aria-expanded', 'false');
-            menuToggle.setAttribute('aria-label', 'Open navigation');
-            menuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
-            menuToggle.focus();
+        if (event.key === 'Escape' && !document.querySelector('dialog[open]')) closeDrawer();
+    });
+    sidebar.addEventListener('focusout', event => {
+        if (drawer && event.relatedTarget && !sidebar.contains(event.relatedTarget)) {
+            drawer = false;
+            renderSidebar();
         }
     });
+    mobile.addEventListener('change', () => { drawer = false; renderSidebar(); });
+    renderSidebar();
 
     // 4. Inject Back to Top Button
     const bttButton = document.createElement('button');

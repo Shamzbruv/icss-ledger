@@ -1,0 +1,35 @@
+/* Shared by signed-in Command Center pages. */
+body.with-command-sidebar { --side-width: 244px; padding-left: var(--side-width); }
+body.sidebar-compact { --side-width: 72px; }
+#commandSidebar { position: fixed; inset: 0 auto 0 0; z-index: 900; width: var(--side-width); box-sizing: border-box; background: #0c1523; color: #eff6ff; border-right: 1px solid #26374a; }
+#commandSidebar .side-inner { display: grid; height: 100%; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: auto minmax(0,1fr); align-items: center; gap: 12px 4px; padding: 16px 10px; box-sizing: border-box; }
+#commandSidebar .brand-section { min-width: 0; }
+#commandSidebar .brand-link { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+#commandSidebar .brand-mark { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 12px; background: linear-gradient(135deg,#00b8e2,#2365db); font-weight: 750; color: white; }
+#commandSidebar .brand-copy { display: grid; color: white; line-height: 1.25; }
+#commandSidebar .brand-copy small { font-size: 11px; color: #abc1d8; }
+#commandSidebar .side-toggle { display: grid; place-items: center; min-width: 38px; height: 40px; border: 1px solid #33475d; background: #152438; color: #cfebff; border-radius: 10px; cursor: pointer; }
+#commandSidebar .side-nav { grid-column: 1/-1; align-self: stretch; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; padding: 9px 1px; border-top: 1px solid #26374a; }
+#commandSidebar .side-nav > :is(a,button) { flex: none; display: flex; align-items: center; justify-content: flex-start; gap: 11px; width: 100%; min-height: 40px; padding: 8px 11px; box-sizing: border-box; margin: 0; border: 1px solid transparent; border-radius: 8px; color: #b5c6d8; background: transparent; text-decoration: none; font: 600 14px/1.25 Inter,system-ui,sans-serif; white-space: nowrap; cursor: pointer; }
+#commandSidebar .side-nav > :hover { background: #172a40; color: white; }
+#commandSidebar .side-nav .active { background: #11304c; color: #e3f6ff; border-color: #225176; }
+#commandSidebar :focus-visible { outline: 2px solid #63c9ff; outline-offset: -2px; }
+#commandSidebar .side-nav :is(i,svg) { width: 19px; height: 18px; flex: none; text-align: center; }
+#commandSidebar [hidden], #sideBackdrop[hidden] { display: none !important; }
+@media(min-width:801px) {
+ .sidebar-compact #commandSidebar .side-inner { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(0,1fr); }
+ .sidebar-compact #commandSidebar :is(.brand-link,.side-nav>a,.side-nav>button) { justify-content: center; }
+ .sidebar-compact #commandSidebar :is(.side-nav span,.brand-copy) { display: none; }
+}
+@media(max-width:800px) {
+ body.with-command-sidebar { padding-left: 0; padding-top: 56px; }
+ #commandSidebar { width: 100%; height: 56px; bottom: auto; border: 0; border-bottom: 1px solid #26374a; }
+ #commandSidebar .side-inner { grid-template-rows: auto; padding: 7px 12px; }
+ .sidebar-open #commandSidebar { width: min(275px,85vw); height: 100vh; height: 100dvh; }
+ .sidebar-open #commandSidebar .side-inner { grid-template-rows: auto minmax(0,1fr); }
+ #sideBackdrop { position: fixed; inset: 0; z-index: 899; width: 100%; height: 100%; border: 0; border-radius: 0; background: #07101bb3; }
+}
+@media print {
+ body.with-command-sidebar { padding: 0; }
+ #commandSidebar,#sideBackdrop { display: none; }
+}
