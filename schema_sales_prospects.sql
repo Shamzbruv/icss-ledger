@@ -22,3 +22,6 @@ using ((select auth.uid()) = 'a339e1af-365a-40f7-82fa-01aff0b5a3ec'::uuid);
 create policy prospect_owner_update on public.sales_prospects for update to authenticated
 using ((select auth.uid()) = 'a339e1af-365a-40f7-82fa-01aff0b5a3ec'::uuid)
 with check ((select auth.uid()) = 'a339e1af-365a-40f7-82fa-01aff0b5a3ec'::uuid);
+
+alter table public.sales_prospects add column removed boolean not null default false;
+grant update(removed) on public.sales_prospects to authenticated;

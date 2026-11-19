@@ -27,7 +27,7 @@ function contactLine(row) {
         if (digits && listed.has(digits)) continue;
         listed.add(digits);
         line.append(' · ' + label + ' ');
-        if (!digits || row.suppressed) { line.append(number); continue; }
+        if (!digits || row.suppressed || row.removed) { line.append(number); continue; }
         const link = element('a',number);
         link.href = 'https://wa.me/' + digits + (row.whatsapp_draft ? '?text=' + encodeURIComponent(row.whatsapp_draft) : '');
         link.target = '_blank';
@@ -52,6 +52,27 @@ function prospect(row) {
     source.target = '_blank';
     source.rel = 'noopener noreferrer';
     card.append(summary, element('p', row.fit), source, contactLine(row));
+    const toggle = element('button',row.removed ? 'Restore prospect' : 'Remove prospect');
+    toggle.type = 'button';
+    const notice = element('span');
+    notice.setAttribute('role','status');
+    toggle.onclick = async () => {
+        if (!row.removed && !window.confirm('Remove ' + row.business + ' from Daily Prospects? You can restore it from the Removed queue.')) return;
+        toggle.disabled = true;
+        try {
+            const {data,error} = await db.from('sales_prospects').update({removed:!row.removed,revision:row.revision+1}).eq('id',row.id).eq('revision',row.revision).select('id').maybeSingle();
+            if (error) throw error;
+            if (!data) throw Error('Record changed. Refresh and try again.');
+            await refresh(row.removed ? 'Prospect restored. ' : 'Prospect removed. ');
+        } catch (error) {
+            notice.textContent = error.message || 'Could not change this prospect. Try again.';
+            toggle.disabled = false;
+        }
+    };
+    if (row.removed) {
+        card.append(toggle,notice);
+        return card;
+    }
     if (!row.suppressed) {
         for (const [title,key] of [['Email draft','email_draft'],['WhatsApp draft','whatsapp_draft'],['Call script','call_script']]) {
             const section = element('details'), copy = element('button','Copy');
@@ -93,7 +114,7 @@ function prospect(row) {
         } catch (e) { feedback.textContent = e.message || 'Save failed. Try again.'; }
         finally { save.disabled = false; }
     };
-    actions.append(labeled('Follow up',follow),labeled('Do not contact',stop),save,feedback);
+    actions.append(labeled('Follow up',follow),labeled('Do not contact',stop),save,feedback,toggle,notice);
     card.append(steps,labeled('Conversation notes',notes),actions);
     return card;
 }
@@ -105,8 +126,8 @@ async function refresh(prefix='') {
     try {
         db = await window.ensureSupabaseClient();
         const filter = byId('queue').value;
-        let query = db.from('sales_prospects').select('*',{count:'exact'});
-        if (filter !== 'all') query = query.eq('suppressed',filter === 'stop');
+        let query = db.from('sales_prospects').select('*',{count:'exact'}).eq('removed',filter === 'removed');
+        if (filter !== 'all' && filter !== 'removed') query = query.eq('suppressed',filter === 'stop');
         const batch = byId('batch').value;
         if (batch === 'today' || batch === 'yesterday') query = query.eq('discovered_on', jamaicaDate(batch === 'today' ? 0 : -1));
         if (batch === 'date') {

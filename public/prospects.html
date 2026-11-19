@@ -6,11 +6,11 @@
 <link rel="icon" href="/assets/icss-logo.png"><link rel="manifest" href="/command-center.webmanifest">
 </head><body><main class="container prospect-page">
 <header><a href="/dashboard">← Dashboard</a><h1>Daily prospects</h1><p>Review the business, choose your approach and track the conversation.</p></header>
-<div class="queue-tools"><label>Queue <select id="queue"><option value="all">All stages</option><option value="new">New</option><option value="active">In progress</option><option value="due">Follow-up due</option><option value="won">Clients</option><option value="stop">Do not contact</option></select></label>
+<div class="queue-tools"><label>Queue <select id="queue"><option value="all">All stages</option><option value="new">New</option><option value="active">In progress</option><option value="due">Follow-up due</option><option value="won">Clients</option><option value="stop">Do not contact</option><option value="removed">Removed</option></select></label>
 <label>Added <select id="batch"><option value="">All dates</option><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="date">Choose date</option></select></label>
 <label id="dateLabel" hidden>Batch date <input type="date" id="batchDate"></label>
 <label>Product <select id="product"><option value="">All products</option><option>ICSS Bookings</option><option>ICSS Plaza</option><option>iCreate Solutions &amp; Services</option></select></label></div>
 <p id="status" role="status">Loading prospects…</p><section id="rows" aria-label="Prospects"></section>
 <div class="queue-tools"><button id="prev" disabled>Previous</button><button id="next" disabled>Next</button></div>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/config.js?v=restore-20261029"></script><script type="module" src="/js/layout.js?v=20261118-sidebar"></script><script type="module" src="/js/prospects.js?v=20261118-history"></script></body></html>
+<script src="/js/config.js?v=restore-20261029"></script><script type="module" src="/js/layout.js?v=20261118-sidebar"></script><script type="module" src="/js/prospects.js?v=20261119-remove"></script></body></html>
