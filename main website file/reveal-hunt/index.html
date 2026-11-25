@@ -41,23 +41,22 @@ body{
 }
 .wrap{max-width:560px;margin:0 auto;padding:22px 16px 56px;display:grid;gap:18px}
 .brand{margin:0;font:800 15px var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
-.stubs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stubs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .stub{
-  height:74px;display:grid;place-items:center;border-radius:10px;
-  font:800 36px/1 var(--display);color:var(--muted);
+  height:66px;display:grid;place-items:center;border-radius:10px;
+  font:800 32px/1 var(--display);color:var(--muted);
   background:
     radial-gradient(circle at 0 50%,var(--ink) 7px,transparent 7.5px),
     radial-gradient(circle at 100% 50%,var(--ink) 7px,transparent 7.5px),
     var(--panel);
 }
 .stub.on{
-  color:var(--pink-ink);
+  color:var(--ink);
   background:
     radial-gradient(circle at 0 50%,var(--ink) 7px,transparent 7.5px),
     radial-gradient(circle at 100% 50%,var(--ink) 7px,transparent 7.5px),
-    var(--cream);
+    var(--gold);
 }
-.stub.on.blue{color:var(--blue-ink)}
 .stub.pop{animation:pop .6s cubic-bezier(.2,1.3,.4,1)}
 @keyframes pop{0%{transform:scale(.5) rotate(-10deg)}60%{transform:scale(1.14) rotate(3deg)}100%{transform:none}}
 
@@ -98,7 +97,7 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 }
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn.ghost{background:transparent;color:var(--cream);box-shadow:inset 0 0 0 2px rgba(255,243,220,.3)}
-.btn:focus-visible,.opt:focus-visible,.team:focus-visible,.card:focus-visible,.slot:focus-visible,.tile:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.btn:focus-visible,.opt:focus-visible,.team:focus-visible,.card:focus-visible,.slot:focus-visible,.tile:focus-visible,.who:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 
 .opts{display:grid;gap:10px}
 .opt{
@@ -110,7 +109,7 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .opt.wrong{border-color:#ff7a59;color:var(--muted);animation:shake .4s}
 @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .card{position:relative;aspect-ratio:1;border:0;padding:0;background:none;perspective:600px;cursor:pointer;border-radius:14px}
 .card .in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .35s}
 .card.up .in{transform:rotateY(180deg)}
@@ -119,7 +118,7 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   background:repeating-linear-gradient(135deg,var(--pink) 0 9px,#e9e3ff 9px 18px,var(--blue) 18px 27px,#e9e3ff 27px 36px);
   box-shadow:inset 0 0 0 4px var(--panel);
 }
-.front{background:var(--cream);transform:rotateY(180deg);font-size:clamp(26px,9vw,40px)}
+.front{background:var(--cream);transform:rotateY(180deg);font-size:clamp(22px,7.5vw,34px)}
 .card.done .front{box-shadow:inset 0 0 0 3px var(--gold)}
 
 .scratch{position:relative;height:190px;border-radius:16px;overflow:hidden;background:var(--cream);color:var(--ink);display:grid;place-items:center;text-align:center}
@@ -129,35 +128,33 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 .big-ticket{
   justify-self:center;width:min(260px,100%);height:170px;border-radius:14px;display:grid;place-content:center;justify-items:center;gap:2px;
-  color:var(--pink-ink);
+  color:var(--ink);
   background:
     radial-gradient(circle at 0 50%,var(--panel) 12px,transparent 12.5px),
     radial-gradient(circle at 100% 50%,var(--panel) 12px,transparent 12.5px),
-    var(--cream);
-  animation:drop .7s cubic-bezier(.2,1.2,.4,1);
+    var(--gold);
+  animation:drop .7s cubic-bezier(.2,1.3,.4,1);
 }
-.big-ticket.blue{color:var(--blue-ink)}
 .big-ticket .admit{font:700 12px var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--ink);opacity:.6}
 .big-ticket .letter{font:800 104px/1 var(--display)}
 @keyframes drop{0%{transform:translateY(-40px) rotate(-8deg) scale(.85);opacity:0}100%{transform:none;opacity:1}}
 
-.slots,.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.slots,.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .slot,.tile{
-  height:84px;border-radius:12px;display:grid;place-items:center;cursor:pointer;
-  font:800 44px/1 var(--display);
+  height:72px;border-radius:12px;display:grid;place-items:center;cursor:pointer;
+  font:800 34px/1 var(--display);
 }
 .slot{border:3px dashed rgba(255,243,220,.3);background:transparent;color:var(--ink)}
-.slot.filled{border:3px solid var(--cream);background:var(--cream)}
+.slot.filled{border:3px solid var(--cream);background:var(--cream);color:var(--ink)}
 .slots.ok .slot.filled{border-color:var(--gold);background:var(--gold)}
 .slots.bad{animation:shake .4s}
 .tile{
-  border:0;color:var(--pink-ink);
+  border:0;color:var(--ink);
   background:
     radial-gradient(circle at 0 50%,var(--panel) 8px,transparent 8.5px),
     radial-gradient(circle at 100% 50%,var(--panel) 8px,transparent 8.5px),
-    var(--cream);
+    var(--gold);
 }
-.tile.blue{color:var(--blue-ink)}
 .tile:disabled{opacity:.18;cursor:default}
 
 .reveal{
@@ -178,6 +175,19 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .reveal :focus-visible{outline-color:var(--ink)}
 .reveal.final .rv-word{animation:land .8s cubic-bezier(.2,1.3,.4,1)}
 @keyframes land{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}
+
+/* Who's more likely */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.who{padding:28px 10px;border-radius:18px;border:3px solid;background:transparent;cursor:pointer;font:800 26px var(--display)}
+.who[data-w=halona]{border-color:var(--gold);color:var(--gold)}
+.who[data-w=shamar]{border-color:var(--cream);color:var(--cream)}
+.who:hover,.who:focus-visible{background:rgba(255,243,220,.1)}
+.res{display:grid;gap:6px}
+.res .rq{margin:0;font-weight:700;font-size:15px}
+.bar{height:14px;border-radius:999px;background:var(--cream);overflow:hidden}
+.bar .h{display:block;height:100%;background:var(--gold)}
+.rl{margin:0;display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.results{display:grid;gap:14px}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -219,19 +229,48 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     return;
   }
   /* ---- Edit these to personalise the game ---- */
-  var CONFIG = { parents: "the parents-to-be" };
+  var CONFIG = { parents: "Halona & Shamar" };
   /* ------------------------------------------- */
 
-  var WORD = "GIRL";
-  var ORDER = [2,0,3,1];                 // ticket i carries letter WORD[ORDER[i]], so tickets arrive scrambled
-  var TCOL = ["pink","blue","blue","pink"]; // ticket colours are decoys, they say nothing about the answer
-  var LETTERS = ORDER.map(function(i){return WORD[i];});
+
+
+  var DIGITS = [7,2,9,4,1];                       // ticket i shows DIGITS[i], so tickets arrive out of order
+  var CODE = DIGITS.slice().sort(function(a,b){return a-b;}).join("");  // vault opens smallest to biggest
+  var TOTAL = DIGITS.length;
+  var API = "/api/reveal-hunt";
   var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var $ = function(s,r){return (r||document).querySelector(s);};
   var stageEl = $("#stage"), stubsEl = $("#stubs");
-  var S = {stage:0, team:"", name:"", tickets:[false,false,false,false]};
   var lastEarned = -1, timer = null, rafId = null;
+
+  function makeId(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var a = "abcdefghijklmnopqrstuvwxyz0123456789", id = "g-";
+    for(var i=0;i<24;i++) id += a[Math.floor(Math.random()*a.length)];
+    return id;
+  }
+  function freshState(){return {stage:0, team:"", name:"", session:makeId(), tickets:[false,false,false,false,false]};}
+  var S = freshState();
+
+  /* Saves progress to the guest book. The game works the same if this fails. */
+  function sync(extra){
+    try{
+      var body = Object.assign({session_id:S.session}, extra);
+      return fetch(API, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body), keepalive:true})
+        .then(function(r){return r.ok;}, function(){return false;});
+    }catch(e){return Promise.resolve(false);}
+  }
+  function loadTotals(){
+    return new Promise(function(resolve){
+      var done = false, ctl = window.AbortController ? new AbortController() : null;
+      var t = setTimeout(function(){ if(!done){done = true; if(ctl) ctl.abort(); resolve(null);} }, 4000);
+      fetch(API, {cache:"no-store", signal:ctl ? ctl.signal : undefined})
+        .then(function(r){return r.ok ? r.json() : null;})
+        .then(function(j){ if(!done){done = true; clearTimeout(t); resolve(j);} })
+        .catch(function(){ if(!done){done = true; clearTimeout(t); resolve(null);} });
+    });
+  }
 
   function shuffle(a){
     a = a.slice();
@@ -239,34 +278,38 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     return a;
   }
   function mount(html){stageEl.innerHTML = html;}
+  function focusHeading(){
+    var h = stageEl.querySelector("h1,h2");
+    if(h) h.focus({preventScroll:true});
+  }
 
   function renderStubs(){
     stubsEl.innerHTML = S.tickets.map(function(on,i){
-      var cls = "stub" + (on ? " on "+TCOL[i] : "") + (i===lastEarned ? " pop" : "");
-      var label = "Ticket "+(i+1)+": "+(on ? "letter "+LETTERS[i] : "locked");
-      return '<div class="'+cls+'" role="img" aria-label="'+label+'">'+(on?LETTERS[i]:"?")+'</div>';
+      var cls = "stub" + (on ? " on" : "") + (i===lastEarned ? " pop" : "");
+      var label = "Ticket "+(i+1)+": "+(on ? "number "+DIGITS[i] : "locked");
+      return '<div class="'+cls+'" role="img" aria-label="'+label+'">'+(on?DIGITS[i]:"?")+'</div>';
     }).join("");
   }
 
+  var STAGES = [introStage, riddleStage, emojiStage, memoryStage, pollStage, scratchStage, vaultStage];
   function go(n){
     S.stage = n;
     renderStubs();
     lastEarned = -1;
-    if(n===6){ mount(""); runReveal(); return; }
-    [introStage, riddleStage, emojiStage, memoryStage, scratchStage, wordStage][n]();
-    var h = stageEl.querySelector("h1,h2");
-    if(h) h.focus({preventScroll:true});
+    if(n===7){ mount(""); runReveal(); return; }
+    STAGES[n]();
+    focusHeading();
     window.scrollTo({top:0});
   }
 
   /* ---------- Stage 0: intro ---------- */
   function introStage(){
     mount(
-      '<p class="eyebrow">Baby reveal hunt</p>'+
+      '<p class="eyebrow">Halona &amp; Shamar’s reveal hunt</p>'+
       '<h1 tabindex="-1"><span class="p">Pink</span> or <span class="b">blue?</span></h1>'+
-      '<p class="lede">Win four little games at the midway. Each one pays out a ticket with a letter on it. Put the letters in order to open the reveal.</p>'+
-      '<div><label for="name">Your name</label><input id="name" type="text" autocomplete="given-name" maxlength="24" placeholder="So we can cheer for you"></div>'+
-      '<div><label id="teamlbl">Make your guess</label>'+
+      '<p class="lede">Another little one is joining the family. Win five games, collect five tickets, then crack the vault to find out who’s coming.</p>'+
+      '<div><label for="name">Your name</label><input id="name" type="text" autocomplete="given-name" maxlength="24" placeholder="So Halona and Shamar know who played"></div>'+
+      '<div><label id="teamlbl">Make your guess first</label>'+
       '<div class="teams" role="group" aria-labelledby="teamlbl">'+
         '<button class="team pink" type="button" data-team="pink" aria-pressed="false">Team Pink</button>'+
         '<button class="team blue" type="button" data-team="blue" aria-pressed="false">Team Blue</button>'+
@@ -275,71 +318,92 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     );
     var name = $("#name"), go_ = $("#go");
     name.value = S.name;
-    function sync(){
+    function refresh(){
       stageEl.querySelectorAll(".team").forEach(function(b){b.setAttribute("aria-pressed", String(b.dataset.team===S.team));});
       go_.disabled = !S.team;
       go_.textContent = S.team ? "Start the game" : "Pick a team to start";
     }
     stageEl.querySelectorAll(".team").forEach(function(b){
-      b.addEventListener("click", function(){S.team = b.dataset.team; sync();});
+      b.addEventListener("click", function(){S.team = b.dataset.team; refresh();});
     });
-    go_.addEventListener("click", function(){S.name = name.value.trim(); go(1);});
-    sync();
+    go_.addEventListener("click", function(){
+      S.name = name.value.trim();
+      sync({name:S.name, team:S.team, tickets_won:0, picks:{}, finished:false});
+      go(1);
+    });
+    refresh();
   }
 
-  /* ---------- Generic quiz stage ---------- */
+  /* ---------- Quiz rounds (one or more questions each) ---------- */
   function quizStage(o){
-    mount(
-      '<p class="eyebrow">Round '+o.n+' of 4 · '+o.tag+'</p>'+
-      '<h2 tabindex="-1">'+o.title+'</h2>'+
-      (o.big ? '<p class="big-emoji" role="img" aria-label="'+o.bigLabel+'">'+o.big+'</p>' : '')+
-      '<p class="lede">'+o.prompt+'</p>'+
-      '<div class="opts">'+o.options.map(function(t,i){return '<button class="opt" type="button" data-i="'+i+'">'+t+'</button>';}).join("")+'</div>'+
-      '<p class="hint" id="hint" role="status"></p>'
-    );
-    var wrong = 0, done = false;
-    stageEl.querySelectorAll(".opt").forEach(function(b){
-      b.addEventListener("click", function(){
-        if(done) return;
-        if(+b.dataset.i === o.answer){
-          done = true; b.classList.add("right");
-          setTimeout(function(){win(o.n-1);}, 650);
-        } else {
-          b.classList.add("wrong"); b.disabled = true;
-          $("#hint").textContent = o.hints[Math.min(wrong,o.hints.length-1)];
-          wrong++;
-        }
+    var idx = 0;
+    function show(){
+      var q = o.questions[idx];
+      mount(
+        '<p class="eyebrow">Round '+o.n+' of '+TOTAL+' · '+o.tag+' · '+(idx+1)+'/'+o.questions.length+'</p>'+
+        '<h2 tabindex="-1">'+o.title+'</h2>'+
+        (q.big ? '<p class="big-emoji" role="img" aria-label="'+q.bigLabel+'">'+q.big+'</p>' : '')+
+        '<p class="lede">'+q.prompt+'</p>'+
+        '<div class="opts">'+q.options.map(function(t,i){return '<button class="opt" type="button" data-i="'+i+'">'+t+'</button>';}).join("")+'</div>'+
+        '<p class="hint" id="hint" role="status"></p>'
+      );
+      focusHeading();
+      var wrong = 0, done = false;
+      stageEl.querySelectorAll(".opt").forEach(function(b){
+        b.addEventListener("click", function(){
+          if(done) return;
+          if(+b.dataset.i === q.answer){
+            done = true; b.classList.add("right");
+            setTimeout(function(){ idx++; if(idx<o.questions.length) show(); else win(o.n-1); }, 650);
+          } else {
+            b.classList.add("wrong"); b.disabled = true; wrong++;
+            $("#hint").textContent = wrong>=2 ? q.hint : "Not that one.";
+          }
+        });
       });
-    });
+    }
+    show();
   }
 
   function riddleStage(){
     quizStage({
-      n:1, tag:"Riddle", title:"Who am I?",
-      prompt:"I arrive small, but I take over the whole house. Nobody sleeps through the night once I move in.",
-      options:["The in-laws","The baby","A very loud raccoon","Tax season"], answer:1,
-      hints:["Nope. Think smaller, and way cuter.","Whoever it is, they don't care about your sleep schedule.","Look at who we're all here to celebrate."]
+      n:1, tag:"Riddles & trivia", title:"Three to get through",
+      questions:[
+        {prompt:"I arrive small, but I take over the whole house. Nobody sleeps through the night once I move in. Who am I?",
+         options:["The in-laws","The baby","A very loud raccoon","Tax season"], answer:1,
+         hint:"Think about who is the star of this whole party."},
+        {prompt:"A newborn spends most of the day doing one thing. What is it?",
+         options:["Crying","Eating","Sleeping","Staring at the ceiling fan"], answer:2,
+         hint:"It adds up to around 16 hours a day. Ironic, since the parents get none."},
+        {prompt:"About how many bones is a baby born with?",
+         options:["About 150","About 206","About 300","About 450"], answer:2,
+         hint:"Adults have 206, and that is after some of them fuse together. So babies have more."}
+      ]
     });
   }
 
   function emojiStage(){
     quizStage({
       n:2, tag:"Emoji decoder", title:"Crack the code",
-      big:"👶 + 🚿", bigLabel:"Baby emoji plus shower emoji",
-      prompt:"Two emojis, one party. What are we at?",
-      options:["Diaper Duty","Crib Notes","Baby Shower","Milk Run"], answer:2,
-      hints:["Close to the theme, wrong party.","The second emoji is the clue.","Baby plus shower."]
+      questions:[
+        {big:"👶 + 🚿", bigLabel:"Baby emoji plus shower emoji", prompt:"Two emojis, one party. What are we at?",
+         options:["Diaper Duty","Crib Notes","Baby Shower","Milk Run"], answer:2, hint:"Baby plus shower."},
+        {big:"🍼 🌙 ⏰", bigLabel:"Baby bottle, moon and alarm clock", prompt:"A parent’s favorite hour. What is it?",
+         options:["Night Shift","Midnight Feeding","Late Bottle","Moon Milk"], answer:1, hint:"The bottle, the moon, the clock. Say it out loud."},
+        {big:"👨‍👩‍👧 ➕ 👶", bigLabel:"Family emoji plus baby emoji", prompt:"What happens when you add one more?",
+         options:["Family Tree","Full House","Group Chat","Growing Family"], answer:3, hint:"A family, plus one more."}
+      ]
     });
   }
 
-  /* ---------- Stage 3: memory ---------- */
+  /* ---------- Round 3: memory, 8 pairs ---------- */
   function memoryStage(){
-    var faces = ["🧸","🍼","🧦","🦆","🚂","🎀"];
+    var faces = ["🧸","🍼","🧦","🦆","🛁","🪀","🌙","⭐"];
     var deck = shuffle(faces.concat(faces));
     mount(
-      '<p class="eyebrow">Round 3 of 4 · Memory</p>'+
+      '<p class="eyebrow">Round 3 of '+TOTAL+' · Memory</p>'+
       '<h2 tabindex="-1">Match the nursery pairs</h2>'+
-      '<p class="lede">Flip two cards at a time and find all 6 pairs. <span id="tries">0 tries</span></p>'+
+      '<p class="lede">Flip two cards at a time and find all 8 pairs. <span id="tries">0 tries</span></p>'+
       '<div class="grid" id="grid">'+deck.map(function(f,i){
         return '<button class="card" type="button" data-i="'+i+'" aria-label="Card '+(i+1)+', face down"><span class="in"><span class="face back"></span><span class="face front" aria-hidden="true">'+f+'</span></span></button>';
       }).join("")+'</div>'
@@ -356,7 +420,7 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         var a = open[0], c = open[1];
         if(deck[a.dataset.i]===deck[c.dataset.i]){
           a.classList.add("done"); c.classList.add("done"); open = []; matched++;
-          if(matched===6) setTimeout(function(){win(2);}, 700);
+          if(matched===8) setTimeout(function(){win(2);}, 700);
         } else {
           lock = true;
           setTimeout(function(){
@@ -368,10 +432,60 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     });
   }
 
-  /* ---------- Stage 4: scratch card ---------- */
+  /* ---------- Round 4: who's more likely ---------- */
+  var POLLS = [
+    {k:"q1", t:"Who’s more likely to take the 3 a.m. feeding?", short:"The 3 a.m. feeding"},
+    {k:"q2", t:"Who’s more likely to cry first at the reveal?", short:"Cries first at the reveal"},
+    {k:"q3", t:"Who’s more likely to pack way too much for the hospital?", short:"Packs way too much"},
+    {k:"q4", t:"Who’s more likely to fall asleep first on the first night home?", short:"Falls asleep first"}
+  ];
+  function pollStage(){
+    var i = 0, picks = {};
+    function ask(){
+      var p = POLLS[i];
+      mount(
+        '<p class="eyebrow">Round 4 of '+TOTAL+' · Who’s more likely? · '+(i+1)+'/'+POLLS.length+'</p>'+
+        '<h2 tabindex="-1">'+p.t+'</h2>'+
+        '<p class="lede">No wrong answers. Go with your gut.</p>'+
+        '<div class="duo"><button class="who" type="button" data-w="halona">Halona</button><button class="who" type="button" data-w="shamar">Shamar</button></div>'
+      );
+      focusHeading();
+      stageEl.querySelectorAll(".who").forEach(function(b){
+        b.addEventListener("click", function(){
+          picks[p.k] = b.dataset.w; i++;
+          if(i<POLLS.length) ask(); else finish();
+        });
+      });
+    }
+    function finish(){
+      mount('<p class="eyebrow">Round 4 of '+TOTAL+'</p><h2 tabindex="-1">Counting the votes…</h2>');
+      focusHeading();
+      sync({picks:picks}).then(loadTotals).then(function(t){
+        if(!t || !t.polls || t.total < 1){ win(3); return; }
+        var rows = POLLS.map(function(p){
+          var h = t.polls[p.k].halona, s = t.polls[p.k].shamar, sum = h + s;
+          var ph = sum ? Math.round(h/sum*100) : 50, ps = 100 - ph;
+          return '<div class="res"><p class="rq">'+p.short+'</p>'+
+            '<div class="bar" role="img" aria-label="Halona '+ph+' percent, Shamar '+ps+' percent"><span class="h" style="width:'+ph+'%"></span></div>'+
+            '<p class="rl"><span>Halona '+ph+'%</span><span>Shamar '+ps+'%</span></p></div>';
+        }).join("");
+        mount(
+          '<p class="eyebrow">Round 4 of '+TOTAL+' · Results</p>'+
+          '<h2 tabindex="-1">Here’s what the party thinks</h2>'+
+          '<div class="results">'+rows+'</div>'+
+          '<button class="btn" id="claim" type="button">Claim your ticket</button>'
+        );
+        focusHeading();
+        $("#claim").addEventListener("click", function(){win(3);});
+      });
+    }
+    ask();
+  }
+
+  /* ---------- Round 5: scratch card ---------- */
   function scratchStage(){
     mount(
-      '<p class="eyebrow">Round 4 of 4 · Scratch card</p>'+
+      '<p class="eyebrow">Round 5 of '+TOTAL+' · Scratch card</p>'+
       '<h2 tabindex="-1">Scratch for the last ticket</h2>'+
       '<p class="lede">Rub the foil with your finger or mouse until the ticket shows up.</p>'+
       '<div class="scratch"><div class="under"><span class="hot" aria-hidden="true">🎟️</span><span>Last ticket!</span></div><canvas id="foil" aria-hidden="true"></canvas></div>'+
@@ -405,7 +519,7 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     function finish(){
       if(finished) return;
       finished = true; cv.style.transition = "opacity .4s"; cv.style.opacity = 0;
-      setTimeout(function(){win(3);}, 900);
+      setTimeout(function(){win(4);}, 900);
     }
     cv.addEventListener("pointerdown", function(e){drawing = true; cv.setPointerCapture(e.pointerId); scratch(e);});
     cv.addEventListener("pointermove", function(e){if(drawing) scratch(e);});
@@ -416,54 +530,56 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   /* ---------- Ticket won ---------- */
   function win(t){
     S.tickets[t] = true; lastEarned = t; renderStubs();
-    var count = S.tickets.filter(Boolean).length, last = count===4;
-    var msgs = ["Ticket one is yours.","Nice. Two down.","Three tickets. So close.","All four tickets won!"];
+    var count = S.tickets.filter(Boolean).length, last = count===TOTAL;
+    sync({tickets_won:count});
+    var msgs = ["Ticket one is yours.","Two down, three to go.","Halfway there. Almost.","One more after this.","All five tickets won!"];
     mount(
-      '<p class="eyebrow">Ticket '+count+' of 4</p>'+
+      '<p class="eyebrow">Ticket '+count+' of '+TOTAL+'</p>'+
       '<h2 tabindex="-1">'+msgs[count-1]+'</h2>'+
-      '<div class="big-ticket '+TCOL[t]+'" role="img" aria-label="Ticket with the letter '+LETTERS[t]+'"><span class="admit">Admit one</span><span class="letter">'+LETTERS[t]+'</span></div>'+
-      '<p class="lede">Keep this letter safe. You need all four to open the reveal.</p>'+
-      '<button class="btn" id="next" type="button">'+(last?"Unscramble the letters":"Next game")+'</button>'
+      '<div class="big-ticket" role="img" aria-label="Ticket number '+DIGITS[t]+'"><span class="admit">Admit one</span><span class="letter">'+DIGITS[t]+'</span></div>'+
+      '<p class="lede">'+(last ? 'The vault is waiting. Your five numbers are the key.' : 'Remember this number. You will need all five.')+'</p>'+
+      '<button class="btn" id="next" type="button">'+(last?"Go to the vault":"Next game")+'</button>'
     );
-    var h = stageEl.querySelector("h2"); if(h) h.focus({preventScroll:true});
+    focusHeading();
     $("#next").addEventListener("click", function(){go(S.stage+1);});
   }
 
-  /* ---------- Stage 5: unscramble ---------- */
-  function wordStage(){
+  /* ---------- Vault ---------- */
+  function vaultStage(){
     mount(
-      '<p class="eyebrow">Final step · Unscramble</p>'+
-      '<h2 tabindex="-1">Spell the answer</h2>'+
-      '<p class="lede">Tap your tickets to drop the letters into the slots. Tap a slot to take a letter back.</p>'+
+      '<p class="eyebrow">The vault</p>'+
+      '<h2 tabindex="-1">Open the vault</h2>'+
+      '<p class="lede">Put your five tickets in the slots from the smallest number to the biggest. Tap a slot to take a ticket back.</p>'+
       '<div class="slots" id="slots"></div>'+
       '<div class="tiles" id="tiles"></div>'+
       '<p class="hint" id="hint" role="status"></p>'+
       '<button class="btn ghost" id="clear" type="button">Clear</button>'
     );
-    var placed = [-1,-1,-1,-1], busy = false;
+    var placed = [-1,-1,-1,-1,-1], busy = false, misses = 0;
     var slotsEl = $("#slots"), tilesEl = $("#tiles");
     function draw(){
       slotsEl.innerHTML = placed.map(function(p,s){
-        return '<button class="slot'+(p>=0?' filled':'')+'" type="button" data-s="'+s+'" aria-label="Slot '+(s+1)+(p>=0?': '+LETTERS[p]:', empty')+'">'+(p>=0?'<span style="color:'+(TCOL[p]==='pink'?'var(--pink-ink)':'var(--blue-ink)')+'">'+LETTERS[p]+'</span>':'')+'</button>';
+        return '<button class="slot'+(p>=0?' filled':'')+'" type="button" data-s="'+s+'" aria-label="Slot '+(s+1)+(p>=0?': '+DIGITS[p]:', empty')+'">'+(p>=0?DIGITS[p]:'')+'</button>';
       }).join("");
-      tilesEl.innerHTML = LETTERS.map(function(L,i){
-        return '<button class="tile '+TCOL[i]+'" type="button" data-i="'+i+'" aria-label="Letter '+L+'"'+(placed.indexOf(i)>=0?' disabled':'')+'>'+L+'</button>';
+      tilesEl.innerHTML = DIGITS.map(function(d,i){
+        return '<button class="tile" type="button" data-i="'+i+'" aria-label="Ticket '+d+'"'+(placed.indexOf(i)>=0?' disabled':'')+'>'+d+'</button>';
       }).join("");
     }
-    function reset(){placed = [-1,-1,-1,-1]; busy = false; slotsEl.className = "slots"; $("#hint").textContent = ""; draw();}
+    function reset(){placed = [-1,-1,-1,-1,-1]; busy = false; slotsEl.className = "slots"; draw();}
     tilesEl.addEventListener("click", function(e){
       var b = e.target.closest(".tile"); if(!b || busy) return;
       var s = placed.indexOf(-1); if(s<0) return;
       placed[s] = +b.dataset.i; draw();
       if(placed.indexOf(-1)<0){
         busy = true;
-        var guess = placed.map(function(i){return LETTERS[i];}).join("");
-        if(guess===WORD){
-          slotsEl.classList.add("ok"); $("#hint").textContent = "That's the word. Hold on tight.";
-          setTimeout(function(){go(6);}, 900);
+        var guess = placed.map(function(i){return DIGITS[i];}).join("");
+        if(guess===CODE){
+          slotsEl.classList.add("ok"); $("#hint").textContent = "Click. The vault is opening.";
+          setTimeout(function(){go(7);}, 900);
         } else {
-          slotsEl.classList.add("bad"); $("#hint").textContent = "Not quite. Try another order.";
-          setTimeout(reset, 900);
+          misses++; slotsEl.classList.add("bad");
+          $("#hint").textContent = misses>=2 ? "Hint: the smallest number goes in the first slot." : "That is not it. Try another order.";
+          setTimeout(function(){reset();}, 900);
         }
       }
     });
@@ -471,7 +587,7 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       var b = e.target.closest(".slot"); if(!b || busy) return;
       placed[+b.dataset.s] = -1; draw();
     });
-    $("#clear").addEventListener("click", function(){if(!busy) reset();});
+    $("#clear").addEventListener("click", function(){if(!busy){$("#hint").textContent=""; reset();}});
     draw();
   }
 
@@ -500,10 +616,11 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     function finish(){
       ov.className = "reveal pink final";
       w.className = "rv-word"; w.textContent = "It's a girl!";
-      $("#rv-eyebrow").textContent = "Congratulations";
+      $("#rv-eyebrow").textContent = "Congratulations, "+CONFIG.parents;
       var who = S.name ? S.name+", " : "";
       var msg = S.team==="pink" ? " "+who+"Team Pink called it. Take a bow." : S.team==="blue" ? " "+who+"Team Blue, the pink side takes this round." : "";
-      $("#rv-sub").textContent = "Congratulations to "+CONFIG.parents+"."+msg;
+      $("#rv-sub").textContent = "The family is growing, and it's a girl."+msg;
+      sync({finished:true});
       $("#rv-actions").hidden = false;
       $("#replay").focus({preventScroll:true});
       if(!reduced) confetti();
@@ -541,7 +658,7 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   $("#restart").addEventListener("click", function(){
     clearTimeout(timer); cancelAnimationFrame(rafId);
     $("#reveal").hidden = true; document.body.style.overflow = "";
-    S = {stage:0, team:"", name:"", tickets:[false,false,false,false]};
+    S = freshState();
     go(0);
   });
 
@@ -550,7 +667,7 @@ input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     window.claude.hot.snapshot(function(){return {S:S};});
   }
   function start(d){
-    if(d && d.S){S = d.S; if(S.stage===6) S.stage = 5;}
+    if(d && d.S){S = d.S; if(!S.session) S.session = makeId(); if(S.tickets.length!==TOTAL) S = freshState(); if(S.stage===7) S.stage = 6;}
     go(S.stage);
   }
   if(window.claude && window.claude.hot && window.claude.hot.ready){window.claude.hot.ready(start);}

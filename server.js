@@ -133,6 +133,12 @@ const checkAuth = async (req, res, next) => {
         return next();
     }
 
+    // Big Reveal Hunt game: guests save progress and read anonymous totals.
+    // The /admin/* routes under this path stay authenticated.
+    if (currentPath === '/api/reveal-hunt' && (req.method === 'GET' || req.method === 'POST')) {
+        return next();
+    }
+
     // Public only after PayPal approval; the handler verifies the subscription
     // and subscriber email directly with PayPal before changing any records.
     if (currentPath === '/api/subscription-onboarding' && req.method === 'POST') {
@@ -233,6 +239,7 @@ router.use('/api/reviews', reviewsRouter);
 router.use('/api/contracts', contractsRouter);
 router.use('/api/partner-contracts', partnerContractsRouter);
 router.use('/api/info-requests', infoRequestsRouter);
+router.use('/api/reveal-hunt', require('./src/routes/revealHunt')(supabase));
 
 const DEFAULT_LINK_HUB = {
     profile: {
