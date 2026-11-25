@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Big Reveal Hunt</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout idea: a tiny carnival midway. Striped awning on top, four ticket stubs as progress, one game panel at a time. */
+  --ink:#17142b;
+  --panel:#221d3f;
+  --cream:#fff3dc;
+  --pink:#ff4d8d;
+  --blue:#4a7dff;
+  --gold:#ffc23d;
+  --muted:#b4acd6;
+  --pink-ink:#d92b6a;
+  --blue-ink:#2f5ee0;
+  --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--ink)}
+body{
+  margin:0;min-height:100vh;color:var(--cream);font:400 17px/1.5 var(--body);
+  background:
+    radial-gradient(520px 380px at 0% 18%,rgba(255,77,141,.20),transparent 70%),
+    radial-gradient(520px 380px at 100% 40%,rgba(74,125,255,.20),transparent 70%),
+    var(--ink);
+}
+.awning{
+  height:22px;
+  background:repeating-linear-gradient(90deg,var(--pink) 0 28px,var(--cream) 28px 56px,var(--blue) 56px 84px,var(--cream) 84px 112px);
+  box-shadow:0 6px 0 rgba(0,0,0,.25);
+}
+.wrap{max-width:560px;margin:0 auto;padding:22px 16px 56px;display:grid;gap:18px}
+.brand{margin:0;font:800 15px var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.stubs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stub{
+  height:74px;display:grid;place-items:center;border-radius:10px;
+  font:800 36px/1 var(--display);color:var(--muted);
+  background:
+    radial-gradient(circle at 0 50%,var(--ink) 7px,transparent 7.5px),
+    radial-gradient(circle at 100% 50%,var(--ink) 7px,transparent 7.5px),
+    var(--panel);
+}
+.stub.on{
+  color:var(--pink-ink);
+  background:
+    radial-gradient(circle at 0 50%,var(--ink) 7px,transparent 7.5px),
+    radial-gradient(circle at 100% 50%,var(--ink) 7px,transparent 7.5px),
+    var(--cream);
+}
+.stub.on.blue{color:var(--blue-ink)}
+.stub.pop{animation:pop .6s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{0%{transform:scale(.5) rotate(-10deg)}60%{transform:scale(1.14) rotate(3deg)}100%{transform:none}}
+
+.panel{
+  background:var(--panel);border:1px solid rgba(255,243,220,.10);border-radius:22px;
+  padding:24px 20px;display:grid;gap:16px;
+}
+.eyebrow{margin:0;font:700 12px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1,h2{margin:0;font-family:var(--display);font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+h1{font-size:clamp(44px,13vw,72px);line-height:.95}
+h2{font-size:clamp(28px,7.5vw,38px);line-height:1.05}
+h1 .p{color:var(--pink)}
+h1 .b{color:var(--blue)}
+h1:focus,h2:focus{outline:none}
+.lede{margin:0;color:var(--cream);opacity:.88;max-width:46ch}
+.hint{margin:0;min-height:1.5em;color:var(--gold);font-weight:500}
+.big-emoji{margin:0;font-size:56px;line-height:1.1;letter-spacing:.08em}
+
+label{display:block;margin-bottom:6px;font-weight:700;font-size:14px;color:var(--muted)}
+input[type=text]{
+  width:100%;padding:13px 14px;border-radius:12px;border:2px solid rgba(255,243,220,.2);
+  background:var(--ink);color:var(--cream);font:500 17px var(--body);
+}
+input[type=text]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.team{
+  padding:16px 10px;border-radius:16px;border:3px solid;background:transparent;cursor:pointer;
+  font:800 22px var(--display);
+}
+.team.pink{border-color:var(--pink);color:var(--pink)}
+.team.blue{border-color:var(--blue);color:var(--blue)}
+.team.pink[aria-pressed=true]{background:var(--pink);color:var(--ink)}
+.team.blue[aria-pressed=true]{background:var(--blue);color:var(--ink)}
+
+.btn{
+  justify-self:start;border:0;border-radius:999px;padding:14px 26px;cursor:pointer;
+  font:700 17px var(--body);background:var(--gold);color:var(--ink);
+}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--cream);box-shadow:inset 0 0 0 2px rgba(255,243,220,.3)}
+.btn:focus-visible,.opt:focus-visible,.team:focus-visible,.card:focus-visible,.slot:focus-visible,.tile:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+.opts{display:grid;gap:10px}
+.opt{
+  text-align:left;padding:14px 16px;border-radius:14px;cursor:pointer;
+  border:2px solid rgba(255,243,220,.18);background:transparent;color:var(--cream);font:500 17px var(--body);
+}
+.opt:hover:not(:disabled){border-color:var(--gold)}
+.opt.right{border-color:var(--gold);background:rgba(255,194,61,.16)}
+.opt.wrong{border-color:#ff7a59;color:var(--muted);animation:shake .4s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.card{position:relative;aspect-ratio:1;border:0;padding:0;background:none;perspective:600px;cursor:pointer;border-radius:14px}
+.card .in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .35s}
+.card.up .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;display:grid;place-items:center;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.back{
+  background:repeating-linear-gradient(135deg,var(--pink) 0 9px,#e9e3ff 9px 18px,var(--blue) 18px 27px,#e9e3ff 27px 36px);
+  box-shadow:inset 0 0 0 4px var(--panel);
+}
+.front{background:var(--cream);transform:rotateY(180deg);font-size:clamp(26px,9vw,40px)}
+.card.done .front{box-shadow:inset 0 0 0 3px var(--gold)}
+
+.scratch{position:relative;height:190px;border-radius:16px;overflow:hidden;background:var(--cream);color:var(--ink);display:grid;place-items:center;text-align:center}
+.scratch .under{display:grid;gap:4px;justify-items:center;font:800 24px var(--display)}
+.scratch .hot{font-size:54px;line-height:1}
+.scratch canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+
+.big-ticket{
+  justify-self:center;width:min(260px,100%);height:170px;border-radius:14px;display:grid;place-content:center;justify-items:center;gap:2px;
+  color:var(--pink-ink);
+  background:
+    radial-gradient(circle at 0 50%,var(--panel) 12px,transparent 12.5px),
+    radial-gradient(circle at 100% 50%,var(--panel) 12px,transparent 12.5px),
+    var(--cream);
+  animation:drop .7s cubic-bezier(.2,1.2,.4,1);
+}
+.big-ticket.blue{color:var(--blue-ink)}
+.big-ticket .admit{font:700 12px var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--ink);opacity:.6}
+.big-ticket .letter{font:800 104px/1 var(--display)}
+@keyframes drop{0%{transform:translateY(-40px) rotate(-8deg) scale(.85);opacity:0}100%{transform:none;opacity:1}}
+
+.slots,.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.slot,.tile{
+  height:84px;border-radius:12px;display:grid;place-items:center;cursor:pointer;
+  font:800 44px/1 var(--display);
+}
+.slot{border:3px dashed rgba(255,243,220,.3);background:transparent;color:var(--ink)}
+.slot.filled{border:3px solid var(--cream);background:var(--cream)}
+.slots.ok .slot.filled{border-color:var(--gold);background:var(--gold)}
+.slots.bad{animation:shake .4s}
+.tile{
+  border:0;color:var(--pink-ink);
+  background:
+    radial-gradient(circle at 0 50%,var(--panel) 8px,transparent 8.5px),
+    radial-gradient(circle at 100% 50%,var(--panel) 8px,transparent 8.5px),
+    var(--cream);
+}
+.tile.blue{color:var(--blue-ink)}
+.tile:disabled{opacity:.18;cursor:default}
+
+.reveal{
+  position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:24px;text-align:center;
+  background:var(--ink);color:var(--cream);overflow:auto;
+}
+.reveal.pink{background:var(--pink);color:var(--ink)}
+.reveal.blue{background:var(--blue);color:var(--ink)}
+.reveal canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.rv-inner{position:relative;display:grid;gap:14px;justify-items:center;max-width:560px}
+.reveal .eyebrow{color:inherit;opacity:.8}
+.rv-word{margin:0;font:800 clamp(56px,19vw,128px)/.9 var(--display);letter-spacing:-.03em;text-wrap:balance}
+.rv-word.count{font-size:clamp(120px,40vw,240px)}
+.rv-sub{margin:0;font-size:19px;max-width:34ch;min-height:1.5em}
+.rv-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:8px}
+.reveal .btn{background:var(--ink);color:var(--cream)}
+.reveal .btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+.reveal :focus-visible{outline-color:var(--ink)}
+.reveal.final .rv-word{animation:land .8s cubic-bezier(.2,1.3,.4,1)}
+@keyframes land{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="awning" aria-hidden="true"></div>
+<main class="wrap">
+  <p class="brand">The Big Reveal Hunt</p>
+  <div class="stubs" id="stubs" role="group" aria-label="Your tickets"></div>
+  <section class="panel" id="stage" aria-live="polite"></section>
+</main>
+
+<div id="reveal" class="reveal" hidden>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <div class="rv-inner">
+    <p class="eyebrow" id="rv-eyebrow"></p>
+    <p class="rv-word" id="rv-word" role="status"></p>
+    <p class="rv-sub" id="rv-sub"></p>
+    <div class="rv-actions" id="rv-actions" hidden>
+      <button class="btn" id="replay" type="button">Replay the reveal</button>
+      <button class="btn ghost" id="restart" type="button">Start over</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* Link expires one week after it was created: Tue 1 Dec 2026, 7:30 PM Jamaica time. */
+  var EXPIRES_AT = Date.parse("2026-12-02T00:30:00Z");
+  if(Date.now() >= EXPIRES_AT){
+    var rv = document.getElementById("reveal"); if(rv) rv.remove();
+    document.querySelector(".wrap").innerHTML =
+      '<p class="brand">The Big Reveal Hunt</p>'+
+      '<section class="panel"><p class="eyebrow">Link expired</p>'+
+      '<h1 style="font-size:clamp(34px,10vw,56px)">The midway has closed.</h1>'+
+      '<p class="lede">This game was only open for one week. Ask the hosts for a new link.</p></section>';
+    return;
+  }
+  /* ---- Edit these to personalise the game ---- */
+  var CONFIG = { parents: "the parents-to-be" };
+  /* ------------------------------------------- */
+
+  var WORD = "GIRL";
+  var ORDER = [2,0,3,1];                 // ticket i carries letter WORD[ORDER[i]], so tickets arrive scrambled
+  var TCOL = ["pink","blue","blue","pink"]; // ticket colours are decoys, they say nothing about the answer
+  var LETTERS = ORDER.map(function(i){return WORD[i];});
+  var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var $ = function(s,r){return (r||document).querySelector(s);};
+  var stageEl = $("#stage"), stubsEl = $("#stubs");
+  var S = {stage:0, team:"", name:"", tickets:[false,false,false,false]};
+  var lastEarned = -1, timer = null, rafId = null;
+
+  function shuffle(a){
+    a = a.slice();
+    for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+    return a;
+  }
+  function mount(html){stageEl.innerHTML = html;}
+
+  function renderStubs(){
+    stubsEl.innerHTML = S.tickets.map(function(on,i){
+      var cls = "stub" + (on ? " on "+TCOL[i] : "") + (i===lastEarned ? " pop" : "");
+      var label = "Ticket "+(i+1)+": "+(on ? "letter "+LETTERS[i] : "locked");
+      return '<div class="'+cls+'" role="img" aria-label="'+label+'">'+(on?LETTERS[i]:"?")+'</div>';
+    }).join("");
+  }
+
+  function go(n){
+    S.stage = n;
+    renderStubs();
+    lastEarned = -1;
+    if(n===6){ mount(""); runReveal(); return; }
+    [introStage, riddleStage, emojiStage, memoryStage, scratchStage, wordStage][n]();
+    var h = stageEl.querySelector("h1,h2");
+    if(h) h.focus({preventScroll:true});
+    window.scrollTo({top:0});
+  }
+
+  /* ---------- Stage 0: intro ---------- */
+  function introStage(){
+    mount(
+      '<p class="eyebrow">Baby reveal hunt</p>'+
+      '<h1 tabindex="-1"><span class="p">Pink</span> or <span class="b">blue?</span></h1>'+
+      '<p class="lede">Win four little games at the midway. Each one pays out a ticket with a letter on it. Put the letters in order to open the reveal.</p>'+
+      '<div><label for="name">Your name</label><input id="name" type="text" autocomplete="given-name" maxlength="24" placeholder="So we can cheer for you"></div>'+
+      '<div><label id="teamlbl">Make your guess</label>'+
+      '<div class="teams" role="group" aria-labelledby="teamlbl">'+
+        '<button class="team pink" type="button" data-team="pink" aria-pressed="false">Team Pink</button>'+
+        '<button class="team blue" type="button" data-team="blue" aria-pressed="false">Team Blue</button>'+
+      '</div></div>'+
+      '<button class="btn" id="go" type="button" disabled>Pick a team to start</button>'
+    );
+    var name = $("#name"), go_ = $("#go");
+    name.value = S.name;
+    function sync(){
+      stageEl.querySelectorAll(".team").forEach(function(b){b.setAttribute("aria-pressed", String(b.dataset.team===S.team));});
+      go_.disabled = !S.team;
+      go_.textContent = S.team ? "Start the game" : "Pick a team to start";
+    }
+    stageEl.querySelectorAll(".team").forEach(function(b){
+      b.addEventListener("click", function(){S.team = b.dataset.team; sync();});
+    });
+    go_.addEventListener("click", function(){S.name = name.value.trim(); go(1);});
+    sync();
+  }
+
+  /* ---------- Generic quiz stage ---------- */
+  function quizStage(o){
+    mount(
+      '<p class="eyebrow">Round '+o.n+' of 4 · '+o.tag+'</p>'+
+      '<h2 tabindex="-1">'+o.title+'</h2>'+
+      (o.big ? '<p class="big-emoji" role="img" aria-label="'+o.bigLabel+'">'+o.big+'</p>' : '')+
+      '<p class="lede">'+o.prompt+'</p>'+
+      '<div class="opts">'+o.options.map(function(t,i){return '<button class="opt" type="button" data-i="'+i+'">'+t+'</button>';}).join("")+'</div>'+
+      '<p class="hint" id="hint" role="status"></p>'
+    );
+    var wrong = 0, done = false;
+    stageEl.querySelectorAll(".opt").forEach(function(b){
+      b.addEventListener("click", function(){
+        if(done) return;
+        if(+b.dataset.i === o.answer){
+          done = true; b.classList.add("right");
+          setTimeout(function(){win(o.n-1);}, 650);
+        } else {
+          b.classList.add("wrong"); b.disabled = true;
+          $("#hint").textContent = o.hints[Math.min(wrong,o.hints.length-1)];
+          wrong++;
+        }
+      });
+    });
+  }
+
+  function riddleStage(){
+    quizStage({
+      n:1, tag:"Riddle", title:"Who am I?",
+      prompt:"I arrive small, but I take over the whole house. Nobody sleeps through the night once I move in.",
+      options:["The in-laws","The baby","A very loud raccoon","Tax season"], answer:1,
+      hints:["Nope. Think smaller, and way cuter.","Whoever it is, they don't care about your sleep schedule.","Look at who we're all here to celebrate."]
+    });
+  }
+
+  function emojiStage(){
+    quizStage({
+      n:2, tag:"Emoji decoder", title:"Crack the code",
+      big:"👶 + 🚿", bigLabel:"Baby emoji plus shower emoji",
+      prompt:"Two emojis, one party. What are we at?",
+      options:["Diaper Duty","Crib Notes","Baby Shower","Milk Run"], answer:2,
+      hints:["Close to the theme, wrong party.","The second emoji is the clue.","Baby plus shower."]
+    });
+  }
+
+  /* ---------- Stage 3: memory ---------- */
+  function memoryStage(){
+    var faces = ["🧸","🍼","🧦","🦆","🚂","🎀"];
+    var deck = shuffle(faces.concat(faces));
+    mount(
+      '<p class="eyebrow">Round 3 of 4 · Memory</p>'+
+      '<h2 tabindex="-1">Match the nursery pairs</h2>'+
+      '<p class="lede">Flip two cards at a time and find all 6 pairs. <span id="tries">0 tries</span></p>'+
+      '<div class="grid" id="grid">'+deck.map(function(f,i){
+        return '<button class="card" type="button" data-i="'+i+'" aria-label="Card '+(i+1)+', face down"><span class="in"><span class="face back"></span><span class="face front" aria-hidden="true">'+f+'</span></span></button>';
+      }).join("")+'</div>'
+    );
+    var open = [], matched = 0, tries = 0, lock = false;
+    $("#grid").addEventListener("click", function(e){
+      var b = e.target.closest(".card");
+      if(!b || lock || b.classList.contains("up")) return;
+      b.classList.add("up");
+      b.setAttribute("aria-label","Card "+(+b.dataset.i+1)+": "+deck[b.dataset.i]);
+      open.push(b);
+      if(open.length===2){
+        tries++; $("#tries").textContent = tries+(tries===1?" try":" tries");
+        var a = open[0], c = open[1];
+        if(deck[a.dataset.i]===deck[c.dataset.i]){
+          a.classList.add("done"); c.classList.add("done"); open = []; matched++;
+          if(matched===6) setTimeout(function(){win(2);}, 700);
+        } else {
+          lock = true;
+          setTimeout(function(){
+            [a,c].forEach(function(x){x.classList.remove("up");x.setAttribute("aria-label","Card "+(+x.dataset.i+1)+", face down");});
+            open = []; lock = false;
+          }, 800);
+        }
+      }
+    });
+  }
+
+  /* ---------- Stage 4: scratch card ---------- */
+  function scratchStage(){
+    mount(
+      '<p class="eyebrow">Round 4 of 4 · Scratch card</p>'+
+      '<h2 tabindex="-1">Scratch for the last ticket</h2>'+
+      '<p class="lede">Rub the foil with your finger or mouse until the ticket shows up.</p>'+
+      '<div class="scratch"><div class="under"><span class="hot" aria-hidden="true">🎟️</span><span>Last ticket!</span></div><canvas id="foil" aria-hidden="true"></canvas></div>'+
+      '<button class="btn ghost" id="skip" type="button">Reveal it for me</button>'
+    );
+    var cv = $("#foil"), r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(r.width*dpr); cv.height = Math.round(r.height*dpr);
+    var g = cv.getContext("2d", {willReadFrequently:true});
+    g.scale(dpr,dpr);
+    var grad = g.createLinearGradient(0,0,r.width,r.height);
+    grad.addColorStop(0,"#c9c6d8"); grad.addColorStop(.5,"#f2f0fa"); grad.addColorStop(1,"#a9a5c0");
+    g.fillStyle = grad; g.fillRect(0,0,r.width,r.height);
+    g.fillStyle = "rgba(255,255,255,.6)";
+    for(var i=0;i<60;i++){g.fillRect(Math.random()*r.width, Math.random()*r.height, 2, 2);}
+    g.fillStyle = "rgba(23,20,43,.6)"; g.font = "800 22px 'DM Sans',sans-serif"; g.textAlign = "center";
+    g.fillText("SCRATCH HERE", r.width/2, r.height/2+8);
+
+    var drawing = false, moves = 0, finished = false;
+    function scratch(e){
+      var b = cv.getBoundingClientRect();
+      g.globalCompositeOperation = "destination-out";
+      g.beginPath(); g.arc(e.clientX-b.left, e.clientY-b.top, 24, 0, 7); g.fill();
+      if(++moves % 8 === 0) check();
+    }
+    function check(){
+      if(finished) return;
+      var d = g.getImageData(0,0,cv.width,cv.height).data, clear = 0, tot = 0;
+      for(var i=3;i<d.length;i+=148){tot++; if(d[i]===0) clear++;}
+      if(clear/tot > 0.5) finish();
+    }
+    function finish(){
+      if(finished) return;
+      finished = true; cv.style.transition = "opacity .4s"; cv.style.opacity = 0;
+      setTimeout(function(){win(3);}, 900);
+    }
+    cv.addEventListener("pointerdown", function(e){drawing = true; cv.setPointerCapture(e.pointerId); scratch(e);});
+    cv.addEventListener("pointermove", function(e){if(drawing) scratch(e);});
+    ["pointerup","pointercancel"].forEach(function(t){cv.addEventListener(t, function(){drawing = false; check();});});
+    $("#skip").addEventListener("click", finish);
+  }
+
+  /* ---------- Ticket won ---------- */
+  function win(t){
+    S.tickets[t] = true; lastEarned = t; renderStubs();
+    var count = S.tickets.filter(Boolean).length, last = count===4;
+    var msgs = ["Ticket one is yours.","Nice. Two down.","Three tickets. So close.","All four tickets won!"];
+    mount(
+      '<p class="eyebrow">Ticket '+count+' of 4</p>'+
+      '<h2 tabindex="-1">'+msgs[count-1]+'</h2>'+
+      '<div class="big-ticket '+TCOL[t]+'" role="img" aria-label="Ticket with the letter '+LETTERS[t]+'"><span class="admit">Admit one</span><span class="letter">'+LETTERS[t]+'</span></div>'+
+      '<p class="lede">Keep this letter safe. You need all four to open the reveal.</p>'+
+      '<button class="btn" id="next" type="button">'+(last?"Unscramble the letters":"Next game")+'</button>'
+    );
+    var h = stageEl.querySelector("h2"); if(h) h.focus({preventScroll:true});
+    $("#next").addEventListener("click", function(){go(S.stage+1);});
+  }
+
+  /* ---------- Stage 5: unscramble ---------- */
+  function wordStage(){
+    mount(
+      '<p class="eyebrow">Final step · Unscramble</p>'+
+      '<h2 tabindex="-1">Spell the answer</h2>'+
+      '<p class="lede">Tap your tickets to drop the letters into the slots. Tap a slot to take a letter back.</p>'+
+      '<div class="slots" id="slots"></div>'+
+      '<div class="tiles" id="tiles"></div>'+
+      '<p class="hint" id="hint" role="status"></p>'+
+      '<button class="btn ghost" id="clear" type="button">Clear</button>'
+    );
+    var placed = [-1,-1,-1,-1], busy = false;
+    var slotsEl = $("#slots"), tilesEl = $("#tiles");
+    function draw(){
+      slotsEl.innerHTML = placed.map(function(p,s){
+        return '<button class="slot'+(p>=0?' filled':'')+'" type="button" data-s="'+s+'" aria-label="Slot '+(s+1)+(p>=0?': '+LETTERS[p]:', empty')+'">'+(p>=0?'<span style="color:'+(TCOL[p]==='pink'?'var(--pink-ink)':'var(--blue-ink)')+'">'+LETTERS[p]+'</span>':'')+'</button>';
+      }).join("");
+      tilesEl.innerHTML = LETTERS.map(function(L,i){
+        return '<button class="tile '+TCOL[i]+'" type="button" data-i="'+i+'" aria-label="Letter '+L+'"'+(placed.indexOf(i)>=0?' disabled':'')+'>'+L+'</button>';
+      }).join("");
+    }
+    function reset(){placed = [-1,-1,-1,-1]; busy = false; slotsEl.className = "slots"; $("#hint").textContent = ""; draw();}
+    tilesEl.addEventListener("click", function(e){
+      var b = e.target.closest(".tile"); if(!b || busy) return;
+      var s = placed.indexOf(-1); if(s<0) return;
+      placed[s] = +b.dataset.i; draw();
+      if(placed.indexOf(-1)<0){
+        busy = true;
+        var guess = placed.map(function(i){return LETTERS[i];}).join("");
+        if(guess===WORD){
+          slotsEl.classList.add("ok"); $("#hint").textContent = "That's the word. Hold on tight.";
+          setTimeout(function(){go(6);}, 900);
+        } else {
+          slotsEl.classList.add("bad"); $("#hint").textContent = "Not quite. Try another order.";
+          setTimeout(reset, 900);
+        }
+      }
+    });
+    slotsEl.addEventListener("click", function(e){
+      var b = e.target.closest(".slot"); if(!b || busy) return;
+      placed[+b.dataset.s] = -1; draw();
+    });
+    $("#clear").addEventListener("click", function(){if(!busy) reset();});
+    draw();
+  }
+
+  /* ---------- Reveal ---------- */
+  function runReveal(){
+    var ov = $("#reveal"), w = $("#rv-word");
+    clearTimeout(timer); cancelAnimationFrame(rafId);
+    ov.hidden = false; ov.className = "reveal"; document.body.style.overflow = "hidden";
+    $("#rv-actions").hidden = true; $("#rv-sub").textContent = "";
+    $("#rv-eyebrow").textContent = "Drumroll";
+    var cctx = $("#confetti").getContext("2d"); cctx.clearRect(0,0,9999,9999);
+    if(reduced){finish(); return;}
+    var counts = ["3","2","1"], k = 0, delays = [90,90,90,90,110,130,160,210,280,380,520,720,1000];
+    w.className = "rv-word count";
+    (function tick(){
+      if(k<3){w.textContent = counts[k++]; timer = setTimeout(tick,750);} else {flick(0);}
+    })();
+    function flick(n){
+      var pink = n%2===1;
+      ov.className = "reveal "+(pink?"pink":"blue");
+      w.className = "rv-word"; w.textContent = pink ? "GIRL?" : "BOY?";
+      $("#rv-eyebrow").textContent = "Pink or blue?";
+      if(n<13){timer = setTimeout(function(){flick(n+1);}, delays[n]);}
+      else {timer = setTimeout(finish, 900);}
+    }
+    function finish(){
+      ov.className = "reveal pink final";
+      w.className = "rv-word"; w.textContent = "It's a girl!";
+      $("#rv-eyebrow").textContent = "Congratulations";
+      var who = S.name ? S.name+", " : "";
+      var msg = S.team==="pink" ? " "+who+"Team Pink called it. Take a bow." : S.team==="blue" ? " "+who+"Team Blue, the pink side takes this round." : "";
+      $("#rv-sub").textContent = "Congratulations to "+CONFIG.parents+"."+msg;
+      $("#rv-actions").hidden = false;
+      $("#replay").focus({preventScroll:true});
+      if(!reduced) confetti();
+    }
+  }
+
+  function confetti(){
+    var cv = $("#confetti"), g = cv.getContext("2d"), dpr = window.devicePixelRatio || 1;
+    var W = window.innerWidth, H = window.innerHeight;
+    cv.width = W*dpr; cv.height = H*dpr; g.setTransform(dpr,0,0,dpr,0,0);
+    var cols = ["#fff3dc","#ffc23d","#ffffff","#17142b","#ffd1e3","#b3004f"], P = [];
+    function add(x,y,vx,vy){
+      P.push({x:x,y:y,vx:vx,vy:vy,s:6+Math.random()*7,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[Math.floor(Math.random()*cols.length)],round:Math.random()<.25});
+    }
+    for(var i=0;i<110;i++){
+      add(0, H, 4+Math.random()*10, -(10+Math.random()*14));
+      add(W, H, -(4+Math.random()*10), -(10+Math.random()*14));
+    }
+    for(var j=0;j<90;j++){add(Math.random()*W, -20-Math.random()*H*.5, (Math.random()-.5)*3, 2+Math.random()*3);}
+    var start = performance.now();
+    (function frame(now){
+      g.clearRect(0,0,W,H);
+      P = P.filter(function(p){return p.y < H+30;});
+      P.forEach(function(p){
+        p.vy += .32; p.vx *= .992; p.vy *= .992; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        g.save(); g.translate(p.x,p.y); g.rotate(p.r); g.fillStyle = p.c;
+        if(p.round){g.beginPath(); g.arc(0,0,p.s/2,0,7); g.fill();} else {g.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);}
+        g.restore();
+      });
+      if(P.length && now-start<9000) rafId = requestAnimationFrame(frame);
+    })(start);
+  }
+
+  $("#replay").addEventListener("click", runReveal);
+  $("#restart").addEventListener("click", function(){
+    clearTimeout(timer); cancelAnimationFrame(rafId);
+    $("#reveal").hidden = true; document.body.style.overflow = "";
+    S = {stage:0, team:"", name:"", tickets:[false,false,false,false]};
+    go(0);
+  });
+
+  /* Keep progress when the page is republished while open */
+  if(window.claude && window.claude.hot && window.claude.hot.snapshot){
+    window.claude.hot.snapshot(function(){return {S:S};});
+  }
+  function start(d){
+    if(d && d.S){S = d.S; if(S.stage===6) S.stage = 5;}
+    go(S.stage);
+  }
+  if(window.claude && window.claude.hot && window.claude.hot.ready){window.claude.hot.ready(start);}
+  else {start((window.claude && window.claude.hot && window.claude.hot.data) || {});}
+})();
+</script>
+</body>
+</html>
